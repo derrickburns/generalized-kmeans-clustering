@@ -50,7 +50,7 @@ object KMeans extends Logging  {
 
   def main(args: Array[String]) {
     if (args.length < 5) {
-      println("Usage: KMeans <master> <input_file> <k> <max_iterations> <distanceMeasure> [<runs>]")
+      println("Usage: KMeans <master> <input_file> <k> <max_iterations> [<runs>]")
       System.exit(1)
     }
     val (master, inputFile, k, iterations) = (args(0), args(1), args(2).toInt, args(3).toInt)
