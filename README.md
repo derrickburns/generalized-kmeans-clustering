@@ -32,6 +32,9 @@ are utilized versus just one.
 The fifth major difference between this implementation and the Spark (1.0.2) implementation is that this clusterer allows 
 one to identify which points are in which clusters efficiently.  In many applications this is necessary. 
 
+This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
+function (Kullback-Leibler). 
+
 
 
 
