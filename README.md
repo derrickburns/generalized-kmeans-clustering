@@ -16,6 +16,19 @@ The key is to create three new abstractions: point, cluster center, and centroid
 centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
 points to cluster centers.  These abstractions are easy to understand and easy to implement.
 
+The second major deviation between this implementation and the Spark (1.0.2) implementation is that this clusterer may produce
+fewer than k clusters when k are requested.  This may sound like a problem, but your data may not cluster into k clusters!
+The Spark (1.0.2) implementation duplicates cluster centers, resulting in useless computation.  This implementation
+tracks the number of cluster centers. 
+
+The third major difference between this implementation and the Spark (1.0.2) implementation is that this clusterer
+separates the initialization step from the main clusterer.  This allows for new initialization methods, including 
+initialization methods that have different numbers of initial clusters.
+
+The fourth major difference between this implementation and the Spark (1.0.2) implementation is that this clusterer
+uses the K-Means clustering step in the K-Means parallel initialization process.  This is much faster, since all cores
+are utilized versus just one.
+
 
 
 
