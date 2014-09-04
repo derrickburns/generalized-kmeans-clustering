@@ -65,7 +65,7 @@ class GeneralizedKMeans[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOp
 
       val activeCenters = activeRuns.map(r => centers(r)).toArray
 
-      if (log.isInfoEnabled) for (r <- activeRuns) log.info("run {} has {} centers", r, activeCenters(r).length)
+      if (log.isInfoEnabled) for (r <- 0 until activeCenters.length) log.info("run {} has {} centers", activeRuns(r), activeCenters(r).length)
 
       // Find the sum and count of points mapping to each center
       val (centroids: Array[((Int, Int), Centroid)], runDistortion: Array[Double]) = getCentroids(data, activeCenters)
