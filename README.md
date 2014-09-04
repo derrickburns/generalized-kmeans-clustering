@@ -1,4 +1,4 @@
-generalized-kmeans-clustering
+Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB K-Means clusterer to support arbitrary distance functions.
