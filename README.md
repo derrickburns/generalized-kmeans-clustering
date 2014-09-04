@@ -29,6 +29,9 @@ The fourth major difference between this implementation and the Spark (1.0.2) im
 uses the K-Means clustering step in the K-Means parallel initialization process.  This is much faster, since all cores
 are utilized versus just one.
 
+The fifth major difference between this implementation and the Spark (1.0.2) implementation is that this clusterer allows 
+one to identify which points are in which clusters efficiently.  In many applications this is necessary. 
+
 
 
 
