@@ -3,7 +3,7 @@ Generalized K-Means Clustering
 
 This project generalizes the Spark MLLIB K-Means clusterer to support arbitrary distance functions.
 
-The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
+The Spark MLLIB (1.0.2) clusterer is good at one thing: clustering data using Euclidean distance as the metric into
 a fixed number of clusters.  However, there are many interesting distance functions other than Euclidean distance.
 It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
 modification to the Spark implementation have made it even more difficult.
