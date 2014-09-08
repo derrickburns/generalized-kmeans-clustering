@@ -1,50 +1,33 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.rincaro.clusterer.base
 
 import com.rincaro.clusterer.util.XORShiftRandom
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkContext, Logging}
-import org.joda.time.DateTime
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
-import scala.util.Random
-import scala.Option
 
 
 /**
- * A re-write of the KMeansPlusPlus initialization method of the Spark Mllib clusterer.
  *
- * @param pointOps the distance function
- * @tparam T  user data type
- * @tparam P  point type
- * @tparam C  center type
+ * The KMeans++ initialization algorithm
+ *
+ * @param pointOps distance function
+ * @tparam T the user point type
+ * @tparam P point type
+ * @tparam C center type
  */
-class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: PointOps[P,C,T]) extends Serializable with Logging {
+class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: PointOps[P, C, T]) extends Serializable with Logging {
 
-  val kmeans = new GeneralizedKMeans[T, P, C](pointOps)
+  /**
+   * We will maintain for each point the distance to its closest cluster center.  Since only one center is added on each
+   * iteration, recomputing the closest cluster center only requires computing the distance to the new cluster center if
+   * that distance is less than the closest cluster center.
+   */
+  type FatPoint = (P, Int, Double, Double)
 
   /**
    * K-means++ on the weighted point set `points`. This first does the K-means++
    * initialization procedure and then rounds of Lloyd's algorithm.
-   *
-   * Unlike the Spark implementation, this one uses the parallel K-means clustering on the initial maxIterations * 2 * k
-   * centers.
    */
 
   def cluster(
@@ -55,68 +38,101 @@ class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: 
                k: Int,
                maxIterations: Int,
                numPartitions: Int): Array[C] = {
-    val centers: Array[C] = getCenters(sc, seed, points, weights, k, numPartitions)
+    val centers = getCenters(sc, seed, points, weights, k, numPartitions, 1)
+    val kmeans = new GeneralizedKMeans[T, P, C](pointOps)
     val (newCenters, _) = kmeans.cluster(sc.parallelize(points.map(pointOps.centerToPoint)), maxIterations, Array(centers))
     newCenters(0)
   }
 
-
   /**
-   * Select at most k samples to be cluster centers by randomly sampling the points, using a probability distribution
-   * computed as the product of the given weights and distance to the closest cluster center.
+   * Select centers in rounds.  On each round, select 'perRound' center, with probability of selection
+   * equal to the as the product of the given weights and distance to the closest cluster center of the previous round.
    *
    * @param sc the Spark context
    * @param seed a random number seed
-   * @param points  the candidate points
-   * @param weights  the weights on the candidate points
-   * @param k  the number of desired centers
+   * @param points  the candidate centers
+   * @param weights  the weights on the candidate centers
+   * @param k  the total number of centers to select
    * @param numPartitions the number of data partitions to use
+   * @param perRound the number of centers to add per round
    * @return   an array of at most k cluster centers
    */
-  def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int, numPartitions: Int): Array[C] = {
+  def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int, numPartitions: Int, perRound: Int): Array[C] = {
     assert(points.length > 0)
     assert(k > 0)
     assert(numPartitions > 0)
+    assert(perRound > 0)
 
     if (points.length < k) log.warn("number of clusters requested {} exceeds number of points {}", k, points.length)
-    val centers = new Array[C](k)
+    val centers = new ArrayBuffer[C](k)
     val rand = new XORShiftRandom(seed)
-    val index = pickWeighted(rand, weights)
-    if (index == -1) throw new IllegalArgumentException("all weights are zero")
-    centers(0) = points(index)
-
-    val allPoints = points.map(pointOps.centerToPoint).zipWithIndex.zip(weights).toArray
-    val localRandom = new XORShiftRandom(rand.nextInt())
-    val indexedPointsWithWeights = sc.parallelize(allPoints, numPartitions).cache()
-
-    var numCenters = 1
-    var sequential = true
-
+    centers += points(pickWeighted(rand, weights))
     log.info("starting kMeansPlusPlus initialization on {} points", points.length)
 
-    for (i <- 1 until k) {
-      log.info("selecting point {} of {}", i, k)
-      val start = new DateTime()
-      val sample = sampleAll(sc, centers, allPoints, sequential, localRandom, indexedPointsWithWeights, numCenters)
-      val end = new DateTime()
-      val duration = end.getMillis - start.getMillis
-      log.info("step took {} milliseconds using {} selection algorithm", duration, if (sequential) "sequential" else "parallel")
+    var more = true
+    var fatPoints = initialFatPoints(points, weights)
+    fatPoints = updateDistances(fatPoints, centers, 0, 1)
 
-      if (sample.length > 0) {
-        val index = sample(0)._1._2
-        centers(numCenters) = points(index)
-        numCenters = numCenters + 1
-        sequential = sequential && duration < 2000
-        log.info("centers({}) = point({})", i, index)
-      } else {
-        log.warn("could not find a new cluster center on iteration {}", k)
+    while (centers.length < k && more) {
+      val chosen = choose(fatPoints, seed ^ (centers.length << 24), rand, perRound)
+      val newCenters = chosen.map {
+        points(_)
       }
+      fatPoints = updateDistances(fatPoints, newCenters, 0, newCenters.length)
+      log.info("chose {} points", chosen.length)
+      for (index <- chosen) {
+        log.info("  center({}) = points({})", centers.length, index)
+        centers += points(index)
+      }
+      more = chosen.nonEmpty
     }
-
-    indexedPointsWithWeights.unpersist()
-    log.info("completed kMeansPlusPlus initialization with {} centers of {} requested", numCenters, k)
-    if (numCenters < k) centers.slice(0, numCenters) else centers
+    val result = centers.take(k)
+    log.info("completed kMeansPlusPlus initialization with {} centers of {} requested", result.length, k)
+    result.toArray
   }
+
+  /**
+   * Choose points
+   *
+   * @param fatPoints points to choose from
+   * @param seed  random number seed
+   * @param rand  random number generator
+   * @param count number of points to choose
+   * @return indices of chosen points
+   */
+  def choose(fatPoints: Array[FatPoint], seed: Int, rand: XORShiftRandom, count: Int) =
+    (0 until count).flatMap { x => pickCenter(rand, fatPoints.iterator)}.map { _._2}
+
+  /**
+   * Create initial fat points with weights given and infinite distance to closest cluster center.
+   * @param points points
+   * @param weights weights of points
+   * @return fat points with given weighs and infinite distance to closest cluster center
+   */
+  def initialFatPoints(points: Array[C], weights: Array[Double]): Array[FatPoint] =
+    points.map(pointOps.centerToPoint).zipWithIndex.zip(weights).map(x => (x._1._1, x._1._2, x._2, 1.0 / 0.0)).toArray
+
+  /**
+   * Update the distance of each point to its closest cluster center, given only the given cluster centers that were
+   * modified.
+   *
+   * @param points set of candidate initial cluster centers
+   * @param center new cluster center
+   * @return  points with their distance to closest to cluster center updated
+   */
+
+  def updateDistances(points: Array[FatPoint], center: Seq[C], from: Int, to: Int): Array[FatPoint] =
+    points.map { p =>
+      var i = from
+      var dist = p._4
+      val point = p._1
+      while (i < to) {
+        val d = pointOps.distance(point, center(i))
+        dist = if( d < dist ) d else dist
+        i = i + 1
+      }
+      (p._1, p._2, p._3, dist)
+    }
 
   /**
    * Pick a point at random, weighing the choices by the given weight vector.  Return -1 if all weights are 0.0
@@ -125,7 +141,7 @@ class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: 
    * @param weights  the weights of the points
    * @return the index of the point chosen
    */
-  private def pickWeighted(rand: Random, weights: Array[Double]): Int = {
+  def pickWeighted(rand: XORShiftRandom, weights: Array[Double]): Int = {
     val r = rand.nextDouble() * weights.sum
     var i = 0
     var curWeight = 0.0
@@ -134,96 +150,28 @@ class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: 
       curWeight += weights(i)
       i += 1
     }
+    if (i == 0) throw new IllegalArgumentException("all weights are zero")
     i - 1
   }
 
   /**
-   * Pick the next center with a probability proportional to cost under current centers multiplied by the weights
    *
-   * @param sc  the Spark context
-   * @param centers  the current centers
-   * @param allPoints   the points
-   * @param sequential  whether to use the sequential algorithm or the parallel algorithm
-   * @param rand  random number generator
-   * @param indexedPointsWithWeights   points with their original indices and weights
-   * @param numCenters  number of centers in the current array of cluster centers
-   * @return
-   */
-  private def sampleAll(sc: SparkContext,
-                        centers: Array[C],
-                        allPoints: Array[((P, Int), Double)],
-                        sequential: Boolean,
-                        rand: XORShiftRandom,
-                        indexedPointsWithWeights: RDD[((P, Int), Double)], numCenters: Int): Array[((P, Int), Double)] = {
-    val seed = rand.nextInt()
-    val pts = if (sequential) allPoints else samplePartitions(sc, centers, seed, indexedPointsWithWeights, numCenters)
-    val (sum, finalIndexedPointsWithWeightRanges) = getRanges(pts.iterator, centers, numCenters, sequential)
-    findNextCenter(rand, sum, finalIndexedPointsWithWeightRanges).toArray
-  }
-
-  /**
-   * Collect at most one point per partition according to the probability distribution of the weights times the distance
-   * from the closest cluster center.
-   *
-   * @param sc  the Spark context
-   * @param centers  an array of cluster centers
-   * @param seed  the seed for a random number generator
-   * @param indexedPointsWithWeights   points with their original indices and weights
-   * @param numCenters  the number of cluster centers in the centers array
-
-   * @return  an array of points and the indices and their composite weights
-   */
-  def samplePartitions(
-                        sc: SparkContext,
-                        centers: Array[C],
-                        seed: Int,
-                        indexedPointsWithWeights: RDD[((P, Int), Double)],
-                        numCenters: Int): Array[((P, Int), Double)] = {
-    val bcActiveCenters = sc.broadcast(centers)
-
-    log.info("using parallel algorithm to select point {}", numCenters)
-    val result = indexedPointsWithWeights.mapPartitionsWithIndex {
-      (partitionIndex, points) => {
-        val bcCenters = bcActiveCenters.value
-        val rand = new XORShiftRandom(seed ^ (numCenters << 16) ^ (partitionIndex + 1))
-        val (sum, x) = getRanges(points, bcCenters, numCenters, scale=true)
-        findNextCenter(rand, sum, x)
-      }
-    }.collect()
-    bcActiveCenters.unpersist()
-    result
-  }
-
-  /**
-   *
-   * Select a (point,index) randomly, with probability weighted by the given weights
+   * Select point randomly with probability weighted by the product of the weight and the distance
    *
    * @param rand random number generator
-   * @param sum  sum of the weights
-   * @param weightedIndexedPoints points with their indices and weight ranges
-
    * @return
    */
-  def findNextCenter(rand: XORShiftRandom, sum: Double, weightedIndexedPoints: Iterator[(Double, Double, (P, Int), Double)]): Iterator[((P, Int), Double)] = {
-    val r = rand.nextDouble() * sum
-    val results = for (w <- weightedIndexedPoints if w._1 <= r && r < w._2) yield (w._3, sum)
-    val result = results.toArray
-    if (result.length == 0) {
-      log.info("no point selected, sum = {}", sum)
+  def pickCenter(rand: XORShiftRandom, fatPoints: Iterator[FatPoint]): Array[FatPoint] = {
+    var cumulative = 0.0
+    val rangeAndIndexedPoints = fatPoints map { z =>
+      val weightedDistance = z._3 * z._4
+      val from = cumulative
+      cumulative = cumulative + weightedDistance
+      (from, cumulative, z._1, z._2)
     }
-    result.toIterator
-  }
-
-  def getRanges(pointAndWeights: Iterator[((P, Int), Double)], centers: Array[C], i: Int, scale: Boolean) = {
-    var cumulativeWeight = 0.0
-    val indexedPointsWithWeightRanges: Iterator[(Double, Double, (P, Int), Double)] = for (z <- pointAndWeights) yield {
-      val weight = if (scale) z._2 * kmeans.pointCost(centers, z._1._1, Some(i)) else z._2
-      val from = cumulativeWeight
-      cumulativeWeight = cumulativeWeight + weight
-      val result = (from, cumulativeWeight, z._1, z._2)
-      result
-    }
-    val a = indexedPointsWithWeightRanges.toArray
-    (cumulativeWeight, a.iterator)
+    val pts = rangeAndIndexedPoints.toArray
+    val total = pts.last._2
+    val r = rand.nextDouble() * total
+    for (w <- pts if w._1 <= r && r < w._2) yield (w._3, w._4, 1.0, total)
   }
 }
