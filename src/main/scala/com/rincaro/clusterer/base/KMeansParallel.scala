@@ -126,8 +126,7 @@ class KMeansParallel[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](k: Int, ru
         val myCenters = centers(r).toArray
         log.info("run {} has {} centers", r, myCenters.length)
         val myWeights = (0 until myCenters.length).map(i => weightMap.getOrElse((r, i), 0.0)).toArray
-        val initialCenters: Array[C] = kmeansPlusPlus.getCenters(data.sparkContext, seed, myCenters, myWeights, if (k > myCenters.length) myCenters.length else k, 30)
-        kmeans.cluster(data.sparkContext.parallelize(initialCenters.map(pointOps.centerToPoint)), 30, Array(initialCenters))._1(0)
+        kmeansPlusPlus.getCenters(data.sparkContext, seed, myCenters, myWeights, if (k > myCenters.length) myCenters.length else k, 30)
     }
     finalCenters.toArray
   }

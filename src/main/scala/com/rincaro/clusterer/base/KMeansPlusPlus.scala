@@ -57,7 +57,7 @@ class KMeansPlusPlus[T, P <: FP[T] : ClassTag, C <: FP[T] : ClassTag](pointOps: 
    * @param perRound the number of centers to add per round
    * @return   an array of at most k cluster centers
    */
-  def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int, numPartitions: Int, perRound: Int): Array[C] = {
+  def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int, numPartitions: Int, perRound: Int=1): Array[C] = {
     assert(points.length > 0)
     assert(k > 0)
     assert(numPartitions > 0)
