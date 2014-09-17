@@ -74,17 +74,14 @@ class GeneralizedKMeans[P <: FP : ClassTag, C <: FP : ClassTag](
     (costs(best), new GeneralizedKMeansModel(pointOps, centers(best)))
   }
 
-  def getCentroids(
-                    data: RDD[P],
-                    activeCenters: Array[Array[C]])
+  def getCentroids(data: RDD[P], activeCenters: Array[Array[C]])
   : (Array[((Int, Int), Centroid)], Array[Double]) = {
     val runDistortion = activeCenters.map(_ => data.sparkContext.accumulator(Zero))
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
-      val centers = bcCenters.map {
-        _.map { _ => new Centroid}
-      }
+      val centers = bcCenters.map { c => Array.fill(c.length)(new Centroid)}
+
       for (
         point <- points;
         (clusters: Array[C], run) <- bcCenters.zipWithIndex
