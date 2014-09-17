@@ -9,6 +9,11 @@ import scala.reflect.ClassTag
 import org.apache.spark.mllib.linalg.Vector
 
 
+/**
+ * This object offers a Java callable interface that this API compatible
+ * with org.apache.spark.mllib.clustering.KMeans.
+ *
+ */
 object KMeans extends Logging {
   // Initialization mode names
   val RANDOM = "random"
