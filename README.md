@@ -22,7 +22,7 @@ points to cluster centers.  These abstractions are easy to understand and easy t
 ### Variable number of clusters
 
 The second major deviation between this implementation and the Spark implementation is that this clusterer may produce
-fewer than k clusters when k are requested.  This may sound like a problem, but your data may not cluster into k clusters!
+fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
 The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
 tracks the number of cluster centers. 
 
