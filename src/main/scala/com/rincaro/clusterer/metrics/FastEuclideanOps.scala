@@ -1,55 +1,57 @@
 package com.rincaro.clusterer.metrics
 
-import com.rincaro.clusterer.base.{FPoint, Centroid, PointOps}
+import com.rincaro.clusterer.base.{Infinity, One, Zero, FPoint, Centroid, PointOps}
 
-class FastEUPoint[T](raw: Array[Double], weight: Double, name: Option[T] = None) extends FPoint(raw, weight, name) {
-  val norm = {
-    if( weight == 0.0 ) 0.0 else {
-      var i = 0
-      val end = raw.length
-      var x = 0.0D
-      while( i < end ) {
-        x = x + raw(i) * raw(i)
-        i = i + 1
-      }
-      x / (weight * weight)
-    }
-  }
+import org.apache.spark.mllib.linalg.{SparseVector, Vector, DenseVector}
+import breeze.linalg.{DenseVector => BDV, SparseVector => BSV, Vector => BV}
+
+
+class FastEUPoint(raw: BV[Double], weight: Double) extends FPoint(raw, weight) {
+  val norm = if (weight == Zero) Zero else raw.dot(raw) / (weight * weight)
 }
 
 /**
- * Euclidean distance measure - expedited by pre-computing vector norms
+ * Euclidean distance measure, expedited by pre-computing vector norms
  */
-class FastEuOps[T] extends PointOps[FastEUPoint[T], FastEUPoint[T], T] with Serializable {
+class FastEuclideanOps extends PointOps[FastEUPoint, FastEUPoint] with Serializable {
+
+  type C = FastEUPoint
+  type P = FastEUPoint
 
   val epsilon = 1e-4
 
-  def distance(p: FastEUPoint[T], c: FastEUPoint[T]): Double = {
-    if( p.weight == 0.0 || c.weight == 0.0 ) {
+  /* compute a lower bound on the euclidean distance distance */
+
+  def distance(p: P, c: C, upperBound: Double): Double = {
+    val d = if (p.weight == Zero || c.weight == Zero) {
       p.norm + c.norm
     } else {
-      var i = 0
-      val end = p.raw.length
-      var x = 0.0D
-      while( i < end ) {
-        x = x + p.raw(i) * c.raw(i)
-        i = i + 1
-      }
-      p.norm + c.norm - 2.0 * x / (p.weight * c.weight)
+      val x = p.raw.dot(c.raw) / (p.weight * c.weight)
+      val b = p.norm + c.norm - 2.0 * x
+      if (b < upperBound) b else upperBound
+    }
+    if (d < Zero) Zero else d
+  }
+
+  def arrayToPoint(raw: Array[Double]) = new P(new BDV[Double](raw), One)
+
+  def vectorToPoint(v: Vector) = {
+    v match {
+      case x: DenseVector => new P(new BDV[Double](x.toArray), 1)
+      case x: SparseVector => new P(new BSV[Double](x.indices, x.values, x.size), 1)
     }
   }
 
-  def userToPoint(raw: Array[Double], index: Option[T]) = new FastEUPoint(raw, 1.0, index)
+  def centerToPoint(v: C) = new P(v.raw, v.weight)
 
-  def centerToPoint(v: FastEUPoint[T]) = new FastEUPoint(v.raw, v.weight, v.index)
+  def centroidToPoint(v: Centroid) = new P(v.raw, v.weight)
 
-  def centroidToPoint(v: Centroid) = new FastEUPoint(v.raw, v.weight, None)
+  def pointToCenter(v: P) = new C(v.raw, v.weight)
 
-  def pointToCenter(v: FastEUPoint[T]) = new FastEUPoint(v.raw, v.weight, v.index)
+  def centroidToCenter(v: Centroid) = new C(v.raw, v.weight)
 
-  def centroidToCenter(v: Centroid) = new FastEUPoint(v.raw, v.weight)
+  def centerToVector(c: C) = new DenseVector(c.inh)
 
-  def centerMoved(v: FastEUPoint[T], w: FastEUPoint[T]): Boolean = distance(v, w) > epsilon * epsilon
+  def centerMoved(v: P, w: C): Boolean = distance(v, w, Infinity) > epsilon * epsilon
 
 }
-
