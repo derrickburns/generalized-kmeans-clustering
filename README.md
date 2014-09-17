@@ -1,7 +1,7 @@
 Generalized K-Means Clustering
 =============================
 
-This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions.  For backward compatibility, the KMeans object provides an interface that is consistent with the 
+This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions.  For backward compatibility, the `KMeans` object provides an interface that is consistent with the 
 object of the same name in the Spark implementation.
 
 ### General Distance Function 
