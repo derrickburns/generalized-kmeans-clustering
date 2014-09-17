@@ -14,8 +14,7 @@ class KMeansParallel[P <: FP : ClassTag, C <: FP : ClassTag](
                                                               pointOps: PointOps[P, C],
                                                               k: Int,
                                                               runs: Int,
-                                                              initializationSteps: Int,
-                                                              numPartitions: Int)
+                                                              initializationSteps: Int)
   extends KMeansInitializer[P, C] with Logging {
 
   /**

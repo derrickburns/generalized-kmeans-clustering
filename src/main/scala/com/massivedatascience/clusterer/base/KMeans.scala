@@ -48,7 +48,7 @@ object KMeans extends Logging {
     val initializer = if (initializationMode == RANDOM) {
       new KMeansRandom(pointOps, k, runs)
     } else {
-      new KMeansParallel(pointOps, k, runs, initializationSteps, 1)
+      new KMeansParallel(pointOps, k, runs, initializationSteps)
     }
     val data = (raw map { vals => pointOps.vectorToPoint(vals)}).cache()
     val centers = initializer.init(data, 0)

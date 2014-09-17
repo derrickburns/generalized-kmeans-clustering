@@ -36,9 +36,8 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
                points: Array[C],
                weights: Array[Double],
                k: Int,
-               maxIterations: Int,
-               numPartitions: Int): Array[C] = {
-    val centers: Array[C] = getCenters(sc, seed, points, weights, k, numPartitions, 1)
+               maxIterations: Int): Array[C] = {
+    val centers: Array[C] = getCenters(sc, seed, points, weights, k, 1)
     val pts = sc.parallelize(points.map(pointOps.centerToPoint))
     new GeneralizedKMeans(pointOps, maxIterations).cluster(pts, Array(centers))._2.centers
   }
@@ -53,15 +52,13 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * @param points  the candidate centers
    * @param weights  the weights on the candidate centers
    * @param k  the total number of centers to select
-   * @param numPartitions the number of data partitions to use
    * @param perRound the number of centers to add per round
    * @return   an array of at most k cluster centers
    */
   def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int,
-                 numPartitions: Int, perRound: Int): Array[C] = {
+                 perRound: Int): Array[C] = {
     assert(points.length > 0)
     assert(k > 0)
-    assert(numPartitions > 0)
     assert(perRound > 0)
 
     if (points.length < k) log.warn("number of clusters requested {} exceeds number of points {}",
