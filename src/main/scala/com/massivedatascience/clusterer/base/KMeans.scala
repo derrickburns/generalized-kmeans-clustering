@@ -42,8 +42,7 @@ object KMeans extends Logging {
     maxIterations: Int = 20,
     runs: Int = 1,
     initializationMode: String = K_MEANS_PARALLEL,
-    initializationSteps: Int = 5,
-    epsilon: Double = 1e-4)(implicit ctag: ClassTag[C], ptag: ClassTag[P])
+    initializationSteps: Int = 5)(implicit ctag: ClassTag[C], ptag: ClassTag[P])
   : (Double, GeneralizedKMeansModel[P, C]) = {
 
     val initializer = if (initializationMode == RANDOM) {
