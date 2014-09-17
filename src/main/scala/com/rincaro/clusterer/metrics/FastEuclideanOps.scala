@@ -30,7 +30,7 @@ class FastEuclideanOps extends PointOps[FastEUPoint, FastEUPoint] with Serializa
       p.norm + c.norm - 2.0 * x
     }
     if (d < upperBound) {
-      if (d < Zero) Zero else upperBound
+      if (d < Zero) Zero else d
     } else {
       upperBound
     }
