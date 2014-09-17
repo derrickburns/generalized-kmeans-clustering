@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.rincaro.clusterer
+package com.massivedatascience.clusterer
 
 import org.apache.spark.mllib.linalg.Vector
 import org.scalatest.exceptions.TestFailedException

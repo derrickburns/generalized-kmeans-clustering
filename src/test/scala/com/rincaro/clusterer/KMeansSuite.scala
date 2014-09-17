@@ -23,8 +23,8 @@ import org.scalatest.FunSuite
 
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
-import com.rincaro.clusterer.TestingUtils._
-import com.rincaro.clusterer.base.KMeans
+import com.massivedatascience.clusterer.TestingUtils._
+import com.massivedatascience.clusterer.base.KMeans
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
 

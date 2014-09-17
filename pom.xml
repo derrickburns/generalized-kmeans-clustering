@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>generalized-spark-kmeans-clustering</artifactId>
-    <groupId>com.rincaro</groupId>
+    <groupId>com.massivedatascience</groupId>
     <name>generalized-spark-kmeans-clustering</name>
     <description>A scalable clusterer that supports a generic distance function.</description>
     <version>1.0-SNAPSHOT</version>
