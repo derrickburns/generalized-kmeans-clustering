@@ -13,7 +13,7 @@ modification to the Spark implementation have made it even more difficult.
 
 This project decouples the metric from the clusterer implementation, allowing the end-user the opportunity
 to define a custom distance function in just a few lines of code.  We demonstrate this by implementing the 
-the Euclidean distance in two very different ways.  
+the squared Euclidean distance (in two ways) and the Kullback-Leibler divergence.  Pull requests offering additional [Bregman divergences](http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
 centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
