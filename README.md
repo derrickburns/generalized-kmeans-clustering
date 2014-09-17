@@ -1,7 +1,8 @@
 Generalized K-Means Clustering
 =============================
 
-This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions.  For backward compatibility, the `KMeans` object provides an interface that is consistent with the 
+This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions (specifically, 
+[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)).  For backward compatibility, the `KMeans` object provides an interface that is consistent with the 
 object of the same name in the Spark implementation.
 
 ### General Distance Function 
@@ -13,7 +14,7 @@ modification to the Spark implementation have made it even more difficult.
 
 This project decouples the metric from the clusterer implementation, allowing the end-user the opportunity
 to define a custom distance function in just a few lines of code.  We demonstrate this by implementing the 
-the squared Euclidean distance (in two ways) and the Kullback-Leibler divergence.  Pull requests offering additional [Bregman divergences](http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
+the squared Euclidean distance (in two ways) and the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence).  Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
 centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
@@ -34,7 +35,7 @@ separates the initialization step (the seeding of the initial clusters) from the
 ### Faster K-Means || implementation  
 
 The fourth major difference between this implementation and the Spark implementation is that this clusterer
-uses the K-Means clustering step in the K-Means || initialization process.  This is much faster, since all cores
+uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.  This is much faster, since all cores
 are utilized versus just one.
 
 Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
