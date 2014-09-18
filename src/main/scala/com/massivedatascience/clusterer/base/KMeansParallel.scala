@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Derrick R. Burns under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * Derrick R. Burns licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.massivedatascience.clusterer.base
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
@@ -125,7 +142,7 @@ class KMeansParallel[P <: FP : ClassTag, C <: FP : ClassTag](
         val weights = (0 until myCenters.length).map(i => weightMap.getOrElse((r, i), Zero)).toArray
         val kx = if (k > myCenters.length) myCenters.length else k
         val sc = data.sparkContext
-        val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, numPartitions, 1)
+        val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
         trackingKmeans.cluster(data.sparkContext.parallelize(myCenters.map(pointOps.centerToPoint)),
           Array(initial))._2.centers
     }
