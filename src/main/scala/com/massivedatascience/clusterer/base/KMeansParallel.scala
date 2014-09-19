@@ -50,7 +50,7 @@ class KMeansParallel[P <: FP : ClassTag, C <: FP : ClassTag](
    * @return
    */
   def init(data: RDD[P], seed: Int): Array[Array[C]] = {
-    log.debug("k-means parallel on {} points" + data.count())
+    logDebug(s"k-means parallel on ${data.count()} points")
 
     // randomly select one center per run, putting each into a separate array buffer
     val sample = data.takeSample(true, runs, seed).toSeq.map(pointOps.pointToCenter)
@@ -74,9 +74,9 @@ class KMeansParallel[P <: FP : ClassTag, C <: FP : ClassTag](
   }
 
   def showCenters(centers: Array[ArrayBuffer[C]], step: Int) {
-    log.info("step {}", step)
+    logInfo(s"step ${step}")
     for (run <- 0 until runs) {
-      log.info("final: run {} has {} centers", run, centers.length)
+      logInfo(s"final: run $run has ${centers.length} centers")
     }
   }
 
@@ -140,7 +140,7 @@ class KMeansParallel[P <: FP : ClassTag, C <: FP : ClassTag](
     val finalCenters = (0 until runs).map {
       r =>
         val myCenters = centers(r).toArray
-        log.info("run {} has {} centers", r, myCenters.length)
+        logInfo(s"run $r has ${myCenters.length} centers")
         val weights = (0 until myCenters.length).map(i => weightMap.getOrElse((r, i), Zero)).toArray
         val kx = if (k > myCenters.length) myCenters.length else k
         val sc = data.sparkContext

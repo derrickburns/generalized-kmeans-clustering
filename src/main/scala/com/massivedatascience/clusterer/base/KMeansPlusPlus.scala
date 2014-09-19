@@ -80,12 +80,12 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
     assert(k > 0)
     assert(perRound > 0)
 
-    if (points.length < k) log.warn("number of clusters requested {} exceeds number of points {}",
-      k, points.length)
+    if (points.length < k) logWarning(s"number of clusters requested $k exceeds number of points" +
+      s" ${points.length}")
     val centers = new ArrayBuffer[C](k)
     val rand = new XORShiftRandom(seed)
     centers += points(pickWeighted(rand, weights))
-    log.info("starting kMeansPlusPlus initialization on {} points", points.length)
+    logInfo(s"starting kMeansPlusPlus initialization on ${points.length}")
 
     var more = true
     var fatPoints = initialFatPoints(points, weights)
@@ -95,16 +95,16 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
       val chosen = choose(fatPoints, seed ^ (centers.length << 24), rand, perRound)
       val newCenters = chosen.map(points(_))
       fatPoints = updateDistances(fatPoints, newCenters)
-      log.info("chose {} points", chosen.length)
+      logInfo("chose ${chosen.length} points")
       for (index <- chosen) {
-        log.info("  center({}) = points({})", centers.length, index)
+        logInfo(s"  center(${centers.length}) = points($index)")
         centers += points(index)
       }
       more = chosen.nonEmpty
     }
     val result = centers.take(k)
-    log.info("completed kMeansPlusPlus initialization with {} centers of {} requested",
-      result.length, k)
+    logInfo(s"completed kMeansPlusPlus initialization with ${result.length} centers of $k" +
+      s" requested")
     result.toArray
   }
 
