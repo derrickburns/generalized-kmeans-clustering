@@ -20,17 +20,41 @@
 package com.massivedatascience.clusterer.base
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.clusterer.util.XORShiftRandom
+import org.apache.spark.mllib.base.FP
+import org.apache.spark.mllib.base.PointOps
+import org.apache.spark.mllib.clustering.KMeansInitializer
 import org.apache.spark.rdd.RDD
+import org.apache.spark.util.random.XORShiftRandom
 
 import scala.reflect.ClassTag
 
 class KMeansRandom[P <: FP : ClassTag, C <: FP : ClassTag](
-                                                            pointOps: PointOps[P, C], k: Int, runs: Int) extends KMeansInitializer[P, C] {
+                                                            pointOps: PointOps[P, C],
+                                                            k: Int,
+                                                            runs: Int)
+  extends KMeansInitializer[P, C] {
 
   def init(data: RDD[P], seed: Int): Array[Array[C]] = {
-    // Sample all the cluster centers in one pass to avoid repeated scans
-    val sample = data.takeSample(true, runs * k, new XORShiftRandom().nextInt()).withFilter(x => x.weight > 0).map(pointOps.pointToCenter).toSeq
-    Array.tabulate(runs)(r => sample.slice(r * k, (r + 1) * k).toArray)
+
+    val filtered = data.filter(_.weight > 0)
+    val count = filtered.count()
+    if (runs * k <= count) {
+      val x = filtered.takeSample(withReplacement = false, runs * k, new XORShiftRandom().nextInt())
+      val centers = x.map(pointOps.pointToCenter).toSeq
+      Array.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k).toArray)
+    } else if (k < count) {
+      (0 to runs).toArray.map { _ => {
+        filtered.takeSample(withReplacement = false, k,
+          new XORShiftRandom().nextInt()).map(pointOps.pointToCenter)
+      }
+      }
+    } else {
+      (0 to runs).toArray.map { _ => filtered.collect().map(pointOps.pointToCenter)}
+    }
   }
+
+
 }
+
 
