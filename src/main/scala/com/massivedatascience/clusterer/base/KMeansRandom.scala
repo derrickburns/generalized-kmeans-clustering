@@ -20,12 +20,7 @@
 package com.massivedatascience.clusterer.base
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
-import com.massivedatascience.clusterer.util.XORShiftRandom
-import org.apache.spark.mllib.base.FP
-import org.apache.spark.mllib.base.PointOps
-import org.apache.spark.mllib.clustering.KMeansInitializer
 import org.apache.spark.rdd.RDD
-import org.apache.spark.util.random.XORShiftRandom
 
 import scala.reflect.ClassTag
 
