@@ -43,7 +43,7 @@ package object base {
    * A mutable point in homogeneous coordinates
    */
   class Centroid extends Serializable {
-    override def toString: String = weight + "," + (raw.toArray mkString ",")
+    override def toString: String = weight + "," + (if (raw != null) (raw.toArray mkString ","))
 
     def isEmpty = weight == Zero
 
