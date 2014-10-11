@@ -90,7 +90,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     // Make sure code runs.
     var model = KMeans.train(data, k = 3, maxIterations = 1)
-    assert(model.clusterCenters.size === 2)
+    assert(model.clusterCenters.size === 2, s"${model.clusterCenters.size} != 2")
   }
 
   test("single cluster with big dataset") {
