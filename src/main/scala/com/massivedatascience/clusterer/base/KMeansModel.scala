@@ -32,7 +32,7 @@ class KMeansModel(pointOps: BregmanPointOps, val centers: Array[BregmanCenter])
 
   val k: Int = clusterCenters.length
 
-  def clusterCenters: Array[Vector] = centers.map { c => pointOps.toInhomogeneous(c)}
+  def clusterCenters: Array[Vector] = centers.map(pointOps.toInhomogeneous)
 
   /** Returns the cluster index that a given point belongs to. */
   def predict(point: Vector): Int =
