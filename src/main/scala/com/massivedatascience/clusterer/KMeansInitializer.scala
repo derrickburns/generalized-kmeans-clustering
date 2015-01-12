@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
+package com.massivedatascience.clusterer
 
-package com.massivedatascience.clusterer.base
+import org.apache.spark.rdd.RDD
 
-trait BasicStats  {
-  def getMovement : Double
-  def getNonEmptyClusters : Int
-  def getEmptyClusters : Int
-  def getRound: Int
+trait KMeansInitializer extends Serializable {
+  def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]]
 }

@@ -15,13 +15,20 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer
+package com.massivedatascience
 
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{SparseVector, Vector}
 import org.apache.spark.rdd.RDD
 
-package object base {
+package object clusterer {
+
+  trait BasicStats  {
+    def getMovement : Double
+    def getNonEmptyClusters : Int
+    def getEmptyClusters : Int
+    def getRound: Int
+  }
 
   val Infinity = Double.MaxValue
   val Unknown = -1.0
@@ -39,6 +46,8 @@ package object base {
     x
   }
 
+
+
   trait WeightedVector extends Serializable {
     def weight: Double
 
@@ -46,9 +55,9 @@ package object base {
 
     def homogeneous: Vector
 
-    def asInhomogeneous = base.asInhomogeneous(homogeneous, weight)
+    def asInhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
 
-    def asHomogeneous = base.asHomogeneous(inhomogeneous, weight)
+    def asHomogeneous = clusterer.asHomogeneous(inhomogeneous, weight)
 
     override def toString: String = weight + "," + homogeneous.toString
   }

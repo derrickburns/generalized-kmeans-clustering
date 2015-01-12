@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer.base
+package com.massivedatascience.clusterer
 
 import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector

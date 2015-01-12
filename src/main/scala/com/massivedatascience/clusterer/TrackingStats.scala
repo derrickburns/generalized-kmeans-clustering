@@ -16,7 +16,7 @@
  */
 
 
-package com.massivedatascience.clusterer.base
+package com.massivedatascience.clusterer
 
 import org.apache.spark.SparkContext._
 import org.apache.spark.{Logging, SparkContext}

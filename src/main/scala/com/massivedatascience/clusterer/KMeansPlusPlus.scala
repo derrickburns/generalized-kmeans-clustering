@@ -18,7 +18,7 @@
  */
 
 
-package com.massivedatascience.clusterer.base
+package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.{Logging, SparkContext}

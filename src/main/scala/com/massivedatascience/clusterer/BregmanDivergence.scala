@@ -16,7 +16,7 @@
  */
 
 
-package com.massivedatascience.clusterer.base
+package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}

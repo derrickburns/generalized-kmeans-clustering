@@ -17,7 +17,7 @@
  * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
-package com.massivedatascience.clusterer.base
+package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.rdd.RDD

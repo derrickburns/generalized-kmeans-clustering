@@ -15,10 +15,13 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer.base
 
+package com.massivedatascience.clusterer
+
+import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 
-trait KMeansInitializer extends Serializable {
-  def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]]
+
+trait MultiKMeansClusterer extends Serializable with Logging {
+  def cluster(data: RDD[BregmanPoint], centers: Array[Array[BregmanCenter]]): (Double, KMeansModel)
 }

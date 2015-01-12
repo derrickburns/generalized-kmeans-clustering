@@ -19,6 +19,8 @@
 
 package com.rincaro.clusterer
 
+import com.massivedatascience.clusterer.KMeans
+
 import scala.util.Random
 
 import org.scalatest.FunSuite
@@ -26,7 +28,6 @@ import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 import com.massivedatascience.clusterer.TestingUtils._
-import com.massivedatascience.clusterer.base.KMeans
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
