@@ -209,7 +209,7 @@ class TrackingKMeans(
         p.assign(if (rand.nextDouble() > rate) unassigned else assignment(round, stats, centers, p))
       }
     }
-    
+
     result.map(updateStats(stats, _))
     bcCenters.unpersist()
     result.persist(StorageLevel.MEMORY_ONLY_SER).count()
@@ -407,23 +407,22 @@ class TrackingKMeans(
     val cp = closestPoints(fatPoints, fatCenters)
 
     val clusterMap = countByCluster(fatPoints)
-    (0 until fatCenters.length).map {
-      i =>
-        val count = clusterMap.getOrElse(i, 0)
-        if (count == 0) {
-          val c = fatCenters(i)
-          val d1 = cp(i)._2
+    Array.tabulate(fatCenters.length) { i =>
+      val count = clusterMap.getOrElse(i, 0)
+      if (count == 0) {
+        val c = fatCenters(i)
+        val d1 = cp(i)._2
 
-          println(s"center: $i = $c")
-          println(s"closest point is ${cp(i)}")
-          val closerCluster = cp(i)._1.cluster
-          val d2 = pointOps.distance(cp(i)._1.location, fatCenters(closerCluster).center)
-          println(s"closest center to that point is $closerCluster =" +
-            s"' ${fatCenters(closerCluster)} at distance $d2")
-          println()
-          assert(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
-            s"to point $d2")
-        }
+        println(s"center: $i = $c")
+        println(s"closest point is ${cp(i)}")
+        val closerCluster = cp(i)._1.cluster
+        val d2 = pointOps.distance(cp(i)._1.location, fatCenters(closerCluster).center)
+        println(s"closest center to that point is $closerCluster =" +
+          s"' ${fatCenters(closerCluster)} at distance $d2")
+        println()
+        assert(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
+          s"to point $d2")
+      }
     }
   }
 }
