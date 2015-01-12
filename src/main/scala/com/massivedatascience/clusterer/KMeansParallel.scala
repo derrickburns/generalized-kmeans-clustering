@@ -98,7 +98,7 @@ class KMeansParallel(
     val sumCosts = data.flatMap { point =>
       val centers = bcCenters.value
       Array.tabulate(runs)(r => (r, point.weight * pointOps.pointCost(centers(r), point)))
-    }.reduceByKey(_ + _).collectAsMap()
+    }.reduceByKeyLocally(_ + _)
 
     // choose points in proportion to ratio of weighted cost to weighted distortion
     data.mapPartitionsWithIndex { (index, points) =>
@@ -129,7 +129,7 @@ class KMeansParallel(
     val weightMap = data.flatMap { point =>
       val centers = bcCenters.value
       Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-    }.reduceByKey(_ + _).collectAsMap()
+    }.reduceByKeyLocally(_ + _)
 
     val centers = bcCenters.value
     val kmeansPlusPlus = new KMeansPlusPlus(pointOps)

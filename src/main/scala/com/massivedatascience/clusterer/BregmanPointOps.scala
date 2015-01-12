@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.BLAS._
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.{DenseVector, Vector}
 
 
 /**
@@ -100,3 +100,20 @@ object GeneralizedIPointOps extends GeneralizedIDivergence with BregmanPointOps
 object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with BregmanPointOps
 
 object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
+
+
+object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
+
+  /**
+   * Smooth the center using Laplacian smoothing.
+   *
+   * @param v
+   * @return
+   */
+  override def toCenter(v: WeightedVector): BregmanCenter = {
+    val h = new DenseVector(v.homogeneous.toArray.map(_+1.0))
+    val w = v.weight + h.size
+    val gradient = gradF(h, w)
+    new BregmanCenter(v.homogeneous, v.weight, dot(h, gradient) / w - F(h, w), gradient)
+  }
+}
