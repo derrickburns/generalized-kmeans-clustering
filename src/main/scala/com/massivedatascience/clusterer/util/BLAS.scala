@@ -23,6 +23,11 @@ import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 import scala.collection.mutable.ArrayBuffer
 
 /**
+ * This code comes from Spark.  Unfortunately, the Spark version is private to the mllib package,
+ * so we copied the code to a separate package.
+ */
+
+/**
  * BLAS routines for MLlib's vectors and matrices.
  */
 object BLAS extends Serializable {
