@@ -13,8 +13,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
 package com.massivedatascience.clusterer.base
@@ -23,21 +21,21 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 
 /**
- * A K-Means clustering implementation that performs multiple K-means clusterings simultaneously, returning the
- * one with the lowest cost.
+ * A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
+ * returning the one with the lowest cost.
  *
  */
 
-class GeneralizedKMeans[P <: FP : ClassTag, C <: FP : ClassTag](
-                                                                 pointOps: PointOps[P, C], maxIterations: Int) extends MultiKMeansClusterer[P, C] {
+class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKMeansClusterer {
 
-  def cluster(data: RDD[P], centers: Array[Array[C]]): (Double, GeneralizedKMeansModel[P, C]) = {
+  def cluster(
+    data: RDD[BregmanPoint],
+    centers: Array[Array[BregmanCenter]]): (Double, KMeansModel) = {
     val runs = centers.length
     val active = Array.fill(runs)(true)
-    val costs = Array.fill(runs)(Zero)
+    val costs = Array.fill(runs)(0.0)
     var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
     var iteration = 0
 
@@ -65,15 +63,15 @@ class GeneralizedKMeans[P <: FP : ClassTag, C <: FP : ClassTag](
 
       for (run <- activeRuns) active(run) = false
 
-      for (((runIndex: Int, clusterIndex: Int), cn: Centroid) <- centroids) {
+      for (((runIndex: Int, clusterIndex: Int), cn: MutableHomogeneousVector) <- centroids) {
         val run = activeRuns(runIndex)
         if (cn.isEmpty) {
           active(run) = true
-          centers(run)(clusterIndex) = null.asInstanceOf[C]
+          centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
         } else {
-          val centroid = pointOps.centroidToPoint(cn)
+          val centroid = pointOps.toPoint(cn)
           active(run) = active(run) || pointOps.centerMoved(centroid, centers(run)(clusterIndex))
-          centers(run)(clusterIndex) = pointOps.pointToCenter(centroid)
+          centers(run)(clusterIndex) = pointOps.toCenter(centroid)
         }
       }
 
@@ -90,33 +88,32 @@ class GeneralizedKMeans[P <: FP : ClassTag, C <: FP : ClassTag](
     }
 
     val best = costs.zipWithIndex.min._2
-    (costs(best), new GeneralizedKMeansModel(pointOps, centers(best)))
+    (costs(best), new KMeansModel(pointOps, centers(best)))
   }
 
-  def getCentroids(data: RDD[P], activeCenters: Array[Array[C]])
-  : (Array[((Int, Int), Centroid)], Array[Double]) = {
-    val runDistortion = activeCenters.map(_ => data.sparkContext.accumulator(Zero))
-    val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
+  def getCentroids(
+    data: RDD[BregmanPoint],
+    activeCenters: Array[Array[BregmanCenter]])
+  : (Array[((Int, Int), MutableHomogeneousVector)], Array[Double]) = {
+
+    val sc = data.sparkContext
+    val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
+    val bcActiveCenters = sc.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
-      val centers = bcCenters.map { c => Array.fill(c.length)(new Centroid)}
-
-      for (
-        point <- points;
-        (clusters: Array[C], run) <- bcCenters.zipWithIndex
-      ) {
+      val centers = bcCenters.map(c => Array.fill(c.length)(new MutableHomogeneousVector))
+      for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
         val (cluster, cost) = pointOps.findClosest(clusters, point)
         runDistortion(run) += cost
         centers(run)(cluster).add(point)
       }
 
-      val contribution =
-        for (
-          (clusters, run) <- bcCenters.zipWithIndex;
-          (contrib, cluster) <- clusters.zipWithIndex
-        ) yield {
-          ((run, cluster), centers(run)(cluster))
-        }
+      val contribution = for (
+        (clusters, run) <- bcCenters.zipWithIndex;
+        (contrib, cluster) <- clusters.zipWithIndex
+      ) yield {
+        ((run, cluster), centers(run)(cluster))
+      }
 
       contribution.iterator
     }.reduceByKey { (x, y) => x.add(y)}.collect()

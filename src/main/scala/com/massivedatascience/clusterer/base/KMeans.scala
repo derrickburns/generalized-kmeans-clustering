@@ -17,58 +17,51 @@
 
 package com.massivedatascience.clusterer.base
 
-import com.massivedatascience.clusterer.metrics.FastEuclideanOps
-import org.apache.spark.rdd.RDD
 import org.apache.spark.Logging
-
-import scala.reflect.ClassTag
-
 import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.rdd.RDD
 
 
-/**
- * This object offers a Java callable interface that this API compatible
- * with org.apache.spark.mllib.clustering.KMeans.
- *
- */
-object KMeans extends Logging {
+object KMeans extends Logging  {
   // Initialization mode names
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
   def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String): KMeansModel =
-    new KMeansModel(doTrain(new FastEuclideanOps)(data, k, maxIterations, runs, mode)._2)
+    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations, runs, mode)._2
 
   /**
    * Trains a k-means model using specified parameters and the default values for unspecified.
    */
   def train(data: RDD[Vector], k: Int, maxIterations: Int): KMeansModel =
-    new KMeansModel(doTrain(new FastEuclideanOps)(data, k, maxIterations)._2)
-
+    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations)._2
 
   /**
    * Trains a k-means model using specified parameters and the default values for unspecified.
    */
-  def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int): KMeansModel =
-    new KMeansModel(doTrain(new FastEuclideanOps)(data, k, maxIterations, runs)._2)
+  def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int): KMeansModel =
+    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations, runs)._2
 
 
-  def doTrain[P <: FP, C <: FP](pointOps: PointOps[P, C])(
+  def doTrain(pointOps: BregmanPointOps)(
     raw: RDD[Vector],
     k: Int = 2,
     maxIterations: Int = 20,
     runs: Int = 1,
     initializationMode: String = K_MEANS_PARALLEL,
-    initializationSteps: Int = 5)(implicit ctag: ClassTag[C], ptag: ClassTag[P])
-  : (Double, GeneralizedKMeansModel[P, C]) = {
+    initializationSteps: Int = 5,
+    epsilon: Double = 1e-4)
+  : (Double, KMeansModel) = {
 
     val initializer = if (initializationMode == RANDOM) {
       new KMeansRandom(pointOps, k, runs)
     } else {
       new KMeansParallel(pointOps, k, runs, initializationSteps)
     }
-    val data = (raw map { vals => pointOps.vectorToPoint(vals)}).cache()
+    val data = (raw map {
+      pointOps.inhomogeneousToPoint(_, 1.0)
+    }).cache()
     val centers = initializer.init(data, 0)
-    new GeneralizedKMeans(pointOps, maxIterations).cluster(data, centers)
+    new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
   }
 }

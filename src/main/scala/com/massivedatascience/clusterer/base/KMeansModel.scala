@@ -19,31 +19,43 @@
 
 package com.massivedatascience.clusterer.base
 
+import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
+/**
+ * A clustering model for K-means. Each point belongs to the cluster with the closest center.
+ */
+class KMeansModel(pointOps: BregmanPointOps, val centers: Array[BregmanCenter])
+  extends Serializable {
 
-class KMeansModel(specific: GeneralizedKMeansModel[_, _]) {
+  val k: Int = clusterCenters.length
 
-  val k: Int = specific.k
+  def clusterCenters: Array[Vector] = centers.map { c => pointOps.toInhomogeneous(c)}
 
   /** Returns the cluster index that a given point belongs to. */
-  def predict(point: Vector): Int = specific.predict(point)
+  def predict(point: Vector): Int =
+    pointOps.findClosestCluster(centers, pointOps.inhomogeneousToPoint(point, 1.0))
+
+
+  def predictClusterAndDistance(point: Vector): (Int, Double) =
+    pointOps.findClosest(centers, pointOps.inhomogeneousToPoint(point, 1.0))
+
+  /** Maps given points to their cluster indices. */
+  def predict(points: RDD[Vector]): RDD[Int] =
+    points.map(p => pointOps.findClosestCluster(centers, pointOps.inhomogeneousToPoint(p, 1.0)))
 
 
   /** Maps given points to their cluster indices. */
-  def predict(points: RDD[Vector]): RDD[Int] = specific.predict(points)
-
-
-  /** Maps given points to their cluster indices. */
-  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] = specific.predict(points)
+  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] =
+    predict(points.rdd).toJavaRDD().asInstanceOf[JavaRDD[java.lang.Integer]]
 
   /**
    * Return the K-means cost (sum of squared distances of points to their nearest center) for this
    * model on the given data.
    */
-  def computeCost(data: RDD[Vector]): Double = specific.computeCost(data)
+  def computeCost(data: RDD[Vector]): Double =
+    data.map(p => pointOps.findClosest(centers, pointOps.inhomogeneousToPoint(p, 1.0))._2).sum()
 
-  def clusterCenters: Array[Vector] = specific.clusterCenters
 }

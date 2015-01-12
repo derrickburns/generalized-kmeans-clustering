@@ -17,24 +17,21 @@
  * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
+
 package com.massivedatascience.clusterer.base
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
-import org.apache.spark.{SparkContext, Logging}
+import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 
 /**
  *
  * The KMeans++ initialization algorithm
  *
- * @param pointOps distance function
- * @tparam P point type
- * @tparam C center type
+ * @param ops distance function
  */
-class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
-                                                              pointOps: PointOps[P, C]) extends Serializable with Logging {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /**
    * We will maintain for each point the distance to its closest cluster center.
@@ -42,7 +39,7 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * only requires computing the distance to the new cluster center if
    * that distance is less than the closest cluster center.
    */
-  case class FatPoint(location: P, index: Int, weight: Double, distance: Double)
+  case class FatPoint(location: BregmanPoint, index: Int, weight: Double, distance: Double)
 
   /**
    * K-means++ on the weighted point set `points`. This first does the K-means++
@@ -50,15 +47,15 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    */
 
   def cluster(
-               sc: SparkContext,
-               seed: Int,
-               points: Array[C],
-               weights: Array[Double],
-               k: Int,
-               maxIterations: Int): Array[C] = {
-    val centers: Array[C] = getCenters(sc, seed, points, weights, k, 1)
-    val pts = sc.parallelize(points.map(pointOps.centerToPoint))
-    new GeneralizedKMeans(pointOps, maxIterations).cluster(pts, Array(centers))._2.centers
+    sc: SparkContext,
+    seed: Int,
+    points: Array[BregmanCenter],
+    weights: Array[Double],
+    k: Int,
+    maxIterations: Int): Array[BregmanCenter] = {
+    val centers: Array[BregmanCenter] = getCenters(sc, seed, points, weights, k, 1)
+    val pts = sc.parallelize(points.map(ops.toPoint))
+    new MultiKMeans(ops, maxIterations).cluster(pts, Array(centers))._2.centers
   }
 
   /**
@@ -74,18 +71,24 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * @param perRound the number of centers to add per round
    * @return   an array of at most k cluster centers
    */
-  def getCenters(sc: SparkContext, seed: Int, points: Array[C], weights: Array[Double], k: Int,
-                 perRound: Int): Array[C] = {
+  def getCenters(
+    sc: SparkContext,
+    seed: Int,
+    points: Array[BregmanCenter],
+    weights: Array[Double],
+    k: Int,
+    perRound: Int): Array[BregmanCenter] = {
+
     assert(points.length > 0)
     assert(k > 0)
     assert(perRound > 0)
 
-    if (points.length < k) logWarning(s"number of clusters requested $k exceeds number of points" +
-      s" ${points.length}")
-    val centers = new ArrayBuffer[C](k)
+    if (points.length < k) log.warn("number of clusters requested {} exceeds number of points {}",
+      k, points.length)
+    val centers = new ArrayBuffer[BregmanCenter](k)
     val rand = new XORShiftRandom(seed)
     centers += points(pickWeighted(rand, weights))
-    logInfo(s"starting kMeansPlusPlus initialization on ${points.length}")
+    logInfo(s"starting kMeansPlusPlus initialization on ${points.length} points")
 
     var more = true
     var fatPoints = initialFatPoints(points, weights)
@@ -95,7 +98,7 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
       val chosen = choose(fatPoints, seed ^ (centers.length << 24), rand, perRound)
       val newCenters = chosen.map(points(_))
       fatPoints = updateDistances(fatPoints, newCenters)
-      logInfo("chose ${chosen.length} points")
+      logInfo(s"chose ${chosen.length} points")
       for (index <- chosen) {
         logInfo(s"  center(${centers.length}) = points($index)")
         centers += points(index)
@@ -103,8 +106,7 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
       more = chosen.nonEmpty
     }
     val result = centers.take(k)
-    logInfo(s"completed kMeansPlusPlus initialization with ${result.length} centers of $k" +
-      s" requested")
+    logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $k requested")
     result.toArray
   }
 
@@ -128,10 +130,8 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * @param weights weights of points
    * @return fat points with given weighs and infinite distance to closest cluster center
    */
-  def initialFatPoints(points: Array[C], weights: Array[Double]): Array[FatPoint] =
-    (0 until points.length).map { i => FatPoint(pointOps.centerToPoint(points(i)), i, weights(i),
-      Infinity)
-    }.toArray
+  def initialFatPoints(points: Array[BregmanCenter], weights: Array[Double]): Array[FatPoint] =
+    Array.tabulate(points.length)(i => FatPoint(ops.toPoint(points(i)), i, weights(i), Infinity))
 
   /**
    * Update the distance of each point to its closest cluster center, given only the given cluster
@@ -142,14 +142,15 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * @return  points with their distance to closest to cluster center updated
    */
 
-  def updateDistances(points: Array[FatPoint], center: Seq[C]): Array[FatPoint] =
+  def updateDistances(points: Array[FatPoint], center: Seq[BregmanCenter]): Array[FatPoint] =
     points.map { p =>
       var i = 0
       val to = center.length
       var dist = p.distance
       val point = p.location
       while (i < to) {
-        dist = pointOps.distance(point, center(i), dist)
+        val d = ops.distance(point, center(i))
+        if (d < dist) dist = d
         i = i + 1
       }
       p.copy(distance = dist)
@@ -184,7 +185,7 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
    * @return
    */
   def pickCenter(rand: XORShiftRandom, fatPoints: Iterator[FatPoint]): Array[FatPoint] = {
-    var cumulative = Zero
+    var cumulative = 0.0
     val rangeAndIndexedPoints = fatPoints map { z =>
       val weightedDistance = z.weight * z.distance
       val from = cumulative
@@ -194,6 +195,6 @@ class KMeansPlusPlus[P <: FP : ClassTag, C <: FP : ClassTag](
     val pts = rangeAndIndexedPoints.toArray
     val total = pts.last._2
     val r = rand.nextDouble() * total
-    for (w <- pts if w._1 <= r && r < w._2) yield FatPoint(w._3, w._4, One, total)
+    for (w <- pts if w._1 <= r && r < w._2) yield FatPoint(w._3, w._4, 1.0, total)
   }
 }

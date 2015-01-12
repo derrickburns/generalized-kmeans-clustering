@@ -17,97 +17,148 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.mllib.linalg.Vector
-import breeze.linalg.{Vector => BV}
+import com.massivedatascience.clusterer.util.BLAS._
+import org.apache.spark.mllib.linalg.{SparseVector, Vector}
 import org.apache.spark.rdd.RDD
 
 package object base {
 
-  val Zero = 0.0
-  val One = 1.0
   val Infinity = Double.MaxValue
   val Unknown = -1.0
+  val empty: Vector = new SparseVector(0, Array[Int](), Array[Double]())
 
-  trait FP extends Serializable {
-    val weight: Double
-    val raw: BV[Double]
+  def asInhomogeneous(homogeneous: Vector, weight: Double) = {
+    val x = homogeneous.copy
+    scal(1.0 / weight, x)
+    x
   }
 
-  class FPoint(val raw: BV[Double], val weight: Double) extends FP {
-    override def toString: String = weight + "," + (raw.toArray mkString ",")
-
-    lazy val inh = (raw :* (1.0 / weight)).toArray
+  def asHomogeneous(inhomogeneous: Vector, weight: Double) = {
+    val x = inhomogeneous.copy
+    scal(weight, x)
+    x
   }
 
-  /**
-   * A mutable point in homogeneous coordinates
-   */
-  class Centroid extends Serializable {
-    override def toString: String = weight + "," + (if (raw != null) (raw.toArray mkString ","))
+  trait WeightedVector extends Serializable {
+    def weight: Double
 
-    def isEmpty = weight == Zero
+    def inhomogeneous: Vector
 
-    var raw: BV[Double] = null
+    def homogeneous: Vector
 
-    var weight: Double = Zero
+    def asInhomogeneous = base.asInhomogeneous(homogeneous, weight)
 
-    def add(p: Centroid): this.type = add(p.raw, p.weight)
+    def asHomogeneous = base.asHomogeneous(inhomogeneous, weight)
 
-    def add(p: FP): this.type = add(p.raw, p.weight)
+    override def toString: String = weight + "," + homogeneous.toString
+  }
 
-    def sub(p: Centroid): this.type = sub(p.raw, p.weight)
+  class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
+    override val inhomogeneous = raw
+    override lazy val homogeneous = asHomogeneous
+  }
 
-    def sub(p: FP): this.type = sub(p.raw, p.weight)
+  class ImmutableHomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
+    override lazy val inhomogeneous: Vector = asInhomogeneous
+    override val homogeneous: Vector = raw
+  }
 
-    def sub(r: BV[Double], w: Double): this.type = {
-      if (r != null) {
-        if (raw == null) {
-          raw = r.toVector :*= -1.0
-          weight = w * -1
-        } else {
-          raw -= r
-          weight = weight - w
-        }
+  class MutableHomogeneousVector extends WeightedVector with Serializable {
+    def homogeneous = raw
+
+    def inhomogeneous = asInhomogeneous
+
+    def isEmpty = weight == 0.0
+
+    private var raw: Vector = empty
+
+    var weight: Double = 0.0
+
+    def add(p: WeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
+
+    def sub(p: WeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
+
+    /**
+     * Add in a vector, preserving the sparsity of the original/first vector.
+     * @param r   vector to add
+     * @param w   weight of vector to add
+     * @param direction whether to add or subtract
+     * @return
+     */
+    private def add(r: Vector, w: Double, direction: Double): this.type = {
+      if (isEmpty) {
+        raw = r.copy
+        scal(0.0, raw)
       }
-      this
-    }
-
-    def add(r: BV[Double], w: Double): this.type = {
-      if (r != null) {
-        if (raw == null) {
-          raw = r.toVector
-          weight = w
-        } else {
-          raw += r
-          weight = weight + w
-        }
-      }
+      axpy(direction, r, raw)
+      weight = weight + w
       this
     }
   }
 
   type TerminationCondition = BasicStats => Boolean
 
-  val DefaultTerminationCondition = { s: BasicStats => s.getRound > 20 || s.getNonEmptyClusters == 0 || s.getMovement / s.getNonEmptyClusters < 1.0E-5}
+  val DefaultTerminationCondition = { s: BasicStats => s.getRound > 20 ||
+    s.getNonEmptyClusters == 0 ||
+    s.getMovement / s.getNonEmptyClusters < 1.0E-5
+  }
 
-  trait PointOps[P <: FP, C <: FP] {
-    def distance(p: P, c: C, upperBound: Double): Double
+  trait PointOps[P <: WeightedVector, C <: WeightedVector] {
+    def distance(p: P, c: C): Double
 
-    def arrayToPoint(v: Array[Double]): P
+    /**
+     * convert a vector in homogeneous coordinates into a point
+     * @param v
+     * @param weight
+     * @return
+     */
+    def homogeneousToPoint(v: Vector, weight: Double): P
 
-    def vectorToPoint(v: Vector): P
 
-    def centerToPoint(v: C): P
+    /**
+     * convert a vector in inhomogeneous coordinates into a point
+     * @param v
+     * @param weight
+     * @return
+     */
+    def inhomogeneousToPoint(v: Vector, weight: Double): P
 
-    def pointToCenter(v: P): C
+    /**
+     * converted a weighted vector to a point
+     * @param v
+     * @return
+     */
+    def toPoint(v: WeightedVector): P
 
-    def centroidToCenter(v: Centroid): C
+    /**
+     * converted a weighted vector to a center
+     * @param v
+     * @return
+     */
+    def toCenter(v: WeightedVector): C
 
-    def centroidToPoint(v: Centroid): P
-
+    /**
+     * determine if a center has moved appreciably
+     * @param v
+     * @param w
+     * @return
+     */
     def centerMoved(v: P, w: C): Boolean
 
-    def centerToVector(c: C): Vector
+
+    /**
+     * convert a weighted point to an inhomogeneous vector
+     * @param c
+     * @return
+     */
+    def toInhomogeneous(c: WeightedVector): Vector = c.inhomogeneous
+
+    /**
+     * convert a weighted point to an homogeneous vector and weight
+     * @param c
+     * @return
+     */
+    def toHomogeneous(c: WeightedVector): (Vector, Double) = (c.homogeneous, c.weight)
 
     /**
      * Return the index of the closest point in `centers` to `point`, as well as its distance.
@@ -118,7 +169,7 @@ package object base {
       var i = 0
       val end = centers.length
       while (i < end && bestDistance > 0.0) {
-        val d = distance(point, centers(i), bestDistance)
+        val d = distance(point, centers(i))
         if (d < bestDistance) {
           bestIndex = i
           bestDistance = d
@@ -128,10 +179,28 @@ package object base {
       (bestIndex, bestDistance)
     }
 
+    def findClosestCluster(centers: Array[C], point: P): Int = {
+      var bestDistance = Infinity
+      var bestIndex = 0
+      var i = 0
+      val end = centers.length
+      while (i < end && bestDistance > 0.0) {
+        val d = distance(point, centers(i))
+        if (d < bestDistance) {
+          bestIndex = i
+          bestDistance = d
+        }
+        i = i + 1
+      }
+      bestIndex
+    }
+
     def distortion(data: RDD[P], centers: Array[C]) = {
-      data.mapPartitions {
-        points => Array(points.foldLeft(Zero) { case (total, p) => total + findClosest(centers, p)._2}).iterator
-      }.reduce(_ + _)
+      data.mapPartitions{  points =>
+        Array(points.foldLeft(0.0) { case (total, p) =>
+          total + findClosest(centers, p)._2
+        }).iterator
+      }.reduce( _ + _ )
     }
 
     /**
@@ -140,5 +209,4 @@ package object base {
     def pointCost(centers: Array[C], point: P): Double = findClosest(centers, point)._2
 
   }
-
 }

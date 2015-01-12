@@ -22,34 +22,26 @@ package com.massivedatascience.clusterer.base
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.rdd.RDD
 
-import scala.reflect.ClassTag
+class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int) extends KMeansInitializer {
 
-class KMeansRandom[P <: FP : ClassTag, C <: FP : ClassTag](
-                                                            pointOps: PointOps[P, C],
-                                                            k: Int,
-                                                            runs: Int)
-  extends KMeansInitializer[P, C] {
-
-  def init(data: RDD[P], seed: Int): Array[Array[C]] = {
-
-    val filtered = data.filter(_.weight > 0)
+  def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]] = {
+    val filtered = data.filter(_.weight > ops.weightThreshold)
     val count = filtered.count()
     if (runs * k <= count) {
-      val x = filtered.takeSample(withReplacement = false, runs * k, new XORShiftRandom().nextInt())
-      val centers = x.map(pointOps.pointToCenter).toSeq
-      Array.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k).toArray)
+      val centers = select(filtered, runs * k)
+      Array.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k))
     } else if (k < count) {
-      (0 to runs).toArray.map { _ => {
-        filtered.takeSample(withReplacement = false, k,
-          new XORShiftRandom().nextInt()).map(pointOps.pointToCenter)
-      }
-      }
+      Array.fill(runs)(select(filtered, k))
     } else {
-      (0 to runs).toArray.map { _ => filtered.collect().map(pointOps.pointToCenter)}
+      val all = filtered.collect().map(ops.toCenter)
+      Array.fill(runs)(all)
     }
   }
 
-
+  protected def select(data: RDD[BregmanPoint], count: Int) = {
+    val toCenter = ops.toCenter _
+    data.takeSample(withReplacement = false, count, new XORShiftRandom().nextInt()).map(toCenter)
+  }
 }
 
 

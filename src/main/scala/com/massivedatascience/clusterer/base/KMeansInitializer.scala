@@ -19,6 +19,6 @@ package com.massivedatascience.clusterer.base
 
 import org.apache.spark.rdd.RDD
 
-trait KMeansInitializer[P <: FP, C <: FP] extends Serializable {
-  def init(data: RDD[P], seed: Int): Array[Array[C]]
+trait KMeansInitializer extends Serializable {
+  def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]]
 }
