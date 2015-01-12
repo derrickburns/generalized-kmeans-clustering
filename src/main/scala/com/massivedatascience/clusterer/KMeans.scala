@@ -27,32 +27,47 @@ object KMeans extends Logging  {
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
+
+  private def getPointOps(name: String): BregmanPointOps = {
+    name match {
+      case "RELATIVE_ENTROPY" => KullbackLeiblerPointOps
+      case "KL_DIVERGENCE" => KullbackLeiblerPointOps
+      case "SMOOTHED_KL_DIVERGENCE" => SmoothedKullbackLeiblerPointOps
+      case "FAST_EUCLIDEAN" => SquaredEuclideanPointOps
+      case "LOGISTIC_LOSS" => LogisticLossPointOps
+      case "GENERALIZED_I_DIVERGENCE" => GeneralizedIPointOps
+      case _ => SquaredEuclideanPointOps
+    }
+  }
+
   def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String): KMeansModel =
-    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations, runs, mode)._2
+    doTrain(data, k, maxIterations, runs, mode)._2
 
   /**
    * Trains a k-means model using specified parameters and the default values for unspecified.
    */
   def train(data: RDD[Vector], k: Int, maxIterations: Int): KMeansModel =
-    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations)._2
+    doTrain(data, k, maxIterations)._2
 
   /**
    * Trains a k-means model using specified parameters and the default values for unspecified.
    */
   def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int): KMeansModel =
-    doTrain(SquaredEuclideanPointOps)(data, k, maxIterations, runs)._2
+    doTrain(data, k, maxIterations, runs)._2
 
 
-  def doTrain(pointOps: BregmanPointOps)(
+  def doTrain(
     raw: RDD[Vector],
     k: Int = 2,
     maxIterations: Int = 20,
     runs: Int = 1,
     initializationMode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    epsilon: Double = 1e-4)
+    epsilon: Double = 1e-4,
+    distanceMetric : String = "FAST_EUCLIDEAN")
   : (Double, KMeansModel) = {
 
+    val pointOps = getPointOps(distanceMetric)
     val initializer = if (initializationMode == RANDOM) {
       new KMeansRandom(pointOps, k, runs)
     } else {
