@@ -23,10 +23,13 @@ import org.apache.spark.rdd.RDD
 
 package object clusterer {
 
-  trait BasicStats  {
-    def getMovement : Double
-    def getNonEmptyClusters : Int
-    def getEmptyClusters : Int
+  trait BasicStats {
+    def getMovement: Double
+
+    def getNonEmptyClusters: Int
+
+    def getEmptyClusters: Int
+
     def getRound: Int
   }
 
@@ -45,7 +48,6 @@ package object clusterer {
     scal(weight, x)
     x
   }
-
 
 
   trait WeightedVector extends Serializable {
@@ -95,127 +97,130 @@ package object clusterer {
      * @return
      */
     private def add(r: Vector, w: Double, direction: Double): this.type = {
-      if (isEmpty) {
-        raw = r.copy
-        scal(0.0, raw)
+      if (w > 0.0) {
+        if (weight == 0.0) {
+          raw = r.copy
+          weight = w
+        } else {
+          axpy(direction, r, raw)
+          weight = weight + w
+        }
       }
-      axpy(direction, r, raw)
-      weight = weight + w
       this
     }
-  }
 
-  type TerminationCondition = BasicStats => Boolean
+    type TerminationCondition = BasicStats => Boolean
 
-  val DefaultTerminationCondition = { s: BasicStats => s.getRound > 20 ||
-    s.getNonEmptyClusters == 0 ||
-    s.getMovement / s.getNonEmptyClusters < 1.0E-5
-  }
+    val DefaultTerminationCondition = { s: BasicStats => s.getRound > 20 ||
+      s.getNonEmptyClusters == 0 ||
+      s.getMovement / s.getNonEmptyClusters < 1.0E-5
+    }
 
-  trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable {
-    def distance(p: P, c: C): Double
+    trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable {
+      def distance(p: P, c: C): Double
 
-    /**
-     * convert a vector in homogeneous coordinates into a point
-     * @param v
-     * @param weight
-     * @return
-     */
-    def homogeneousToPoint(v: Vector, weight: Double): P
-
-
-    /**
-     * convert a vector in inhomogeneous coordinates into a point
-     * @param v
-     * @param weight
-     * @return
-     */
-    def inhomogeneousToPoint(v: Vector, weight: Double): P
-
-    /**
-     * converted a weighted vector to a point
-     * @param v
-     * @return
-     */
-    def toPoint(v: WeightedVector): P
-
-    /**
-     * converted a weighted vector to a center
-     * @param v
-     * @return
-     */
-    def toCenter(v: WeightedVector): C
-
-    /**
-     * determine if a center has moved appreciably
-     * @param v
-     * @param w
-     * @return
-     */
-    def centerMoved(v: P, w: C): Boolean
+      /**
+       * convert a vector in homogeneous coordinates into a point
+       * @param v
+       * @param weight
+       * @return
+       */
+      def homogeneousToPoint(v: Vector, weight: Double): P
 
 
-    /**
-     * convert a weighted point to an inhomogeneous vector
-     * @param c
-     * @return
-     */
-    def toInhomogeneous(c: WeightedVector): Vector = c.inhomogeneous
+      /**
+       * convert a vector in inhomogeneous coordinates into a point
+       * @param v
+       * @param weight
+       * @return
+       */
+      def inhomogeneousToPoint(v: Vector, weight: Double): P
 
-    /**
-     * convert a weighted point to an homogeneous vector and weight
-     * @param c
-     * @return
-     */
-    def toHomogeneous(c: WeightedVector): (Vector, Double) = (c.homogeneous, c.weight)
+      /**
+       * converted a weighted vector to a point
+       * @param v
+       * @return
+       */
+      def toPoint(v: WeightedVector): P
 
-    /**
-     * Return the index of the closest point in `centers` to `point`, as well as its distance.
-     */
-    def findClosest(centers: Array[C], point: P): (Int, Double) = {
-      var bestDistance = Infinity
-      var bestIndex = 0
-      var i = 0
-      val end = centers.length
-      while (i < end && bestDistance > 0.0) {
-        val d = distance(point, centers(i))
-        if (d < bestDistance) {
-          bestIndex = i
-          bestDistance = d
+      /**
+       * converted a weighted vector to a center
+       * @param v
+       * @return
+       */
+      def toCenter(v: WeightedVector): C
+
+      /**
+       * determine if a center has moved appreciably
+       * @param v
+       * @param w
+       * @return
+       */
+      def centerMoved(v: P, w: C): Boolean
+
+
+      /**
+       * convert a weighted point to an inhomogeneous vector
+       * @param c
+       * @return
+       */
+      def toInhomogeneous(c: WeightedVector): Vector = c.inhomogeneous
+
+      /**
+       * convert a weighted point to an homogeneous vector and weight
+       * @param c
+       * @return
+       */
+      def toHomogeneous(c: WeightedVector): (Vector, Double) = (c.homogeneous, c.weight)
+
+      /**
+       * Return the index of the closest point in `centers` to `point`, as well as its distance.
+       */
+      def findClosest(centers: Array[C], point: P): (Int, Double) = {
+        var bestDistance = Infinity
+        var bestIndex = 0
+        var i = 0
+        val end = centers.length
+        while (i < end && bestDistance > 0.0) {
+          val d = distance(point, centers(i))
+          if (d < bestDistance) {
+            bestIndex = i
+            bestDistance = d
+          }
+          i = i + 1
         }
-        i = i + 1
+        (bestIndex, bestDistance)
       }
-      (bestIndex, bestDistance)
-    }
 
-    def findClosestCluster(centers: Array[C], point: P): Int = {
-      var bestDistance = Infinity
-      var bestIndex = 0
-      var i = 0
-      val end = centers.length
-      while (i < end && bestDistance > 0.0) {
-        val d = distance(point, centers(i))
-        if (d < bestDistance) {
-          bestIndex = i
-          bestDistance = d
+      def findClosestCluster(centers: Array[C], point: P): Int = {
+        var bestDistance = Infinity
+        var bestIndex = 0
+        var i = 0
+        val end = centers.length
+        while (i < end && bestDistance > 0.0) {
+          val d = distance(point, centers(i))
+          if (d < bestDistance) {
+            bestIndex = i
+            bestDistance = d
+          }
+          i = i + 1
         }
-        i = i + 1
+        bestIndex
       }
-      bestIndex
-    }
 
-    def distortion(data: RDD[P], centers: Array[C]) = {
-      data.mapPartitions{  points =>
-        Array(points.foldLeft(0.0) { case (total, p) =>
-          total + findClosest(centers, p)._2
-        }).iterator
-      }.reduce( _ + _ )
-    }
+      def distortion(data: RDD[P], centers: Array[C]) = {
+        data.mapPartitions { points =>
+          Array(points.foldLeft(0.0) { case (total, p) =>
+            total + findClosest(centers, p)._2
+          }).iterator
+        }.reduce(_ + _)
+      }
 
-    /**
-     * Return the K-means cost of a given point against the given cluster centers.
-     */
-    def pointCost(centers: Array[C], point: P): Double = findClosest(centers, point)._2
+      /**
+       * Return the K-means cost of a given point against the given cluster centers.
+       */
+      def pointCost(centers: Array[C], point: P): Double = findClosest(centers, point)._2
+
+    }
 
   }
-}
