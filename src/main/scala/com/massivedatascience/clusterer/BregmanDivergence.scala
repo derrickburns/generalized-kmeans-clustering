@@ -98,7 +98,7 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 trait KullbackLeiblerDivergence extends BregmanDivergence {
   val invLog2 = 1.0 / Math.log(2)
 
-  @inline def logBase2(x: Double) = Math.log(x) * invLog2
+  @inline def logBase2(x: Double) = if (x == 0.0) 0.0 else Math.log(x) * invLog2
 
   def F(v: Vector): Double = dot(trans(v, logBase2), v)
 
@@ -121,20 +121,22 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
  * The generalized I-Divergence is defined on points in R**n
  */
 trait GeneralizedIDivergence extends BregmanDivergence {
-  def F(v: Vector): Double = dot(trans(v, Math.log), v)
+  @inline def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
+
+  def F(v: Vector): Double = dot(trans(v, log), v)
 
   def F(v: Vector, w: Double): Double = {
-    val logW = Math.log(w)
-    dot(v, trans(v, Math.log(_) - logW)) / w
+    val logW = log(w)
+    dot(v, trans(v, log(_) - logW)) / w
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + Math.log(_))
+    trans(v, 1.0 + log(_))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - Math.log(w)
-    trans(v, c + Math.log(_))
+    val c = 1.0 - log(w)
+    trans(v, c + log(_))
   }
 }
 
@@ -142,23 +144,25 @@ trait GeneralizedIDivergence extends BregmanDivergence {
  * The Logistic loss divergence is defined on points in R
  */
 trait LogisticLossDivergence extends BregmanDivergence {
+  @inline def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
+
   def F(v: Vector): Double = {
     val x = v(0)
-    x * Math.log(x) + (1.0 - x) * Math.log(1.0 - x)
+    x * log(x) + (1.0 - x) * log(1.0 - x)
   }
 
   def F(v: Vector, w: Double): Double = {
     val x = v(0) / w
-    x * Math.log(x) + (1.0 - x) * Math.log(1.0 - x)
+    x * log(x) + (1.0 - x) * log(1.0 - x)
   }
 
   def gradF(v: Vector): Vector = {
     val x = v(0)
-    Vectors.dense(2.0 + Math.log(x) + Math.log(1.0 - x))
+    Vectors.dense(2.0 + log(x) + log(1.0 - x))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
     val x = v(0) / w
-    Vectors.dense(2.0 + Math.log(x) + Math.log(1.0 - x))
+    Vectors.dense(2.0 + log(x) + log(1.0 - x))
   }
 }

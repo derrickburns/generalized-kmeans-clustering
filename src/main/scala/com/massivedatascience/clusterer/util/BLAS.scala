@@ -137,7 +137,7 @@ object BLAS extends Serializable {
 
     val indices = indexBuffer.toArray
     val values = valueBuffer.toArray
-    val size = indices(indices.length - 1) + 1
+    val size = if (indices.length > 0) indices(indices.length - 1) + 1 else 0
     new SparseVector(size, indices, values)
   }
 

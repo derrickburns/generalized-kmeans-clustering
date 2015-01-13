@@ -95,6 +95,7 @@ class KMeansParallel(
     step: Int,
     bcCenters: Broadcast[Array[Array[BregmanCenter]]]): Array[(Int, BregmanPoint)] = {
     // compute the weighted distortion for each run
+
     val sumCosts = data.flatMap { point =>
       val centers = bcCenters.value
       Array.tabulate(runs)(r => (r, point.weight * pointOps.pointCost(centers(r), point)))
