@@ -29,7 +29,12 @@ import org.apache.spark.mllib.linalg.{DenseVector, Vector}
  * @param f f(point)
  */
 class BregmanPoint(inh: Vector, weight: Double, val f: Double)
-  extends ImmutableInhomogeneousVector(inh, weight)
+  extends ImmutableInhomogeneousVector(inh, weight) {
+  if (f.isNaN()) {
+    assert(!f.isNaN())
+
+  }
+}
 
 /**
  * A cluster center with two additional Double values that are used in distance computation.
