@@ -112,7 +112,7 @@ package object clusterer {
     s.getMovement / s.getNonEmptyClusters < 1.0E-5
   }
 
-  trait PointOps[P <: WeightedVector, C <: WeightedVector] {
+  trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable {
     def distance(p: P, c: C): Double
 
     /**
