@@ -37,6 +37,9 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  */
 
 trait BregmanDivergence {
+  @inline
+  def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
+
   /**
    * F is any convex function.
    *
@@ -98,7 +101,7 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 trait KullbackLeiblerDivergence extends BregmanDivergence {
   val invLog2 = 1.0 / Math.log(2)
 
-  @inline def logBase2(x: Double) = if (x == 0.0) 0.0 else Math.log(x) * invLog2
+  @inline def logBase2(x: Double) = log(x) * invLog2
 
   def F(v: Vector): Double = dot(trans(v, logBase2), v)
 
@@ -121,7 +124,6 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
  * The generalized I-Divergence is defined on points in R**n
  */
 trait GeneralizedIDivergence extends BregmanDivergence {
-  @inline def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -144,7 +146,6 @@ trait GeneralizedIDivergence extends BregmanDivergence {
  * The Logistic loss divergence is defined on points in R
  */
 trait LogisticLossDivergence extends BregmanDivergence {
-  @inline def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
 
   def F(v: Vector): Double = {
     val x = v(0)
