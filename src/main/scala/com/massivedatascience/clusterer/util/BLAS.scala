@@ -304,6 +304,16 @@ object BLAS extends Serializable {
     v
   }
 
+  private def doMax(v: Array[Double]): Double = {
+    var i = 0
+    var maximum = Double.MinValue
+    while (i < v.length) {
+      if (v(i) < maximum) maximum = v(i)
+      i = i + 1
+    }
+    maximum
+  }
+
   def add(v: Vector, c: Double): Vector = {
     v match {
       case x: DenseVector => new DenseVector(doAdd(x.values.clone(), c))
@@ -315,6 +325,13 @@ object BLAS extends Serializable {
     v match {
       case x: DenseVector => doSum(x.values)
       case y: SparseVector => doSum(y.values)
+    }
+  }
+
+  def max(v: Vector): Double = {
+    v match {
+      case x: DenseVector => doMax(x.values)
+      case y: SparseVector => doMax(y.values)
     }
   }
 }
