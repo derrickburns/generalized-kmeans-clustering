@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.BLAS._
-import org.apache.spark.mllib.linalg.{DenseVector, Vector}
+import org.apache.spark.mllib.linalg.Vector
 
 
 /**
@@ -29,12 +29,8 @@ import org.apache.spark.mllib.linalg.{DenseVector, Vector}
  * @param f f(point)
  */
 class BregmanPoint(inh: Vector, weight: Double, val f: Double)
-  extends ImmutableInhomogeneousVector(inh, weight) {
-  if (f.isNaN()) {
-    assert(!f.isNaN())
+  extends ImmutableInhomogeneousVector(inh, weight)
 
-  }
-}
 
 /**
  * A cluster center with two additional Double values that are used in distance computation.
@@ -109,16 +105,25 @@ object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
 object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
 
+  def mergeOp(x: Double, y: Double): Double = if (x > 0.0) 0.0 else y
+
   /**
-   * Smooth the center using Laplacian smoothing.
+   * Smooth the center using a variant Laplacian smoothing.
    *
-   * @param v
+   * The distance is roughly the equivalent of adding 1 to the center for
+   * each dimension of C that is zero in C but that is non-zero in P
+   *
    * @return
    */
-  override def toCenter(v: WeightedVector): BregmanCenter = {
-    val h = new DenseVector(v.homogeneous.toArray.map(_+1.0))
-    val w = v.weight + h.size
-    val gradient = gradF(h, w)
-    new BregmanCenter(v.homogeneous, v.weight, dot(h, gradient) / w - F(h, w), gradient)
+  override def distance(p: BregmanPoint, c: BregmanCenter): Double = {
+    if (c.weight <= weightThreshold) {
+      Infinity
+    } else if (p.weight <= weightThreshold) {
+      0.0
+    } else {
+      val smoothed = merge(c.homogeneous, p.inhomogeneous, mergeOp)
+      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + sum(smoothed)
+      if (d < 0.0) 0.0 else d
+    }
   }
 }

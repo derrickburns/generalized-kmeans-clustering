@@ -93,7 +93,38 @@ object BLAS extends Serializable {
     merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
-  private def merge(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)) = {
+  def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case dx: DenseVector =>
+            merge(dx, dy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"axpy doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            merge(sx, sy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"merge doesn't support x type ${x.getClass}.")
+        }
+    }
+  }
+
+  private def merge(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): DenseVector = {
+    var i = 0
+    val results = new Array[Double](x.size)
+    while (i < x.size) {
+      results(i) = op(x(i), y(i))
+      i = i + 1
+    }
+    new DenseVector(results)
+  }
+
+  private def merge(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)): SparseVector = {
     var i = 0
     var j = 0
     val xIndices = x.indices
@@ -117,7 +148,7 @@ object BLAS extends Serializable {
       if (xIndices(i) < yIndices(j)) {
         append(op(xValues(i), 0.0), xIndices(i))
         i = i + 1
-      } else if (yIndices(j) < xIndices(j)) {
+      } else if (yIndices(j) < xIndices(i)) {
         append(op(0.0, yValues(j)), yIndices(j))
         j = j + 1
       } else {
@@ -304,6 +335,16 @@ object BLAS extends Serializable {
     v
   }
 
+  private def doMax(v: Array[Double]): Double = {
+    var i = 0
+    var maximum = Double.MinValue
+    while (i < v.length) {
+      if (v(i) < maximum) maximum = v(i)
+      i = i + 1
+    }
+    maximum
+  }
+
   def add(v: Vector, c: Double): Vector = {
     v match {
       case x: DenseVector => new DenseVector(doAdd(x.values.clone(), c))
@@ -315,6 +356,13 @@ object BLAS extends Serializable {
     v match {
       case x: DenseVector => doSum(x.values)
       case y: SparseVector => doSum(y.values)
+    }
+  }
+
+  def max(v: Vector): Double = {
+    v match {
+      case x: DenseVector => doMax(x.values)
+      case y: SparseVector => doMax(y.values)
     }
   }
 }

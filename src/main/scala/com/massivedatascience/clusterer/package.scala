@@ -23,10 +23,13 @@ import org.apache.spark.rdd.RDD
 
 package object clusterer {
 
-  trait BasicStats  {
-    def getMovement : Double
-    def getNonEmptyClusters : Int
-    def getEmptyClusters : Int
+  trait BasicStats {
+    def getMovement: Double
+
+    def getNonEmptyClusters: Int
+
+    def getEmptyClusters: Int
+
     def getRound: Int
   }
 
@@ -45,7 +48,6 @@ package object clusterer {
     scal(weight, x)
     x
   }
-
 
 
   trait WeightedVector extends Serializable {
@@ -95,12 +97,15 @@ package object clusterer {
      * @return
      */
     private def add(r: Vector, w: Double, direction: Double): this.type = {
-      if (isEmpty) {
-        raw = r.copy
-        scal(0.0, raw)
+      if (w > 0.0) {
+        if (weight == 0.0) {
+          raw = r.copy
+          weight = w
+        } else {
+          axpy(direction, r, raw)
+          weight = weight + w
+        }
       }
-      axpy(direction, r, raw)
-      weight = weight + w
       this
     }
   }
@@ -205,17 +210,17 @@ package object clusterer {
     }
 
     def distortion(data: RDD[P], centers: Array[C]) = {
-      data.mapPartitions{  points =>
+      data.mapPartitions { points =>
         Array(points.foldLeft(0.0) { case (total, p) =>
           total + findClosest(centers, p)._2
         }).iterator
-      }.reduce( _ + _ )
+      }.reduce(_ + _)
     }
 
     /**
      * Return the K-means cost of a given point against the given cluster centers.
      */
     def pointCost(centers: Array[C], point: P): Double = findClosest(centers, point)._2
-
   }
+
 }

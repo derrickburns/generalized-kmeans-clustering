@@ -49,7 +49,7 @@ class KMeansParallel(
    * @return
    */
   def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]] = {
-    logDebug(s"k-means parallel on ${data.count()} points")
+    logInfo(s"k-means parallel on ${data.count()} points")
 
     // randomly select one center per run, putting each into a separate array buffer
     val sc = data.sparkContext
