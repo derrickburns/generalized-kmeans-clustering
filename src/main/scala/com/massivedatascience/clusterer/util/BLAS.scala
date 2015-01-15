@@ -93,7 +93,38 @@ object BLAS extends Serializable {
     merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
-  private def merge(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)) = {
+  def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case dx: DenseVector =>
+            merge(dx, dy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"axpy doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            merge(sx, sy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"merge doesn't support x type ${x.getClass}.")
+        }
+    }
+  }
+
+  private def merge(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): DenseVector = {
+    var i = 0
+    val results = new Array[Double](x.size)
+    while (i < x.size) {
+      results(i) = op(x(i), y(i))
+      i = i + 1
+    }
+    new DenseVector(results)
+  }
+
+  private def merge(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)): SparseVector = {
     var i = 0
     var j = 0
     val xIndices = x.indices
