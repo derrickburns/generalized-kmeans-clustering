@@ -148,7 +148,7 @@ object BLAS extends Serializable {
       if (xIndices(i) < yIndices(j)) {
         append(op(xValues(i), 0.0), xIndices(i))
         i = i + 1
-      } else if (yIndices(j) < xIndices(j)) {
+      } else if (yIndices(j) < xIndices(i)) {
         append(op(0.0, yValues(j)), yIndices(j))
         j = j + 1
       } else {
