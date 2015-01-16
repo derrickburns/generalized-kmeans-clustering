@@ -114,52 +114,37 @@ object BLAS extends Serializable {
   private def accumulate(x: DenseVector, y: DenseVector): Double = {
     var i = 0
     var result = 0.0
-    @inline val op = (x: Double, y: Double) => if (x > 0.0) 0.0 else y
 
     while (i < x.size) {
-      result = result + op(x(i), y(i))
+      if (x(i) == 0.0) result = result + y(i)
       i = i + 1
     }
     result
   }
 
   private def accumulate(x: SparseVector, y: SparseVector): Double = {
-
-    @inline val op = (x: Double, y: Double) => if (x > 0.0) 0.0 else y
     val xIndices = x.indices
     val yIndices = y.indices
     val xValues = x.values
     val yValues = y.values
+    val xLen = xIndices.length
+    val yLen = yIndices.length
 
     var i = 0
     var j = 0
     var result = 0.0
 
-    @inline
-    def append(value: Double) = {
-      result = result + value
-    }
-
-    while (i < xIndices.length && j < yIndices.length) {
+    while (i < xLen && j < yLen) {
       if (xIndices(i) < yIndices(j)) {
-        append(op(xValues(i), 0.0))
         i = i + 1
       } else if (yIndices(j) < xIndices(i)) {
-        append(op(0.0, yValues(j)))
+        result = result + yValues(j)
         j = j + 1
       } else {
-        append(op(xValues(i), yValues(j)))
+        if (xValues(i) == 0.0) result = result + yValues(j)
         i = i + 1
         j = j + 1
       }
-    }
-    while (i < xIndices.length) {
-      append(op(xValues(i), 0.0))
-      i = i + 1
-    }
-    while (j < yIndices.length) {
-      append(op(0.0, yValues(j)))
-      j = j + 1
     }
     result
   }
