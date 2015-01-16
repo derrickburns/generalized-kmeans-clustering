@@ -89,8 +89,76 @@ object BLAS extends Serializable {
     transformed
   }
 
-  private def axpy(a: Double, x: SparseVector, y: SparseVector): Unit = {
-    merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
+
+  def accumulate(x: Vector, y: Vector, op: ((Double, Double) => Double)): Double = {
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case dx: DenseVector =>
+            accumulate(dx, dy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"axpy doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            accumulate(sx, sy, op)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"merge doesn't support x type ${x.getClass}.")
+        }
+    }
+  }
+
+  private def accumulate(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): Double = {
+    var i = 0
+    var result = 0.0
+
+    while (i < x.size) {
+      result = result + op(x(i), y(i))
+      i = i + 1
+    }
+    result
+  }
+
+  private def accumulate(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)): Double = {
+    val xIndices = x.indices
+    val yIndices = y.indices
+    val xValues = x.values
+    val yValues = y.values
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    @inline
+    def append(value: Double) = {
+      result = result + value
+    }
+
+    while (i < xIndices.length && j < yIndices.length) {
+      if (xIndices(i) < yIndices(j)) {
+        append(op(xValues(i), 0.0))
+        i = i + 1
+      } else if (yIndices(j) < xIndices(i)) {
+        append(op(0.0, yValues(j)))
+        j = j + 1
+      } else {
+        append(op(xValues(i), yValues(j)))
+        i = i + 1
+        j = j + 1
+      }
+    }
+    while (i < xIndices.length) {
+      append(op(xValues(i), 0.0))
+      i = i + 1
+    }
+    while (j < yIndices.length) {
+      append(op(0.0, yValues(j)))
+      j = j + 1
+    }
+    result
   }
 
   def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
@@ -112,6 +180,11 @@ object BLAS extends Serializable {
               s"merge doesn't support x type ${x.getClass}.")
         }
     }
+  }
+
+
+  private def axpy(a: Double, x: SparseVector, y: SparseVector): Unit = {
+    merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
   private def merge(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): DenseVector = {

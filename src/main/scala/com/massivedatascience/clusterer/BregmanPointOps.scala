@@ -121,8 +121,8 @@ object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with Br
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val smoothed = merge(c.homogeneous, p.inhomogeneous, mergeOp)
-      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + sum(smoothed)
+      val smoothed = accumulate(c.homogeneous, p.inhomogeneous, mergeOp)
+      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }
   }
