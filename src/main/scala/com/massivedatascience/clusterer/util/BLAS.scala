@@ -96,6 +96,8 @@ object BLAS extends Serializable {
         x match {
           case dx: DenseVector =>
             accumulate(dx, dy)
+          case sx: DenseVector =>
+            accumulate(sx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"axpy doesn't support x type ${x.getClass}.")
@@ -104,6 +106,8 @@ object BLAS extends Serializable {
         x match {
           case sx: SparseVector =>
             accumulate(sx, sy)
+          case dx: DenseVector =>
+            accumulate(dx, sy)
           case _ =>
             throw new UnsupportedOperationException(
               s"merge doesn't support x type ${x.getClass}.")
@@ -118,6 +122,58 @@ object BLAS extends Serializable {
     while (i < x.size) {
       if (x(i) == 0.0) result = result + y(i)
       i = i + 1
+    }
+    result
+  }
+
+  private def accumulate(x: SparseVector, y: DenseVector): Double = {
+    val xIndices = x.indices
+    val xValues = x.values
+    val yValues = y.values
+    val xLen = xIndices.length
+    val yLen = y.values.length
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    while (i < xLen && j < yLen) {
+      if (xIndices(i) < j) {
+        i = i + 1
+      } else if (j < xIndices(i)) {
+        result = result + yValues(j)
+        j = j + 1
+      } else {
+        if (xValues(i) == 0.0) result = result + yValues(j)
+        i = i + 1
+        j = j + 1
+      }
+    }
+    result
+  }
+
+  private def accumulate(x: DenseVector, y: SparseVector): Double = {
+    val yIndices = y.indices
+    val xValues = x.values
+    val yValues = y.values
+    val xLen = x.values.length
+    val yLen = yIndices.length
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    while (i < xLen && j < yLen) {
+      if (i < yIndices(j)) {
+        i = i + 1
+      } else if (yIndices(j) < i) {
+        result = result + yValues(j)
+        j = j + 1
+      } else {
+        if (xValues(i) == 0.0) result = result + yValues(j)
+        i = i + 1
+        j = j + 1
+      }
     }
     result
   }
