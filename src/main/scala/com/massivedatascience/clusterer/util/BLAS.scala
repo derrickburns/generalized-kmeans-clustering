@@ -149,6 +149,12 @@ object BLAS extends Serializable {
         j = j + 1
       }
     }
+
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
+
+    }
     result
   }
 
@@ -174,6 +180,10 @@ object BLAS extends Serializable {
         i = i + 1
         j = j + 1
       }
+    }
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
     }
     result
   }
@@ -201,6 +211,12 @@ object BLAS extends Serializable {
         i = i + 1
         j = j + 1
       }
+    }
+
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
+
     }
     result
   }
