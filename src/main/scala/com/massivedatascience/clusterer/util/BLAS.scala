@@ -96,7 +96,7 @@ object BLAS extends Serializable {
         x match {
           case dx: DenseVector =>
             accumulate(dx, dy)
-          case sx: DenseVector =>
+          case sx: SparseVector =>
             accumulate(sx, dy)
           case _ =>
             throw new UnsupportedOperationException(
