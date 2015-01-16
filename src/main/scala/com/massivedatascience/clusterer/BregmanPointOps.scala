@@ -104,9 +104,6 @@ object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
 
 object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
-
-  def mergeOp(x: Double, y: Double): Double = if (x > 0.0) 0.0 else y
-
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -121,7 +118,7 @@ object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with Br
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val smoothed = accumulate(c.homogeneous, p.inhomogeneous, mergeOp)
+      val smoothed = accumulate(c.homogeneous, p.inhomogeneous)
       val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }

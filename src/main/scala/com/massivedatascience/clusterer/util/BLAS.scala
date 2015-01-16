@@ -90,12 +90,12 @@ object BLAS extends Serializable {
   }
 
 
-  def accumulate(x: Vector, y: Vector, op: ((Double, Double) => Double)): Double = {
+  def accumulate(x: Vector, y: Vector): Double = {
     y match {
       case dy: DenseVector =>
         x match {
           case dx: DenseVector =>
-            accumulate(dx, dy, op)
+            accumulate(dx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"axpy doesn't support x type ${x.getClass}.")
@@ -103,7 +103,7 @@ object BLAS extends Serializable {
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
-            accumulate(sx, sy, op)
+            accumulate(sx, sy)
           case _ =>
             throw new UnsupportedOperationException(
               s"merge doesn't support x type ${x.getClass}.")
@@ -111,9 +111,10 @@ object BLAS extends Serializable {
     }
   }
 
-  private def accumulate(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): Double = {
+  private def accumulate(x: DenseVector, y: DenseVector): Double = {
     var i = 0
     var result = 0.0
+    @inline val op = (x: Double, y: Double) => if (x > 0.0) 0.0 else y
 
     while (i < x.size) {
       result = result + op(x(i), y(i))
@@ -122,7 +123,9 @@ object BLAS extends Serializable {
     result
   }
 
-  private def accumulate(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)): Double = {
+  private def accumulate(x: SparseVector, y: SparseVector): Double = {
+
+    @inline val op = (x: Double, y: Double) => if (x > 0.0) 0.0 else y
     val xIndices = x.indices
     val yIndices = y.indices
     val xValues = x.values
