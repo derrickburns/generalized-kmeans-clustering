@@ -102,6 +102,9 @@ object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with 
 
 object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
+object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
+
+
 
 /**
  * One of the challenges with Kullback Leibler divergence is that it is only defined for points
