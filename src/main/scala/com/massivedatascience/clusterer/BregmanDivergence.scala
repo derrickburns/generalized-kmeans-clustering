@@ -96,7 +96,7 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 }
 
 /**
- * The Kullback-Leibler divergence is defined on points on a simplex
+ * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
   val invLog2 = 1.0 / Math.log(2)
@@ -167,3 +167,29 @@ trait LogisticLossDivergence extends BregmanDivergence {
     Vectors.dense(2.0 + log(x) + log(1.0 - x))
   }
 }
+
+
+/**
+ * The Itakura-Saito Divergence is defined on points in R+ ** n
+ */
+trait ItakuraSaitoDivergence extends BregmanDivergence {
+
+  def F(v: Vector): Double = {
+    -sum(trans(v, log))
+  }
+
+  def F(v: Vector, w: Double): Double = {
+    log(w) - sum(trans(v, log))
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, x => -1.0 / x)
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = 1.0 - log(w)
+    trans(v, x => -w / x)
+  }
+}
+
+
