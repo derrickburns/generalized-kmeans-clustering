@@ -2,8 +2,9 @@ Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions (specifically, 
-[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)).  For backward compatibility, the `KMeans` object provides an interface that is consistent with the 
-object of the same name in the Spark implementation.
+[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)) and
+[generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
+
 
 ### General Distance Function 
 
@@ -13,8 +14,11 @@ It is far from trivial to adapt the Spark MLLIB clusterer to these other distanc
 modification to the Spark implementation have made it even more difficult.
 
 This project decouples the metric from the clusterer implementation, allowing the end-user the opportunity
-to define a custom distance function in just a few lines of code.  We demonstrate this by implementing the 
-the squared Euclidean distance (in two ways) and the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence).  Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
+to define a custom distance function in just a few lines of code.  We demonstrate this by implementing several
+Bregman divergences, including the squared Euclidean distance (in two ways), the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
+the logistic loss divergence, and the generalized I-divergence. We also implement a distance function
+that is a symmetric version of the Kullback-Leibler divergence that is also a metric.
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
 centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
@@ -30,7 +34,8 @@ tracks the number of cluster centers.
 ### Plugable seeding algorithm
 
 The third major difference between this implementation and the Spark implementation is that this clusterer
-separates the initialization step (the seeding of the initial clusters) from the main clusterer.  This allows for new initialization methods, including initialization methods that have different numbers of initial clusters.
+separates the initialization step (the seeding of the initial clusters) from the main clusterer.
+This allows for new initialization methods, including initialization methods that have different numbers of initial clusters.
 
 ### Faster K-Means || implementation  
 

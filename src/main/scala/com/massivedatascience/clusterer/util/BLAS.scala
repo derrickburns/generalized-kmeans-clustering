@@ -89,8 +89,136 @@ object BLAS extends Serializable {
     transformed
   }
 
-  private def axpy(a: Double, x: SparseVector, y: SparseVector): Unit = {
-    merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
+
+  def accumulate(x: Vector, y: Vector): Double = {
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case dx: DenseVector =>
+            accumulate(dx, dy)
+          case sx: SparseVector =>
+            accumulate(sx, dy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"axpy doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            accumulate(sx, sy)
+          case dx: DenseVector =>
+            accumulate(dx, sy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"merge doesn't support x type ${x.getClass}.")
+        }
+    }
+  }
+
+  private def accumulate(x: DenseVector, y: DenseVector): Double = {
+    var i = 0
+    var result = 0.0
+
+    while (i < x.size) {
+      if (x(i) == 0.0) result = result + y(i)
+      i = i + 1
+    }
+    result
+  }
+
+  private def accumulate(x: SparseVector, y: DenseVector): Double = {
+    val xIndices = x.indices
+    val xValues = x.values
+    val yValues = y.values
+    val xLen = xIndices.length
+    val yLen = y.values.length
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    while (i < xLen && j < yLen) {
+      if (xIndices(i) < j) {
+        i = i + 1
+      } else if (j < xIndices(i)) {
+        result = result + yValues(j)
+        j = j + 1
+      } else {
+        if (xValues(i) == 0.0) result = result + yValues(j)
+        i = i + 1
+        j = j + 1
+      }
+    }
+
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
+
+    }
+    result
+  }
+
+  private def accumulate(x: DenseVector, y: SparseVector): Double = {
+    val yIndices = y.indices
+    val xValues = x.values
+    val yValues = y.values
+    val xLen = x.values.length
+    val yLen = yIndices.length
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    while (i < xLen && j < yLen) {
+      if (i < yIndices(j)) {
+        i = i + 1
+      } else if (yIndices(j) < i) {
+        result = result + yValues(j)
+        j = j + 1
+      } else {
+        if (xValues(i) == 0.0) result = result + yValues(j)
+        i = i + 1
+        j = j + 1
+      }
+    }
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
+    }
+    result
+  }
+
+  private def accumulate(x: SparseVector, y: SparseVector): Double = {
+    val xIndices = x.indices
+    val yIndices = y.indices
+    val xValues = x.values
+    val yValues = y.values
+    val xLen = xIndices.length
+    val yLen = yIndices.length
+
+    var i = 0
+    var j = 0
+    var result = 0.0
+
+    while (i < xLen && j < yLen) {
+      if (xIndices(i) < yIndices(j)) {
+        i = i + 1
+      } else if (yIndices(j) < xIndices(i)) {
+        result = result + yValues(j)
+        j = j + 1
+      } else {
+        if (xValues(i) == 0.0) result = result + yValues(j)
+        i = i + 1
+        j = j + 1
+      }
+    }
+
+    while (j < yLen) {
+      result = result + yValues(j)
+      j = j + 1
+
+    }
+    result
   }
 
   def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
@@ -112,6 +240,11 @@ object BLAS extends Serializable {
               s"merge doesn't support x type ${x.getClass}.")
         }
     }
+  }
+
+
+  private def axpy(a: Double, x: SparseVector, y: SparseVector): Unit = {
+    merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
   private def merge(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): DenseVector = {

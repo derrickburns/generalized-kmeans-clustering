@@ -103,10 +103,19 @@ object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with 
 object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
 
+/**
+ * One of the challenges with Kullback Leibler divergence is that it is only defined for points
+ * on a simplex of R+ ** n.  So, points with zero values in a given dimensions are not allowed.
+ *
+ * To solve this problem, one can smooth the points by adding a constant to each dimension and then
+ * re-normalizing to get points on the simplex in R+ ** n.  This works fine with n is small and
+ * known.  When n is large or unknown, one often uses sparse representations.  However, smoothing
+ * turns a sparse vector into a dense one, and when n is large, this space is prohibitive.
+ *
+ * This implementation approximates smoothing by adding a penalty equal to the sum of the
+ * values of the point along dimensions that are no represented in the cluster center.
+ */
 object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
-
-  def mergeOp(x: Double, y: Double): Double = if (x > 0.0) 0.0 else y
-
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -121,9 +130,32 @@ object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with Br
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val smoothed = merge(c.homogeneous, p.inhomogeneous, mergeOp)
-      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + sum(smoothed)
+      val smoothed = accumulate(c.homogeneous, p.inhomogeneous)
+      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }
+  }
+}
+
+/**
+ * One can create a symmetric version of the Kullback Leibler Divergence that can be clustered
+ * by embedding the input points (which are a simplex in R+ ** n) into a new Euclidean space R ** N.
+ *
+ * See http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf
+ *
+ * This one is
+ *
+ * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+ *
+ * The embedding is simply
+ *
+ * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+ *
+ */
+object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence {
+  override def toPoint(v: WeightedVector): BregmanPoint = {
+    val inh = v.inhomogeneous.copy
+    axpy(1.0, gradF(v.inhomogeneous), inh)
+    new BregmanPoint(v.inhomogeneous, v.weight, F(inh))
   }
 }
