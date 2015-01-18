@@ -137,7 +137,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 }
 
 /**
- * The geenralized Kullback-Leibler divergence is defined on points on R+ ** n
+ * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
  *
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
