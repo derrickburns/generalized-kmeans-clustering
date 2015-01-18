@@ -78,6 +78,12 @@ trait BregmanDivergence {
  * The squared Euclidean distance function is defined on points in R**n
  */
 trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
+
+  /**
+   * Squared L^2 norm
+   * @param v input
+   * @return F(v)
+   */
   def F(v: Vector): Double = dot(v, v)
 
   def F(v: Vector, w: Double) = dot(v, v) / (w * w)
@@ -96,9 +102,10 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 }
 
 /**
- * The Kullback-Leibler divergence is defined on points on a simplex
+ * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
+ *
  */
-trait KullbackLeiblerDivergence extends BregmanDivergence {
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
   val invLog2 = 1.0 / Math.log(2)
 
   @inline def logBase2(x: Double) = log(x) * invLog2
@@ -121,6 +128,32 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 }
 
 /**
+ * The geenralized Kullback-Leibler divergence is defined on points on R+ ** n
+ *
+ */
+trait KullbackLeiblerDivergence extends BregmanDivergence {
+  val invLog2 = 1.0 / Math.log(2)
+
+  @inline def logBase2Minus1(x: Double) = log(x) * invLog2 - 1
+
+  def F(v: Vector): Double = dot(trans(v, logBase2Minus1), v)
+
+  def F(v: Vector, w: Double) = {
+    val logBase2w = logBase2Minus1(w)
+    dot(trans(v, logBase2Minus1(_) - logBase2w), v) / w
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, invLog2 + logBase2Minus1(_))
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = invLog2 - logBase2Minus1(w)
+    trans(v, c + logBase2Minus1(_))
+  }
+}
+
+/**
  * The generalized I-Divergence is defined on points in R**n
  */
 trait GeneralizedIDivergence extends BregmanDivergence {
@@ -133,11 +166,11 @@ trait GeneralizedIDivergence extends BregmanDivergence {
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + log(_))
+    trans(v, log)
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - log(w)
+    val c = -log(w)
     trans(v, c + log(_))
   }
 }
@@ -159,11 +192,42 @@ trait LogisticLossDivergence extends BregmanDivergence {
 
   def gradF(v: Vector): Vector = {
     val x = v(0)
-    Vectors.dense(2.0 + log(x) + log(1.0 - x))
+    Vectors.dense(log(x) - log(1.0 - x))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
     val x = v(0) / w
-    Vectors.dense(2.0 + log(x) + log(1.0 - x))
+    Vectors.dense(log(x) - log(1.0 - x))
   }
 }
+
+
+/**
+ * The Itakura-Saito Divergence is defined on points in R+ ** n
+ */
+trait ItakuraSaitoDivergence extends BregmanDivergence {
+
+  /**
+   * Burg entropy
+   *
+   * @param v input
+   * @return F(v)
+   */
+  def F(v: Vector): Double = {
+    -sum(trans(v, log))
+  }
+
+  def F(v: Vector, w: Double): Double = {
+    log(w) - sum(trans(v, log))
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, x => -1.0 / x)
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = 1.0 - log(w)
+    trans(v, x => -w / x)
+  }
+}
+
