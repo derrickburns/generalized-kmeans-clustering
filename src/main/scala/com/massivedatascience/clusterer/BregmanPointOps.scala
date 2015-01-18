@@ -103,6 +103,18 @@ object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with 
 object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
 
+/**
+ * One of the challenges with Kullback Leibler divergence is that it is only defined for points
+ * on a simplex of R+ ** n.  So, points with zero values in a given dimensions are not allowed.
+ *
+ * To solve this problem, one can smooth the points by adding a constant to each dimension and then
+ * re-normalizing to get points on the simplex in R+ ** n.  This works fine with n is small and
+ * known.  When n is large or unknown, one often uses sparse representations.  However, smoothing
+ * turns a sparse vector into a dense one, and when n is large, this space is prohibitive.
+ *
+ * This implementation approximates smoothing by adding a penalty equal to the sum of the
+ * values of the point along dimensions that are no represented in the cluster center.
+ */
 object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
   /**
    * Smooth the center using a variant Laplacian smoothing.
