@@ -2,7 +2,7 @@ Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions, specifically,
-[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)) and
+[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
 
@@ -15,8 +15,8 @@ modification to the Spark implementation have made it even more difficult.
 
 This project decouples the metric from the clusterer implementation, allowing the end-user the opportunity
 to define a custom distance function in just a few lines of code.  We demonstrate this by implementing several
-Bregman divergences, including the squared Euclidean distance (in two ways), the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
-the logistic loss divergence, and the generalized I-divergence. We also implement a distance function
+Bregman divergences, including the squared Euclidean distance, the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
+the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence. We also implement a distance function
 that is a symmetric version of the Kullback-Leibler divergence that is also a metric.
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
