@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>com.massivedatascience.clusterer</artifactId>
     <groupId>com.massivedatascience</groupId>
-    <name>generalized-spark-kmeans-clustering</name>
+    <name>generalized-kmeans-clustering</name>
     <description>A scalable clusterer that supports a generic distance function.</description>
     <version>1.1-SNAPSHOT</version>
 
@@ -18,6 +18,35 @@
         <PermGen>128m</PermGen>
         <MaxPermGen>512m</MaxPermGen>
     </properties>
+
+
+    <developers>
+        <developer>
+            <id>derrick</id>
+            <name>Derrick Burns</name>
+            <email>derrick.burns@rincaro.com</email>
+            <organization>Massive Data Science, LLC</organization>
+
+            <roles>
+                <role>founder</role>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/derrickburns/${project.name}/issues</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:git@github.com:derrickburns/${project.name}.git</connection>
+        <url>http://github.com/derrickburns/${project.name}.git</url>
+        <developerConnection>scm:git:git@github.com:derrickburns/${project.name}.git
+        </developerConnection>
+    </scm>
 
     <dependencies>
 
