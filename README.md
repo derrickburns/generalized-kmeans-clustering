@@ -1,7 +1,7 @@
 Generalized K-Means Clustering
 =============================
 
-This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions (specifically, 
+This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support arbitrary distance functions, specifically,
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
