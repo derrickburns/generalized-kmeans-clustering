@@ -29,6 +29,8 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * gradientF on homogeneous coordinates is often more efficient that mapping
  * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradientF.
  *
+ * http://mark.reid.name/blog/meet-the-bregman-divergences.html
+ *
  * http://en.wikipedia.org/wiki/Bregman_divergence
  *
  * Bregman Divergences are used in K-Means clustering:
@@ -76,6 +78,8 @@ trait BregmanDivergence {
 
 /**
  * The squared Euclidean distance function is defined on points in R**n
+ *
+ * http://en.wikipedia.org/wiki/Euclidean_distance
  */
 trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
@@ -104,52 +108,58 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 /**
  * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
  *
+ * If we know that the points are on the simplex, then we may simplify the implementation
+ * of KL divergence.  This trait implements that simplification.
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ * KL divergence is usually defined using log base 2.  By using natural log,
+ * we get distances that are related to the usual definition by a constant. Therefore,
+ * the clustering using these distances are identical.
  */
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
-  val invLog2 = 1.0 / Math.log(2)
-
-  @inline def logBase2(x: Double) = log(x) * invLog2
-
-  def F(v: Vector): Double = dot(trans(v, logBase2), v)
+  
+  def F(v: Vector): Double = dot(trans(v, log), v)
 
   def F(v: Vector, w: Double) = {
-    val logBase2w = logBase2(w)
-    dot(trans(v, logBase2(_) - logBase2w), v) / w
+    val logW = log(w)
+    dot(trans(v, log(_) - logW), v) / w
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, invLog2 + logBase2(_))
+    trans(v, 1.0 + log(_))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = invLog2 - logBase2(w)
-    trans(v, c + logBase2(_))
+    val c = 1.0 - log(w)
+    trans(v, c + log(_))
   }
 }
 
 /**
  * The geenralized Kullback-Leibler divergence is defined on points on R+ ** n
  *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
-  val invLog2 = 1.0 / Math.log(2)
 
-  @inline def logBase2Minus1(x: Double) = log(x) * invLog2 - 1
+  @inline def logMinusOne(x: Double) = log(x) - 1
 
-  def F(v: Vector): Double = dot(trans(v, logBase2Minus1), v)
+  def F(v: Vector): Double = dot(trans(v, logMinusOne), v)
 
   def F(v: Vector, w: Double) = {
-    val logBase2w = logBase2Minus1(w)
-    dot(trans(v, logBase2Minus1(_) - logBase2w), v) / w
+    val logWMinusOne = logMinusOne(w)
+    dot(trans(v, logMinusOne(_) - logWMinusOne), v) / w
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, invLog2 + logBase2Minus1(_))
+    trans(v, 1.0 + logMinusOne(_))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = invLog2 - logBase2Minus1(w)
-    trans(v, c + logBase2Minus1(_))
+    val c = 1.0 - logMinusOne(w)
+    trans(v, c + logMinusOne(_))
   }
 }
 
@@ -176,7 +186,11 @@ trait GeneralizedIDivergence extends BregmanDivergence {
 }
 
 /**
- * The Logistic loss divergence is defined on points in R
+ * The Logistic loss divergence is defined on points in (0.0,1.0)
+ *
+ * Logistic loss is the same as KL Divergence with the embedding into R**2
+ *
+ *    x => (x, 1.0 - x)
  */
 trait LogisticLossDivergence extends BregmanDivergence {
 
