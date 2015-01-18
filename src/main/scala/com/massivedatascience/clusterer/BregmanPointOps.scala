@@ -124,3 +124,26 @@ object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with Br
     }
   }
 }
+
+/**
+ * One can create a symmetric version of the Kullback Leibler Divergence that can be clustered
+ * by embedding the input points (which are a simplex in R+ ** n) into a new Euclidean space R ** N.
+ *
+ * See http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf
+ *
+ * This one is
+ *
+ * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+ *
+ * The embedding is simply
+ *
+ * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+ *
+ */
+object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence {
+  override def toPoint(v: WeightedVector): BregmanPoint = {
+    val inh = v.inhomogeneous.copy
+    axpy(1.0, gradF(v.inhomogeneous), inh)
+    new BregmanPoint(v.inhomogeneous, v.weight, F(inh))
+  }
+}
