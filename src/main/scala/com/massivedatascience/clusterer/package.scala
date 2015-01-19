@@ -18,20 +18,11 @@
 package com.massivedatascience
 
 import com.massivedatascience.clusterer.util.BLAS._
-import org.apache.spark.mllib.linalg.{SparseVector, Vector}
+import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 import org.apache.spark.rdd.RDD
 
 package object clusterer {
 
-  trait BasicStats {
-    def getMovement: Double
-
-    def getNonEmptyClusters: Int
-
-    def getEmptyClusters: Int
-
-    def getRound: Int
-  }
 
   val Infinity = Double.MaxValue
   val Unknown = -1.0
@@ -49,8 +40,21 @@ package object clusterer {
     x
   }
 
+  implicit class RichVector(v: Vector) {
+    def iterator: VectorIterator = {
+      v match {
+        case s: SparseVector => new SparseVectorIterator(s)
+        case d: DenseVector => new DenseVectorIterator(d)
+      }
+    }
 
-
+    def negativeIterator: VectorIterator = {
+      v match {
+        case s: SparseVector => new NegativeSparseVectorIterator(s)
+        case d: DenseVector => new NegativeDenseVectorIterator(d)
+      }
+    }
+  }
 
   type TerminationCondition = BasicStats => Boolean
 
