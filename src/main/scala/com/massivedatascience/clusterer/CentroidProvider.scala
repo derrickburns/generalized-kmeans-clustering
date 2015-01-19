@@ -3,10 +3,18 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.Vector
 
+/**
+ * K-Means algorithms need a method to construct a median or centroid value.
+ * This trait abstracts the type of the object used to create the centroid.
+ */
 trait CentroidProvider {
   def getCentroid: MutableWeightedVector
 }
 
+/**
+ * This centroid eagerly adds new vectors to the centroid. Consequently,
+ * it is appropriate for use with dense vectors.
+ */
 class EagerCentroid extends MutableWeightedVector with Serializable {
   def homogeneous = raw
 
