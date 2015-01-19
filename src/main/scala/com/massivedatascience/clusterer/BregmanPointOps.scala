@@ -104,8 +104,6 @@ object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
 object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
 
-
-
 /**
  * One of the challenges with Kullback Leibler divergence is that it is only defined for points
  * on a simplex of R+ ** n.  So, points with zero values in a given dimensions are not allowed.
@@ -118,7 +116,7 @@ object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
  * This implementation approximates smoothing by adding a penalty equal to the sum of the
  * values of the point along dimensions that are no represented in the cluster center.
  */
-object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
+object DenseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -137,6 +135,29 @@ object SmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with Br
       val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }
+  }
+}
+
+object DiscreteKullbackLeiblerPointOps
+  extends DiscreteKullbackLeiblerDivergence with BregmanPointOps
+
+
+/**
+ * This version of Kullback-Leibler assumes that points are vectors in N ** n and the
+ * weights equal the sum of the frequencies.  Because KL divergence is not defined on
+ * zero values, we smooth the centers by adding the unit vector to each center.
+ *
+ * This version does NOT work on SparseVectors, instead use
+ * SmoothedKullbackLeiblerPointOps
+ */
+object DiscreteSparseSmoothedKullbackLeiblerPointOps
+  extends DiscreteKullbackLeiblerDivergence with BregmanPointOps {
+
+  override def toCenter(v: WeightedVector): BregmanCenter = {
+    val h = add(v.homogeneous, 1.0)
+    val w = v.weight + v.homogeneous.size
+    val df = gradF(h, w)
+    new BregmanCenter(v.homogeneous, w, dot(h, df) / w - F(h, w), df)
   }
 }
 
