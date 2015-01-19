@@ -33,8 +33,8 @@ object KMeans extends Logging  {
       case "RELATIVE_ENTROPY" => KullbackLeiblerPointOps
       case "KL_DIVERGENCE" => KullbackLeiblerPointOps
       case "DISCRETE_KL_DIVERGENCE" => DiscreteKullbackLeiblerPointOps
-      case "DENSE_SMOOTHED_KL_DIVERGENCE" => DenseSmoothedKullbackLeiblerPointOps
-      case "DISCRETE_SPARSE_SMOOTHED_KL_DIVERGENCE" => DiscreteSparseSmoothedKullbackLeiblerPointOps
+      case "SPARSE_SMOOTHED_KL_DIVERGENCE" => SparseSmoothedKullbackLeiblerPointOps
+      case "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE" => DiscreteDenseSmoothedKullbackLeiblerPointOps
       case "FAST_EUCLIDEAN" => SquaredEuclideanPointOps
       case "LOGISTIC_LOSS" => LogisticLossPointOps
       case "GENERALIZED_I_DIVERGENCE" => GeneralizedIPointOps
