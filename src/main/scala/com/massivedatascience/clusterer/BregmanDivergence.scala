@@ -26,8 +26,8 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  *
  * For convenience, we also provide methods for evaluating F and its 
  * gradient when points are provided using homogeneous coordinates.  Evaluating F and
- * gradientF on homogeneous coordinates is often more efficient that mapping
- * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradientF.
+ * gradient of F on homogeneous coordinates is often more efficient that mapping
+ * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
  *
  * http://mark.reid.name/blog/meet-the-bregman-divergences.html
  *
@@ -240,6 +240,3 @@ trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
     trans(v, x => -w / x)
   }
 }
-
-
-
