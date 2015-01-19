@@ -38,9 +38,6 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
-
-
-
 trait BregmanDivergence {
 
   /**
@@ -114,11 +111,8 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
- * KL divergence is usually defined using log base 2.  By using natural log,
- * we get distances that are related to the usual definition by a constant. Therefore,
- * the clustering using these distances are identical.
  */
-trait KullbackLeiblerSimplexDivergence extends BregmanDivergence with HasLog {
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence  { this : HasLog =>
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -143,9 +137,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence with HasLog {
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerDivergence extends BregmanDivergence {
-
-  this : HasLog =>
+trait KullbackLeiblerDivergence extends BregmanDivergence { this : HasLog =>
 
   @inline def logMinusOne(x: Double) = log(x) - 1
 
@@ -169,8 +161,7 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-trait GeneralizedIDivergence extends BregmanDivergence   {
-  this : HasLog =>
+trait GeneralizedIDivergence extends BregmanDivergence { this : HasLog =>
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -221,11 +212,10 @@ trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
 
 /**
  * The Itakura-Saito Divergence is defined on points in R+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-trait ItakuraSaitoDivergence extends BregmanDivergence {
-
-  this : HasLog =>
-
+trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
 
   /**
    * Burg entropy
