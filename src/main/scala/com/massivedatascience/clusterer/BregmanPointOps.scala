@@ -95,14 +95,15 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] {
 }
 
 object KullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps
+  with GeneralLog
 
-object GeneralizedIPointOps extends GeneralizedIDivergence with BregmanPointOps
+object GeneralizedIPointOps extends GeneralizedIDivergence with BregmanPointOps with GeneralLog
 
 object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with BregmanPointOps
 
 object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
 
-object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
+object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps with GeneralLog
 
 /**
  * One of the challenges with Kullback Leibler divergence is that it is only defined for points
@@ -116,7 +117,8 @@ object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
  * This implementation approximates smoothing by adding a penalty equal to the sum of the
  * values of the point along dimensions that are no represented in the cluster center.
  */
-object SparseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
+object SparseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps
+with GeneralLog {
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -139,7 +141,7 @@ object SparseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence w
 }
 
 object DiscreteKullbackLeiblerPointOps
-  extends DiscreteKullbackLeiblerDivergence with BregmanPointOps
+  extends KullbackLeiblerDivergence with BregmanPointOps with DiscreteLog
 
 
 /**
@@ -151,7 +153,7 @@ object DiscreteKullbackLeiblerPointOps
  * SmoothedKullbackLeiblerPointOps
  */
 object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  extends DiscreteKullbackLeiblerDivergence with BregmanPointOps {
+  extends KullbackLeiblerDivergence with BregmanPointOps with DiscreteLog {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
@@ -176,7 +178,9 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
  *
  */
-object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence {
+object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence
+  with GeneralLog {
+
   override def toPoint(v: WeightedVector): BregmanPoint = {
     val inh = v.inhomogeneous.copy
     axpy(1.0, gradF(v.inhomogeneous), inh)

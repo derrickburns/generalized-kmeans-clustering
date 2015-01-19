@@ -26,8 +26,8 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  *
  * For convenience, we also provide methods for evaluating F and its 
  * gradient when points are provided using homogeneous coordinates.  Evaluating F and
- * gradientF on homogeneous coordinates is often more efficient that mapping
- * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradientF.
+ * gradient of F on homogeneous coordinates is often more efficient that mapping
+ * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
  *
  * http://mark.reid.name/blog/meet-the-bregman-divergences.html
  *
@@ -39,8 +39,6 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  */
 
 trait BregmanDivergence {
-  @inline
-  def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
 
   /**
    * F is any convex function.
@@ -84,7 +82,7 @@ trait BregmanDivergence {
 trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
-   * Squared L^2 norm
+   * Squared L ** 2 norm
    * @param v input
    * @return F(v)
    */
@@ -113,11 +111,8 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
- * KL divergence is usually defined using log base 2.  By using natural log,
- * we get distances that are related to the usual definition by a constant. Therefore,
- * the clustering using these distances are identical.
  */
-trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence  { this : HasLog =>
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -142,7 +137,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerDivergence extends BregmanDivergence {
+trait KullbackLeiblerDivergence extends BregmanDivergence { this : HasLog =>
 
   @inline def logMinusOne(x: Double) = log(x) - 1
 
@@ -166,7 +161,7 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-trait GeneralizedIDivergence extends BregmanDivergence {
+trait GeneralizedIDivergence extends BregmanDivergence { this : HasLog =>
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -192,7 +187,7 @@ trait GeneralizedIDivergence extends BregmanDivergence {
  *
  *    x => (x, 1.0 - x)
  */
-trait LogisticLossDivergence extends BregmanDivergence {
+trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
 
   def F(v: Vector): Double = {
     val x = v(0)
@@ -217,8 +212,10 @@ trait LogisticLossDivergence extends BregmanDivergence {
 
 /**
  * The Itakura-Saito Divergence is defined on points in R+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-trait ItakuraSaitoDivergence extends BregmanDivergence {
+trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
 
   /**
    * Burg entropy
@@ -243,51 +240,3 @@ trait ItakuraSaitoDivergence extends BregmanDivergence {
     trans(v, x => -w / x)
   }
 }
-
-trait LogTable {
-  private val logTable = new Array[Double](4096 * 1000)
-
-  def fastLog(d: Double): Double = {
-    if (d == 0.0 || d == 1.0) {
-      0.0
-    } else {
-      if (d < logTable.length ) {
-        val x = d.toInt
-        if (x.toDouble == d) {
-          if (logTable(x) == 0.0) logTable(x) = Math.log(x)
-          logTable(x)
-        } else {
-          Math.log(d)
-        }
-      }  else {
-        Math.log(d)
-      }
-    }
-  }
-}
-
-/**
- * An implementation of Kullback Leibler divergence that is most efficient
- * for vectors whose values are integral frequencies and whose weight is the
- * sum of those frequencies.
- */
-trait DiscreteKullbackLeiblerDivergence extends BregmanDivergence with LogTable {
-
-  def F(v: Vector): Double = dot(trans(v, fastLog), v)
-
-  def F(v: Vector, w: Double) = {
-    val logW = fastLog(w)
-    dot(trans(v, fastLog(_) - logW), v) / w
-  }
-
-  def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + fastLog(_))
-  }
-
-  def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - fastLog(w)
-    trans(v, c + fastLog(_))
-  }
-}
-
-
