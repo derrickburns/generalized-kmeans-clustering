@@ -116,7 +116,7 @@ object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps
  * This implementation approximates smoothing by adding a penalty equal to the sum of the
  * values of the point along dimensions that are no represented in the cluster center.
  */
-object DenseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
+object SparseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps {
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -150,7 +150,7 @@ object DiscreteKullbackLeiblerPointOps
  * This version does NOT work on SparseVectors, instead use
  * SmoothedKullbackLeiblerPointOps
  */
-object DiscreteSparseSmoothedKullbackLeiblerPointOps
+object DiscreteDenseSmoothedKullbackLeiblerPointOps
   extends DiscreteKullbackLeiblerDivergence with BregmanPointOps {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
