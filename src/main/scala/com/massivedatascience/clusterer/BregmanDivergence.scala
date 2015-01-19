@@ -118,7 +118,7 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
  * the clustering using these distances are identical.
  */
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
-  
+
   def F(v: Vector): Double = dot(trans(v, log), v)
 
   def F(v: Vector, w: Double) = {
@@ -215,7 +215,6 @@ trait LogisticLossDivergence extends BregmanDivergence {
   }
 }
 
-
 /**
  * The Itakura-Saito Divergence is defined on points in R+ ** n
  */
@@ -244,4 +243,51 @@ trait ItakuraSaitoDivergence extends BregmanDivergence {
     trans(v, x => -w / x)
   }
 }
+
+trait LogTable {
+  private val logTable = new Array[Double](4096 * 1000)
+
+  def fastLog(d: Double): Double = {
+    if (d == 0.0 || d == 1.0) {
+      0.0
+    } else {
+      if (d < logTable.length ) {
+        val x = d.toInt
+        if (x.toDouble == d) {
+          if (logTable(x) == 0.0) logTable(x) = Math.log(x)
+          logTable(x)
+        } else {
+          Math.log(d)
+        }
+      }  else {
+        Math.log(d)
+      }
+    }
+  }
+}
+
+/**
+ * An implementation of Kullback Leibler divergence that is most efficient
+ * for vectors whose values are integral frequencies and whose weight is the
+ * sum of those frequencies.
+ */
+trait DiscreteKullbackLeiblerDivergence extends BregmanDivergence with LogTable {
+
+  def F(v: Vector): Double = dot(trans(v, fastLog), v)
+
+  def F(v: Vector, w: Double) = {
+    val logW = fastLog(w)
+    dot(trans(v, fastLog(_) - logW), v) / w
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, 1.0 + fastLog(_))
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = 1.0 - fastLog(w)
+    trans(v, c + fastLog(_))
+  }
+}
+
 
