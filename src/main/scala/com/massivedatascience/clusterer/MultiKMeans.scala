@@ -66,7 +66,7 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
 
       for (run <- activeRuns) active(run) = false
 
-      for (((runIndex: Int, clusterIndex: Int), cn: MutableHomogeneousVector) <- centroids) {
+      for (((runIndex: Int, clusterIndex: Int), cn: EagerCentroid) <- centroids) {
         val run = activeRuns(runIndex)
         if (cn.isEmpty) {
           active(run) = true
@@ -97,14 +97,14 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
   def getCentroids(
     data: RDD[BregmanPoint],
     activeCenters: Array[Array[BregmanCenter]])
-  : (Array[((Int, Int), MutableHomogeneousVector)], Array[Double]) = {
+  : (Array[((Int, Int), MutableWeightedVector)], Array[Double]) = {
 
     val sc = data.sparkContext
     val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
     val bcActiveCenters = sc.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
-      val centers = bcCenters.map(c => Array.fill(c.length)(new MutableHomogeneousVector))
+      val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
       for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
         val (cluster, cost) = pointOps.findClosest(clusters, point)
         runDistortion(run) += cost

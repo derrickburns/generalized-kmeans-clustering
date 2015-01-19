@@ -207,7 +207,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @return
    */
   def getUpdatedFatCenters(
-    centroidChanges: Array[(Int, MutableHomogeneousVector)],
+    centroidChanges: Array[(Int, MutableWeightedVector)],
     fatCenters: Array[FatCenter]): Array[FatCenter] =
   
     centroidChanges.map {
@@ -237,10 +237,10 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    */
   def getCentroidChanges(
     bcCenters: Broadcast[Array[FatCenter]],
-    points: RDD[FatPoint]): Array[(Int, MutableHomogeneousVector)] =
+    points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
   
     points.mapPartitions { changes =>
-      val centers = bcCenters.value.map { _ => new MutableHomogeneousVector}
+      val centers = bcCenters.value.map { _ => ops.getCentroid}
 
       for (p <- changes if p.assignment(0).index != p.assignment(1).index) {
         if (p.assignment(p.current).index != -1) {
