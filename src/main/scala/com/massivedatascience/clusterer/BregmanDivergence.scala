@@ -38,9 +38,39 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
-trait BregmanDivergence {
+
+trait HasLog {
+  def log(x: Double) : Double
+}
+
+trait GeneralLog extends HasLog {
   @inline
-  def log(x: Double) = if (x == 0.0) 0.0 else Math.log(x)
+  override def log(x: Double) : Double = if (x == 0.0) 0.0 else Math.log(x)
+}
+
+trait DiscreteLog extends  HasLog {
+  private val logTable = new Array[Double](4096 * 1000)
+
+  override def log(d: Double): Double = {
+    if (d == 0.0 || d == 1.0) {
+      0.0
+    } else {
+      if (d < logTable.length ) {
+        val x = d.toInt
+        if (x.toDouble == d) {
+          if (logTable(x) == 0.0) logTable(x) = Math.log(x)
+          logTable(x)
+        } else {
+          Math.log(d)
+        }
+      }  else {
+        Math.log(d)
+      }
+    }
+  }
+}
+
+trait BregmanDivergence {
 
   /**
    * F is any convex function.
@@ -84,7 +114,7 @@ trait BregmanDivergence {
 trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
-   * Squared L^2 norm
+   * Squared L ** 2 norm
    * @param v input
    * @return F(v)
    */
@@ -117,7 +147,7 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
  * we get distances that are related to the usual definition by a constant. Therefore,
  * the clustering using these distances are identical.
  */
-trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence with HasLog {
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -144,6 +174,8 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
 
+  this : HasLog =>
+
   @inline def logMinusOne(x: Double) = log(x) - 1
 
   def F(v: Vector): Double = dot(trans(v, logMinusOne), v)
@@ -166,7 +198,8 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-trait GeneralizedIDivergence extends BregmanDivergence {
+trait GeneralizedIDivergence extends BregmanDivergence   {
+  this : HasLog =>
 
   def F(v: Vector): Double = dot(trans(v, log), v)
 
@@ -192,7 +225,7 @@ trait GeneralizedIDivergence extends BregmanDivergence {
  *
  *    x => (x, 1.0 - x)
  */
-trait LogisticLossDivergence extends BregmanDivergence {
+trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
 
   def F(v: Vector): Double = {
     val x = v(0)
@@ -220,6 +253,9 @@ trait LogisticLossDivergence extends BregmanDivergence {
  */
 trait ItakuraSaitoDivergence extends BregmanDivergence {
 
+  this : HasLog =>
+
+
   /**
    * Burg entropy
    *
@@ -244,50 +280,5 @@ trait ItakuraSaitoDivergence extends BregmanDivergence {
   }
 }
 
-trait LogTable {
-  private val logTable = new Array[Double](4096 * 1000)
-
-  def fastLog(d: Double): Double = {
-    if (d == 0.0 || d == 1.0) {
-      0.0
-    } else {
-      if (d < logTable.length ) {
-        val x = d.toInt
-        if (x.toDouble == d) {
-          if (logTable(x) == 0.0) logTable(x) = Math.log(x)
-          logTable(x)
-        } else {
-          Math.log(d)
-        }
-      }  else {
-        Math.log(d)
-      }
-    }
-  }
-}
-
-/**
- * An implementation of Kullback Leibler divergence that is most efficient
- * for vectors whose values are integral frequencies and whose weight is the
- * sum of those frequencies.
- */
-trait DiscreteKullbackLeiblerDivergence extends BregmanDivergence with LogTable {
-
-  def F(v: Vector): Double = dot(trans(v, fastLog), v)
-
-  def F(v: Vector, w: Double) = {
-    val logW = fastLog(w)
-    dot(trans(v, fastLog(_) - logW), v) / w
-  }
-
-  def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + fastLog(_))
-  }
-
-  def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - fastLog(w)
-    trans(v, c + fastLog(_))
-  }
-}
 
 
