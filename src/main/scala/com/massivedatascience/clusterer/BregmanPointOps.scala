@@ -94,29 +94,45 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Centroi
     distance(v, w) > distanceThreshold
 }
 
-
+/**
+ * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
+ */
 object KullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with GeneralLog
   with DenseCentroidProvider
 
+/**
+ * Implements Generalized I-divergence on dense vectors in R+ ** n
+ */
 object GeneralizedIPointOps
   extends GeneralizedIDivergence
   with BregmanPointOps
   with GeneralLog
   with DenseCentroidProvider
 
+/**
+ * Implements Squared Euclidean distance on dense vectors in R+ ** n
+ */
 object SquaredEuclideanPointOps
   extends SquaredEuclideanDistanceDivergence
   with BregmanPointOps
   with DenseCentroidProvider
+
+/**
+ * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
+ */
 
 object LogisticLossPointOps
   extends LogisticLossDivergence
   with BregmanPointOps
   with DenseCentroidProvider
 
+
+/**
+ * Implements Itakura-Saito divergence on dense vectors in R+ ** n
+ */
 object ItakuraSaitoPointOps
   extends ItakuraSaitoDivergence
   with BregmanPointOps
@@ -124,11 +140,10 @@ object ItakuraSaitoPointOps
   with DenseCentroidProvider
 
 /**
- * One of the challenges with Kullback Leibler divergence is that it is only defined for points
- * on a simplex of R+ ** n.  So, points with zero values in a given dimensions are not allowed.
+ * Implements Kullback-Leibler divergence for sparse points in R+ ** n
  *
- * To solve this problem, one can smooth the points by adding a constant to each dimension and then
- * re-normalizing to get points on the simplex in R+ ** n.  This works fine with n is small and
+ * We smooth the points by adding a constant to each dimension and then re-normalize the points
+ * to get points on the simplex in R+ ** n.  This works fine with n is small and
  * known.  When n is large or unknown, one often uses sparse representations.  However, smoothing
  * turns a sparse vector into a dense one, and when n is large, this space is prohibitive.
  *
@@ -165,8 +180,8 @@ object SparseKullbackLeiblerPointOps
 }
 
 /**
- * Implements the Kullback-Leibler divergence under the assumption that the points are
- * dense vectors from from N+ ** n, i.e. the entries in each vector are positive integers.
+ * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
+ * i.e. the entries in each vector are positive integers.
  */
 object DiscreteKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
@@ -176,12 +191,12 @@ object DiscreteKullbackLeiblerPointOps
 
 
 /**
- * This version of Kullback-Leibler assumes that points are vectors in N ** n and the
- * weights equal the sum of the frequencies.  Because KL divergence is not defined on
+ * Implements Kullback-Leibler divergence with dense points in N ** n and whose
+ * weights equal the sum of the frequencies.
+ *
+ * Because KL divergence is not defined on
  * zero values, we smooth the centers by adding the unit vector to each center.
  *
- * This version does NOT work on SparseVectors, instead use
- * SmoothedKullbackLeiblerPointOps
  */
 object DiscreteDenseSmoothedKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
