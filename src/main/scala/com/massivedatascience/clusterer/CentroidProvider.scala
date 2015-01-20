@@ -112,8 +112,8 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   var weight: Double = 0.0
 
   def homogeneous = {
-    var total: Double = 0.0
     while (iterators.nonEmpty) {
+      var total: Double = 0.0
       val minIndex = iterators.minBy(_.index).index
       for (x <- iterators) {
         if (x.index == minIndex) {
