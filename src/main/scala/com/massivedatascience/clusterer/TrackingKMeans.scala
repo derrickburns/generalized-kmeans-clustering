@@ -261,25 +261,25 @@ class TrackingKMeans(
    * @param points points and their assignments
    * @return changes to cluster position
    */
-  def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableHomogeneousVector)] = {
+  def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] = {
     points.mapPartitions {
       pts =>
-        val buffer = new ArrayBuffer[(Int, MutableHomogeneousVector)]
+        val buffer = new ArrayBuffer[(Int, MutableWeightedVector)]
         for (p <- pts if p.wasReassigned) {
           assert(p.isAssigned)
           if (p.isAssigned)
-            buffer.append((p.cluster, new MutableHomogeneousVector().add(p.location)))
+            buffer.append((p.cluster, pointOps.getCentroid.add(p.location)))
 
           if (p.wasPreviouslyAssigned)
-            buffer.append((p.previousCluster, new MutableHomogeneousVector().sub(p.location)))
+            buffer.append((p.previousCluster, new EagerCentroid().sub(p.location)))
         }
         buffer.toIterator
     }.reduceByKey { (l, r) => l.add(r)}.collect()
   }
 
-  def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableHomogeneousVector)] =
+  def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, EagerCentroid)] =
     points.filter(_.isAssigned).map { p =>
-      (p.cluster, new MutableHomogeneousVector().add(p.location))
+      (p.cluster, new EagerCentroid().add(p.location))
     }.reduceByKey(_.add(_)).collect()
 
   /**

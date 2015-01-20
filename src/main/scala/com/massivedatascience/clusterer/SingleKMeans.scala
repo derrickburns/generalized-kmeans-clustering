@@ -41,8 +41,8 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     while (active && iteration < maxIterations) {
       logInfo(s"iteration $iteration number of centers ${activeCenters.length}")
       active = false
-      for ((clusterIndex: Int, cn: MutableHomogeneousVector) <- getCentroids(data, activeCenters)) {
-        if (cn.isEmpty) {
+      for ((clusterIndex: Int, cn: MutableWeightedVector) <- getCentroids(data, activeCenters)) {
+        if (cn.weight == 0.0) {
           active = true
           activeCenters(clusterIndex) = null.asInstanceOf[BregmanCenter]
         } else {
@@ -59,12 +59,12 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
 
   def getCentroids(
     data: RDD[BregmanPoint],
-    activeCenters: Array[BregmanCenter]): Array[(Int, MutableHomogeneousVector)] = {
+    activeCenters: Array[BregmanCenter]): Array[(Int, MutableWeightedVector)] = {
 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
-      val centers = Array.fill(bcCenters.length)(new MutableHomogeneousVector)
+      val centers = Array.fill(bcCenters.length)(pointOps.getCentroid)
       for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
       centers.zipWithIndex.map(_.swap).iterator
     }.reduceByKey { case (x, y) => x.add(y)}.collect()

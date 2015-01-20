@@ -44,7 +44,7 @@ class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gr
   extends ImmutableHomogeneousVector(h, weight)
 
 
-trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] {
+trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with CentroidProvider {
   this: BregmanDivergence =>
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
@@ -94,16 +94,34 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] {
     distance(v, w) > distanceThreshold
 }
 
-object KullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps
+
+object KullbackLeiblerPointOps
+  extends KullbackLeiblerDivergence
+  with BregmanPointOps
   with GeneralLog
+  with DenseCentroidProvider
 
-object GeneralizedIPointOps extends GeneralizedIDivergence with BregmanPointOps with GeneralLog
+object GeneralizedIPointOps
+  extends GeneralizedIDivergence
+  with BregmanPointOps
+  with GeneralLog
+  with DenseCentroidProvider
 
-object SquaredEuclideanPointOps extends SquaredEuclideanDistanceDivergence with BregmanPointOps
+object SquaredEuclideanPointOps
+  extends SquaredEuclideanDistanceDivergence
+  with BregmanPointOps
+  with DenseCentroidProvider
 
-object LogisticLossPointOps extends LogisticLossDivergence with BregmanPointOps
+object LogisticLossPointOps
+  extends LogisticLossDivergence
+  with BregmanPointOps
+  with DenseCentroidProvider
 
-object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps with GeneralLog
+object ItakuraSaitoPointOps
+  extends ItakuraSaitoDivergence
+  with BregmanPointOps
+  with GeneralLog
+  with DenseCentroidProvider
 
 /**
  * One of the challenges with Kullback Leibler divergence is that it is only defined for points
@@ -117,8 +135,11 @@ object ItakuraSaitoPointOps extends ItakuraSaitoDivergence with BregmanPointOps 
  * This implementation approximates smoothing by adding a penalty equal to the sum of the
  * values of the point along dimensions that are no represented in the cluster center.
  */
-object SparseSmoothedKullbackLeiblerPointOps extends KullbackLeiblerDivergence with BregmanPointOps
-with GeneralLog {
+object SparseSmoothedKullbackLeiblerPointOps
+  extends KullbackLeiblerDivergence
+  with BregmanPointOps
+  with GeneralLog
+  with SparseCentroidProvider {
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -141,7 +162,10 @@ with GeneralLog {
 }
 
 object DiscreteKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence with BregmanPointOps with DiscreteLog
+  extends KullbackLeiblerDivergence
+  with BregmanPointOps
+  with DiscreteLog
+  with DenseCentroidProvider
 
 
 /**
@@ -153,7 +177,10 @@ object DiscreteKullbackLeiblerPointOps
  * SmoothedKullbackLeiblerPointOps
  */
 object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence with BregmanPointOps with DiscreteLog {
+  extends KullbackLeiblerDivergence
+  with BregmanPointOps
+  with DiscreteLog
+  with DenseCentroidProvider {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
@@ -179,7 +206,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  *
  */
 object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence
-  with GeneralLog {
+with GeneralLog with DenseCentroidProvider {
 
   override def toPoint(v: WeightedVector): BregmanPoint = {
     val inh = v.inhomogeneous.copy
