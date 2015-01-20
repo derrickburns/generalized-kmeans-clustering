@@ -90,14 +90,22 @@ object BLAS extends Serializable {
   }
 
 
-  def accumulate(x: Vector, y: Vector): Double = {
+  /**
+   * Computes the sum of the values in y whose values are
+   * zero in x.
+   *
+   * @param x
+   * @param y
+   * @return
+   */
+  def sumMissing(x: Vector, y: Vector): Double = {
     y match {
       case dy: DenseVector =>
         x match {
           case dx: DenseVector =>
-            accumulate(dx, dy)
+            sumMissing(dx, dy)
           case sx: SparseVector =>
-            accumulate(sx, dy)
+            sumMissing(sx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"axpy doesn't support x type ${x.getClass}.")
@@ -105,7 +113,7 @@ object BLAS extends Serializable {
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
-            accumulate(sx, sy)
+            sumMissing(sx, sy)
           case dx: DenseVector =>
             accumulate(dx, sy)
           case _ =>
@@ -115,7 +123,7 @@ object BLAS extends Serializable {
     }
   }
 
-  private def accumulate(x: DenseVector, y: DenseVector): Double = {
+  private def sumMissing(x: DenseVector, y: DenseVector): Double = {
     var i = 0
     var result = 0.0
 
@@ -126,7 +134,7 @@ object BLAS extends Serializable {
     result
   }
 
-  private def accumulate(x: SparseVector, y: DenseVector): Double = {
+  private def sumMissing(x: SparseVector, y: DenseVector): Double = {
     val xIndices = x.indices
     val xValues = x.values
     val yValues = y.values
@@ -188,7 +196,7 @@ object BLAS extends Serializable {
     result
   }
 
-  private def accumulate(x: SparseVector, y: SparseVector): Double = {
+  private def sumMissing(x: SparseVector, y: SparseVector): Double = {
     val xIndices = x.indices
     val yIndices = y.indices
     val xValues = x.values

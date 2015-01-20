@@ -134,8 +134,11 @@ object ItakuraSaitoPointOps
  *
  * This implementation approximates smoothing by adding a penalty equal to the sum of the
  * values of the point along dimensions that are no represented in the cluster center.
+ *
+ * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
+ * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
-object SparseSmoothedKullbackLeiblerPointOps
+object SparseKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with GeneralLog
@@ -154,7 +157,7 @@ object SparseSmoothedKullbackLeiblerPointOps
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val smoothed = accumulate(c.homogeneous, p.inhomogeneous)
+      val smoothed = sumMissing(c.homogeneous, p.inhomogeneous)
       val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }
