@@ -164,6 +164,10 @@ object SparseKullbackLeiblerPointOps
   }
 }
 
+/**
+ * Implements the Kullback-Leibler divergence under the assumption that the points are
+ * dense vectors from from N+ ** n, i.e. the entries in each vector are positive integers.
+ */
 object DiscreteKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
