@@ -18,7 +18,7 @@ trait VectorIterator {
 class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
   var i = 0
 
-  def hasNext: Boolean = i < underlying.indices.length
+  def hasNext: Boolean = i < underlying.values.length
 
   def forward(): Unit = i = i + 1
 
@@ -39,26 +39,10 @@ class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
   def value: Double = underlying.values(i)
 }
 
-class NegativeSparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
-  var i = 0
-
-  def hasNext: Boolean = i < underlying.indices.length
-
-  def forward(): Unit = i = i + 1
-
-  def index: Int = underlying.indices(i)
-
-  def value: Double = -underlying.values(i)
+class NegativeSparseVectorIterator(underlying: SparseVector) extends SparseVectorIterator(underlying) {
+  override def value: Double = -underlying.values(i)
 }
 
-class NegativeDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
-  var i = 0
-
-  def hasNext: Boolean = i < underlying.values.length
-
-  def forward(): Unit = i = i + 1
-
-  def index: Int = i
-
-  def value: Double = -underlying.values(i)
+class NegativeDenseVectorIterator(underlying: DenseVector) extends DenseVectorIterator(underlying) {
+  override def value: Double = -underlying.values(i)
 }
