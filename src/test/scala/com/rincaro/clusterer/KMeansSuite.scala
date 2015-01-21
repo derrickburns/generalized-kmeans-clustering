@@ -20,6 +20,7 @@
 package com.rincaro.clusterer
 
 import com.massivedatascience.clusterer.KMeans
+import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
@@ -144,6 +145,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
         Vectors.sparse(n, Seq((0, 1.0), (1, 4.0), (2, 6.0 - x)))
       )
     }, 4)
+
 
     data.persist()
 

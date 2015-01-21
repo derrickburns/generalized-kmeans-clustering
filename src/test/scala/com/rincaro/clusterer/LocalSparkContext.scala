@@ -31,6 +31,7 @@ trait LocalSparkContext extends BeforeAndAfterAll { self: Suite =>
     val conf = new SparkConf()
       .setMaster("local")
       .setAppName("test")
+      .set("com.massivedatascience.clusterer.preview", "true")
     sc = new SparkContext(conf)
     super.beforeAll()
   }

@@ -48,7 +48,7 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
         raw = r.copy
         weight = w
       } else {
-        axpy(direction, r, raw)
+        raw = axpy(direction, r, raw)
         weight = weight + w
       }
     }
