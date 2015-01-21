@@ -42,8 +42,6 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
     var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
     var iteration = 0
 
-    preview(data, "MultiKMeans cluster input")
-
     /*
      * Execute iterations of Lloyd's algorithm until all runs have converged.
      */
@@ -60,7 +58,7 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
       }
 
       // Find the sum and count of points mapping to each center
-      val (centroids, runDistortion) = getCentroids(data, activeCenters)
+      val (centroids: Array[((Int, Int), MutableWeightedVector)], runDistortion) = getCentroids(data, activeCenters)
 
       if (log.isInfoEnabled) {
         for (run <- activeRuns) logInfo(s"run $run distortion ${runDistortion(run)}")
@@ -68,9 +66,9 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
 
       for (run <- activeRuns) active(run) = false
 
-      for (((runIndex: Int, clusterIndex: Int), cn: EagerCentroid) <- centroids) {
+      for (((runIndex: Int, clusterIndex: Int), cn: MutableWeightedVector) <- centroids) {
         val run = activeRuns(runIndex)
-        if (cn.isEmpty) {
+        if (cn.weight == 0.0) {
           active(run) = true
           centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
         } else {
@@ -104,7 +102,7 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
     val sc = data.sparkContext
     val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
     val bcActiveCenters = sc.broadcast(activeCenters)
-    val result = data.mapPartitions { points =>
+    val result: Array[((Int, Int), MutableWeightedVector)] = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
       val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
       for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {

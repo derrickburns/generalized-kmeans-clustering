@@ -20,7 +20,6 @@
 package com.rincaro.clusterer
 
 import com.massivedatascience.clusterer.KMeans
-import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
@@ -32,7 +31,8 @@ import com.massivedatascience.clusterer.TestingUtils._
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
-  import org.apache.spark.mllib.clustering.KMeans.{K_MEANS_PARALLEL, RANDOM}
+  import com.massivedatascience.clusterer.KMeans._
+
 
   test("single cluster") {
     val data = sc.parallelize(Array(
@@ -173,6 +173,29 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric=RELATIVE_ENTROPY)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = EUCLIDEAN)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = SPARSE_EUCLIDEAN)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = DISCRETE_KL)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = SPARSE_SMOOTHED_KL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     data.unpersist()
