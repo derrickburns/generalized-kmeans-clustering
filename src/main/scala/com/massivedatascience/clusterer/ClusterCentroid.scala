@@ -155,14 +155,18 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   def isEmpty = weight == 0.0
 
   def add(p: WeightedVector): this.type = {
-    pq += p.homogeneous.iterator
-    weight = weight + p.weight
+    if (p.weight > 0.0) {
+      pq += p.homogeneous.iterator
+      weight = weight + p.weight
+    }
     this
   }
 
   def sub(p: WeightedVector): this.type = {
-    pq += p.homogeneous.negativeIterator
-    weight = weight + p.weight
+    if (p.weight > 0.0) {
+      pq += p.homogeneous.negativeIterator
+      weight = weight + p.weight
+    }
     this
   }
 }
