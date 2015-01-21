@@ -42,6 +42,8 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
     var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
     var iteration = 0
 
+    preview(data, "MultiKMeans cluster input")
+
     /*
      * Execute iterations of Lloyd's algorithm until all runs have converged.
      */

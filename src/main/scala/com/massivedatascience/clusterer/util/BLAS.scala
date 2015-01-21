@@ -45,7 +45,7 @@ object BLAS extends Serializable {
   /**
    * y += a * x
    */
-  def axpy(a: Double, x: Vector, y: Vector): Unit = {
+  def axpy(a: Double, x: Vector, y: Vector): Vector = {
     y match {
       case dy: DenseVector =>
         x match {
@@ -251,7 +251,7 @@ object BLAS extends Serializable {
   }
 
 
-  private def axpy(a: Double, x: SparseVector, y: SparseVector): Unit = {
+  private def axpy(a: Double, x: SparseVector, y: SparseVector): Vector = {
     merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
@@ -309,22 +309,22 @@ object BLAS extends Serializable {
 
     val indices = indexBuffer.toArray
     val values = valueBuffer.toArray
-    val size = if (indices.length > 0) indices(indices.length - 1) + 1 else 0
-    new SparseVector(size, indices, values)
+    new SparseVector(x.size, indices, values)
   }
 
   /**
    * y += a * x
    */
-  private def axpy(a: Double, x: DenseVector, y: DenseVector): Unit = {
+  private def axpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
     val n = x.size
     f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
+    y
   }
 
   /**
    * y += a * x
    */
-  private def axpy(a: Double, x: SparseVector, y: DenseVector): Unit = {
+  private def axpy(a: Double, x: SparseVector, y: DenseVector): Vector = {
     val nnz = x.indices.size
     if (a == 1.0) {
       var k = 0
@@ -339,13 +339,17 @@ object BLAS extends Serializable {
         k += 1
       }
     }
+    y
   }
 
   /**
    * dot(x, y)
    */
   def dot(x: Vector, y: Vector): Double = {
-    require(x.size == y.size)
+    if( x.size != y.size ) {
+      require(x.size == y.size)
+
+    }
     (x, y) match {
       case (dx: DenseVector, dy: DenseVector) =>
         dot(dx, dy)
