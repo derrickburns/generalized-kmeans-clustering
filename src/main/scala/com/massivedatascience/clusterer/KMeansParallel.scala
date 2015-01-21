@@ -77,7 +77,7 @@ class KMeansParallel(
     // and new centers are computed in each iteration.
     var step = 0
     while (step < initializationSteps) {
-      val bcNewCenters: Broadcast[Array[ArrayBuffer[BregmanCenter]]] = data.context.broadcast(newCenters)
+      val bcNewCenters = data.context.broadcast(newCenters)
       val preCosts = costs
       costs = data.zip(preCosts).map { case (point, cost) =>
         Vectors.dense(
