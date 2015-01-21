@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
  * K-Means algorithms need a method to construct a median or centroid value.
  * This trait abstracts the type of the object used to create the centroid.
  */
-trait ClusterCentroid {
+trait ClusterFactory {
   def getCentroid: MutableWeightedVector
 }
 
@@ -60,7 +60,7 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 trait Collector {
   def add(index: Int, value: Double): Unit
 
-  def result(): Vector
+  def result(size: Int): Vector
 }
 
 trait FullCollector extends Collector {
@@ -73,7 +73,7 @@ trait FullCollector extends Collector {
     values += value
   }
 
-  def result(): Vector = Vectors.sparse(Int.MaxValue, indices.toArray, values.toArray)
+  def result(size: Int): Vector = Vectors.sparse(Int.MaxValue, indices.toArray, values.toArray)
 }
 
 
@@ -95,8 +95,8 @@ trait TopKCollector extends Collector {
   @inline
   def add(index: Int, value: Double) = heap.add((index, value))
 
-  def result(): Vector = {
-    Vectors.sparse(Int.MaxValue, heap.toArray[(Int, Double)](new Array[(Int, Double)](heap.size())))
+  def result(size: Int): Vector = {
+    Vectors.sparse(size, heap.toArray[(Int, Double)](new Array[(Int, Double)](heap.size())))
   }
 }
 
@@ -123,6 +123,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
 
   def homogeneous = {
     if (pq.nonEmpty) {
+      val size = pq.head.underlying.size
       if (pq.length == 1) {
         pq.dequeue().underlying
       } else {
@@ -143,7 +144,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
           if (head.hasNext) pq.enqueue(head)
         }
         if (total != 0.0) add(lastIndex, total)
-        result()
+        result(size)
       }
     } else {
       empty
@@ -171,14 +172,14 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   }
 }
 
-trait DenseCluster extends ClusterCentroid {
+trait DenseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new EagerCentroid
 }
 
-trait SparseCluster extends ClusterCentroid {
+trait SparseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new LateCentroid with FullCollector
 }
 
-trait SparseTopKCluster extends ClusterCentroid {
+trait SparseTopKClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new LateCentroid with TopKCollector
 }

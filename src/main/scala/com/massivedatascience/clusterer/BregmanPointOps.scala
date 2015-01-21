@@ -44,7 +44,7 @@ class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gr
   extends ImmutableHomogeneousVector(h, weight)
 
 
-trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterCentroid {
+trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory {
   this: BregmanDivergence =>
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
@@ -101,7 +101,7 @@ object KullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with GeneralLog
-  with DenseCluster
+  with DenseClusterFactory
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
@@ -110,7 +110,7 @@ object GeneralizedIPointOps
   extends GeneralizedIDivergence
   with BregmanPointOps
   with GeneralLog
-  with DenseCluster
+  with DenseClusterFactory
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R+ ** n
@@ -118,7 +118,7 @@ object GeneralizedIPointOps
 object SquaredEuclideanPointOps
   extends SquaredEuclideanDistanceDivergence
   with BregmanPointOps
-  with DenseCluster
+  with DenseClusterFactory
 
 /**
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
@@ -127,7 +127,7 @@ object SquaredEuclideanPointOps
 object LogisticLossPointOps
   extends LogisticLossDivergence
   with BregmanPointOps
-  with DenseCluster
+  with DenseClusterFactory
 
 
 /**
@@ -137,7 +137,7 @@ object ItakuraSaitoPointOps
   extends ItakuraSaitoDivergence
   with BregmanPointOps
   with GeneralLog
-  with DenseCluster
+  with DenseClusterFactory
 
 /**
  * Implements Kullback-Leibler divergence for sparse points in R+ ** n
@@ -157,7 +157,7 @@ object SparseKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with GeneralLog
-  with SparseCluster {
+  with SparseClusterFactory {
   /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -187,7 +187,7 @@ object DiscreteKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with DiscreteLog
-  with DenseCluster
+  with DenseClusterFactory
 
 
 /**
@@ -202,7 +202,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with DiscreteLog
-  with DenseCluster {
+  with DenseClusterFactory {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
@@ -228,7 +228,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  *
  */
 object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence
-with GeneralLog with DenseCluster {
+with GeneralLog with DenseClusterFactory {
 
   override def toPoint(v: WeightedVector): BregmanPoint = {
     val inh = v.inhomogeneous.copy
