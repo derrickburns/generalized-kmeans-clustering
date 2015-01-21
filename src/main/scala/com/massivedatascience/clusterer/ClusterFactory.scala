@@ -59,7 +59,6 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
 trait Collector {
   def add(index: Int, value: Double): Unit
-
   def result(size: Int): Vector
 }
 
@@ -84,7 +83,7 @@ trait TopKCollector extends Collector {
 
   import com.google.common.collect.MinMaxPriorityQueue
 
-  val heap: MinMaxPriorityQueue[(Int, Double)] = MinMaxPriorityQueue.orderedBy(
+  private[this] val heap: MinMaxPriorityQueue[(Int, Double)] = MinMaxPriorityQueue.orderedBy(
     new Comparator[(Int, Double)]() {
       def compare(x: (Int, Double), y: (Int, Double)): Int = (y._2 - x._2).toInt
     }
@@ -113,12 +112,12 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
 
   import com.massivedatascience.clusterer.RichVector
 
-  implicit val ordering = new Ordering[VectorIterator]  {
+  final implicit val ordering = new Ordering[VectorIterator]  {
     override def compare(x: VectorIterator, y: VectorIterator): Int = x.index - y.index
   }
 
-  val empty = Vectors.zeros(1)
-  val pq = new mutable.PriorityQueue[VectorIterator]()
+  final val empty = Vectors.zeros(1)
+  private[this] val pq = new mutable.PriorityQueue[VectorIterator]()
   var weight: Double = 0.0
 
   def homogeneous = {
