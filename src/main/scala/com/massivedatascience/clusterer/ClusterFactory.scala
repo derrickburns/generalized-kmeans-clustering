@@ -71,7 +71,6 @@ trait FullCollector extends Collector {
   def add(index: Int, value: Double) = {
     indices += index
     values += value
-    println( s"added $index $value")
   }
 
   def result(size: Int): Vector = Vectors.sparse(size, indices.toArray, values.toArray)
