@@ -133,7 +133,7 @@ package object clusterer {
     /**
      * Return the index of the closest point in `centers` to `point`, as well as its distance.
      */
-    def findClosest(centers: Array[C], point: P): (Int, Double) = {
+    def findClosest(centers: IndexedSeq[C], point: P): (Int, Double) = {
       var bestDistance = Infinity
       var bestIndex = 0
       var i = 0
@@ -176,7 +176,7 @@ package object clusterer {
     /**
      * Return the K-means cost of a given point against the given cluster centers.
      */
-    def pointCost(centers: Array[C], point: P): Double = findClosest(centers, point)._2
+    def pointCost(centers: IndexedSeq[C], point: P): Double = findClosest(centers, point)._2
   }
 
 }
