@@ -179,13 +179,24 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       distanceMetric=RELATIVE_ENTROPY)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    for( distanceMetric <- Seq(EUCLIDEAN, SPARSE_EUCLIDEAN,DISCRETE_KL, DISCRETE_SMOOTHED_KL,
-    GENERALIZED_SYMMETRIZED_KL, SPARSE_SMOOTHED_KL)) {
-      println( s"distance metric $distanceMetric}")
-      model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-        distanceMetric = distanceMetric)
-      assert(model.clusterCenters.head ~== center absTol 1E-5)
-    }
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = EUCLIDEAN)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = SPARSE_EUCLIDEAN)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = DISCRETE_KL)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceMetric = SPARSE_SMOOTHED_KL)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     data.unpersist()
   }
