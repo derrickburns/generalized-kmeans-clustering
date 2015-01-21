@@ -97,7 +97,6 @@ object KMeans extends Logging  {
     val data = (raw map {
       pointOps.inhomogeneousToPoint(_, 1.0)
     }).cache()
-    preview( data, "input data")
     val centers = initializer.init(data, 0)
     new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
   }

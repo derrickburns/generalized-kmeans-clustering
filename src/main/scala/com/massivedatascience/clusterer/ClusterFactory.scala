@@ -156,9 +156,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
         if (head.hasNext) pq.add(head)
       }
       if (total != 0.0) add(lastIndex, total)
-      val x = result(size)
-      println( x )
-      x
+      result(size)
     }
   }
 

@@ -42,8 +42,6 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
     var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
     var iteration = 0
 
-    preview(data, "MultiKMeans cluster input")
-
     /*
      * Execute iterations of Lloyd's algorithm until all runs have converged.
      */
@@ -123,10 +121,6 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
       contribution.iterator
     }.reduceByKey { (x, y) => x.add(y)}.collect()
     bcActiveCenters.unpersist()
-    val x = (result, runDistortion.map(x => x.localValue))
-    for( y <- result ) {
-      println( y )
-    }
-    x
+    (result, runDistortion.map(x => x.localValue))
   }
 }
