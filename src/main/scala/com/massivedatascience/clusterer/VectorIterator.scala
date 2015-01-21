@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer
 
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
+import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 
 
 trait VectorIterator {
@@ -11,52 +11,38 @@ trait VectorIterator {
   def index: Int
 
   def value: Double
+
+  val underlying: Vector
 }
 
-class SparseVectorIterator(x: SparseVector) extends VectorIterator {
+class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
   var i = 0
 
-  def hasNext: Boolean = i < x.indices.length
+  def hasNext: Boolean = i < underlying.values.length
 
   def forward(): Unit = i = i + 1
 
-  def index: Int = x.indices(i)
+  def index: Int = underlying.indices(i)
 
-  def value: Double = x.indices(i)
+  def value: Double = underlying.values(i)
 }
 
-class DenseVectorIterator(x: DenseVector) extends VectorIterator {
+class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
   var i = 0
 
-  def hasNext: Boolean = i < x.values.length
-
-  def forward(): Unit = i = i + 1
-
-  def index: Int = i
-
-  def value: Double = x.values(i)
-}
-
-class NegativeSparseVectorIterator(x: SparseVector) extends VectorIterator {
-  var i = 0
-
-  def hasNext: Boolean = i < x.indices.length
-
-  def forward(): Unit = i = i + 1
-
-  def index: Int = x.indices(i)
-
-  def value: Double = -x.indices(i)
-}
-
-class NegativeDenseVectorIterator(x: DenseVector) extends VectorIterator {
-  var i = 0
-
-  def hasNext: Boolean = i < x.values.length
+  def hasNext: Boolean = i < underlying.values.length
 
   def forward(): Unit = i = i + 1
 
   def index: Int = i
 
-  def value: Double = -x.values(i)
+  def value: Double = underlying.values(i)
+}
+
+class NegativeSparseVectorIterator(underlying: SparseVector) extends SparseVectorIterator(underlying) {
+  override def value: Double = -underlying.values(i)
+}
+
+class NegativeDenseVectorIterator(underlying: DenseVector) extends DenseVectorIterator(underlying) {
+  override def value: Double = -underlying.values(i)
 }

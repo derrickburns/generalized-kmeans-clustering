@@ -5,13 +5,14 @@ import java.util.Comparator
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
  * K-Means algorithms need a method to construct a median or centroid value.
  * This trait abstracts the type of the object used to create the centroid.
  */
-trait CentroidProvider {
+trait ClusterCentroid {
   def getCentroid: MutableWeightedVector
 }
 
@@ -59,29 +60,27 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 trait Collector {
   def add(index: Int, value: Double): Unit
 
-  def result(): WeightedVector
+  def result(): Vector
 }
 
 trait FullCollector extends Collector {
   val indices = new ArrayBuffer[Int]
   val values = new ArrayBuffer[Double]
 
+  @inline
   def add(index: Int, value: Double) = {
     indices += index
     values += value
   }
 
-  def result(): WeightedVector = {
-    val weight = values.sum
-    new ImmutableHomogeneousVector(Vectors.sparse(Int.MaxValue, indices.toArray, values.toArray), weight)
-  }
+  def result(): Vector = Vectors.sparse(Int.MaxValue, indices.toArray, values.toArray)
 }
 
 
 /**
  * Retains only the top k most heavily weighted items
  */
-trait TopCollector extends Collector {
+trait TopKCollector extends Collector {
 
   import com.google.common.collect.MinMaxPriorityQueue
 
@@ -93,41 +92,62 @@ trait TopCollector extends Collector {
 
   def numberToRetain: Int = 128
 
+  @inline
   def add(index: Int, value: Double) = heap.add((index, value))
 
-  def result(): WeightedVector = {
-    val entries = heap.toArray[(Int, Double)](new Array[(Int, Double)](heap.size()))
-    val weight = entries.map(_._2).sum
-    new ImmutableHomogeneousVector(Vectors.sparse(Int.MaxValue, entries), weight)
+  def result(): Vector = {
+    Vectors.sparse(Int.MaxValue, heap.toArray[(Int, Double)](new Array[(Int, Double)](heap.size())))
   }
 }
 
+/**
+ * Implements a centroid where the points are assumed to be sparse.
+ *
+ * The calculation of the centroid is deferred until all points are added to the
+ * cluster. When the calculation is performed, a priority queue is used to sort the entries
+ * by index.
+ *
+ */
 trait LateCentroid extends MutableWeightedVector with Serializable {
   this: Collector =>
 
   import com.massivedatascience.clusterer.RichVector
 
-  var iterators = new ArrayBuffer[VectorIterator]()
+  implicit val ordering = new Ordering[VectorIterator]  {
+    override def compare(x: VectorIterator, y: VectorIterator): Int = x.index - y.index
+  }
 
+  val empty = Vectors.zeros(1)
+  val pq = new mutable.PriorityQueue[VectorIterator]()
   var weight: Double = 0.0
 
   def homogeneous = {
-    iterators = iterators.filter(_.hasNext)
-    while (iterators.nonEmpty) {
-      var total: Double = 0.0
-      val minIndex = iterators.minBy(_.index).index
-      for (x <- iterators) {
-        if (x.index == minIndex) {
-          total = total + x.value
-          x.forward()
+    if (pq.nonEmpty) {
+      if (pq.length == 1) {
+        pq.dequeue().underlying
+      } else {
+        var total = 0.0
+        var lastIndex = pq.head.index
+        while (pq.nonEmpty) {
+          val head = pq.dequeue()
+          val index = head.index
+          val value = head.value
+          if (index == lastIndex) {
+            total = total + value
+          } else {
+            add(lastIndex, total)
+            total = 0.0
+            lastIndex = index
+          }
+          head.forward()
+          if (head.hasNext) pq.enqueue(head)
         }
+        if (total != 0.0) add(lastIndex, total)
+        result()
       }
-      iterators = iterators.filter(_.hasNext)
-      add(minIndex, total)
+    } else {
+      empty
     }
-    val x = result()
-    weight = x.weight
-    x.homogeneous
   }
 
   def inhomogeneous = asInhomogeneous
@@ -135,26 +155,30 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   def isEmpty = weight == 0.0
 
   def add(p: WeightedVector): this.type = {
-    iterators += p.homogeneous.iterator
-    weight = weight + p.weight
+    if (p.weight > 0.0) {
+      pq += p.homogeneous.iterator
+      weight = weight + p.weight
+    }
     this
   }
 
   def sub(p: WeightedVector): this.type = {
-    iterators += p.homogeneous.negativeIterator
-    weight = weight - p.weight
+    if (p.weight > 0.0) {
+      pq += p.homogeneous.negativeIterator
+      weight = weight + p.weight
+    }
     this
   }
 }
 
-trait DenseCentroidProvider {
+trait DenseCluster extends ClusterCentroid {
   def getCentroid: MutableWeightedVector = new EagerCentroid
 }
 
-trait SparseCentroidProvider {
+trait SparseCluster extends ClusterCentroid {
   def getCentroid: MutableWeightedVector = new LateCentroid with FullCollector
 }
 
-trait TopKCentroidProvider {
-  def getCentroid: MutableWeightedVector = new LateCentroid with TopCollector
+trait SparseTopKCluster extends ClusterCentroid {
+  def getCentroid: MutableWeightedVector = new LateCentroid with TopKCollector
 }
