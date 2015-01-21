@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
  * K-Means algorithms need a method to construct a median or centroid value.
  * This trait abstracts the type of the object used to create the centroid.
  */
-trait CentroidProvider {
+trait ClusterCentroid {
   def getCentroid: MutableWeightedVector
 }
 
@@ -80,7 +80,7 @@ trait FullCollector extends Collector {
 /**
  * Retains only the top k most heavily weighted items
  */
-trait TopCollector extends Collector {
+trait TopKCollector extends Collector {
 
   import com.google.common.collect.MinMaxPriorityQueue
 
@@ -167,14 +167,14 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   }
 }
 
-trait DenseCentroidProvider {
+trait DenseCluster extends ClusterCentroid {
   def getCentroid: MutableWeightedVector = new EagerCentroid
 }
 
-trait SparseCentroidProvider {
+trait SparseCluster extends ClusterCentroid {
   def getCentroid: MutableWeightedVector = new LateCentroid with FullCollector
 }
 
-trait TopKCentroidProvider {
-  def getCentroid: MutableWeightedVector = new LateCentroid with TopCollector
+trait SparseTopKCluster extends ClusterCentroid {
+  def getCentroid: MutableWeightedVector = new LateCentroid with TopKCollector
 }
