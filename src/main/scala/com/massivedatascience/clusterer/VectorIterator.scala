@@ -12,7 +12,7 @@ trait VectorIterator {
 
   def value: Double
 
-  def underlying: Vector
+  val underlying: Vector
 }
 
 class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
@@ -24,7 +24,7 @@ class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator 
 
   def index: Int = underlying.indices(i)
 
-  def value: Double = underlying.indices(i)
+  def value: Double = underlying.values(i)
 }
 
 class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
@@ -48,7 +48,7 @@ class NegativeSparseVectorIterator(val underlying: SparseVector) extends VectorI
 
   def index: Int = underlying.indices(i)
 
-  def value: Double = -underlying.indices(i)
+  def value: Double = -underlying.values(i)
 }
 
 class NegativeDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
