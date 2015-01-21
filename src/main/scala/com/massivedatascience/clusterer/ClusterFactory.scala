@@ -58,7 +58,7 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
 
 trait Collector {
-  def add(index: Int, value: Double): Unit
+  def update(index: Int, value: Double): Unit
   def result(size: Int): Vector
 }
 
@@ -67,7 +67,7 @@ trait FullCollector extends Collector {
   val values = new ArrayBuffer[Double]
 
   @inline
-  def add(index: Int, value: Double) = {
+  def update(index: Int, value: Double) = {
     indices += index
     values += value
   }
@@ -92,7 +92,7 @@ trait TopKCollector extends Collector {
   def numberToRetain: Int = 128
 
   @inline
-  def add(index: Int, value: Double) = heap.add((index, value))
+  def update(index: Int, value: Double) = heap.add((index, value))
 
   def result(size: Int): Vector = {
     Vectors.sparse(size, heap.toArray[(Int, Double)](new Array[(Int, Double)](heap.size())))
@@ -117,36 +117,36 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   }
 
   final val empty = Vectors.zeros(1)
-  private[this] val pq = new mutable.PriorityQueue[VectorIterator]()
+  private[this] val container = new ArrayBuffer[VectorIterator]()
   var weight: Double = 0.0
 
   def homogeneous = {
-    if (pq.nonEmpty) {
-      val size = pq.head.underlying.size
-      if (pq.length == 1) {
-        pq.dequeue().underlying
-      } else {
-        var total = 0.0
-        var lastIndex = pq.head.index
-        while (pq.nonEmpty) {
-          val head = pq.dequeue()
-          val index = head.index
-          val value = head.value
-          if (index == lastIndex) {
-            total = total + value
-          } else {
-            add(lastIndex, total)
-            total = 0.0
-            lastIndex = index
-          }
-          head.forward()
-          if (head.hasNext) pq.enqueue(head)
-        }
-        if (total != 0.0) add(lastIndex, total)
-        result(size)
-      }
-    } else {
+    if (container.isEmpty) {
       empty
+    } else if (container.size == 1) {
+      container.remove(0).underlying
+    } else {
+      val pq = new mutable.PriorityQueue[VectorIterator]()
+      pq ++= container
+      val size = pq.head.underlying.size
+      var total = 0.0
+      var lastIndex = pq.head.index
+      while (pq.nonEmpty) {
+        val head = pq.dequeue()
+        val index = head.index
+        val value = head.value
+        if (index == lastIndex) {
+          total = total + value
+        } else {
+          update(lastIndex, total)
+          total = 0.0
+          lastIndex = index
+        }
+        head.advance()
+        if (head.hasNext) pq.enqueue(head)
+      }
+      if (total != 0.0) update(lastIndex, total)
+      result(size)
     }
   }
 
@@ -156,7 +156,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
 
   def add(p: WeightedVector): this.type = {
     if (p.weight > 0.0) {
-      pq += p.homogeneous.iterator
+      container += p.homogeneous.iterator
       weight = weight + p.weight
     }
     this
@@ -164,7 +164,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
 
   def sub(p: WeightedVector): this.type = {
     if (p.weight > 0.0) {
-      pq += p.homogeneous.negativeIterator
+      container += p.homogeneous.negativeIterator
       weight = weight + p.weight
     }
     this

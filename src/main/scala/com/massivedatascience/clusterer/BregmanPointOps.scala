@@ -97,7 +97,7 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
-object KullbackLeiblerPointOps
+object DenseKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with GeneralLog
@@ -113,12 +113,20 @@ object GeneralizedIPointOps
   with DenseClusterFactory
 
 /**
- * Implements Squared Euclidean distance on dense vectors in R+ ** n
+ * Implements Squared Euclidean distance on dense vectors in R ** n
  */
-object SquaredEuclideanPointOps
+object DenseSquaredEuclideanPointOps
   extends SquaredEuclideanDistanceDivergence
   with BregmanPointOps
   with DenseClusterFactory
+
+/**
+ * Implements Squared Euclidean distance on sparse vectors in R ** n
+ */
+object SparseSquaredEuclideanPointOps
+  extends SquaredEuclideanDistanceDivergence
+  with BregmanPointOps
+  with SparseClusterFactory
 
 /**
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
@@ -183,7 +191,7 @@ object SparseKullbackLeiblerPointOps
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
-object DiscreteKullbackLeiblerPointOps
+object DiscreteDenseKullbackLeiblerPointOps
   extends KullbackLeiblerDivergence
   with BregmanPointOps
   with DiscreteLog

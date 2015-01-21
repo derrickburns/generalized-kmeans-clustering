@@ -3,9 +3,9 @@ package com.massivedatascience.clusterer
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 
 
-trait VectorIterator {
+trait VectorIterator extends Serializable {
   def hasNext: Boolean
-  def forward(): Unit
+  def advance(): Unit
   def index: Int
   def value: Double
   val underlying: Vector
@@ -14,7 +14,7 @@ trait VectorIterator {
 class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
-  def forward(): Unit = i = i + 1
+  def advance(): Unit = i = i + 1
   def index: Int = underlying.indices(i)
   def value: Double = underlying.values(i)
 }
@@ -22,7 +22,7 @@ class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator 
 class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
-  def forward(): Unit = i = i + 1
+  def advance(): Unit = i = i + 1
   def index: Int = i
   def value: Double = underlying.values(i)
 }
