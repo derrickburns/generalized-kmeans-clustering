@@ -27,18 +27,32 @@ object KMeans extends Logging  {
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
+  val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
+  val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
+  val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
+  val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
+  val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
+  val EUCLIDEAN = "DENSE_EUCLIDEAN"
+  val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
+  val LOGISTIC_LOSS = "LOGISTIC_LOSS"
+  val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
+
 
   private def getPointOps(name: String): BregmanPointOps = {
     name match {
-      case "RELATIVE_ENTROPY" => KullbackLeiblerPointOps
-      case "KL_DIVERGENCE" => KullbackLeiblerPointOps
-      case "DISCRETE_KL_DIVERGENCE" => DiscreteKullbackLeiblerPointOps
-      case "SPARSE_SMOOTHED_KL_DIVERGENCE" => SparseKullbackLeiblerPointOps
-      case "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE" => DiscreteDenseSmoothedKullbackLeiblerPointOps
-      case "FAST_EUCLIDEAN" => SquaredEuclideanPointOps
-      case "LOGISTIC_LOSS" => LogisticLossPointOps
-      case "GENERALIZED_I_DIVERGENCE" => GeneralizedIPointOps
-      case _ => SquaredEuclideanPointOps
+      case EUCLIDEAN => DenseSquaredEuclideanPointOps
+      case RELATIVE_ENTROPY => DenseKullbackLeiblerPointOps
+      case DISCRETE_KL => DiscreteDenseKullbackLeiblerPointOps
+      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKullbackLeiblerPointOps
+
+      case SPARSE_SMOOTHED_KL => SparseKullbackLeiblerPointOps
+      case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
+
+      case LOGISTIC_LOSS => LogisticLossPointOps
+      case GENERALIZED_I => GeneralizedIPointOps
+      case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
+
+      case _ => DenseSquaredEuclideanPointOps
     }
   }
 
@@ -56,6 +70,11 @@ object KMeans extends Logging  {
    */
   def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int): KMeansModel =
     doTrain(data, k, maxIterations, runs)._2
+
+  def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
+    distanceMetric: String): KMeansModel =
+
+    doTrain(data, k, maxIterations, runs, initializationMode = mode, distanceMetric = distanceMetric)._2
 
 
   def doTrain(
