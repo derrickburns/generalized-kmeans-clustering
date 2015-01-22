@@ -149,7 +149,7 @@ package object clusterer {
       (bestIndex, bestDistance)
     }
 
-    def findClosestCluster(centers: Array[C], point: P): Int = {
+    def findClosestCluster(centers: IndexedSeq[C], point: P): Int = {
       var bestDistance = Infinity
       var bestIndex = 0
       var i = 0
@@ -165,7 +165,7 @@ package object clusterer {
       bestIndex
     }
 
-    def distortion(data: RDD[P], centers: Array[C]) = {
+    def distortion(data: RDD[P], centers: IndexedSeq[C]) = {
       data.mapPartitions { points =>
         Array(points.foldLeft(0.0) { case (total, p) =>
           total + findClosest(centers, p)._2
