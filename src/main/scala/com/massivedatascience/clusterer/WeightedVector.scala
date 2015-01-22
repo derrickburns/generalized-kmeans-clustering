@@ -15,12 +15,16 @@ trait WeightedVector extends Serializable {
   def asHomogeneous = clusterer.asHomogeneous(inhomogeneous, weight)
 
   override def toString: String = weight + "," + homogeneous.toString
+
+  def asImmutable = new ImmutableHomogeneousVector(homogeneous, weight).asInstanceOf[WeightedVector]
 }
 
 trait MutableWeightedVector extends WeightedVector {
   def add(p: WeightedVector): this.type
 
   def sub(p: WeightedVector): this.type
+
+  def asImmutable: WeightedVector
 }
 
 class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
