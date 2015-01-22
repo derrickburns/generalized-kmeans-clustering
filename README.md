@@ -7,6 +7,21 @@ or dense data using distances defined by
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
 
+### Usage
+
+The simplest way to call the clusterer is to use the ```KMeans``` object.
+
+```scala
+  object KMeans {
+    def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
+      distanceFunction: String): KMeansModel = ???
+  }
+```
+
+For greater control, you may provide your own distance function by using the lower level interface.
+See the implementation of ```KMeans.train``` for an example.
+
+
 ### General Distance Function 
 
 The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
@@ -27,6 +42,21 @@ and transform it into a related Bregman divergence that is also a metric. To dem
 also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
 that is also a metric.
 
+Several distance functions are predefined:
+```scala
+  object KMeans {
+    val RELATIVE_ENTROPY = ???
+    val DISCRETE_KL = ???
+    val SPARSE_SMOOTHED_KL = ???
+    val DISCRETE_SMOOTHED_KL = ???
+    val GENERALIZED_SYMMETRIZED_KL = ???
+    val EUCLIDEAN = ???
+    val SPARSE_EUCLIDEAN = ???
+    val LOGISTIC_LOSS = ???
+    val GENERALIZED_I = ???
+  }
+```
+
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 ### Variable number of clusters
@@ -42,6 +72,17 @@ The third major difference between this implementation and the Spark implementat
 separates the initialization step (the seeding of the initial clusters) from the main clusterer.
 This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
 including initialization methods that have different numbers of initial clusters.
+
+There are two pre-defined seeding algorithms.
+
+```scala
+  object KMeans {
+    val RANDOM = ???
+    val K_MEANS_PARALLEL = ???
+  }
+```
+
+You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
 ### Faster K-Means || implementation  
 
