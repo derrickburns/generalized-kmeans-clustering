@@ -73,6 +73,17 @@ separates the initialization step (the seeding of the initial clusters) from the
 This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
 including initialization methods that have different numbers of initial clusters.
 
+There are two pre-defined seeding algorithms.
+
+```scala
+  object KMeans {
+    val RANDOM = ???
+    val K_MEANS_PARALLEL = ???
+  }
+```
+
+You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
+
 ### Faster K-Means || implementation  
 
 The fourth major difference between this implementation and the Spark implementation is that this clusterer
