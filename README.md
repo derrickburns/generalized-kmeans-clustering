@@ -18,7 +18,7 @@ This project decouples the distance function from the clusterer implementation, 
 to define an alternative distance function in just a few lines of code.
 
 The most general class of distance functions that work with the K-Means algorithm are called Bregman divergences.
-This project implements severalBregman divergences, including the squared Euclidean distance,
+This project implements several Bregman divergences, including the squared Euclidean distance,
 the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
 the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
 
