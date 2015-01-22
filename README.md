@@ -14,16 +14,20 @@ a fixed number of clusters.  However, there are many interesting distance functi
 It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
 modification to the Spark implementation have made it even more difficult.
 
-This project decouples the metric from the clusterer implementation, allowing the end-user the opportunity
-to define a custom distance function in just a few lines of code.  We demonstrate this by implementing several
-Bregman divergences, including the squared Euclidean distance, the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
-the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence. We also implement a distance function
-that is a symmetric version of the Kullback-Leibler divergence that is also a metric.
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
+This project decouples the distance function from the clusterer implementation, allowing the end-user the opportunity
+to define an alternative distance function in just a few lines of code.
 
-The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
-centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
-points to cluster centers.  These abstractions are easy to understand and easy to implement.
+The most general class of distance functions that work with the K-Means algorithm are called Bregman divergences.
+This project implements severalBregman divergences, including the squared Euclidean distance,
+the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
+the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
+
+Generally speaking, Bregman divergences are not metrics. However, one may take any Bregman divergence
+and transform it into a related Bregman divergence that is also a metric. To demonstrate this, we
+also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
+that is also a metric.
+
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 ### Variable number of clusters
 
@@ -36,15 +40,29 @@ tracks the number of cluster centers.
 
 The third major difference between this implementation and the Spark implementation is that this clusterer
 separates the initialization step (the seeding of the initial clusters) from the main clusterer.
-This allows for new initialization methods, including initialization methods that have different numbers of initial clusters.
+This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
+including initialization methods that have different numbers of initial clusters.
 
 ### Faster K-Means || implementation  
 
 The fourth major difference between this implementation and the Spark implementation is that this clusterer
-uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.  This is much faster, since all cores
-are utilized versus just one.
+uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
+This is much faster, since all cores are utilized versus just one.
 
 Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
+
+### Sparse Data
+
+The fifth major difference between this implementation and the Spark implementation is that this clusterer
+works well on sparse input data of high dimension.  Note, some distance functions are not defined on
+sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
+achieve similar results.  This implementation provides such approximations.
+
+### Internals
+
+The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
+centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
+points to cluster centers.  These abstractions are easy to understand and easy to implement.
 
 ### Scalability and Testing
 
