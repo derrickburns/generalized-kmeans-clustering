@@ -271,15 +271,15 @@ class TrackingKMeans(
             buffer.append((p.cluster, pointOps.getCentroid.add(p.location)))
 
           if (p.wasPreviouslyAssigned)
-            buffer.append((p.previousCluster, new EagerCentroid().sub(p.location)))
+            buffer.append((p.previousCluster, pointOps.getCentroid.sub(p.location)))
         }
         buffer.toIterator
     }.reduceByKey { (l, r) => l.add(r)}.collect()
   }
 
-  def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, EagerCentroid)] =
+  def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
     points.filter(_.isAssigned).map { p =>
-      (p.cluster, new EagerCentroid().add(p.location))
+      (p.cluster, pointOps.getCentroid.add(p.location))
     }.reduceByKey(_.add(_)).collect()
 
   /**

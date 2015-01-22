@@ -34,14 +34,6 @@ import scala.collection.mutable.ArrayBuffer
 class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /**
-   * We will maintain for each point the distance to its closest cluster center.
-   * Since only one center is added on each iteration, recomputing the closest cluster center
-   * only requires computing the distance to the new cluster center if
-   * that distance is less than the closest cluster center.
-   */
-  case class FatPoint(location: BregmanPoint, index: Int, weight: Double, distance: Double)
-
-  /**
    * K-means++ on the weighted point set `points`. This first does the K-means++
    * initialization procedure and then rounds of Lloyd's algorithm.
    */
@@ -53,7 +45,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     weights: Array[Double],
     k: Int,
     maxIterations: Int): Array[BregmanCenter] = {
-    val centers: Array[BregmanCenter] = getCenters(sc, seed, points, weights, k, 1)
+    val centers = getCenters(sc, seed, points, weights, k, 1)
     val pts = sc.parallelize(points.map(ops.toPoint))
     new MultiKMeans(ops, maxIterations).cluster(pts, Array(centers))._2.centers
   }
@@ -65,7 +57,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
    *
    * @param sc the Spark context
    * @param seed a random number seed
-   * @param points  the candidate centers
+   * @param candidateCenters  the candidate centers
    * @param weights  the weights on the candidate centers
    * @param k  the total number of centers to select
    * @param perRound the number of centers to add per round
@@ -74,36 +66,40 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   def getCenters(
     sc: SparkContext,
     seed: Int,
-    points: Array[BregmanCenter],
+    candidateCenters: Array[BregmanCenter],
     weights: Array[Double],
     k: Int,
     perRound: Int): Array[BregmanCenter] = {
 
-    assert(points.length > 0)
-    assert(k > 0)
-    assert(perRound > 0)
+    require(candidateCenters.length > 0)
+    require(k > 0)
+    require(perRound > 0)
 
-    if (points.length < k) log.warn("number of clusters requested {} exceeds number of points {}",
-      k, points.length)
+    if (candidateCenters.length < k)
+      logWarning(s"# of clusters requested $k exceeds number of points ${candidateCenters.length}")
+
+    val points = candidateCenters.map(ops.toPoint)
     val centers = new ArrayBuffer[BregmanCenter](k)
     val rand = new XORShiftRandom(seed)
-    centers += points(pickWeighted(rand, weights))
-    logInfo(s"starting kMeansPlusPlus initialization on ${points.length} points")
+    val newCenter = pickWeighted(rand, weights).map(candidateCenters(_))
+    centers += newCenter.get
+    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
+    var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
+    distances = updateDistances(points, distances, IndexedSeq(newCenter.get))
     var more = true
-    var fatPoints = initialFatPoints(points, weights)
-    fatPoints = updateDistances(fatPoints, centers.view.take(1))
-
     while (centers.length < k && more) {
-      val chosen = choose(fatPoints, seed ^ (centers.length << 24), rand, perRound)
-      val newCenters = chosen.map(points(_))
-      fatPoints = updateDistances(fatPoints, newCenters)
-      logInfo(s"chose ${chosen.length} points")
-      for (index <- chosen) {
-        logInfo(s"  center(${centers.length}) = points($index)")
-        centers += points(index)
+      val selected = (0 until perRound).flatMap {_ =>
+        pickWeighted(rand, points.zip(distances).map{ case (p,d) => p.weight * d})
       }
-      more = chosen.nonEmpty
+      val newCenters = selected.toArray.map(candidateCenters(_))
+      distances = updateDistances(points, distances, newCenters)
+      logInfo(s"chose ${newCenters.length} new centers")
+      for (c <- newCenters) {
+        logInfo(s"  chose center $c")
+        centers += c
+      }
+      more = selected.nonEmpty
     }
     val result = centers.take(k)
     logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $k requested")
@@ -111,50 +107,24 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   }
 
   /**
-   * Choose points
-   *
-   * @param fatPoints points to choose from
-   * @param seed  random number seed
-   * @param rand  random number generator
-   * @param count number of points to choose
-   * @return indices of chosen points
-   */
-  def choose(fatPoints: Array[FatPoint], seed: Int, rand: XORShiftRandom, count: Int) =
-    (0 until count).flatMap { x => pickCenter(rand, fatPoints.iterator)}.map {
-      _.index
-    }
-
-  /**
-   * Create initial fat points with weights given and infinite distance to closest cluster center.
-   * @param points points
-   * @param weights weights of points
-   * @return fat points with given weighs and infinite distance to closest cluster center
-   */
-  def initialFatPoints(points: Array[BregmanCenter], weights: Array[Double]): Array[FatPoint] =
-    Array.tabulate(points.length)(i => FatPoint(ops.toPoint(points(i)), i, weights(i), Infinity))
-
-  /**
-   * Update the distance of each point to its closest cluster center, given only the given cluster
-   * centers that were modified.
+   * Update the distance of each point to its closest cluster center, given the cluster
+   * centers that were added.
    *
    * @param points set of candidate initial cluster centers
-   * @param center new cluster center
+   * @param centers new cluster centers
    * @return  points with their distance to closest to cluster center updated
    */
 
-  def updateDistances(points: Array[FatPoint], center: Seq[BregmanCenter]): Array[FatPoint] =
-    points.map { p =>
-      var i = 0
-      val to = center.length
-      var dist = p.distance
-      val point = p.location
-      while (i < to) {
-        val d = ops.distance(point, center(i))
-        if (d < dist) dist = d
-        i = i + 1
-      }
-      p.copy(distance = dist)
+  def updateDistances(
+    points: Array[BregmanPoint],
+    distances: Array[Double],
+    centers: IndexedSeq[BregmanCenter]): Array[Double] = {
+    
+    points.zip(distances).map { case (p, d) =>
+      val dist = ops.pointCost(centers, p)
+      if(dist < d) dist else d
     }
+  }
 
   /**
    * Pick a point at random, weighing the choices by the given weight vector.
@@ -164,37 +134,16 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
    * @param weights  the weights of the points
    * @return the index of the point chosen
    */
-  def pickWeighted(rand: XORShiftRandom, weights: Array[Double]): Int = {
-    val r = rand.nextDouble() * weights.sum
-    var i = 0
-    var curWeight = 0.0
-    while (i < weights.length && curWeight < r) {
-      assert(weights(i) >= 0.0)
-      curWeight += weights(i)
-      i += 1
-    }
-    if (i == 0) throw new IllegalArgumentException("all weights are zero")
-    i - 1
-  }
+  def pickWeighted(rand: XORShiftRandom, weights: IndexedSeq[Double]): Option[Int] = {
+    require(weights.nonEmpty)
 
-  /**
-   *
-   * Select point randomly with probability weighted by the product of the weight and the distance
-   *
-   * @param rand random number generator
-   * @return
-   */
-  def pickCenter(rand: XORShiftRandom, fatPoints: Iterator[FatPoint]): Array[FatPoint] = {
     var cumulative = 0.0
-    val rangeAndIndexedPoints = fatPoints map { z =>
-      val weightedDistance = z.weight * z.distance
-      val from = cumulative
-      cumulative = cumulative + weightedDistance
-      (from, cumulative, z.location, z.index)
+    val rangeAndIndices = weights map { z =>
+      cumulative = cumulative + z
+      cumulative
     }
-    val pts = rangeAndIndexedPoints.toArray
-    val total = pts.last._2
-    val r = rand.nextDouble() * total
-    for (w <- pts if w._1 <= r && r < w._2) yield FatPoint(w._3, w._4, 1.0, total)
+    val r = rand.nextDouble() * rangeAndIndices.last
+    val index = rangeAndIndices.indexWhere(x => x > r)
+    if( index == -1 ) None else Some(index)
   }
 }

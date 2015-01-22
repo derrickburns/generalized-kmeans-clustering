@@ -58,8 +58,7 @@ class KMeansParallel(
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
-    val sample = data.takeSample(withReplacement = true, runs, seed).toSeq.map(pointOps.toCenter)
-
+    val sample = data.takeSample(withReplacement = true, runs, seed).map(pointOps.toCenter)
     val newCenters = Array.tabulate(runs)(r => ArrayBuffer(sample(r)))
 
     /** Merges new centers to centers. */
@@ -101,14 +100,17 @@ class KMeansParallel(
         val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
         val range = 0 until runs
         pointsWithCosts.flatMap { case (p, c) =>
-          range.filter { r =>
+          val selectedRuns = range.filter { r =>
             rand.nextDouble() < 2.0 * c(r) * k / sumCosts(r)
-          }.map((_, p))
+          }
+          val nullCenter = null.asInstanceOf[BregmanCenter]
+          val center = if(selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
+          selectedRuns.map((_, center))
         }
       }.collect()
       mergeNewCenters()
-      chosen.foreach { case (r, p) =>
-        newCenters(r) += pointOps.toCenter(p)
+      chosen.foreach { case (r, center) =>
+        newCenters(r) += center
       }
       step += 1
     }
@@ -120,6 +122,7 @@ class KMeansParallel(
     // on the weighted centers to pick just k of them
 
 
+    costs.unpersist(blocking = false)
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
