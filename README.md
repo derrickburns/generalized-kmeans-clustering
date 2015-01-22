@@ -37,7 +37,7 @@ This project implements several Bregman divergences, including the squared Eucli
 the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
 the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
 
-The ```BregmanDivergence``` trait encapsulated the Bregamn Divergence definition.
+The ```BregmanDivergence``` trait encapsulates the Bregman Divergence definition.
 
 ```scala
 trait BregmanDivergence {
