@@ -86,7 +86,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
     var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
-    distances = updateDistances(points, distances, Array(newCenter.get))
+    distances = updateDistances(points, distances, IndexedSeq(newCenter.get))
     var more = true
     while (centers.length < k && more) {
       val selected = (0 until perRound).flatMap {_ =>
@@ -118,7 +118,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   def updateDistances(
     points: Array[BregmanPoint],
     distances: Array[Double],
-    centers: Array[BregmanCenter]): Array[Double] = {
+    centers: IndexedSeq[BregmanCenter]): Array[Double] = {
     
     points.zip(distances).map { case (p, d) =>
       val dist = ops.pointCost(centers, p)
