@@ -120,6 +120,7 @@ class KMeansParallel(
     // on the weighted centers to pick just k of them
 
 
+    costs.unpersist(blocking = false)
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
