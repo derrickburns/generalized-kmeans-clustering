@@ -127,11 +127,6 @@ trait ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
-Generally speaking, Bregman divergences are not metrics. However, one may take any Bregman divergence
-and transform it into a related Bregman divergence that is also a metric. To demonstrate this, we
-also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
-that is also a metric.
-
 ### From Bregman Divergences to Distance Functions
 
 Bregman divergences define distances, while ```PointOps``` implement fast
