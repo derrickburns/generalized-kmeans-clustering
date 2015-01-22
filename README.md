@@ -13,7 +13,7 @@ The simplest way to call the clusterer is to use the ```KMeans``` object.
 
 ```scala
   object KMeans {
-    train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
+    def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
       distanceFunction: String): KMeansModel = ???
   }
 ```
@@ -45,15 +45,15 @@ that is also a metric.
 Several distance functions are predefined:
 ```scala
   object KMeans {
-    val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
-    val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
-    val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
-    val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
-    val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
-    val EUCLIDEAN = "DENSE_EUCLIDEAN"
-    val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
-    val LOGISTIC_LOSS = "LOGISTIC_LOSS"
-    val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
+    val RELATIVE_ENTROPY = ???
+    val DISCRETE_KL = ???
+    val SPARSE_SMOOTHED_KL = ???
+    val DISCRETE_SMOOTHED_KL = ???
+    val GENERALIZED_SYMMETRIZED_KL = ???
+    val EUCLIDEAN = ???
+    val SPARSE_EUCLIDEAN = ???
+    val LOGISTIC_LOSS = ???
+    val GENERALIZED_I = ???
   }
 ```
 
