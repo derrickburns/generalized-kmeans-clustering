@@ -37,6 +37,96 @@ This project implements several Bregman divergences, including the squared Eucli
 the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
 the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
 
+The ```BregmanDivergence``` trait encapsulated the Bregamn Divergence definition.
+
+```scala
+trait BregmanDivergence {
+
+  /**
+   * F is any convex function.
+   *
+   * @param v input
+   * @return F(v)
+   */
+  def F(v: Vector): Double
+
+  /**
+   * Gradient of F
+   *
+   * @param v input
+   * @return  gradient of F when at v
+   */
+  def gradF(v: Vector): Vector
+
+  /**
+   * F applied to homogeneous coordinates.
+   *
+   * @param v input
+   * @param w weight
+   * @return  F(v/w)
+   */
+  def F(v: Vector, w: Double): Double
+
+  /**
+   * Gradient of F, applied to homogeneous coordinates
+   * @param v input
+   * @param w weight
+   * @return  gradient(v/w)
+   */
+  def gradF(v: Vector, w: Double): Vector
+}
+```
+
+Several Bregman Divergences are provided:
+
+```scala
+/**
+ * The squared Euclidean distance function is defined on points in R**n
+ *
+ * http://en.wikipedia.org/wiki/Euclidean_distance
+ */
+trait SquaredEuclideanDistanceDivergence extends BregmanDivergence
+
+/**
+ * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
+ *
+ * If we know that the points are on the simplex, then we may simplify the implementation
+ * of KL divergence.  This trait implements that simplification.
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence
+/**
+ * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+trait KullbackLeiblerDivergence extends BregmanDivergence
+
+/**
+ * The generalized I-Divergence is defined on points in R**n
+ */
+trait GeneralizedIDivergence extends BregmanDivergence
+
+/**
+ * The Logistic loss divergence is defined on points in (0.0,1.0)
+ *
+ * Logistic loss is the same as KL Divergence with the embedding into R**2
+ *
+ *    x => (x, 1.0 - x)
+ */
+trait LogisticLossDivergence extends BregmanDivergence with GeneralLog
+/**
+ * The Itakura-Saito Divergence is defined on points in R+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
+ */
+trait ItakuraSaitoDivergence extends BregmanDivergence
+
+```
+
 Generally speaking, Bregman divergences are not metrics. However, one may take any Bregman divergence
 and transform it into a related Bregman divergence that is also a metric. To demonstrate this, we
 also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
