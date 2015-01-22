@@ -22,7 +22,7 @@ For greater control, you may provide your own distance function by using the low
 See the implementation of ```KMeans.train``` for an example.
 
 
-### General Distance Function 
+### Bregman Divergences
 
 The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
 a fixed number of clusters.  However, there are many interesting distance functions other than Euclidean distance.
@@ -132,7 +132,29 @@ and transform it into a related Bregman divergence that is also a metric. To dem
 also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
 that is also a metric.
 
-Several distance functions are predefined:
+### From Bregman Divergences to Distance Functions
+
+Bregman divergences define distances, while ```PointOps``` implement fast
+method for computing distances.  ```PointOps``` take advantage of the characteristics of the
+data to define the fastest methods for evaluating Bregman divergences.
+
+
+```scala
+trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory {
+  this: BregmanDivergence =>
+  val weightThreshold = 1e-4
+  val distanceThreshold = 1e-8
+  def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
+  def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = ???
+  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = ???
+  def toCenter(v: WeightedVector): BregmanCenter = ???
+  def toPoint(v: WeightedVector): BregmanPoint =  ???
+  def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
+}
+```
+
+Several singleton distance functions are predefined, including:
+
 ```scala
   object KMeans {
     val RELATIVE_ENTROPY = ???
