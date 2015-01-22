@@ -128,7 +128,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /**
    * Pick a point at random, weighing the choices by the given weight vector.
-   * Return -1 if all weights are 0.0
    *
    * @param rand  random number generator
    * @param weights  the weights of the points
@@ -138,12 +137,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     require(weights.nonEmpty)
 
     var cumulative = 0.0
-    val rangeAndIndices = weights map { z =>
-      cumulative = cumulative + z
+    val cumulativeWeights = weights map { weight =>
+      cumulative = cumulative + weight
       cumulative
     }
-    val r = rand.nextDouble() * rangeAndIndices.last
-    val index = rangeAndIndices.indexWhere(x => x > r)
+    val r = rand.nextDouble() * cumulativeWeights.last
+    val index = cumulativeWeights.indexWhere(x => x > r)
     if( index == -1 ) None else Some(index)
   }
 }
