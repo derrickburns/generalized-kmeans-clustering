@@ -127,7 +127,7 @@ trait ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
-### From Bregman Divergences to Distance Functions
+### From Bregman Divergences to Point Operations
 
 Bregman divergences define distances, while ```PointOps``` implement fast
 method for computing distances.  ```PointOps``` take advantage of the characteristics of the
@@ -148,7 +148,7 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 }
 ```
 
-Several singleton distance functions are predefined, including:
+Several singleton point operations are predefined, including:
 
 ```scala
   object KMeans {
