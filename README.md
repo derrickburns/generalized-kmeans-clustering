@@ -19,7 +19,7 @@ The simplest way to call the clusterer is to use the ```KMeans``` object.
 ```
 
 For greater control, you may provide your own distance function by using the lower level interface.
-See the implementation of ``KMeans.train``` for an example.
+See the implementation of ```KMeans.train``` for an example.
 
 
 ### General Distance Function 
