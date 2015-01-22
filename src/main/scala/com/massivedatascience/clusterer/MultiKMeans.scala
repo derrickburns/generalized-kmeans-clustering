@@ -58,7 +58,7 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
       }
 
       // Find the sum and count of points mapping to each center
-      val (centroids: Array[((Int, Int), MutableWeightedVector)], runDistortion) = getCentroids(data, activeCenters)
+      val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) = getCentroids(data, activeCenters)
 
       if (log.isInfoEnabled) {
         for (run <- activeRuns) logInfo(s"run $run distortion ${runDistortion(run)}")
@@ -66,7 +66,7 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
 
       for (run <- activeRuns) active(run) = false
 
-      for (((runIndex: Int, clusterIndex: Int), cn: MutableWeightedVector) <- centroids) {
+      for (((runIndex: Int, clusterIndex: Int), cn: WeightedVector) <- centroids) {
         val run = activeRuns(runIndex)
         if (cn.weight == 0.0) {
           active(run) = true
@@ -97,12 +97,12 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
   def getCentroids(
     data: RDD[BregmanPoint],
     activeCenters: Array[Array[BregmanCenter]])
-  : (Array[((Int, Int), MutableWeightedVector)], Array[Double]) = {
+  : (Array[((Int, Int), WeightedVector)], Array[Double]) = {
 
     val sc = data.sparkContext
     val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
     val bcActiveCenters = sc.broadcast(activeCenters)
-    val result: Array[((Int, Int), MutableWeightedVector)] = data.mapPartitions { points =>
+    val result: Array[((Int, Int), WeightedVector)] = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
       val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
       for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
@@ -115,11 +115,14 @@ class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKM
         (clusters, run) <- bcCenters.zipWithIndex;
         (contrib, cluster) <- clusters.zipWithIndex
       ) yield {
-        ((run, cluster), centers(run)(cluster))
+        ((run, cluster), centers(run)(cluster).asImmutable)
       }
 
       contribution.iterator
-    }.reduceByKey { (x, y) => x.add(y)}.collect()
+    }.aggregateByKey(pointOps.getCentroid)(
+      (x,y) => x.add(y),
+      (x,y) => x.add(y)
+      ).map( x=> (x._1, x._2.asImmutable)).collect()
     bcActiveCenters.unpersist()
     (result, runDistortion.map(x => x.localValue))
   }
