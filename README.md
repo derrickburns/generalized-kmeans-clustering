@@ -27,6 +27,21 @@ and transform it into a related Bregman divergence that is also a metric. To dem
 also implement a distance function that is a symmetric version of the Kullback-Leibler divergence
 that is also a metric.
 
+Several distance functions are predefined:
+```scala
+  object KMeans {
+    val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
+    val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
+    val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
+    val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
+    val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
+    val EUCLIDEAN = "DENSE_EUCLIDEAN"
+    val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
+    val LOGISTIC_LOSS = "LOGISTIC_LOSS"
+    val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
+  }
+```
+
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 ### Variable number of clusters
