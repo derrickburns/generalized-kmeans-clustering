@@ -7,6 +7,21 @@ or dense data using distances defined by
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
 
+### Usage
+
+The simplest way to call the clusterer is to use the ```KMeans``` object.
+
+```scala
+  object KMeans {
+    train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
+      distanceFunction: String): KMeansModel = ???
+  }
+```
+
+For greater control, you may provide your own distance function by using the lower level interface.
+See the implementation of ``KMeans.train``` for an example.
+
+
 ### General Distance Function 
 
 The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
