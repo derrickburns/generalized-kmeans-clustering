@@ -151,17 +151,17 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 Several singleton point operations are predefined, including:
 
 ```scala
-  object KMeans {
-    val RELATIVE_ENTROPY = ???
-    val DISCRETE_KL = ???
-    val SPARSE_SMOOTHED_KL = ???
-    val DISCRETE_SMOOTHED_KL = ???
-    val GENERALIZED_SYMMETRIZED_KL = ???
-    val EUCLIDEAN = ???
-    val SPARSE_EUCLIDEAN = ???
-    val LOGISTIC_LOSS = ???
-    val GENERALIZED_I = ???
-  }
+  package com.massivedatascience.clusterer
+
+  object DenseSquaredEuclideanPointOps
+  object DenseKullbackLeiblerPointOps
+  object DiscreteDenseKullbackLeiblerPointOps
+  object DiscreteDenseSmoothedKullbackLeiblerPointOps
+  object SparseKullbackLeiblerPointOps
+  object SparseSquaredEuclideanPointOps
+  object LogisticLossPointOps
+  object GeneralizedIPointOps
+  object GeneralizedSymmetrizedKLPointOps
 ```
 
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
