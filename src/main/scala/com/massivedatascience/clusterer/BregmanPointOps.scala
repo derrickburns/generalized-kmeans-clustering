@@ -24,7 +24,7 @@ import org.apache.spark.mllib.linalg.Vector
 /**
  * A point with an additional single Double value that is used in distance computation.
  *
- * @param embedding  inhomogeneous coordinates of point
+ * @param embedding  inhomogeneous coordinates of point following embedding
  * @param weight weight of point
  * @param f f(point)
  */
@@ -35,7 +35,7 @@ class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
 /**
  * A cluster center with two additional Double values that are used in distance computation.
  *
- * @param h vector in homogeneous coordinates
+ * @param h inhomogeneous coordinates of center in the embedded space
  * @param weight weight of vector
  * @param dotGradMinusF  center dot gradient(center) - f(center)
  * @param gradient gradient of center
