@@ -34,6 +34,7 @@ object DirectEmbedding extends Embedding {
   }
 }
 
+
 /**
  *
  * Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
@@ -51,9 +52,9 @@ object DirectEmbedding extends Embedding {
  * @param on number on positive and negative half-spaces to occupy
  */
 class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
-  require(on * 2 < dim)
+  require(on < dim)
 
-  val tinySet = new TinyIntSet(2 * on)
+  val tinySet = new TinyIntSet(on)
 
   def embed(v: Vector): Vector = {
     val iterator = v.iterator
@@ -64,22 +65,12 @@ class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
       val random = new XORShiftRandom(iterator.index)
       iterator.advance()
 
-      var remainingOn = on
-      while (remainingOn > 0) {
+      var remaining = on
+      while (remaining > 0) {
         val ri = random.nextInt() % dim
         if (!tinySet.contains(ri)) {
-          rep(ri) += count
-          remainingOn = remainingOn - 1
-          tinySet.add(ri)
-        }
-      }
-
-      var remainingOff = on
-      while (remainingOff > 0) {
-        val ri = random.nextInt() % dim
-        if (!tinySet.contains(ri)) {
-          rep(ri) -= count
-          remainingOff = remainingOff - 1
+          rep(ri) = if(random.nextBoolean()) rep(ri) + count else rep(ri) - count
+          remaining = remaining - 1
           tinySet.add(ri)
         }
       }
