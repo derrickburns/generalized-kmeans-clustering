@@ -200,14 +200,14 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   }
 }
 
-trait DenseClusterFactory extends ClusterFactory {
+object DenseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new EagerCentroid
 }
 
-trait SparseClusterFactory extends ClusterFactory {
+object SparseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new LateCentroid with FullCollector
 }
 
-trait SparseTopKClusterFactory extends ClusterFactory {
+object SparseTopKClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new LateCentroid with TopKCollector
 }

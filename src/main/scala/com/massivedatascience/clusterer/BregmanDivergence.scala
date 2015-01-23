@@ -79,7 +79,7 @@ trait BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
+object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
    * Squared L ** 2 norm
@@ -112,22 +112,22 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerSimplexDivergence extends BregmanDivergence  { this : HasLog =>
+class KullbackLeiblerSimplexDivergence(logFunc: HasLog) extends BregmanDivergence {
 
-  def F(v: Vector): Double = dot(trans(v, log), v)
+  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def F(v: Vector, w: Double) = {
-    val logW = log(w)
-    dot(trans(v, log(_) - logW), v) / w
+    val logW = logFunc.log(w)
+    dot(trans(v, logFunc.log(_) - logW), v) / w
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + log(_))
+    trans(v, 1.0 + logFunc.log(_))
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - log(w)
-    trans(v, c + log(_))
+    val c = 1.0 - logFunc.log(w)
+    trans(v, c + logFunc.log(_))
   }
 }
 
@@ -137,9 +137,9 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence  { this : HasLo
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerDivergence extends BregmanDivergence { this : HasLog =>
+class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
 
-  @inline def logMinusOne(x: Double) = log(x) - 1
+  @inline def logMinusOne(x: Double) = logFunc.log(x) - 1
 
   def F(v: Vector): Double = dot(trans(v, logMinusOne), v)
 
@@ -161,22 +161,22 @@ trait KullbackLeiblerDivergence extends BregmanDivergence { this : HasLog =>
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-trait GeneralizedIDivergence extends BregmanDivergence { this : HasLog =>
+class GeneralizedIDivergence(logFunc: HasLog) extends BregmanDivergence {
 
-  def F(v: Vector): Double = dot(trans(v, log), v)
+  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def F(v: Vector, w: Double): Double = {
-    val logW = log(w)
-    dot(v, trans(v, log(_) - logW)) / w
+    val logW = logFunc.log(w)
+    dot(v, trans(v, logFunc.log(_) - logW)) / w
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, log)
+    trans(v, logFunc.log)
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = -log(w)
-    trans(v, c + log(_))
+    val c = -logFunc.log(w)
+    trans(v, c + logFunc.log(_))
   }
 }
 
@@ -187,7 +187,9 @@ trait GeneralizedIDivergence extends BregmanDivergence { this : HasLog =>
  *
  *    x => (x, 1.0 - x)
  */
-trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
+object LogisticLossDivergence extends BregmanDivergence {
+
+  val log = GeneralLog.log _
 
   def F(v: Vector): Double = {
     val x = v(0)
@@ -215,7 +217,7 @@ trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
  *
  * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
+class ItakuraSaitoDivergence(logFunc: HasLog) extends BregmanDivergence {
 
   /**
    * Burg entropy
@@ -224,11 +226,11 @@ trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
    * @return F(v)
    */
   def F(v: Vector): Double = {
-    -sum(trans(v, log))
+    -sum(trans(v, logFunc.log))
   }
 
   def F(v: Vector, w: Double): Double = {
-    log(w) - sum(trans(v, log))
+    logFunc.log(w) - sum(trans(v, logFunc.log))
   }
 
   def gradF(v: Vector): Vector = {
@@ -236,7 +238,7 @@ trait ItakuraSaitoDivergence extends BregmanDivergence { this : HasLog =>
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - log(w)
+    val c = 1.0 - logFunc.log(w)
     trans(v, x => -w / x)
   }
 }

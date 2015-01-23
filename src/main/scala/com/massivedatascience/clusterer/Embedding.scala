@@ -24,6 +24,7 @@ trait Embedding extends Serializable {
   def embed(v: Vector): Vector
 }
 
+
 object DirectEmbedding extends Embedding {
   def embed(v: Vector): Vector = {
    v match {

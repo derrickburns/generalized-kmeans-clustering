@@ -31,7 +31,6 @@ import org.apache.spark.mllib.linalg.Vector
 class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
   extends ImmutableInhomogeneousVector(embedding, weight)
 
-
 /**
  * A cluster center with an additional Double and an additional vector containing the gradient
  * that are used in distance computation.
@@ -45,12 +44,16 @@ class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gr
   extends ImmutableHomogeneousVector(h, weight)
 
 
-trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory {
-  this: BregmanDivergence =>
+class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
+  extends PointOps[BregmanPoint, BregmanCenter]
+  with ClusterFactory {
+
+  def getCentroid = clusterFactory.getCentroid
+
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
 
-  def embed(v: Vector) : Vector = v
+  def embed(v: Vector): Vector = v
 
   /**
    * Bregman distance function
@@ -75,24 +78,24 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
     val embedding = embed(asInhomogeneous(h, weight))
-    new BregmanPoint(embedding, weight, F(embedding))
+    new BregmanPoint(embedding, weight, divergence.F(embedding))
   }
 
   def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
     val embedding = embed(inh)
-    new BregmanPoint(embedding, weight, F(embedding))
+    new BregmanPoint(embedding, weight, divergence.F(embedding))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = v.homogeneous
     val w = v.weight
-    val df = gradF(h, w)
-    new BregmanCenter(h, w, dot(h, df) / w - F(h, w), df)
+    val df = divergence.gradF(h, w)
+    new BregmanCenter(h, w, dot(h, df) / w - divergence.F(h, w), df)
   }
 
   def toPoint(v: WeightedVector): BregmanPoint = {
     val inh = v.inhomogeneous
-    new BregmanPoint(inh, v.weight, F(inh))
+    new BregmanPoint(inh, v.weight, divergence.F(inh))
   }
 
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean =
@@ -103,49 +106,36 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
 object DenseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
-  with GeneralLog
-  with DenseClusterFactory
+  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), DenseClusterFactory)
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
 object GeneralizedIPointOps
-  extends GeneralizedIDivergence
-  with BregmanPointOps
-  with GeneralLog
-  with DenseClusterFactory
+  extends BregmanPointOps(new GeneralizedIDivergence(GeneralLog), DenseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
 object DenseSquaredEuclideanPointOps
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
-  with DenseClusterFactory
+  extends BregmanPointOps(SquaredEuclideanDistanceDivergence, DenseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n
  */
 object SparseSquaredEuclideanPointOps
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
-  with SparseClusterFactory
+  extends BregmanPointOps(SquaredEuclideanDistanceDivergence, SparseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n by
  * embedding the sparse vectors into a dense space using Random Indexing
  *
  */
-class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
-  with DenseClusterFactory {
+class RIEuclideanPointOps(dim: Int, on: Int)
+  extends BregmanPointOps(SquaredEuclideanDistanceDivergence, DenseClusterFactory) {
 
   val embedding = new RandomIndexEmbedding(dim, on)
-
-  override def embed(v: Vector) : Vector = embedding.embed(v.copy)
+  override def embed(v: Vector): Vector = embedding.embed(v.copy)
 }
 
 /**
@@ -153,14 +143,11 @@ class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps
-  extends RandomIndexedSquaredEuclideanPointOps(256, 3)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256, 3)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps
-  extends RandomIndexedSquaredEuclideanPointOps(512, 4)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512, 4)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps
-  extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024, 7)
 
 
 /**
@@ -168,19 +155,13 @@ object HighDimensionalRandomIndexedSquaredEuclideanPointOps
  */
 
 object LogisticLossPointOps
-  extends LogisticLossDivergence
-  with BregmanPointOps
-  with DenseClusterFactory
-
+  extends BregmanPointOps(LogisticLossDivergence, DenseClusterFactory)
 
 /**
  * Implements Itakura-Saito divergence on dense vectors in R+ ** n
  */
 object ItakuraSaitoPointOps
-  extends ItakuraSaitoDivergence
-  with BregmanPointOps
-  with GeneralLog
-  with DenseClusterFactory
+  extends BregmanPointOps(new ItakuraSaitoDivergence(GeneralLog), DenseClusterFactory)
 
 /**
  * Implements Kullback-Leibler divergence for sparse points in R+ ** n
@@ -197,11 +178,8 @@ object ItakuraSaitoPointOps
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
 object SparseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
-  with GeneralLog
-  with SparseClusterFactory {
-  /**
+  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), SparseClusterFactory) {
+    /**
    * Smooth the center using a variant Laplacian smoothing.
    *
    * The distance is roughly the equivalent of adding 1 to the center for
@@ -227,11 +205,7 @@ object SparseKullbackLeiblerPointOps
  * i.e. the entries in each vector are positive integers.
  */
 object DiscreteDenseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
-  with DiscreteLog
-  with DenseClusterFactory
-
+  extends BregmanPointOps(new KullbackLeiblerDivergence(DiscreteLog), DenseClusterFactory)
 
 /**
  * Implements Kullback-Leibler divergence with dense points in N ** n and whose
@@ -242,18 +216,16 @@ object DiscreteDenseKullbackLeiblerPointOps
  *
  */
 object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
-  with DiscreteLog
-  with DenseClusterFactory {
+  extends BregmanPointOps(new KullbackLeiblerDivergence(DiscreteLog), DenseClusterFactory) {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
     val w = v.weight + v.homogeneous.size
-    val df = gradF(h, w)
-    new BregmanCenter(v.homogeneous, w, dot(h, df) / w - F(h, w), df)
+    val df = divergence.gradF(h, w)
+    new BregmanCenter(v.homogeneous, w, dot(h, df) / w - divergence.F(h, w), df)
   }
 }
+
 
 /**
  * One can create a symmetric version of the Kullback Leibler Divergence that can be clustered
@@ -271,13 +243,10 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  *
  */
 object GeneralizedSymmetrizedKLPointOps
-  extends BregmanPointOps
-  with KullbackLeiblerDivergence
-  with GeneralLog
-  with DenseClusterFactory {
+  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), DenseClusterFactory) {
 
-  override def embed(v: Vector) : Vector = {
+  override def embed(v: Vector): Vector = {
     val embeddedV = v.copy
-    axpy(1.0, gradF(embeddedV), embeddedV)
+    axpy(1.0, divergence.gradF(embeddedV), embeddedV)
   }
 }

@@ -21,12 +21,12 @@ trait HasLog extends Serializable {
   def log(x: Double) : Double
 }
 
-trait GeneralLog extends HasLog {
+object GeneralLog extends HasLog {
   @inline
   override def log(x: Double) : Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
-trait DiscreteLog extends HasLog{
+object DiscreteLog extends HasLog{
   private val logTable = new Array[Double](4096 * 1000)
 
   override def log(d: Double): Double = {
