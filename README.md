@@ -191,7 +191,7 @@ point operations are provided as singleton objects, including:
 |----------------------------|--------------------------------------------------------|--------------------------------|
 | ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |
 | ```RELATIVE_ENTROPY```           | ```DenseKullbackLeiblerPointOps```                           | R+^d                           |
-| ```DISCRETE_KL```                | ```DiscreteDenseKullbackLeiblerPointOps```                   | R+^d                           |
+| ```DISCRETE_KL```                | ```DiscreteDenseKullbackLeiblerPointOps```                   | N+^d                           |
 | ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKullbackLeiblerPointOps```           | N^d                            |
 | ```SPARSE_SMOOTHED_KL```         | ```SparseKullbackLeiblerPointOps```                          | R+^d                           |
 | ```SPARSE_EUCLIDEAN```          | ```SparseSquaredEuclideanPointOps```                         | R^d                            |
