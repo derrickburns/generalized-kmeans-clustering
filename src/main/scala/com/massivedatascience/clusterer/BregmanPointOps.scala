@@ -33,7 +33,8 @@ class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
 
 
 /**
- * A cluster center with two additional Double values that are used in distance computation.
+ * A cluster center with an additional Double and an additional vector containing the gradient
+ * that are used in distance computation.
  *
  * @param h inhomogeneous coordinates of center in the embedded space
  * @param weight weight of vector
@@ -152,11 +153,14 @@ class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(256, 3)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(256, 3)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(512, 4)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(512, 4)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
 
 
 /**
@@ -266,10 +270,11 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
  *
  */
-object GeneralizedSymmetrizedKLPointOps
+object KLGeneralizedSymmetrizedKLPointOps
   extends BregmanPointOps
   with KullbackLeiblerDivergence
-  with GeneralLog with DenseClusterFactory {
+  with GeneralLog
+  with DenseClusterFactory {
 
   override def embed(v: Vector) : Vector = {
     val embeddedV = v.copy
