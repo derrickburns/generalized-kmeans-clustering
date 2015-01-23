@@ -39,7 +39,7 @@ import org.apache.spark.mllib.linalg.{Vectors, Vector}
 class RandomIndex(dim: Int, on: Int) {
   require(on * 2 < dim)
 
-  val tinySet = new TinyNaturalSet(2*on)
+  val tinySet = new TinyNaturalSet(2 * on)
 
   def asRandomDenseVector(v: Vector): Vector = {
     val iterator = v.iterator
@@ -47,13 +47,13 @@ class RandomIndex(dim: Int, on: Int) {
 
     while (iterator.hasNext) {
       val count = iterator.value
-      val random =  new XORShiftRandom(iterator.index)
+      val random = new XORShiftRandom(iterator.index)
       iterator.advance()
 
       var remainingOn = on
       while (remainingOn > 0) {
         val ri = random.nextInt() % dim
-        if (! tinySet.contains(ri)) {
+        if (!tinySet.contains(ri)) {
           rep(ri) += count
           remainingOn = remainingOn - 1
           tinySet.add(ri)
@@ -63,7 +63,7 @@ class RandomIndex(dim: Int, on: Int) {
       var remainingOff = on
       while (remainingOff > 0) {
         val ri = random.nextInt() % dim
-        if (! tinySet.contains(ri)) {
+        if (!tinySet.contains(ri)) {
           rep(ri) -= count
           remainingOff = remainingOff - 1
           tinySet.add(ri)
@@ -77,7 +77,7 @@ class RandomIndex(dim: Int, on: Int) {
 
 /**
  * A tiny set of integer values
- * 
+ *
  * @param maxSize the maximum number of elements in the set
  */
 
@@ -85,20 +85,20 @@ class TinyNaturalSet(maxSize: Int) {
   val taken = new Array[Int](maxSize)
   var size = 0
 
-  def contains(ri: Int) : Boolean = {
+  def contains(ri: Int): Boolean = {
     var i = size
-    while( i > 0 ) {
+    while (i > 0) {
       i = i - 1
-      if( taken(i) == ri ) return true
+      if (taken(i) == ri) return true
     }
     false
   }
 
-  def add(ri:Int) : Unit = {
+  def add(ri: Int): Unit = {
     require(size < maxSize)
     taken(size) = ri
     size = size + 1
   }
 
-  def clear() : Unit = size = 0
+  def clear(): Unit = size = 0
 }
