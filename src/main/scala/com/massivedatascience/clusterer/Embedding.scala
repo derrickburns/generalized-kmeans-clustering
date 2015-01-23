@@ -38,7 +38,7 @@ object DirectEmbedding extends Embedding {
  * Embeds sparse vectors in high dimensional spaces into dense vectors of low dimensional space
  * in a way that preserves similarity as per the Johnson-Lindenstrauss lemma.
  *
- * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss_lemma
+ * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss lemma
  *
  * This technique is called random indexing
  *
@@ -52,7 +52,7 @@ object DirectEmbedding extends Embedding {
 class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
   require(on * 2 < dim)
 
-  val tinySet = new TinyNaturalSet(2 * on)
+  val tinySet = new TinyIntSet(2 * on)
 
   def embed(v: Vector): Vector = {
     val iterator = v.iterator
@@ -94,7 +94,7 @@ class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
  * @param maxSize the maximum number of elements in the set
  */
 
-class TinyNaturalSet(maxSize: Int) {
+class TinyIntSet(maxSize: Int) {
   val taken = new Array[Int](maxSize)
   var size = 0
 
