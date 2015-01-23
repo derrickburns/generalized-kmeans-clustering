@@ -134,8 +134,10 @@ method for computing distances.  ```PointOps``` take advantage of the characteri
 data to define the fastest methods for evaluating Bregman divergences.
 
 ```scala
-trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory {
-  this: BregmanDivergence =>
+class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
+  extends PointOps[BregmanPoint, BregmanCenter]
+  with ClusterFactory {
+
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
   def embed(v:Vector) : Vector = ???
