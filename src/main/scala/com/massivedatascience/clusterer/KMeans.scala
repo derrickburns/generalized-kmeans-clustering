@@ -52,7 +52,6 @@ object KMeans extends Logging  {
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
-      case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
       case LOW_DIMENSIONAL_RI => LowDimensionalRandomIndexedSquaredEuclideanPointOps
       case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRandomIndexedSquaredEuclideanPointOps
       case HIGH_DIMENSIONAL_RI => HighDimensionalRandomIndexedSquaredEuclideanPointOps

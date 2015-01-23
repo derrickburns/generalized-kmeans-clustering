@@ -187,22 +187,20 @@ for an example.
 Point operations may be created by mixing in various traits.  However, several commonly used
 point operations are provided as singleton objects, including:
 
-```scala
-  package com.massivedatascience.clusterer
-
-  object DenseSquaredEuclideanPointOps
-  object DenseKullbackLeiblerPointOps
-  object DiscreteDenseKullbackLeiblerPointOps
-  object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  object SparseKullbackLeiblerPointOps
-  object SparseSquaredEuclideanPointOps
-  object LogisticLossPointOps
-  object GeneralizedIPointOps
-  object GeneralizedSymmetrizedKLPointOps
-  object LowDimensionalRandomIndexedSquaredEuclideanPointOps
-  object MediumDimensionalRandomIndexedSquaredEuclideanPointOps
-  object HighDimensionalRandomIndexedSquaredEuclideanPointOps
-```
+| Name (KMeans._)            | Object                                                 | Space (d is small, D is large) |
+|----------------------------|--------------------------------------------------------|--------------------------------|
+| EUCLIDEAN                  | DenseSquaredEuclideanPointOps                          | R^d                            |
+| RELATIVE_ENTROPY           | DenseKullbackLeiblerPointOps                           | R+^d                           |
+| DISCRETE_KL                | DiscreteDenseKullbackLeiblerPointOps                   | R+^d                           |
+| DISCRETE_SMOOTHED_KL       | DiscreteDenseSmoothedKullbackLeiblerPointOps           | N^d                            |
+| SPARSE_SMOOTHED_KL         | SparseKullbackLeiblerPointOps                          | R+^d                           |
+| SPARSE_EUCLIDEAN           | SparseSquaredEuclideanPointOps                         | R^d                            |
+| LOGISTIC_LOSS              | LogisticLossPointOps                                   | R                              |
+| GENERALIZED_I              | GeneralizedIPointOps                                   | R                              |
+| GENERALIZED_SYMMETRIZED_KL | GeneralizedSymmetrizedKLPointOps                       | R+^d                           |
+| LOW_DIMENSIONAL_RI         | LowDimensionalRandomIndexedSquaredEuclideanPointOps    | R^D                            |
+| MEDIUM_DIMENSIONAL_RI      | MediumDimensionalRandomIndexedSquaredEuclideanPointOps | R^D                            |
+| HIGH_DIMENSIONAL_RI        | HighDimensionalRandomIndexedSquaredEuclideanPointOps   | R^D                            |
 
 
 ### Variable number of clusters
