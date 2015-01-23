@@ -106,7 +106,7 @@ class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: Clu
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
 object DenseKullbackLeiblerPointOps
-  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), DenseClusterFactory)
+  extends BregmanPointOps(RealKullbackLeiblerDivergence, DenseClusterFactory)
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
@@ -143,11 +143,11 @@ class RIEuclideanPointOps(dim: Int, on: Int)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256, 3)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256, 6)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512, 4)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512, 8)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024, 7)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024, 10)
 
 
 /**
@@ -178,7 +178,7 @@ object ItakuraSaitoPointOps
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
 object SparseKullbackLeiblerPointOps
-  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), SparseClusterFactory) {
+  extends BregmanPointOps(RealKullbackLeiblerDivergence, SparseClusterFactory) {
     /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -205,7 +205,7 @@ object SparseKullbackLeiblerPointOps
  * i.e. the entries in each vector are positive integers.
  */
 object DiscreteDenseKullbackLeiblerPointOps
-  extends BregmanPointOps(new KullbackLeiblerDivergence(DiscreteLog), DenseClusterFactory)
+  extends BregmanPointOps(NaturalKullbackLeiblerDivergence, DenseClusterFactory)
 
 /**
  * Implements Kullback-Leibler divergence with dense points in N ** n and whose
@@ -216,7 +216,7 @@ object DiscreteDenseKullbackLeiblerPointOps
  *
  */
 object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  extends BregmanPointOps(new KullbackLeiblerDivergence(DiscreteLog), DenseClusterFactory) {
+  extends BregmanPointOps(NaturalKullbackLeiblerDivergence, DenseClusterFactory) {
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
@@ -243,7 +243,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  *
  */
 object GeneralizedSymmetrizedKLPointOps
-  extends BregmanPointOps(new KullbackLeiblerDivergence(GeneralLog), DenseClusterFactory) {
+  extends BregmanPointOps(RealKullbackLeiblerDivergence, DenseClusterFactory) {
 
   override def embed(v: Vector): Vector = {
     val embeddedV = v.copy

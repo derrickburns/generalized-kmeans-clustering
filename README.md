@@ -85,7 +85,7 @@ Several Bregman Divergences are provided:
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-trait SquaredEuclideanDistanceDivergence extends BregmanDivergence
+object SquaredEuclideanDistanceDivergence extends BregmanDivergence
 
 /**
  * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
@@ -96,19 +96,39 @@ trait SquaredEuclideanDistanceDivergence extends BregmanDivergence
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerSimplexDivergence extends BregmanDivergence
+object RealKullbackLeiblerSimplexDivergence extends BregmanDivergence
+
+/**
+ * The Kullback-Leibler divergence is defined on points on a simplex in N+ ** n
+ *
+ * If we know that the points are on the simplex, then we may simplify the implementation
+ * of KL divergence.  This trait implements that simplification.
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+object NaturalKullbackLeiblerSimplexDivergence extends BregmanDivergence
+
 /**
  * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
  *
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-trait KullbackLeiblerDivergence extends BregmanDivergence
+object RealKullbackLeiblerDivergence extends BregmanDivergence
+
+/**
+ * The generalized Kullback-Leibler divergence is defined on points on N+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+object NaturalKullbackLeiblerDivergence extends BregmanDivergence
 
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-trait GeneralizedIDivergence extends BregmanDivergence
+object GeneralizedIDivergence extends BregmanDivergence
 
 /**
  * The Logistic loss divergence is defined on points in (0.0,1.0)
@@ -117,13 +137,15 @@ trait GeneralizedIDivergence extends BregmanDivergence
  *
  *    x => (x, 1.0 - x)
  */
-trait LogisticLossDivergence extends BregmanDivergence with GeneralLog
+object LogisticLossDivergence extends BregmanDivergence
+
 /**
  * The Itakura-Saito Divergence is defined on points in R+ ** n
  *
  * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-trait ItakuraSaitoDivergence extends BregmanDivergence
+
+object ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
