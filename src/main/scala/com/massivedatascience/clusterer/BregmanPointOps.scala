@@ -108,26 +108,22 @@ class BregmanPointOps(
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
-object DenseKullbackLeiblerPointOps
-  extends BregmanPointOps(RealKLDivergence)
+object DenseKullbackLeiblerPointOps extends BregmanPointOps(RealKLDivergence)
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
-object GeneralizedIPointOps
-  extends BregmanPointOps(new GeneralizedIDivergence(GeneralLog))
+object GeneralizedIPointOps extends BregmanPointOps(new GeneralizedIDivergence(GeneralLog))
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
-object DenseSquaredEuclideanPointOps
-  extends BregmanPointOps()
+object DenseSquaredEuclideanPointOps extends BregmanPointOps()
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n
  */
-object SparseSquaredEuclideanPointOps
-  extends BregmanPointOps(clusterFactory = SparseClusterFactory)
+object SparseSquaredEuclideanPointOps extends BregmanPointOps(clusterFactory = SparseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n by
@@ -147,7 +143,6 @@ object LowDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointO
 object MediumDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(256)
 
 object HighDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(512)
-
 
 /**
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
@@ -211,7 +206,6 @@ object DiscreteDenseKLPointOps extends BregmanPointOps(NaturalKLDivergence)
  *
  */
 object DiscreteDenseSmoothedKLPointOps extends BregmanPointOps(NaturalKLDivergence) {
-
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
     val w = v.weight + v.homogeneous.size
@@ -237,7 +231,6 @@ object DiscreteDenseSmoothedKLPointOps extends BregmanPointOps(NaturalKLDivergen
  *
  */
 object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps(RealKLDivergence) {
-
   override def embed(v: Vector): Vector = {
     val embedded = v.copy
     axpy(1.0, divergence.gradF(embedded), embedded)
