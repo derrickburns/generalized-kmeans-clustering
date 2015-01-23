@@ -35,7 +35,7 @@ object DirectEmbedding extends Embedding {
 
 /**
  *
- * Embeds sparse vectors in high dimensional spaces into dense vectors of low dimensional space
+ * Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
  * in a way that preserves similarity as per the Johnson-Lindenstrauss lemma.
  *
  * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss lemma
