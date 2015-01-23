@@ -102,35 +102,31 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
-object DenseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
+object DenseKullbackLeiblerPointOps extends BregmanPointOps
+  with KullbackLeiblerDivergence
   with GeneralLog
   with DenseClusterFactory
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
-object GeneralizedIPointOps
-  extends GeneralizedIDivergence
-  with BregmanPointOps
+object GeneralizedIPointOps extends BregmanPointOps
+  with GeneralizedIDivergence
   with GeneralLog
   with DenseClusterFactory
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
-object DenseSquaredEuclideanPointOps
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
+object DenseSquaredEuclideanPointOps extends BregmanPointOps
+  with SquaredEuclideanDistanceDivergence
   with DenseClusterFactory
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n
  */
-object SparseSquaredEuclideanPointOps
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
+object SparseSquaredEuclideanPointOps extends BregmanPointOps
+  with SquaredEuclideanDistanceDivergence
   with SparseClusterFactory
 
 /**
@@ -138,9 +134,8 @@ object SparseSquaredEuclideanPointOps
  * embedding the sparse vectors into a dense space using Random Indexing
  *
  */
-class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
-  extends SquaredEuclideanDistanceDivergence
-  with BregmanPointOps
+class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int) extends BregmanPointOps
+  with SquaredEuclideanDistanceDivergence
   with DenseClusterFactory {
 
   val embedding = new RandomIndexEmbedding(dim, on)
@@ -167,18 +162,16 @@ object HighDimensionalRandomIndexedSquaredEuclideanPointOps
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
  */
 
-object LogisticLossPointOps
-  extends LogisticLossDivergence
-  with BregmanPointOps
+object LogisticLossPointOps extends BregmanPointOps
+  with LogisticLossDivergence
   with DenseClusterFactory
 
 
 /**
  * Implements Itakura-Saito divergence on dense vectors in R+ ** n
  */
-object ItakuraSaitoPointOps
-  extends ItakuraSaitoDivergence
-  with BregmanPointOps
+object ItakuraSaitoPointOps extends BregmanPointOps
+  with ItakuraSaitoDivergence
   with GeneralLog
   with DenseClusterFactory
 
@@ -196,9 +189,8 @@ object ItakuraSaitoPointOps
  * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
-object SparseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
+object SparseKullbackLeiblerPointOps extends BregmanPointOps
+  with KullbackLeiblerDivergence
   with GeneralLog
   with SparseClusterFactory {
   /**
@@ -226,9 +218,8 @@ object SparseKullbackLeiblerPointOps
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
-object DiscreteDenseKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
+object DiscreteDenseKullbackLeiblerPointOps extends BregmanPointOps
+  with KullbackLeiblerDivergence
   with DiscreteLog
   with DenseClusterFactory
 
@@ -241,9 +232,8 @@ object DiscreteDenseKullbackLeiblerPointOps
  * zero values, we smooth the centers by adding the unit vector to each center.
  *
  */
-object DiscreteDenseSmoothedKullbackLeiblerPointOps
-  extends KullbackLeiblerDivergence
-  with BregmanPointOps
+object DiscreteDenseSmoothedKullbackLeiblerPointOps extends BregmanPointOps
+  with KullbackLeiblerDivergence
   with DiscreteLog
   with DenseClusterFactory {
 
@@ -270,8 +260,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
  *
  */
-object GeneralizedSymmetrizedKLPointOps
-  extends BregmanPointOps
+object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps
   with KullbackLeiblerDivergence
   with GeneralLog
   with DenseClusterFactory {
