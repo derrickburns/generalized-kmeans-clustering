@@ -131,6 +131,10 @@ class KullbackLeiblerSimplexDivergence(logFunc: HasLog) extends BregmanDivergenc
   }
 }
 
+object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(GeneralLog)
+
+object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(DiscreteLog)
+
 /**
  * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
  *
@@ -157,6 +161,11 @@ class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
     trans(v, c + logMinusOne(_))
   }
 }
+
+object RealKullbackLeiblerDivergence extends KullbackLeiblerDivergence(GeneralLog)
+
+object NaturalKullbackLeiblerDivergence extends KullbackLeiblerDivergence(DiscreteLog)
+
 
 /**
  * The generalized I-Divergence is defined on points in R**n
