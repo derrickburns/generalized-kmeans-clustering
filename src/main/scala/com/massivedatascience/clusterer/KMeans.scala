@@ -36,6 +36,9 @@ object KMeans extends Logging  {
   val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
   val LOGISTIC_LOSS = "LOGISTIC_LOSS"
   val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
+  val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
+  val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
+  val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
 
   private def getPointOps(name: String): BregmanPointOps = {
@@ -44,13 +47,15 @@ object KMeans extends Logging  {
       case RELATIVE_ENTROPY => DenseKullbackLeiblerPointOps
       case DISCRETE_KL => DiscreteDenseKullbackLeiblerPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKullbackLeiblerPointOps
-
       case SPARSE_SMOOTHED_KL => SparseKullbackLeiblerPointOps
       case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
-
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
+      case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
+      case LOW_DIMENSIONAL_RI => LowDimensionalRandomIndexedSquaredEuclideanPointOps
+      case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRandomIndexedSquaredEuclideanPointOps
+      case HIGH_DIMENSIONAL_RI => HighDimensionalRandomIndexedSquaredEuclideanPointOps
 
       case _ => DenseSquaredEuclideanPointOps
     }

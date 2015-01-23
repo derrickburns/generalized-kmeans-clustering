@@ -185,7 +185,7 @@ for an example.
 #### Provided Point Operations
 
 Point operations may be created by mixing in various traits.  However, several commonly used
-point operations are provided as singleton objected, including:
+point operations are provided as singleton objects, including:
 
 ```scala
   package com.massivedatascience.clusterer

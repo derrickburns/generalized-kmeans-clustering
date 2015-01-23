@@ -24,18 +24,19 @@ import org.apache.spark.mllib.linalg.Vector
 /**
  * A point with an additional single Double value that is used in distance computation.
  *
- * @param inh  inhomogeneous coordinates of point
+ * @param embedding  inhomogeneous coordinates of point following embedding
  * @param weight weight of point
  * @param f f(point)
  */
-class BregmanPoint(inh: Vector, weight: Double, val f: Double)
-  extends ImmutableInhomogeneousVector(inh, weight)
+class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
+  extends ImmutableInhomogeneousVector(embedding, weight)
 
 
 /**
- * A cluster center with two additional Double values that are used in distance computation.
+ * A cluster center with an additional Double and an additional vector containing the gradient
+ * that are used in distance computation.
  *
- * @param h vector in homogeneous coordinates
+ * @param h inhomogeneous coordinates of center in the embedded space
  * @param weight weight of vector
  * @param dotGradMinusF  center dot gradient(center) - f(center)
  * @param gradient gradient of center
@@ -73,14 +74,13 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
   }
 
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
-    val inh = asInhomogeneous(h, weight)
-    val embedding = embed(inh)
-    new BregmanPoint(inh, weight, F(embedding))
+    val embedding = embed(asInhomogeneous(h, weight))
+    new BregmanPoint(embedding, weight, F(embedding))
   }
 
   def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
     val embedding = embed(inh)
-    new BregmanPoint(inh, weight, F(embedding))
+    new BregmanPoint(embedding, weight, F(embedding))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
@@ -153,11 +153,14 @@ class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(256, 3)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(256, 3)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(512, 4)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(512, 4)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps
+  extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
 
 
 /**
@@ -270,7 +273,8 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
 object GeneralizedSymmetrizedKLPointOps
   extends BregmanPointOps
   with KullbackLeiblerDivergence
-  with GeneralLog with DenseClusterFactory {
+  with GeneralLog
+  with DenseClusterFactory {
 
   override def embed(v: Vector) : Vector = {
     val embeddedV = v.copy
