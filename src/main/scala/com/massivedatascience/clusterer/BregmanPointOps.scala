@@ -44,7 +44,10 @@ class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gr
   extends ImmutableHomogeneousVector(h, weight)
 
 
-class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
+class BregmanPointOps(
+  val divergence: BregmanDivergence, 
+  val clusterFactory: ClusterFactory, 
+  val embedding: Embedding = IdentityEmbedding)
   extends PointOps[BregmanPoint, BregmanCenter]
   with ClusterFactory {
 
@@ -53,7 +56,7 @@ class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: Clu
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
 
-  def embed(v: Vector): Vector = v
+  def embed(v: Vector): Vector = embedding.embed(v)
 
   /**
    * Bregman distance function
@@ -131,23 +134,20 @@ object SparseSquaredEuclideanPointOps
  * embedding the sparse vectors into a dense space using Random Indexing
  *
  */
-class RIEuclideanPointOps(dim: Int, on: Int)
-  extends BregmanPointOps(SquaredEuclideanDistanceDivergence, DenseClusterFactory) {
-
-  val embedding = new RandomIndexEmbedding(dim, on)
-  override def embed(v: Vector): Vector = embedding.embed(v.copy)
-}
+class RIEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
+  extends BregmanPointOps(SquaredEuclideanDistanceDivergence, DenseClusterFactory, 
+    new RandomIndexEmbedding(dimension, epsilon))
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n by
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256, 6)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512, 8)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024, 10)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024)
 
 
 /**

@@ -38,7 +38,7 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
-trait BregmanDivergence {
+trait BregmanDivergence extends Serializable {
 
   /**
    * F is any convex function.

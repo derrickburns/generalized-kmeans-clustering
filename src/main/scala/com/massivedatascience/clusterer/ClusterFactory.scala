@@ -30,7 +30,7 @@ import scala.collection.mutable.ArrayBuffer
  * K-Means algorithms need a method to construct a median or centroid value.
  * This trait abstracts the type of the object used to create the centroid.
  */
-trait ClusterFactory {
+trait ClusterFactory extends  Serializable {
   def getCentroid: MutableWeightedVector
 }
 

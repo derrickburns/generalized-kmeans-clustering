@@ -24,8 +24,11 @@ trait Embedding extends Serializable {
   def embed(v: Vector): Vector
 }
 
+object IdentityEmbedding extends Embedding {
+  def embed(v: Vector): Vector = v
+}
 
-object DirectEmbedding extends Embedding {
+object DenseEmbedding extends Embedding {
   def embed(v: Vector): Vector = {
    v match {
      case sv: SparseVector => Vectors.dense(v.toArray)
@@ -33,7 +36,6 @@ object DirectEmbedding extends Embedding {
    }
   }
 }
-
 
 /**
  *
@@ -49,10 +51,13 @@ object DirectEmbedding extends Embedding {
  * https://www.sics.se/~mange/papers/RI_intro.pdf
  *
  * @param dim number of dimensions to use for the dense vector
- * @param on number on positive and negative half-spaces to occupy
+ * @param epsilon portion of dimensions with non-zero values
  */
-class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
-  require(on < dim)
+class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
+  require(epsilon < 1.0)
+  require(epsilon > 0.0)
+
+  val on = Math.ceil(epsilon * dim).toInt & -2
 
   val tinySet = new TinyIntSet(on)
 
