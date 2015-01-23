@@ -18,31 +18,24 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
-import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector}
+import org.apache.spark.mllib.linalg.{Vectors, Vector}
 
-
-class TinyNaturalSet(on: Int) {
-  val taken = new Array[Int](on)
-  var size = 0
-
-  def contains(ri: Int) : Boolean = {
-    var i = size
-    while( i > 0 ) {
-      i = i - 1
-      if( taken(i) == ri ) return true
-    }
-    false
-  }
-
-  def add(ri:Int) : Unit = {
-    require(size < on)
-    taken(size) = ri
-    size = size + 1
-  }
-
-  def clear() : Unit = size = 0
-}
-
+/**
+ *
+ * Converts sparse vectors in high dimensional spaces into dense vectors of low dimensional space
+ * in a way that preserves similarity as per the Johnson-Lindenstrauss lemma.
+ *
+ * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss_lemma
+ *
+ * This technique is called random indexing
+ *
+ * http://en.wikipedia.org/wiki/Random_indexing
+ *
+ * https://www.sics.se/~mange/papers/RI_intro.pdf
+ *
+ * @param dim number of dimensions to use for the dense vector
+ * @param on number on positive and negative half-spaces to occupy
+ */
 class RandomIndex(dim: Int, on: Int) {
   require(on * 2 < dim)
 
@@ -80,4 +73,32 @@ class RandomIndex(dim: Int, on: Int) {
     }
     Vectors.dense(rep)
   }
+}
+
+/**
+ * A tiny set of integer values
+ * 
+ * @param maxSize the maximum number of elements in the set
+ */
+
+class TinyNaturalSet(maxSize: Int) {
+  val taken = new Array[Int](maxSize)
+  var size = 0
+
+  def contains(ri: Int) : Boolean = {
+    var i = size
+    while( i > 0 ) {
+      i = i - 1
+      if( taken(i) == ri ) return true
+    }
+    false
+  }
+
+  def add(ri:Int) : Unit = {
+    require(size < maxSize)
+    taken(size) = ri
+    size = size + 1
+  }
+
+  def clear() : Unit = size = 0
 }
