@@ -127,11 +127,7 @@ class TrackingKMeans(
 
       (distortion(fatPoints), fatCenters.map(_.center))
     }
-
-    results.foldLeft((Infinity, null.asInstanceOf[Array[BregmanCenter]])) {
-      case ((bestDist, bestCenters), (dist, centers)) =>
-        if (dist < bestDist) (dist, centers) else (bestDist, bestCenters)
-    }
+    results.minBy(_._1)
   }
 
   /**
@@ -165,7 +161,7 @@ class TrackingKMeans(
     fatPoints: RDD[FatPoint]) {
 
     val clusterCounts = countByCluster(fatPoints)
-    val biggest = clusterCounts.reduce { (x, y) => if (x._2 > y._2) x else y}
+    val biggest = clusterCounts.maxBy(_._2)
     stats.largestCluster.setValue(biggest._2)
     stats.nonemptyClusters.add(clusterCounts.size)
     stats.emptyClusters.add(fatCenters.size - clusterCounts.size)
@@ -239,18 +235,17 @@ class TrackingKMeans(
     else
       getExactCentroidChanges(fatPoints)
 
-    changes.map {
-      case (index, delta) =>
-        val c = fatCenters(index)
-        val oldPosition = pointOps.toPoint(c.center)
-        val x = if (c.initialized) delta.add(oldPosition) else delta
-        fatCenters(index) = FatCenter(pointOps.toCenter(x), round)
-        stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
+    changes.map { case (index, delta) =>
+      val c = fatCenters(index)
+      val oldPosition = pointOps.toPoint(c.center)
+      val x = if (c.initialized) delta.add(oldPosition) else delta
+      fatCenters(index) = FatCenter(pointOps.toCenter(x), round)
+      stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
     }
     fatCenters
   }
 
-  def distortion(data: RDD[FatPoint]) = data.filter(_.isAssigned).map(_.distance).reduce(_ + _)
+  def distortion(data: RDD[FatPoint]) = data.filter(_.isAssigned).map(_.distance).sum
 
   /**
    * Identify cluster changes.
@@ -262,25 +257,27 @@ class TrackingKMeans(
    * @return changes to cluster position
    */
   def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] = {
-    points.mapPartitions {
-      pts =>
-        val buffer = new ArrayBuffer[(Int, MutableWeightedVector)]
-        for (p <- pts if p.wasReassigned) {
-          assert(p.isAssigned)
-          if (p.isAssigned)
-            buffer.append((p.cluster, pointOps.getCentroid.add(p.location)))
+    points.mapPartitions { pts =>
+      val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
+      for (p <- pts if p.wasReassigned) {
+        assert(p.isAssigned)
+        if (p.isAssigned)
+          buffer.append((p.cluster, (p.location, true)))
 
-          if (p.wasPreviouslyAssigned)
-            buffer.append((p.previousCluster, pointOps.getCentroid.sub(p.location)))
-        }
-        buffer.toIterator
-    }.reduceByKey { (l, r) => l.add(r)}.collect()
+        if (p.wasPreviouslyAssigned)
+          buffer.append((p.previousCluster, (p.location, false)))
+      }
+      buffer.iterator
+    }.aggregateByKey(pointOps.getCentroid)(
+        (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
+        (x, y) => x.add(y)
+      ).collect()
   }
 
   def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
     points.filter(_.isAssigned).map { p =>
-      (p.cluster, pointOps.getCentroid.add(p.location))
-    }.reduceByKey(_.add(_)).collect()
+      (p.cluster, p.location)
+    }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
 
   /**
    * count number of points assigned to each cluster
@@ -288,8 +285,8 @@ class TrackingKMeans(
    * @param points the points
    * @return a map from cluster index to number of points assigned to that cluster
    */
-  def countByCluster(points: RDD[FatPoint]): Map[Int, Int] =
-    points.filter(_.isAssigned).map { p => (p.cluster, 1)}.reduceByKey(_ + _).collectAsMap()
+  def countByCluster(points: RDD[FatPoint]): Map[Int, Long] =
+    points.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
   /**
    * Find the closest point and distance to each cluster
@@ -300,18 +297,14 @@ class TrackingKMeans(
    */
   def closestPoints(points: RDD[FatPoint], centers: FatCenters): Map[Int, (FatPoint, Double)] = {
     val bcCenters = points.sparkContext.broadcast(centers)
-    points.mapPartitions {
-      pts =>
-        val bc = bcCenters.value
-        pts.flatMap {
-          p => {
-            bc.zipWithIndex.map {
-              case (c, i) => (i, (p, pointOps.distance(p.location, c.center)))
-            }
-          }
+    points.mapPartitions { pts =>
+      val bc = bcCenters.value
+      pts.flatMap { p =>
+        bc.zipWithIndex.map { case (c, i) =>
+          (i, (p, pointOps.distance(p.location, c.center)))
         }
-
-    }.reduceByKey { (x, y) => if (x._2 < y._2) x else y}.collectAsMap()
+      }
+    }.reduceByKeyLocally { (x, y) => if (x._2 < y._2) x else y}
   }
 
   /**

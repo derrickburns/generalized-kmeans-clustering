@@ -36,7 +36,7 @@ class TrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Se
   val movement = sc.accumulator[Double](0.0, s"Center Movement $round")
   val nonemptyClusters = sc.accumulator[Int](0, s"Non-Empty Clusters $round")
   val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters $round")
-  val largestCluster = sc.accumulator[Int](0, s"Largest Cluster $round")
+  val largestCluster = sc.accumulator[Long](0, s"Largest Cluster $round")
 
   def getMovement = movement.value
 
