@@ -143,11 +143,11 @@ class RIEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(128)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(1024)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512)
 
 
 /**
