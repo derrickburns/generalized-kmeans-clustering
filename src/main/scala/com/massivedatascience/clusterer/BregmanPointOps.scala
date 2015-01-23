@@ -153,11 +153,11 @@ class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object RandomIndexedSquaredEuclideanPointOpsLow extends RandomIndexedSquaredEuclideanPointOps(256, 3)
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(256, 3)
 
-object RandomIndexedSquaredEuclideanPointOpsMedium extends RandomIndexedSquaredEuclideanPointOps(512, 4)
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(512, 4)
 
-object RandomIndexedSquaredEuclideanPointOpsHigh extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
 
 
 /**
