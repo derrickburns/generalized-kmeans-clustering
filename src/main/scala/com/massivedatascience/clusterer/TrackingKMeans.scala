@@ -103,7 +103,7 @@ class TrackingKMeans(
    */
   def cluster(
     data: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): (Double, KMeansModel) = {
+    centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter]) = {
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -125,12 +125,12 @@ class TrackingKMeans(
         round = round + 1
       } while (!terminate)
 
-      (distortion(fatPoints), new KMeansModel(pointOps, fatCenters.map(_.center)))
+      (distortion(fatPoints), fatCenters.map(_.center))
     }
 
-    results.foldLeft((Infinity, null.asInstanceOf[KMeansModel])) {
-      case ((bestDist, bestModel), (dist, model)) =>
-        if (dist < bestDist) (dist, model) else (bestDist, bestModel)
+    results.foldLeft((Infinity, null.asInstanceOf[Array[BregmanCenter]])) {
+      case ((bestDist, bestCenters), (dist, centers)) =>
+        if (dist < bestDist) (dist, centers) else (bestDist, bestCenters)
     }
   }
 
