@@ -134,7 +134,7 @@ object SparseSquaredEuclideanPointOps
  * embedding the sparse vectors into a dense space using Random Indexing
  *
  */
-class RIEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
+class RISquaredEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
   extends BregmanPointOps(embedding = new RandomIndexEmbedding(dimension, epsilon))
 
 /**
@@ -142,11 +142,11 @@ class RIEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
  * embedding the sparse vectors of various dimensions.
  *
  */
-object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(128)
+object LowDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(128)
 
-object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(256)
+object MediumDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(256)
 
-object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RIEuclideanPointOps(512)
+object HighDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(512)
 
 
 /**

@@ -96,7 +96,7 @@ object SquaredEuclideanDistanceDivergence extends BregmanDivergence
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-object RealKullbackLeiblerSimplexDivergence extends BregmanDivergence
+object RealKLSimplexDivergence extends BregmanDivergence
 
 /**
  * The Kullback-Leibler divergence is defined on points on a simplex in N+ ** n
@@ -107,7 +107,7 @@ object RealKullbackLeiblerSimplexDivergence extends BregmanDivergence
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-object NaturalKullbackLeiblerSimplexDivergence extends BregmanDivergence
+object NaturalKLSimplexDivergence extends BregmanDivergence
 
 /**
  * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
@@ -115,7 +115,7 @@ object NaturalKullbackLeiblerSimplexDivergence extends BregmanDivergence
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-object RealKullbackLeiblerDivergence extends BregmanDivergence
+object RealKLDivergence extends BregmanDivergence
 
 /**
  * The generalized Kullback-Leibler divergence is defined on points on N+ ** n
@@ -123,7 +123,7 @@ object RealKullbackLeiblerDivergence extends BregmanDivergence
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-object NaturalKullbackLeiblerDivergence extends BregmanDivergence
+object NaturalKLDivergence extends BregmanDivergence
 
 /**
  * The generalized I-Divergence is defined on points in R**n
@@ -211,20 +211,20 @@ for an example.
 Point operations may be created by mixing in various traits.  However, several commonly used
 point operations are provided as singleton objects, including:
 
-| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)                                                | Space (d is small, D is large) |
-|----------------------------|--------------------------------------------------------|--------------------------------|
+| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) |
+|----------------------------------|--------------------------------------------------------------|--------------------------------|
 | ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |
-| ```RELATIVE_ENTROPY```           | ```DenseKullbackLeiblerPointOps```                           | R+^d                           |
-| ```DISCRETE_KL```                | ```DiscreteDenseKullbackLeiblerPointOps```                   | N+^d                           |
-| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKullbackLeiblerPointOps```           | N^d                            |
-| ```SPARSE_SMOOTHED_KL```         | ```SparseKullbackLeiblerPointOps```                          | R+^d                           |
-| ```SPARSE_EUCLIDEAN```          | ```SparseSquaredEuclideanPointOps```                         | R^d                            |
+| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |
+| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |
+| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |
+| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |
+| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |
 | ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |
 | ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |
 | ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |
-| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRandomIndexedSquaredEuclideanPointOps```    | R^D                            |
-| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRandomIndexedSquaredEuclideanPointOps``` | R^D                            |
-| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRandomIndexedSquaredEuclideanPointOps```   | R^D                            |
+| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```    | R^D                            |
+| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps``` | R^D                            |
+| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```   | R^D                            |
 
 
 ### Variable number of clusters
