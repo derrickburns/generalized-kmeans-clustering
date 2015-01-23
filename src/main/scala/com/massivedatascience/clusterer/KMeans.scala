@@ -44,7 +44,7 @@ object KMeans extends Logging  {
   private def getPointOps(name: String): BregmanPointOps = {
     name match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
-      case RELATIVE_ENTROPY => DenseKullbackLeiblerPointOps
+      case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps

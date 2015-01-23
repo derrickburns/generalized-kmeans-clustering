@@ -44,17 +44,17 @@ class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gr
   extends ImmutableHomogeneousVector(h, weight)
 
 
-class BregmanPointOps(
-  val divergence: BregmanDivergence = SquaredEuclideanDistanceDivergence, 
-  val clusterFactory: ClusterFactory = DenseClusterFactory, 
-  val embedding: Embedding = IdentityEmbedding)
+case class BregmanPointOps(
+  divergence: BregmanDivergence = SquaredEuclideanDistanceDivergence,
+  clusterFactory: ClusterFactory = DenseClusterFactory,
+  embedding: Embedding = IdentityEmbedding)
   extends PointOps[BregmanPoint, BregmanCenter]
   with ClusterFactory {
 
-  def getCentroid = clusterFactory.getCentroid
-
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
+
+  def getCentroid = clusterFactory.getCentroid
 
   def embed(v: Vector): Vector = embedding.embed(v)
 
@@ -108,7 +108,7 @@ class BregmanPointOps(
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
-object DenseKullbackLeiblerPointOps extends BregmanPointOps(RealKLDivergence)
+object DenseKLPointOps extends BregmanPointOps(RealKLDivergence)
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
