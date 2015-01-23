@@ -102,6 +102,7 @@ object KMeans extends Logging  {
       pointOps.inhomogeneousToPoint(_, 1.0)
     }).cache()
     val centers = initializer.init(data, 0)
-    new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
+    val (cost, finalCenters) = new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
+    (cost, new KMeansModel(pointOps, finalCenters))
   }
 }

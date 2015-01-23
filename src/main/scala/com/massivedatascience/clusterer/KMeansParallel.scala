@@ -160,7 +160,7 @@ class KMeansParallel(
       val kx = if (k > myCenters.length) myCenters.length else k
       val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
       val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-      trackingKmeans.cluster(parallelCenters, Array(initial))._2.centers
+      trackingKmeans.cluster(parallelCenters, Array(initial))._2
     }
   }
 }
