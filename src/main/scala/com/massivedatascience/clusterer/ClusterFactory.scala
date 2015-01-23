@@ -96,6 +96,8 @@ trait FullCollector extends Collector {
 
 /**
  * Retains only the top k most heavily weighted items
+ *
+ * Note: this collector is not associative!
  */
 trait TopKCollector extends Collector {
 
