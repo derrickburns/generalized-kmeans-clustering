@@ -46,32 +46,37 @@ class TinyNaturalSet(on: Int) {
 class RandomIndex(dim: Int, on: Int) {
   require(on * 2 < dim)
 
-  val tinySet = new TinyNaturalSet(on)
+  val tinySet = new TinyNaturalSet(2*on)
 
-  def asDenseVector(v: SparseVector): Vector = {
+  def asRandomDenseVector(v: Vector): Vector = {
     val iterator = v.iterator
     val rep = new Array[Double](dim)
 
     while (iterator.hasNext) {
-      val index = iterator.index
-      val value = iterator.value
+      val count = iterator.value
+      val random =  new XORShiftRandom(iterator.index)
       iterator.advance()
-      val r = new XORShiftRandom(index)
 
-      def spread(count: Double) {
-        tinySet.clear()
-        var remainingOn = on
-        while (remainingOn > 0) {
-          val ri = r.nextInt() % dim
-          if (! tinySet.contains(ri)) {
-            rep(ri) += count
-            remainingOn = remainingOn - 1
-            tinySet.add(ri)
-          }
+      var remainingOn = on
+      while (remainingOn > 0) {
+        val ri = random.nextInt() % dim
+        if (! tinySet.contains(ri)) {
+          rep(ri) += count
+          remainingOn = remainingOn - 1
+          tinySet.add(ri)
         }
       }
-      spread(value)
-      spread(-value)
+
+      var remainingOff = on
+      while (remainingOff > 0) {
+        val ri = random.nextInt() % dim
+        if (! tinySet.contains(ri)) {
+          rep(ri) -= count
+          remainingOff = remainingOff - 1
+          tinySet.add(ri)
+        }
+      }
+      tinySet.clear()
     }
     Vectors.dense(rep)
   }
