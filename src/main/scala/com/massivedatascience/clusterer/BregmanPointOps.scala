@@ -270,7 +270,7 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
  *
  */
-object KLGeneralizedSymmetrizedKLPointOps
+object GeneralizedSymmetrizedKLPointOps
   extends BregmanPointOps
   with KullbackLeiblerDivergence
   with GeneralLog
