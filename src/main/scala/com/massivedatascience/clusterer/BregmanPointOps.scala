@@ -80,13 +80,13 @@ class BregmanPointOps(
   }
 
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
-    val embedding = embed(asInhomogeneous(h, weight))
-    new BregmanPoint(embedding, weight, divergence.F(embedding))
+    val embedded = embed(asInhomogeneous(h, weight))
+    new BregmanPoint(embedded, weight, divergence.F(embedded))
   }
 
   def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
-    val embedding = embed(inh)
-    new BregmanPoint(embedding, weight, divergence.F(embedding))
+    val embedded = embed(inh)
+    new BregmanPoint(embedded, weight, divergence.F(embedded))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
@@ -246,7 +246,7 @@ object GeneralizedSymmetrizedKLPointOps
   extends BregmanPointOps(RealKullbackLeiblerDivergence, DenseClusterFactory) {
 
   override def embed(v: Vector): Vector = {
-    val embeddedV = v.copy
-    axpy(1.0, divergence.gradF(embeddedV), embeddedV)
+    val embedded = v.copy
+    axpy(1.0, divergence.gradF(embedded), embedded)
   }
 }
