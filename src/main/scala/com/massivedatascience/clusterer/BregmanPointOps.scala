@@ -24,12 +24,12 @@ import org.apache.spark.mllib.linalg.Vector
 /**
  * A point with an additional single Double value that is used in distance computation.
  *
- * @param inh  inhomogeneous coordinates of point
+ * @param embedding  inhomogeneous coordinates of point
  * @param weight weight of point
  * @param f f(point)
  */
-class BregmanPoint(inh: Vector, weight: Double, val f: Double)
-  extends ImmutableInhomogeneousVector(inh, weight)
+class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
+  extends ImmutableInhomogeneousVector(embedding, weight)
 
 
 /**
@@ -73,14 +73,13 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
   }
 
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
-    val inh = asInhomogeneous(h, weight)
-    val embedding = embed(inh)
-    new BregmanPoint(inh, weight, F(embedding))
+    val embedding = embed(asInhomogeneous(h, weight))
+    new BregmanPoint(embedding, weight, F(embedding))
   }
 
   def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
     val embedding = embed(inh)
-    new BregmanPoint(inh, weight, F(embedding))
+    new BregmanPoint(embedding, weight, F(embedding))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
