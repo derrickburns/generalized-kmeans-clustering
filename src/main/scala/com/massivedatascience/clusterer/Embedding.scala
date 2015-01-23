@@ -17,12 +17,15 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.GeneralizedSymmetrizedKLPointOps._
+import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
 
 trait Embedding extends Serializable {
   def embed(v: Vector): Vector
 }
+
 
 object DirectEmbedding extends Embedding {
   def embed(v: Vector): Vector = {

@@ -79,7 +79,7 @@ trait BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-trait SquaredEuclideanDistanceDivergence extends BregmanDivergence {
+object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
    * Squared L ** 2 norm
@@ -187,7 +187,7 @@ trait GeneralizedIDivergence extends BregmanDivergence { this : HasLog =>
  *
  *    x => (x, 1.0 - x)
  */
-trait LogisticLossDivergence extends BregmanDivergence with GeneralLog {
+object LogisticLossDivergence extends BregmanDivergence with GeneralLog {
 
   def F(v: Vector): Double = {
     val x = v(0)
