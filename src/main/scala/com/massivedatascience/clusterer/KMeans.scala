@@ -45,9 +45,9 @@ object KMeans extends Logging  {
     name match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKullbackLeiblerPointOps
-      case DISCRETE_KL => DiscreteDenseKullbackLeiblerPointOps
-      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKullbackLeiblerPointOps
-      case SPARSE_SMOOTHED_KL => SparseKullbackLeiblerPointOps
+      case DISCRETE_KL => DiscreteDenseKLPointOps
+      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
+      case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps

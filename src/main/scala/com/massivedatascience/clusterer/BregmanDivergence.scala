@@ -162,9 +162,9 @@ class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
   }
 }
 
-object RealKullbackLeiblerDivergence extends KullbackLeiblerDivergence(GeneralLog)
+object RealKLDivergence extends KullbackLeiblerDivergence(GeneralLog)
 
-object NaturalKullbackLeiblerDivergence extends KullbackLeiblerDivergence(DiscreteLog)
+object NaturalKLDivergence extends KullbackLeiblerDivergence(DiscreteLog)
 
 
 /**
