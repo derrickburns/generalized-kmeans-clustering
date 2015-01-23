@@ -50,7 +50,7 @@ package object clusterer {
     x
   }
 
-  implicit class RichVector(v: Vector) extends AnyVal {
+  implicit class RichVector(val v: Vector) extends AnyVal {
     def iterator: VectorIterator = {
       v match {
         case s: SparseVector => new SparseVectorIterator(s)
@@ -122,13 +122,6 @@ package object clusterer {
      * @return
      */
     def toInhomogeneous(c: WeightedVector): Vector = c.inhomogeneous
-
-    /**
-     * convert a weighted point to an homogeneous vector and weight
-     * @param c
-     * @return
-     */
-    def toHomogeneous(c: WeightedVector): (Vector, Double) = (c.homogeneous, c.weight)
 
     /**
      * Return the index of the closest point in `centers` to `point`, as well as its distance.
