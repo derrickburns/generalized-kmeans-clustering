@@ -262,25 +262,27 @@ class TrackingKMeans(
    * @return changes to cluster position
    */
   def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] = {
-    points.mapPartitions {
-      pts =>
-        val buffer = new ArrayBuffer[(Int, MutableWeightedVector)]
-        for (p <- pts if p.wasReassigned) {
-          assert(p.isAssigned)
-          if (p.isAssigned)
-            buffer.append((p.cluster, pointOps.getCentroid.add(p.location)))
+    points.mapPartitions { pts =>
+      val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
+      for (p <- pts if p.wasReassigned) {
+        assert(p.isAssigned)
+        if (p.isAssigned)
+          buffer.append((p.cluster, (p.location, true)))
 
-          if (p.wasPreviouslyAssigned)
-            buffer.append((p.previousCluster, pointOps.getCentroid.sub(p.location)))
-        }
-        buffer.toIterator
-    }.reduceByKey { (l, r) => l.add(r)}.collect()
+        if (p.wasPreviouslyAssigned)
+          buffer.append((p.previousCluster, (p.location, false)))
+      }
+      buffer.iterator
+    }.aggregateByKey(pointOps.getCentroid)(
+        (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
+        (x, y) => x.add(y)
+      ).collect()
   }
 
   def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
     points.filter(_.isAssigned).map { p =>
-      (p.cluster, pointOps.getCentroid.add(p.location))
-    }.reduceByKey(_.add(_)).collect()
+      (p.cluster, p.location)
+    }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
 
   /**
    * count number of points assigned to each cluster
@@ -300,16 +302,14 @@ class TrackingKMeans(
    */
   def closestPoints(points: RDD[FatPoint], centers: FatCenters): Map[Int, (FatPoint, Double)] = {
     val bcCenters = points.sparkContext.broadcast(centers)
-    points.mapPartitions {
-      pts =>
-        val bc = bcCenters.value
-        pts.flatMap {
-          p => {
-            bc.zipWithIndex.map {
-              case (c, i) => (i, (p, pointOps.distance(p.location, c.center)))
-            }
-          }
+    points.mapPartitions { pts =>
+      val bc = bcCenters.value
+      pts.flatMap { p => {
+        bc.zipWithIndex.map {
+          case (c, i) => (i, (p, pointOps.distance(p.location, c.center)))
         }
+      }
+      }
 
     }.reduceByKey { (x, y) => if (x._2 < y._2) x else y}.collectAsMap()
   }
