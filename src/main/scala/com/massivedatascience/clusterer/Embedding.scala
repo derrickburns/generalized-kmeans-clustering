@@ -20,9 +20,14 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 
+trait Embedding extends Serializable {
+  def embed(v: Vector): Vector
+}
+
+
 /**
  *
- * Converts sparse vectors in high dimensional spaces into dense vectors of low dimensional space
+ * Embeds sparse vectors in high dimensional spaces into dense vectors of low dimensional space
  * in a way that preserves similarity as per the Johnson-Lindenstrauss lemma.
  *
  * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss_lemma
@@ -36,12 +41,12 @@ import org.apache.spark.mllib.linalg.{Vectors, Vector}
  * @param dim number of dimensions to use for the dense vector
  * @param on number on positive and negative half-spaces to occupy
  */
-class RandomIndex(dim: Int, on: Int) {
+class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding {
   require(on * 2 < dim)
 
   val tinySet = new TinyNaturalSet(2 * on)
 
-  def asRandomDenseVector(v: Vector): Vector = {
+  def embed(v: Vector): Vector = {
     val iterator = v.iterator
     val rep = new Array[Double](dim)
 
