@@ -187,7 +187,7 @@ for an example.
 Point operations may be created by mixing in various traits.  However, several commonly used
 point operations are provided as singleton objects, including:
 
-| Name (KMeans._)            | Object                                                 | Space (d is small, D is large) |
+| Name (```KMeans._```)            | Object                                                 | Space (d is small, D is large) |
 |----------------------------|--------------------------------------------------------|--------------------------------|
 | ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |
 | ```RELATIVE_ENTROPY```           | ```DenseKullbackLeiblerPointOps```                           | R+^d                           |
