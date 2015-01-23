@@ -49,6 +49,8 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
 
+  def embed(v: Vector) : Vector = v
+
   /**
    * Bregman distance function
    *
@@ -72,11 +74,14 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
 
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
     val inh = asInhomogeneous(h, weight)
-    new BregmanPoint(inh, weight, F(inh))
+    val embedding = embed(inh)
+    new BregmanPoint(inh, weight, F(embedding))
   }
 
-  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint =
-    new BregmanPoint(inh, weight, F(inh))
+  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
+    val embedding = embed(inh)
+    new BregmanPoint(inh, weight, F(embedding))
+  }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = v.homogeneous
@@ -127,6 +132,33 @@ object SparseSquaredEuclideanPointOps
   extends SquaredEuclideanDistanceDivergence
   with BregmanPointOps
   with SparseClusterFactory
+
+/**
+ * Implements Squared Euclidean distance on sparse vectors in R ** n by
+ * embedding the sparse vectors into a dense space using Random Indexing
+ *
+ */
+class RandomIndexedSquaredEuclideanPointOps(dim: Int, on: Int)
+  extends SquaredEuclideanDistanceDivergence
+  with BregmanPointOps
+  with DenseClusterFactory {
+
+  val embedding = new RandomIndexEmbedding(dim, on)
+
+  override def embed(v: Vector) : Vector = embedding.embed(v.copy)
+}
+
+/**
+ * Implements Squared Euclidean distance on sparse vectors in R ** n by
+ * embedding the sparse vectors of various dimensions.
+ *
+ */
+object LowDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(256, 3)
+
+object MediumDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(512, 4)
+
+object HighDimensionalRandomIndexedSquaredEuclideanPointOps extends RandomIndexedSquaredEuclideanPointOps(1024, 7)
+
 
 /**
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
@@ -235,12 +267,13 @@ object DiscreteDenseSmoothedKullbackLeiblerPointOps
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
  *
  */
-object GeneralizedSymmetrizedKLPointOps extends BregmanPointOps with KullbackLeiblerDivergence
-with GeneralLog with DenseClusterFactory {
+object GeneralizedSymmetrizedKLPointOps
+  extends BregmanPointOps
+  with KullbackLeiblerDivergence
+  with GeneralLog with DenseClusterFactory {
 
-  override def toPoint(v: WeightedVector): BregmanPoint = {
-    val inh = v.inhomogeneous.copy
-    axpy(1.0, gradF(v.inhomogeneous), inh)
-    new BregmanPoint(v.inhomogeneous, v.weight, F(inh))
+  override def embed(v: Vector) : Vector = {
+    val embeddedV = v.copy
+    axpy(1.0, gradF(embeddedV), embeddedV)
   }
 }

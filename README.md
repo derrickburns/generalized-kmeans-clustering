@@ -133,12 +133,12 @@ Bregman divergences define distances, while ```PointOps``` implement fast
 method for computing distances.  ```PointOps``` take advantage of the characteristics of the
 data to define the fastest methods for evaluating Bregman divergences.
 
-
 ```scala
 trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory {
   this: BregmanDivergence =>
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
+  def embed(v:Vector) : Vector = ???
   def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
   def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = ???
   def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = ???
@@ -147,8 +147,45 @@ trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter] with Cluster
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
 }
 ```
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
-Several singleton point operations are predefined, including:
+
+#### Embedding
+
+```PointOps``` also provide a means to embed points into a different space before clustering.
+Embedding is used to provide means to cluster data using generalized symmetrized Bregman
+divergences.
+
+Embedding is also used to support clustering of sparse data which can
+be quite inefficient to cluster directly.
+
+
+```scala
+
+  trait Embedding extends Serializable {
+    def embed(v: Vector): Vector
+  }
+```
+
+Two embedding are provided.  One uses [random indexing](https://www.sics.se/~mange/papers/RI_intro.pdf)
+to reduce the dimension of the data while the other simply converts vectors to isomorphic
+dense vectors. Note that random indexing may result in vectors with negative values, which may
+not be used in divergences that require non-negative values.
+
+
+```scala
+  class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding
+  object DirectEmbedding extends Embedding
+```
+
+Embedding objects are not used directly in the main interface.  Rather, they are used in the
+construction of instances of ```PointOps```. See  the definition of ```RandomIndexedSquaredEuclideanPointOps```
+for an example.
+
+#### Provided Point Operations
+
+Point operations may be created by mixing in various traits.  However, several commonly used
+point operations are provided as singleton objected, including:
 
 ```scala
   package com.massivedatascience.clusterer
@@ -162,9 +199,11 @@ Several singleton point operations are predefined, including:
   object LogisticLossPointOps
   object GeneralizedIPointOps
   object GeneralizedSymmetrizedKLPointOps
+  object LowDimensionalRandomIndexedSquaredEuclideanPointOps
+  object MediumDimensionalRandomIndexedSquaredEuclideanPointOps
+  object HighDimensionalRandomIndexedSquaredEuclideanPointOps
 ```
 
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
 
 ### Variable number of clusters
 

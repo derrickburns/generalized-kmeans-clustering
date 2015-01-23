@@ -50,7 +50,7 @@ package object clusterer {
     x
   }
 
-  implicit class RichVector(v: Vector) {
+  implicit class RichVector(v: Vector) extends AnyVal {
     def iterator: VectorIterator = {
       v match {
         case s: SparseVector => new SparseVectorIterator(s)
