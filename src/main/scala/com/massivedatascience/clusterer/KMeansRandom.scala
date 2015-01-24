@@ -20,14 +20,16 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.XORShiftRandom
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int) extends KMeansInitializer {
+class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
-  def init(data: RDD[BregmanPoint], seed: Int): Array[Array[BregmanCenter]] = {
+  def init(d: RDD[Vector]) : (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+    val data = d.map{ p=>ops.inhomogeneousToPoint(p,1.0)}
     val filtered = data.filter(_.weight > ops.weightThreshold)
     val count = filtered.count()
-    if (runs * k <= count) {
+    val centers = if (runs * k <= count) {
       val centers = select(filtered, runs * k)
       Array.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k))
     } else if (k < count) {
@@ -36,6 +38,7 @@ class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int) extends KMeansInitia
       val all = filtered.collect().map(ops.toCenter)
       Array.fill(runs)(all)
     }
+    (data, centers)
   }
 
   protected def select(data: RDD[BregmanPoint], count: Int) = {
