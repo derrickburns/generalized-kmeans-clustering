@@ -44,17 +44,17 @@ object KMeans extends Logging  {
   private def getPointOps(name: String): BregmanPointOps = {
     name match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
-      case RELATIVE_ENTROPY => DenseKullbackLeiblerPointOps
-      case DISCRETE_KL => DiscreteDenseKullbackLeiblerPointOps
-      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKullbackLeiblerPointOps
-      case SPARSE_SMOOTHED_KL => SparseKullbackLeiblerPointOps
+      case RELATIVE_ENTROPY => DenseKLPointOps
+      case DISCRETE_KL => DiscreteDenseKLPointOps
+      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
+      case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
-      case LOW_DIMENSIONAL_RI => LowDimensionalRandomIndexedSquaredEuclideanPointOps
-      case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRandomIndexedSquaredEuclideanPointOps
-      case HIGH_DIMENSIONAL_RI => HighDimensionalRandomIndexedSquaredEuclideanPointOps
+      case LOW_DIMENSIONAL_RI => LowDimensionalRISquaredEuclideanPointOps
+      case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRISquaredEuclideanPointOps
+      case HIGH_DIMENSIONAL_RI => HighDimensionalRISquaredEuclideanPointOps
 
       case _ => DenseSquaredEuclideanPointOps
     }
@@ -89,7 +89,7 @@ object KMeans extends Logging  {
     initializationMode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     epsilon: Double = 1e-4,
-    distanceMetric : String = "FAST_EUCLIDEAN")
+    distanceMetric: String = EUCLIDEAN)
   : (Double, KMeansModel) = {
 
     val pointOps = getPointOps(distanceMetric)

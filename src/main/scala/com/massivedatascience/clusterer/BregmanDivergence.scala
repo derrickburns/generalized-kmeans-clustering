@@ -38,7 +38,7 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
-trait BregmanDivergence {
+trait BregmanDivergence extends Serializable {
 
   /**
    * F is any convex function.
@@ -162,9 +162,9 @@ class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
   }
 }
 
-object RealKullbackLeiblerDivergence extends KullbackLeiblerDivergence(GeneralLog)
+object RealKLDivergence extends KullbackLeiblerDivergence(GeneralLog)
 
-object NaturalKullbackLeiblerDivergence extends KullbackLeiblerDivergence(DiscreteLog)
+object NaturalKLDivergence extends KullbackLeiblerDivergence(DiscreteLog)
 
 
 /**
