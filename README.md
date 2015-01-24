@@ -34,7 +34,7 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
        mode: String = K_MEANS_PARALLEL,
        initializationSteps: Int = 5,
        distanceFunction: String = EUCLIDEAN)
-     : (Double, KMeansModel)
+     : KMeansModel
    }
 ```
 
