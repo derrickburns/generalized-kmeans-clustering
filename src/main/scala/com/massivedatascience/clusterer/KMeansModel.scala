@@ -32,6 +32,9 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
 
   lazy val k: Int = clusterCenters.length
 
+  /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
+    * takes place, which may be different from the space of the input vectors!
+    */
   lazy val clusterCenters: Array[Vector] = centers.map(pointOps.toInhomogeneous)
 
   /** Returns the cluster index that a given point belongs to. */

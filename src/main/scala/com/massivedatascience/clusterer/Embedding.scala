@@ -91,7 +91,7 @@ class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
  * @param maxSize the maximum number of elements in the set
  */
 
-class TinyIntSet(maxSize: Int) {
+private[clusterer] class TinyIntSet(maxSize: Int) {
   val taken = new Array[Int](maxSize)
   var size = 0
 

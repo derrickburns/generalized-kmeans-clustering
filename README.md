@@ -9,18 +9,70 @@ or dense data using distances defined by
 
 ### Usage
 
-The simplest way to call the clusterer is to use the ```KMeans``` object.
+The simplest way to call the clusterer is to use the ```KMeans.train``` method.
 
 ```scala
+  package com.massivedatascience.clusterer
+
   object KMeans {
-    def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
-      distanceFunction: String): KMeansModel = ???
-  }
+     /**
+      *
+      * @param raw input data
+      * @param k  number of clusters desired
+      * @param maxIterations maximum number of iterations of Lloyd's algorithm
+      * @param runs number of parallel clusterings to run
+      * @param mode initialization algorithm to use
+      * @param initializationSteps number of steps of the initialization algorithm
+      * @param distanceFunction the distance functions to use
+      * @return (distortion, K-Means model)
+      */
+     def train(
+       raw: RDD[Vector],
+       k: Int,
+       maxIterations: Int = 20,
+       runs: Int = 1,
+       mode: String = K_MEANS_PARALLEL,
+       initializationSteps: Int = 5,
+       distanceFunction: String = EUCLIDEAN)
+     : KMeansModel
+   }
 ```
 
-For greater control, you may provide your own distance function by using the lower level interface.
-See the implementation of ```KMeans.train``` for an example.
+At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
+desire. The method will return a ```KMeansModel``` of the clustering.
 
+```scala
+class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
+  extends Serializable {
+
+  /** The number of clusters. **/
+  lazy val k: Int = ???
+
+  /**
+   Returns the cluster centers.  N.B. These are in the embedded space where the clustering
+   takes place, which may be different from the space of the input vectors!
+   */
+  lazy val clusterCenters: Array[Vector] = ???
+
+  /** Returns the cluster index that a given point belongs to. */
+  def predict(point: Vector): Int = ???
+
+  /** Returns the closest cluster index and distance to that cluster. */
+  def predictClusterAndDistance(point: Vector): (Int, Double) = ???
+
+  /** Maps given points to their cluster indices. */
+  def predict(points: RDD[Vector]): RDD[Int] = ???
+
+  /** Maps given points to their cluster indices. */
+  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] = ???
+
+  /**
+   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
+   * model on the given data.
+   */
+  def computeCost(data: RDD[Vector]): Double = ???
+}
+```
 
 ### Bregman Divergences
 
