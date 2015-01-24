@@ -53,6 +53,7 @@ class KMeansParallel(
   def init(d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
     val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
+    data.cache()
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])

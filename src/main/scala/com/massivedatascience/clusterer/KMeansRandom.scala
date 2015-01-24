@@ -27,6 +27,7 @@ class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int, seed: Int) extends K
 
   def init(d: RDD[Vector]) : (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
     val data = d.map{ p=>ops.inhomogeneousToPoint(p,1.0)}
+    data.cache()
     val filtered = data.filter(_.weight > ops.weightThreshold)
     val count = filtered.count()
     val centers = if (runs * k <= count) {

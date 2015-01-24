@@ -26,6 +26,7 @@ class SampleInitializer(pointOps: BregmanPointOps, model: KMeansModel) extends K
 
     val assignments = model.predict(d)
     val data = d.map { pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
+    data.cache()
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),
