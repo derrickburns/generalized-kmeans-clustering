@@ -79,9 +79,9 @@ object KMeans extends Logging  {
     }
 
     val initializer = mode match {
-      case RANDOM => new KMeansRandom(pointOps, k, runs)
-      case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps)
-      case _ => new KMeansRandom(pointOps, k, runs)
+      case RANDOM => new KMeansRandom(pointOps, k, runs, 0)
+      case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps, 0)
+      case _ => new KMeansRandom(pointOps, k, runs, 0)
     }
     train(raw, maxIterations, initializer, initializationSteps, pointOps)._2
   }
@@ -94,9 +94,7 @@ object KMeans extends Logging  {
     pointOps: BregmanPointOps)
   : (Double, KMeansModel) = {
 
-    val data = raw map (pointOps.inhomogeneousToPoint(_, 1.0))
-    data.cache()
-    val centers = initializer.init(data, 0)
+    val (data, centers) = initializer.init(raw)
     val (cost, finalCenters) = new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
