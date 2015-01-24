@@ -98,22 +98,20 @@ data is integral. Similarity of frequencies or distributions are best performed 
 Kullback-Leibler divergence.
 
 
-| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) | Divergence | Input |
-|----------------------------------|--------------------------------------------------------------|--------------------------------|------------|---------|
-| ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |Euclidean | Dense |
-| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```               | R^D                            |Euclidean | Either |
-| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps```            | R^D                            |Euclidean | Either |
-| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```             | R^D                            |Euclidean | Either |
-| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |Euclidean |  Sparse |
-| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |Kullback-Leibler| Dense  |
-| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |Kullback-Leibler| Dense  |
-| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |Kullback-Leibler| Dense   |
-| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |Kullback-Leibler| Sparse  |
-| ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |Kullback-Leibler | Dense |
-| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |Logistic Loss| |
-| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |Generalized I-divergence|  |
-
-
+| Name (```KMeans._```)            | Space | Divergence              | Input   | Dimension |
+|----------------------------------|-------|-------------------------|---------|-----------|
+| ```EUCLIDEAN```                  | R^d   |Euclidean                | Dense   |  low      |
+| ```LOW_DIMENSIONAL_RI```         | R^d   |Euclidean                | Either  | medium    |
+| ```MEDIUM_DIMENSIONAL_RI```      | R^d   |Euclidean                | Either  | high      |
+| ```HIGH_DIMENSIONAL_RI```        | R^d   |Euclidean                | Either  | very high |
+| ```SPARSE_EUCLIDEAN```           | R^d   |Euclidean                | Sparse  | low       |
+| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | low       |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   | low       |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   | low       |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  | low       |
+| ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   | low       |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         | 1         |
+| ```GENERALIZED_I```              | R     |Generalized I-divergence |         | 1         |
 
 
 ### Initialization/seeding algorithm
@@ -131,7 +129,7 @@ There are two pre-defined seeding algorithms.
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
-### Other Differences with Spark K-Means Clusterer
+### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
 There are several other differences with this clusterer and the Spark K-Means clusterer.
 
