@@ -144,7 +144,7 @@ tracks the number of cluster centers.
 This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
 This is much faster, since all cores are utilized versus just one.
 
-Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
+Additionally, this implementation performs the implementation in time quadratic in the number of clusters, whereas the Spark implementation takes time cubic in the number of clusters.
 
 #### Sparse Data
 
