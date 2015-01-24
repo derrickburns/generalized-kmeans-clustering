@@ -98,7 +98,6 @@ data is integral. Similarity of frequencies or distributions are best performed 
 Kullback-Leibler divergence.
 
 
-
 | Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) | Divergence |
 |----------------------------------|--------------------------------------------------------------|--------------------------------|------------|
 | ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |Euclidean |
@@ -107,39 +106,61 @@ Kullback-Leibler divergence.
 | ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |Kullback-Leibler|
 | ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |Kullback-Leibler|
 | ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |Euclidean |
-| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |LogisticLoss|
-| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |GeneralizedI|
+| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |Logistic Loss|
+| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |Generalized I-divergence|
 | ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |Euclidean |
 | ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```               | R^D                            |Euclidean |
 | ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps```            | R^D                            |Euclidean |
 | ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```             | R^D                            |Euclidean |
 
 
-### Distance Function Internals
 
-```PointOps``` implement fast method for computing distances, taking advantage of the
-characteristics of the data to define the fastest methods for evaluating Bregman divergences.
+### Initialization/seeding algorithm
 
-```scala
-class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
-  extends PointOps[BregmanPoint, BregmanCenter]
-  with ClusterFactory {
+This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
+This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
+including initialization methods that have different numbers of initial clusters.
 
-  val weightThreshold = 1e-4
-  val distanceThreshold = 1e-8
-  def embed(v:Vector) : Vector = ???
-  def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
-  def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = ???
-  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = ???
-  def toCenter(v: WeightedVector): BregmanCenter = ???
-  def toPoint(v: WeightedVector): BregmanPoint =  ???
-  def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
-}
-```
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
-are welcome.
+There are two pre-defined seeding algorithms.
 
-### Bregman Divergences
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```RANDOM```                  | Random selection of initial k centers |
+| ```K_MEANS_PARALLEL```           | (K-Means Parallel)[http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf]              |
+
+You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
+
+### Other Differences with Spark K-Means Clusterer
+
+There are several other differences with this clusterer and the Spark K-Means clusterer.
+
+#### Variable number of clusters
+
+This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
+The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
+tracks the number of cluster centers. 
+
+#### Faster K-Means || implementation
+
+This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
+This is much faster, since all cores are utilized versus just one.
+
+Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
+
+#### Sparse Data
+
+This clusterer works well on sparse input data of high dimension.  Note, some distance functions are not defined on
+sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
+achieve similar results.  This implementation provides such approximations.
+
+### Scalability and Testing
+
+This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
+function (Kullback-Leibler).
+
+### Internals
+
+#### Bregman Divergences
 
 Underlying ```PointOps``` are the supporting Bregman divergences. The ```BregmanDivergence``` trait
  encapsulates the Bregman Divergence definition.
@@ -254,24 +275,37 @@ object ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
-### Initialization/seeding algorithm
+#### Distance Functions
 
-This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
-This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
-including initialization methods that have different numbers of initial clusters.
+This clusterer abstracts the distance function, as described above, making it extensible.
 
-There are two pre-defined seeding algorithms.
+The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
+centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
+points to cluster centers.  These abstractions are easy to understand and easy to implement.
+
+```PointOps``` implement fast method for computing distances, taking advantage of the
+characteristics of the data to define the fastest methods for evaluating Bregman divergences.
 
 ```scala
-  object KMeans {
-    val RANDOM = ???
-    val K_MEANS_PARALLEL = ???
-  }
+class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
+  extends PointOps[BregmanPoint, BregmanCenter]
+  with ClusterFactory {
+
+  val weightThreshold = 1e-4
+  val distanceThreshold = 1e-8
+  def embed(v:Vector) : Vector = ???
+  def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
+  def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = ???
+  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = ???
+  def toCenter(v: WeightedVector): BregmanCenter = ???
+  def toPoint(v: WeightedVector): BregmanPoint =  ???
+  def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
+}
 ```
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
+are welcome.
 
-You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
-
-### Embedding
+#### Embeddings
 
 ```PointOps``` also provide a means to embed points into a different space before clustering.
 Embedding is used to provide means to cluster data using generalized symmetrized Bregman
@@ -304,41 +338,6 @@ construction of instances of ```PointOps```. See  the definition of ```RandomInd
 for an example.
 
 
-### Other Differences with Spark K-Means Clusterer
-
-There are several other differences with this clusterer and the Spark K-Means clusterer.
-
-#### Variable number of clusters
-
-This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
-The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
-tracks the number of cluster centers. 
-
-#### Faster K-Means || implementation
-
-This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
-This is much faster, since all cores are utilized versus just one.
-
-Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
-
-#### Sparse Data
-
-This clusterer works well on sparse input data of high dimension.  Note, some distance functions are not defined on
-sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
-achieve similar results.  This implementation provides such approximations.
-
-#### Internals
-
-This clusterer abstracts the distance function, as described above, making it extensible.
-
-The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
-centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
-points to cluster centers.  These abstractions are easy to understand and easy to implement.
-
-### Scalability and Testing
-
-This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
-function (Kullback-Leibler). 
 
 
 
