@@ -21,6 +21,8 @@ import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+import scala.collection.Map
+
 /**
  * A simple k-means implementation that re-computes the closest cluster centers on each iteration
  * and that recomputes each cluster on each iteration.
@@ -59,7 +61,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
 
   def getCentroids(
     data: RDD[BregmanPoint],
-    activeCenters: Array[BregmanCenter]): Array[(Int, MutableWeightedVector)] = {
+    activeCenters: Array[BregmanCenter]): Map[Int, MutableWeightedVector] = {
 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
@@ -67,7 +69,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
       val centers = Array.fill(bcCenters.length)(pointOps.getCentroid)
       for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
       centers.zipWithIndex.map(_.swap).iterator
-    }.reduceByKey { case (x, y) => x.add(y)}.collect()
+    }.reduceByKeyLocally { case (x, y) => x.add(y)}
     bcActiveCenters.unpersist()
     result
   }

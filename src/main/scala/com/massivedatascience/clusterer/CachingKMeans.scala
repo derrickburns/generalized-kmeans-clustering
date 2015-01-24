@@ -25,6 +25,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{Accumulator, Logging}
 
+import scala.collection.Map
+
 
 /**
  *
@@ -164,37 +166,37 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @return points and their new assignments
    */
   def getNewAssignments(
-                         freshPoints: Accumulator[Int],
-                         improvedPoints: Accumulator[Int],
-                         movedPoints: Accumulator[Int],
-                         costDiff: Accumulator[Double],
-                         bcCenters: Broadcast[Array[FatCenter]],
-                         fatPoints: RDD[FatPoint],
-                         sampleRate: Double,
-                         seed: Int): RDD[FatPoint] = {
+    freshPoints: Accumulator[Int],
+    improvedPoints: Accumulator[Int],
+    movedPoints: Accumulator[Int],
+    costDiff: Accumulator[Double],
+    bcCenters: Broadcast[Array[FatCenter]],
+    fatPoints: RDD[FatPoint],
+    sampleRate: Double,
+    seed: Int): RDD[FatPoint] = {
 
     fatPoints.mapPartitionsWithIndex { (index, points) =>
       val rand = new XORShiftRandom(seed ^ index << 16)
       val myFatCenters = bcCenters.value
       points.map { p =>
 
-      if (rand.nextDouble() > sampleRate) {
-        markStale(myFatCenters, p.point, p.distances)
-        p
-      } else {
-        val closest = getClosest(updateDistances(myFatCenters, p.point, p.distances))
-        p.assignment(p.current) match {
-          case Closest(_, -1) => freshPoints.add(1)
-          case Closest(d, i) =>
-            val diff = d - closest.dist
-            if (diff > 0.0) improvedPoints.add(1)
-            costDiff += diff
+        if (rand.nextDouble() > sampleRate) {
+          markStale(myFatCenters, p.point, p.distances)
+          p
+        } else {
+          val closest = getClosest(updateDistances(myFatCenters, p.point, p.distances))
+          p.assignment(p.current) match {
+            case Closest(_, -1) => freshPoints.add(1)
+            case Closest(d, i) =>
+              val diff = d - closest.dist
+              if (diff > 0.0) improvedPoints.add(1)
+              costDiff += diff
+          }
+          p.current = 1 - p.current
+          p.assignment(p.current) = closest
+          if (p.assignment(0).index != p.assignment(1).index) movedPoints.add(1)
+          p
         }
-        p.current = 1 - p.current
-        p.assignment(p.current) = closest
-        if( p.assignment(0).index != p.assignment(1).index ) movedPoints.add(1)
-        p
-      }
       }
     }
   }
@@ -207,9 +209,9 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @return
    */
   def getUpdatedFatCenters(
-    centroidChanges: Array[(Int, MutableWeightedVector)],
-    fatCenters: Array[FatCenter]): Array[FatCenter] =
-  
+    centroidChanges: Map[Int, MutableWeightedVector],
+    fatCenters: Array[FatCenter]): Array[FatCenter] = {
+
     centroidChanges.map {
       case (index, delta) =>
         val c = fatCenters(index)
@@ -219,13 +221,14 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
         } else {
           c.copy(moved = false)
         }
-    }
+    }.toArray
+  }
 
-  def distortion(data: RDD[FatPoint]) = {
-    data.mapPartitions{
+  def distortion(data: RDD[FatPoint]): Double = {
+    data.mapPartitions {
       points =>
-        Array(points.map{ p => p.assignment(p.current).dist}.reduce( _ + _)).iterator
-    }.reduce( _ + _ )
+        Array(points.map { p => p.assignment(p.current).dist}.reduce(_ + _)).iterator
+    }.reduce(_ + _)
   }
 
   /**
@@ -237,8 +240,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    */
   def getCentroidChanges(
     bcCenters: Broadcast[Array[FatCenter]],
-    points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
-  
+    points: RDD[FatPoint]): Map[Int, MutableWeightedVector] =
+
     points.mapPartitions { changes =>
       val centers = bcCenters.value.map { _ => ops.getCentroid}
 
@@ -251,7 +254,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
         }
       }
       centers.zipWithIndex.map { case (l, r) => (r, l)}.iterator
-    }.reduceByKey { case (l, r) => l.add(r)}.collect()
+    }.reduceByKeyLocally { case (l, r) => l.add(r)}
 
   /**
    * Update distances to cluster centers in place

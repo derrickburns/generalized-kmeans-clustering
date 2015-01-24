@@ -98,20 +98,21 @@ data is integral. Similarity of frequencies or distributions are best performed 
 Kullback-Leibler divergence.
 
 
-| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) | Divergence |
-|----------------------------------|--------------------------------------------------------------|--------------------------------|------------|
-| ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |Euclidean |
-| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |Kullback-Leibler|
-| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |Kullback-Leibler|
-| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |Kullback-Leibler|
-| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |Kullback-Leibler|
-| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |Euclidean |
-| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |Logistic Loss|
-| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |Generalized I-divergence|
-| ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |Euclidean |
-| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```               | R^D                            |Euclidean |
-| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps```            | R^D                            |Euclidean |
-| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```             | R^D                            |Euclidean |
+| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) | Divergence | Input |
+|----------------------------------|--------------------------------------------------------------|--------------------------------|------------|---------|
+| ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |Euclidean | Dense |
+| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```               | R^D                            |Euclidean | Either |
+| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps```            | R^D                            |Euclidean | Either |
+| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```             | R^D                            |Euclidean | Either |
+| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |Euclidean |  Sparse |
+| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |Kullback-Leibler| Dense  |
+| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |Kullback-Leibler| Dense  |
+| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |Kullback-Leibler| Dense   |
+| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |Kullback-Leibler| Sparse  |
+| ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |Kullback-Leibler | Dense |
+| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |Logistic Loss| |
+| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |Generalized I-divergence|  |
+
 
 
 
