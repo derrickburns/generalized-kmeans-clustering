@@ -115,8 +115,10 @@ class ColumnTrackingKMeans(
       var round = 1
       do {
         val stats = new TrackingStats(points.sparkContext, round)
-        centersWithHistory = updatedCenters(round, stats, points, recentAssignments, centersWithHistory, updateRate)
-        recentAssignments = reassignedPoints(round, stats, centersWithHistory, points, recentAssignments, updateRate)
+        centersWithHistory = updatedCenters(round, stats, points, recentAssignments,
+          centersWithHistory, updateRate)
+        recentAssignments = reassignedPoints(round, stats, centersWithHistory, points,
+          recentAssignments, updateRate)
         updateStats(round, stats, centersWithHistory, recentAssignments)
         stats.report()
         terminate = terminationCondition(stats)
@@ -300,28 +302,7 @@ class ColumnTrackingKMeans(
   def countByCluster(assignments: RDD[RecentAssignments]): Map[Int, Long] =
     assignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
-  /**
-   * Find the closest point and distance to each cluster
-   *
-   * @param points the points
-   * @param assignments the assignments
-   * @param centers the clusters
-   * @return a map from cluster index to the closest point to that cluster and the distance
-   */
-  def closestPoints(
-    points: RDD[BregmanPoint],
-    assignments: RDD[RecentAssignments],
-    centers: Array[CenterWithHistory]): Map[Int, (BregmanPoint, RecentAssignments, Double)] = {
 
-    val bcCenters = assignments.sparkContext.broadcast(centers)
-    points.zip(assignments).mapPartitions { pts =>
-      val bc = bcCenters.value
-      pts.flatMap { case (point, a) =>
-        bc.zipWithIndex.map { case (c, i) => (i, (point, a, pointOps.distance(point, c.center)))
-        }
-      }
-    }.reduceByKeyLocally { (x, y) => if (x._3 < y._3) x else y}
-  }
 
   /**
    * Find the closest cluster assignment that has moved/not moved since the point was last assigned.
@@ -418,6 +399,8 @@ class ColumnTrackingKMeans(
     }
   }
 
+  case class PointWithDistance(point: BregmanPoint, assignments: RecentAssignments, dist: Double)
+
   def showEmpty(
     centersWithHistory: Array[CenterWithHistory],
     points: RDD[BregmanPoint],
@@ -430,12 +413,12 @@ class ColumnTrackingKMeans(
       val count = clusterMap.getOrElse(i, 0)
       if (count == 0) {
         val c = centersWithHistory(i)
-        val d1 = cp(i)._3
+        val d1 = cp(i).dist
 
         println(s"center: $i = $c")
         println(s"closest point is ${cp(i)}")
-        val closerCluster = cp(i)._2.cluster
-        val d2 = pointOps.distance(cp(i)._1, centersWithHistory(closerCluster).center)
+        val closerCluster = cp(i).assignments.cluster
+        val d2 = pointOps.distance(cp(i).point, centersWithHistory(closerCluster).center)
         println(s"closest center to that point is $closerCluster =" +
           s"' ${centersWithHistory(closerCluster)} at distance $d2")
         println()
@@ -443,5 +426,28 @@ class ColumnTrackingKMeans(
           s"to point $d2")
       }
     }
+  }
+
+  /**
+   * Find the closest point and distance to each cluster
+   *
+   * @param points the points
+   * @param assignments the assignments
+   * @param centers the clusters
+   * @return a map from cluster index to the closest point to that cluster and the distance
+   */
+  def closestPoints(
+    points: RDD[BregmanPoint],
+    assignments: RDD[RecentAssignments],
+    centers: Array[CenterWithHistory]): Map[Int, PointWithDistance] = {
+
+    val bcCenters = assignments.sparkContext.broadcast(centers)
+    points.zip(assignments).mapPartitions { pts =>
+      val bc = bcCenters.value
+      pts.flatMap { case (point, a) =>
+        bc.zipWithIndex.map { case (c, i) => (i, PointWithDistance(point, a, pointOps.distance(point, c.center)))
+        }
+      }
+    }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}
   }
 }
