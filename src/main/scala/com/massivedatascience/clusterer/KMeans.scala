@@ -27,6 +27,7 @@ object KMeans extends Logging  {
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
+  // point ops
   val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
@@ -40,9 +41,28 @@ object KMeans extends Logging  {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
+  /**
+   *
+   * @param raw input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param mode initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunction the distance functions to use
+   * @return (distortion, K-Means model)
+   */
+  def train(
+    raw: RDD[Vector],
+    k: Int = 2,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    mode: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunction: String = EUCLIDEAN)
+  : KMeansModel = {
 
-  private def getPointOps(name: String): BregmanPointOps = {
-    name match {
+    val pointOps = distanceFunction match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
@@ -55,52 +75,27 @@ object KMeans extends Logging  {
       case LOW_DIMENSIONAL_RI => LowDimensionalRISquaredEuclideanPointOps
       case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRISquaredEuclideanPointOps
       case HIGH_DIMENSIONAL_RI => HighDimensionalRISquaredEuclideanPointOps
-
       case _ => DenseSquaredEuclideanPointOps
     }
+
+    val initializer = mode match {
+      case RANDOM => new KMeansRandom(pointOps, k, runs)
+      case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps)
+      case _ => new KMeansRandom(pointOps, k, runs)
+    }
+    train(raw, maxIterations, initializer, initializationSteps, pointOps)._2
   }
 
-  def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String): KMeansModel =
-    doTrain(data, k, maxIterations, runs, mode)._2
-
-  /**
-   * Trains a k-means model using specified parameters and the default values for unspecified.
-   */
-  def train(data: RDD[Vector], k: Int, maxIterations: Int): KMeansModel =
-    doTrain(data, k, maxIterations)._2
-
-  /**
-   * Trains a k-means model using specified parameters and the default values for unspecified.
-   */
-  def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int): KMeansModel =
-    doTrain(data, k, maxIterations, runs)._2
-
-  def train( data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
-    distanceMetric: String): KMeansModel =
-
-    doTrain(data, k, maxIterations, runs, initializationMode = mode, distanceMetric = distanceMetric)._2
-
-
-  def doTrain(
+  def train(
     raw: RDD[Vector],
-    k: Int = 2,
-    maxIterations: Int = 20,
-    runs: Int = 1,
-    initializationMode: String = K_MEANS_PARALLEL,
-    initializationSteps: Int = 5,
-    epsilon: Double = 1e-4,
-    distanceMetric: String = EUCLIDEAN)
+    maxIterations: Int,
+    initializer: KMeansInitializer,
+    initializationSteps: Int,
+    pointOps: BregmanPointOps)
   : (Double, KMeansModel) = {
 
-    val pointOps = getPointOps(distanceMetric)
-    val initializer = if (initializationMode == RANDOM) {
-      new KMeansRandom(pointOps, k, runs)
-    } else {
-      new KMeansParallel(pointOps, k, runs, initializationSteps)
-    }
-    val data = (raw map {
-      pointOps.inhomogeneousToPoint(_, 1.0)
-    }).cache()
+    val data = raw map (pointOps.inhomogeneousToPoint(_, 1.0))
+    data.cache()
     val centers = initializer.init(data, 0)
     val (cost, finalCenters) = new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))

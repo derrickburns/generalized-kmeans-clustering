@@ -176,26 +176,26 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceMetric=RELATIVE_ENTROPY)
+      distanceFunction = RELATIVE_ENTROPY)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceMetric = EUCLIDEAN)
-    assert(model.clusterCenters.head ~== center absTol 1E-5)
-
-
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceMetric = SPARSE_EUCLIDEAN)
+      distanceFunction = EUCLIDEAN)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceMetric = DISCRETE_KL)
+      distanceFunction = SPARSE_EUCLIDEAN)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceMetric = SPARSE_SMOOTHED_KL)
+      distanceFunction = DISCRETE_KL)
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceFunction = SPARSE_SMOOTHED_KL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     data.unpersist()
@@ -253,7 +253,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
       // Two iterations are sufficient no matter where the initial centers are.
-      val model = KMeans.train(rdd, k = 2, maxIterations = 2, runs = 1, initMode)
+      val model = KMeans.train(rdd, k = 2, maxIterations = 2, runs = 1, mode = initMode)
 
       val predicts = model.predict(rdd).collect()
 
@@ -273,7 +273,7 @@ class KMeansClusterSuite extends FunSuite with LocalClusterSparkContext {
     val n = 200000
     val points = sc.parallelize(0 until m, 2).mapPartitionsWithIndex { (idx, iter) =>
       val random = new Random(idx)
-      iter.map(i => Vectors.dense(Array.fill(n)(random.nextDouble)))
+      iter.map(i => Vectors.dense(Array.fill(n)(random.nextDouble())))
     }.cache()
     for (initMode <- Seq(KMeans.RANDOM, KMeans.K_MEANS_PARALLEL)) {
       // If we serialize data directly in the task closure, the size of the serialized task would be

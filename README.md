@@ -9,18 +9,38 @@ or dense data using distances defined by
 
 ### Usage
 
-The simplest way to call the clusterer is to use the ```KMeans``` object.
+The simplest way to call the clusterer is to use the ```KMeans.train``` method.
 
 ```scala
+  package com.massivedatascience.clusterer
+
   object KMeans {
-    def train(data: RDD[Vector], k: Int, maxIterations: Int, runs: Int, mode: String,
-      distanceFunction: String): KMeansModel = ???
-  }
+     /**
+      *
+      * @param raw input data
+      * @param k  number of clusters desired
+      * @param maxIterations maximum number of iterations of Lloyd's algorithm
+      * @param runs number of parallel clusterings to run
+      * @param mode initialization algorithm to use
+      * @param initializationSteps number of steps of the initialization algorithm
+      * @param distanceFunction the distance functions to use
+      * @return (distortion, K-Means model)
+      */
+     def train(
+       raw: RDD[Vector],
+       k: Int,
+       maxIterations: Int = 20,
+       runs: Int = 1,
+       mode: String = K_MEANS_PARALLEL,
+       initializationSteps: Int = 5,
+       distanceFunction: String = EUCLIDEAN)
+     : (Double, KMeansModel)
+   }
 ```
 
-For greater control, you may provide your own distance function by using the lower level interface.
-See the implementation of ```KMeans.train``` for an example.
-
+At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
+desire. The method will return a 2-tuple
+of the distortion of the clustering and a ```KMeansModel``` of the clustering.
 
 ### Bregman Divergences
 
