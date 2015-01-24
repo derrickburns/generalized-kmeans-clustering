@@ -74,7 +74,7 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
 }
 ```
 
-### Bregman Divergences
+### Distance Functions
 
 The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
 a fixed number of clusters.  However, there are many interesting distance functions other than Euclidean distance.
@@ -89,7 +89,81 @@ This project implements several Bregman divergences, including the squared Eucli
 the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
 the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
 
-The ```BregmanDivergence``` trait encapsulates the Bregman Divergence definition.
+Computing distance for a given divergence and other distance-functions specific operations needed
+for the implementation of the clusterer are provided by the ```PointOps``` trait.  Several
+implementations of this trait are provided.
+
+When selecting a distance function, consider the domain of the input data.  For example, frequency
+data is integral. Similarity of frequencies or distributions are best performed using the
+Kullback-Leibler divergence.
+
+
+| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) | Divergence |
+|----------------------------------|--------------------------------------------------------------|--------------------------------|------------|
+| ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |Euclidean |
+| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |Kullback-Leibler|
+| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |Kullback-Leibler|
+| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |Kullback-Leibler|
+| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |Kullback-Leibler|
+| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |Euclidean |
+| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |Logistic Loss|
+| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |Generalized I-divergence|
+| ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |Euclidean |
+| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```               | R^D                            |Euclidean |
+| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps```            | R^D                            |Euclidean |
+| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```             | R^D                            |Euclidean |
+
+
+
+### Initialization/seeding algorithm
+
+This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
+This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
+including initialization methods that have different numbers of initial clusters.
+
+There are two pre-defined seeding algorithms.
+
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```RANDOM```                  | Random selection of initial k centers |
+| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)              |
+
+You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
+
+### Other Differences with Spark K-Means Clusterer
+
+There are several other differences with this clusterer and the Spark K-Means clusterer.
+
+#### Variable number of clusters
+
+This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
+The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
+tracks the number of cluster centers. 
+
+#### Faster K-Means || implementation
+
+This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
+This is much faster, since all cores are utilized versus just one.
+
+Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
+
+#### Sparse Data
+
+This clusterer works well on sparse input data of high dimension.  Note, some distance functions are not defined on
+sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
+achieve similar results.  This implementation provides such approximations.
+
+### Scalability and Testing
+
+This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
+function (Kullback-Leibler).
+
+### Internals
+
+#### Bregman Divergences
+
+Underlying ```PointOps``` are the supporting Bregman divergences. The ```BregmanDivergence``` trait
+ encapsulates the Bregman Divergence definition.
 
 ```scala
 trait BregmanDivergence {
@@ -201,11 +275,16 @@ object ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
-### From Bregman Divergences to Point Operations
+#### Distance Functions
 
-Bregman divergences define distances, while ```PointOps``` implement fast
-method for computing distances.  ```PointOps``` take advantage of the characteristics of the
-data to define the fastest methods for evaluating Bregman divergences.
+This clusterer abstracts the distance function, as described above, making it extensible.
+
+The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
+centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
+points to cluster centers.  These abstractions are easy to understand and easy to implement.
+
+```PointOps``` implement fast method for computing distances, taking advantage of the
+characteristics of the data to define the fastest methods for evaluating Bregman divergences.
 
 ```scala
 class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
@@ -223,10 +302,10 @@ class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: Clu
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
 }
 ```
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence) are welcome.
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
+are welcome.
 
-
-#### Embedding
+#### Embeddings
 
 ```PointOps``` also provide a means to embed points into a different space before clustering.
 Embedding is used to provide means to cluster data using generalized symmetrized Bregman
@@ -258,77 +337,7 @@ Embedding objects are not used directly in the main interface.  Rather, they are
 construction of instances of ```PointOps```. See  the definition of ```RandomIndexedSquaredEuclideanPointOps```
 for an example.
 
-#### Provided Point Operations
 
-Point operations may be created by mixing in various traits.  However, several commonly used
-point operations are provided as singleton objects, including:
-
-| Name (```KMeans._```)            | Object (```com.massivedatascience.clusterer._```)            | Space (d is small, D is large) |
-|----------------------------------|--------------------------------------------------------------|--------------------------------|
-| ```EUCLIDEAN```                  | ```DenseSquaredEuclideanPointOps```                          | R^d                            |
-| ```RELATIVE_ENTROPY```           | ```DenseKLPointOps```                                        | R+^d                           |
-| ```DISCRETE_KL```                | ```DiscreteDenseKLPointOps```                                | N+^d                           |
-| ```DISCRETE_SMOOTHED_KL```       | ```DiscreteDenseSmoothedKLPointOps```                        | N^d                            |
-| ```SPARSE_SMOOTHED_KL```         | ```SparseRealKLPointOps```                                   | R+^d                           |
-| ```SPARSE_EUCLIDEAN```           | ```SparseSquaredEuclideanPointOps```                         | R^d                            |
-| ```LOGISTIC_LOSS```              | ```LogisticLossPointOps```                                   | R                              |
-| ```GENERALIZED_I```              | ```GeneralizedIPointOps```                                   | R                              |
-| ```GENERALIZED_SYMMETRIZED_KL``` | ```GeneralizedSymmetrizedKLPointOps```                       | R+^d                           |
-| ```LOW_DIMENSIONAL_RI```         | ```LowDimensionalRISquaredEuclideanPointOps```    | R^D                            |
-| ```MEDIUM_DIMENSIONAL_RI```      | ```MediumDimensionalRISquaredEuclideanPointOps``` | R^D                            |
-| ```HIGH_DIMENSIONAL_RI```        | ```HighDimensionalRaISquaredEuclideanPointOps```   | R^D                            |
-
-
-### Variable number of clusters
-
-The second major deviation between this implementation and the Spark implementation is that this clusterer may produce
-fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
-The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
-tracks the number of cluster centers. 
-
-### Plugable seeding algorithm
-
-The third major difference between this implementation and the Spark implementation is that this clusterer
-separates the initialization step (the seeding of the initial clusters) from the main clusterer.
-This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
-including initialization methods that have different numbers of initial clusters.
-
-There are two pre-defined seeding algorithms.
-
-```scala
-  object KMeans {
-    val RANDOM = ???
-    val K_MEANS_PARALLEL = ???
-  }
-```
-
-You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
-
-### Faster K-Means || implementation  
-
-The fourth major difference between this implementation and the Spark implementation is that this clusterer
-uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
-This is much faster, since all cores are utilized versus just one.
-
-Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
-
-### Sparse Data
-
-The fifth major difference between this implementation and the Spark implementation is that this clusterer
-works well on sparse input data of high dimension.  Note, some distance functions are not defined on
-sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
-achieve similar results.  This implementation provides such approximations.
-
-### Internals
-
-The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
-centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
-points to cluster centers.  These abstractions are easy to understand and easy to implement.
-
-### Scalability and Testing
-
-This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
-function (Kullback-Leibler). 
 
 
 
