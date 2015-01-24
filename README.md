@@ -45,8 +45,13 @@ desire. The method will return a ```KMeansModel``` of the clustering.
 class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
   extends Serializable {
 
+  /** The number of clusters. **/
   lazy val k: Int = ???
 
+  /**
+   Returns the cluster centers.  N.B. These are in the embedded space where the clustering
+   takes place, which may be different from the space of the input vectors!
+   */
   lazy val clusterCenters: Array[Vector] = ???
 
   /** Returns the cluster index that a given point belongs to. */
