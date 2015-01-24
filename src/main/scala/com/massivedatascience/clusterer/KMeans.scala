@@ -89,7 +89,7 @@ object KMeans extends Logging  {
     initializationMode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     epsilon: Double = 1e-4,
-    distanceMetric : String = "FAST_EUCLIDEAN")
+    distanceMetric: String = EUCLIDEAN)
   : (Double, KMeansModel) = {
 
     val pointOps = getPointOps(distanceMetric)
