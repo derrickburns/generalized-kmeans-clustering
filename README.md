@@ -6,6 +6,9 @@ or dense data using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
+Be aware that work on this project is ongoing.  Parts of this project are being integrated into upcoming releases
+of the Spark MLLIB clusterer.
+
 
 ### Usage
 
