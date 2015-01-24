@@ -39,8 +39,7 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
 ```
 
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
-desire. The method will return a 2-tuple
-of the distortion of the clustering and a ```KMeansModel``` of the clustering.
+desire. The method will return a ```KMeansModel``` of the clustering.
 
 ### Bregman Divergences
 
