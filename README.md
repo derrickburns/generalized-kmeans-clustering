@@ -41,6 +41,34 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
 desire. The method will return a ```KMeansModel``` of the clustering.
 
+```scala
+class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
+  extends Serializable {
+
+  lazy val k: Int = ???
+
+  lazy val clusterCenters: Array[Vector] = ???
+
+  /** Returns the cluster index that a given point belongs to. */
+  def predict(point: Vector): Int = ???
+
+  /** Returns the closest cluster index and distance to that cluster. */
+  def predictClusterAndDistance(point: Vector): (Int, Double) = ???
+
+  /** Maps given points to their cluster indices. */
+  def predict(points: RDD[Vector]): RDD[Int] = ???
+
+  /** Maps given points to their cluster indices. */
+  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] = ???
+
+  /**
+   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
+   * model on the given data.
+   */
+  def computeCost(data: RDD[Vector]): Double = ???
+}
+```
+
 ### Bregman Divergences
 
 The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
