@@ -44,13 +44,9 @@ object WaveletKmeans {
     }
 
     recurse(raw, depth)
-
   }
 
   object HaarEmbedding extends Embedding {
-    def embed(raw: Vector): Vector = {
-      val array = raw.toArray
-      Vectors.dense(HaarWavelet.average(array))
-    }
+    def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
   }
 }
