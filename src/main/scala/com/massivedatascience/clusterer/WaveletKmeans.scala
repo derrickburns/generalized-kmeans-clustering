@@ -12,7 +12,7 @@ import org.apache.spark.rdd.RDD
  *
  */
 
-object WaveletKmeans {
+object WaveletKMeans {
 
   def train(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],

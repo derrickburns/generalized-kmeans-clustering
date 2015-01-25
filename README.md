@@ -9,7 +9,7 @@ or dense data using distances defined by
 Several k-means clustering algorithms are provided: 1) the ```MultiKMeans``` implementation runs
 several k-means clusterings in parallel 2) the ```TrackingKMeans``` implementation tracks
 assignments of point to clusters between rounds of Lloyd's algorithms, resulting in an
-speed-up in latter rounds of Lloyd's algorihtm; and, 3) the ```WaveletKmeans``` implementation recursively
+speed-up in latter rounds of Lloyd's algorihtm; and, 3) the ```WaveletKMeans``` implementation recursively
 solves K-means problem in lower dimensional spaces and maps the lower dimensional solutions back. By default,
 the ```MultiKMeans``` is used.
 
