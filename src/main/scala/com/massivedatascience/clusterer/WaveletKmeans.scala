@@ -14,17 +14,15 @@ import org.apache.spark.rdd.RDD
 
 object WaveletKmeans {
 
-  def train(
+  def train(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
-    pointOps: BregmanPointOps,
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
     baseInitializer: KMeansInitializer,
     embedding : Embedding = HaarEmbedding,
     depth: Int = 0,
-    initializationSteps: Int = 5,
-    maxIterations: Int = 30
+    initializationSteps: Int = 5
     ) : (Double, KMeansModel) = {
 
-    val kmeans = new MultiKMeans(pointOps, maxIterations)
 
     def recurse(data: RDD[Vector], remaining: Int) : (Double, KMeansModel) = {
       val initializer = if (remaining > 0) {
@@ -39,7 +37,7 @@ object WaveletKmeans {
       }
 
       val (points,centerArray) = initializer.init(data)
-      val (cost, centers)  = kmeans.cluster(points, centerArray)
+      val (cost, centers)  = kMeans.cluster(points, centerArray)
       (cost, new KMeansModel(pointOps, centers))
     }
 
