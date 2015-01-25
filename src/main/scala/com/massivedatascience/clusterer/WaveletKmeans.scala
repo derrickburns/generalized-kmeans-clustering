@@ -24,7 +24,7 @@ object WaveletKmeans {
     maxIterations: Int = 30
     ) : (Double, KMeansModel) = {
 
-    val mkm = new MultiKMeans(pointOps, maxIterations)
+    val kmeans = new MultiKMeans(pointOps, maxIterations)
 
     def recurse(data: RDD[Vector], remaining: Int) : (Double, KMeansModel) = {
       val initializer = if (remaining > 0) {
@@ -39,7 +39,7 @@ object WaveletKmeans {
       }
 
       val (points,centerArray) = initializer.init(data)
-      val (cost, centers)  = mkm.cluster(points, centerArray)
+      val (cost, centers)  = kmeans.cluster(points, centerArray)
       (cost, new KMeansModel(pointOps, centers))
     }
 
