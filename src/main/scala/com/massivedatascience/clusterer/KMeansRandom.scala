@@ -23,7 +23,7 @@ import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int, seed: Int) extends KMeansInitializer {
+class KMeansRandom(ops: BPointOps, k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
   def init(d: RDD[Vector]) : (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
     val data = d.map{ p=>ops.inhomogeneousToPoint(p,1.0)}

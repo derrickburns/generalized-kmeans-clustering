@@ -17,6 +17,7 @@
 
 package com.massivedatascience
 
+import com.massivedatascience.clusterer.{ClusterFactory, PointOps}
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 import org.apache.spark.rdd.RDD
@@ -172,4 +173,10 @@ package object clusterer {
     def pointCost(centers: IndexedSeq[C], point: P): Double = findClosest(centers, point)._2
   }
 
+
+  trait BPointOps extends PointOps[BregmanPoint, BregmanCenter] with ClusterFactory   {
+    def embed(v: Vector): Vector
+    val weightThreshold : Double
+
+  }
 }

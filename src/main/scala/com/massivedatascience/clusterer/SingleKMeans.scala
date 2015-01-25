@@ -29,7 +29,7 @@ import scala.collection.Map
  *
  * @param pointOps distance function
  */
-class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging {
+class SingleKMeans(pointOps: BPointOps) extends Serializable with Logging {
 
   def cluster(
     data: RDD[BregmanPoint],

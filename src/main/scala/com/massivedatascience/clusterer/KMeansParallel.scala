@@ -31,7 +31,7 @@ import com.massivedatascience.clusterer.util.BLAS.axpy
 
 
 class KMeansParallel(
-  pointOps: BregmanPointOps,
+  pointOps: BPointOps,
   k: Int,
   runs: Int,
   initializationSteps: Int,

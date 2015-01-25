@@ -31,7 +31,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
+class KMeansPlusPlus(ops: BPointOps) extends Serializable with Logging {
 
   /**
    * K-means++ on the weighted point set `points`. This first does the K-means++

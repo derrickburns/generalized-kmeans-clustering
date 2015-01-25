@@ -43,13 +43,23 @@ class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
 class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gradient: Vector)
   extends ImmutableHomogeneousVector(h, weight)
 
+class BregmanPointOpsWithEmbedding(ops: BPointOps, embedding: Embedding) extends BPointOps  {
+  val weightThreshold = ops.weightThreshold
+  def embed(v: Vector): Vector = ops.embed(embedding.embed(v))
+  def getCentroid = ops.getCentroid
+  def distance(p: BregmanPoint, c: BregmanCenter) = ops.distance(p,c)
+  def toCenter(v: WeightedVector) = ops.toCenter(v)
+  def inhomogeneousToPoint(v: Vector, weight: Double) = ops. inhomogeneousToPoint(v,weight)
+  def homogeneousToPoint(v: Vector, weight: Double) = ops.homogeneousToPoint(v,weight)
+  def centerMoved(v: BregmanPoint, w: BregmanCenter) = ops.centerMoved(v,w)
+  def toPoint(v: WeightedVector) = ops.toPoint(v)
+}
+
 
 case class BregmanPointOps(
   divergence: BregmanDivergence = SquaredEuclideanDistanceDivergence,
   clusterFactory: ClusterFactory = DenseClusterFactory,
-  embedding: Embedding = IdentityEmbedding)
-  extends PointOps[BregmanPoint, BregmanCenter]
-  with ClusterFactory {
+  embedding: Embedding = IdentityEmbedding) extends BPointOps {
 
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8

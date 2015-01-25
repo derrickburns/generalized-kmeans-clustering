@@ -31,7 +31,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
-class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKMeansClusterer {
+class MultiKMeans(pointOps: BPointOps, maxIterations: Int) extends MultiKMeansClusterer {
 
   def cluster(
     data: RDD[BregmanPoint],
