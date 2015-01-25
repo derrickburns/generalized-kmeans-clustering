@@ -16,11 +16,11 @@ object WaveletKmeans {
 
   def train(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
     baseInitializer: KMeansInitializer,
     embedding : Embedding = HaarEmbedding,
     depth: Int = 0,
-    initializationSteps: Int = 5
+    initializationSteps: Int = 5,
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
     ) : (Double, KMeansModel) = {
 
 
