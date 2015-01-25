@@ -1,5 +1,4 @@
-package com.massivedatascience.clusterer
-
+package com.massivedatascience.clusterer.util
 
 object HaarWavelet {
 

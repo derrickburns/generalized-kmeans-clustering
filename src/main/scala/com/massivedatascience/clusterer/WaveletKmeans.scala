@@ -1,5 +1,6 @@
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.util.HaarWavelet
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
