@@ -17,6 +17,7 @@
 
 package com.massivedatascience
 
+import com.massivedatascience.clusterer.{ClusterFactory, PointOps}
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 import org.apache.spark.rdd.RDD
@@ -73,7 +74,12 @@ package object clusterer {
     s.getMovement / s.getNonEmptyClusters < 1.0E-5
   }
 
-  trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable {
+  trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable  with ClusterFactory {
+
+    def embed(v: Vector): Vector
+
+    val weightThreshold : Double
+
     def distance(p: P, c: C): Double
 
     /**
@@ -172,4 +178,27 @@ package object clusterer {
     def pointCost(centers: IndexedSeq[C], point: P): Double = findClosest(centers, point)._2
   }
 
+  /**
+   * A point with an additional single Double value that is used in distance computation.
+   *
+   * @param embedding  inhomogeneous coordinates of point following embedding
+   * @param weight weight of point
+   * @param f f(point)
+   */
+  class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
+    extends ImmutableInhomogeneousVector(embedding, weight)
+
+  /**
+   * A cluster center with an additional Double and an additional vector containing the gradient
+   * that are used in distance computation.
+   *
+   * @param h inhomogeneous coordinates of center in the embedded space
+   * @param weight weight of vector
+   * @param dotGradMinusF  center dot gradient(center) - f(center)
+   * @param gradient gradient of center
+   */
+  class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gradient: Vector)
+    extends ImmutableHomogeneousVector(h, weight)
+
+  trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter]
 }

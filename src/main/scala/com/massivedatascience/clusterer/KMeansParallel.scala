@@ -23,7 +23,7 @@ import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.{Vectors,Vector}
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
@@ -34,7 +34,8 @@ class KMeansParallel(
   pointOps: BregmanPointOps,
   k: Int,
   runs: Int,
-  initializationSteps: Int)
+  initializationSteps: Int,
+  seedx: Int)
   extends KMeansInitializer with Logging {
 
   /**
@@ -46,11 +47,13 @@ class KMeansParallel(
    *
    * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
    *
-   * @param data the RDD of points
-   * @param seedx the random number generator seed
+   * @param d the RDD of points
    * @return
    */
-  def init(data: RDD[BregmanPoint], seedx: Int): Array[Array[BregmanCenter]] = {
+  def init(d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+
+    val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
+    data.cache()
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
@@ -126,7 +129,7 @@ class KMeansParallel(
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
-    result
+    (data, result)
   }
 
 

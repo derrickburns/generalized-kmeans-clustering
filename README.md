@@ -6,6 +6,16 @@ or dense data using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 
+Several k-means clustering algorithms are provided: 1) the ```MultiKMeans``` implementation runs
+several k-means clusterings in parallel 2) the ```TrackingKMeans``` implementation tracks
+assignments of point to clusters between rounds of Lloyd's algorithms, resulting in an
+speed-up in latter rounds of Lloyd's algorihtm; and, 3) the ```WaveletKMeans``` implementation recursively
+solves K-means problem in lower dimensional spaces and maps the lower dimensional solutions back. By default,
+the ```MultiKMeans``` is used.
+
+Be aware that work on this project is ongoing.  Parts of this project are being integrated into upcoming releases
+of the Spark MLLIB clusterer.
+
 
 ### Usage
 
@@ -144,7 +154,7 @@ tracks the number of cluster centers.
 This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
 This is much faster, since all cores are utilized versus just one.
 
-Additionally, this implementation performs the implementation in time quadratic in the number of cluster, whereas the Spark implementation takes time cubic in the number of clusters.
+Additionally, this implementation performs the implementation in time quadratic in the number of clusters, whereas the Spark implementation takes time cubic in the number of clusters.
 
 #### Sparse Data
 
