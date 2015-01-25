@@ -91,7 +91,7 @@ object KMeans extends Logging  {
     maxIterations: Int,
     initializer: KMeansInitializer,
     initializationSteps: Int,
-    pointOps: BasicPointOps)
+    pointOps: BregmanPointOps)
   : (Double, KMeansModel) = {
 
     val (data, centers) = initializer.init(raw)

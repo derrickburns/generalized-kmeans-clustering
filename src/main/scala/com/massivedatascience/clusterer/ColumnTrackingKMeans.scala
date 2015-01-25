@@ -34,7 +34,7 @@ import scala.collection.mutable.ArrayBuffer
  * @param updateRate  percentage of points that are updated on each round
  */
 class ColumnTrackingKMeans(
-  pointOps: BasicPointOps,
+  pointOps: BregmanPointOps,
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer {

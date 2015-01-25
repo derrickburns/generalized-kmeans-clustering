@@ -57,7 +57,7 @@ import scala.collection.Map
  * 6. If any cluster moved, then go to 1.
  */
 
-class CachingKMeans(ops: BasicPointOps) extends Serializable with Logging {
+class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
 
   case class Closest(dist: Double, index: Int)
 
