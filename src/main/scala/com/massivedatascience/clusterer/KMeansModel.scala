@@ -27,7 +27,7 @@ import org.apache.spark.rdd.RDD
 /**
  * A clustering model for K-means. Each point belongs to the cluster with the closest center.
  */
-class KMeansModel(pointOps: BPointOps, centers: Array[BregmanCenter])
+class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
   extends Serializable {
 
   lazy val k: Int = clusterCenters.length

@@ -15,7 +15,7 @@ object WaveletKmeans {
 
   def train(
     raw: RDD[Vector],
-    pointOps: BPointOps,
+    pointOps: BregmanPointOps,
     baseInitializer: KMeansInitializer,
     embedding : Embedding = HaarEmbedding,
     depth: Int = 0,
