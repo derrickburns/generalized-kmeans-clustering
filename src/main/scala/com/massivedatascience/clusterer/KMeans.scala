@@ -17,9 +17,8 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.HaarWavelet
 import org.apache.spark.Logging
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 
@@ -98,37 +97,76 @@ object KMeans extends Logging  {
     val (cost, finalCenters) = kMeans.cluster(data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
-  
-  def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+
+  def subSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    embedding : Embedding = HaarEmbedding,
-    depth: Int = 0,
+    initializationSteps: Int = 5,
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
+    depth: Int = 4,
+    embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
+
+    val samples = subsample(raw, depth, embedding)
+    recursivelyTrain( pointOps, maxIterations)(samples, initializer, initializationSteps, kMeans)
+  }
+
+  def reSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+    raw: RDD[Vector],
+    initializer: KMeansInitializer,
+    initializationSteps: Int = 5,
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
+    embeddings: List[Embedding]
+    ): (Double, KMeansModel) = {
+
+    val samples = resample(raw, embeddings)
+    recursivelyTrain( pointOps, maxIterations)(samples, initializer, initializationSteps, kMeans)
+  }
+
+  def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+    raw: List[RDD[Vector]],
+    initializer: KMeansInitializer,
     initializationSteps: Int = 5,
     kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
     ) : (Double, KMeansModel) = {
 
-    def recurse(data: RDD[Vector], remaining: Int) : (Double, KMeansModel) = {
-      val currentInitializer = if (remaining > 0) {
-        val downData = data.map{embedding.embed}
+    def recurse(data: List[RDD[Vector]]): (Double, KMeansModel) = {
+      val currentInitializer = if (data.tail.nonEmpty) {
+        val downData = data.head
         downData.cache()
-        val (downCost, model) = recurse(downData, remaining - 1)
+        val (downCost, model) = recurse(data.tail)
         val assignments = model.predict(downData)
         downData.unpersist(blocking = false)
         new SampleInitializer(pointOps, assignments)
       } else {
         initializer
       }
-      train(pointOps, maxIterations)(data,currentInitializer,kMeans)
+      train(pointOps, maxIterations)(data.head,currentInitializer,kMeans)
     }
 
-    recurse(raw, depth)
+    recurse(raw)
   }
 
-  object HaarEmbedding extends Embedding {
-    def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
+  def subsample( raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
+    if( depth == 0 ) {
+      List(raw)
+    } else {
+      val x = subsample(raw, depth-1)
+      x.head.map{embedding.embed} :: x
+    }
   }
 
+  /**
+   *
+   * @param raw data set to embed
+   * @param embeddings  list of embedding from smallest to largest
+   * @return
+   */
 
+  def resample( raw: RDD[Vector], embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] = {
+    if( embeddings.isEmpty ) {
+      List[RDD[Vector]]()
+    } else {
+      raw.map{embeddings.head.embed} :: resample(raw, embeddings.tail)
+    }
+  }
 
-}
