@@ -41,7 +41,6 @@ object DenseEmbedding extends Embedding {
 object HaarEmbedding extends Embedding {
   def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
 }
-}
 
 /**
  *

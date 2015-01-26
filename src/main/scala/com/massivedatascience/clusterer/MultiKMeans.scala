@@ -31,99 +31,106 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
-class MultiKMeans(pointOps: BregmanPointOps, maxIterations: Int) extends MultiKMeansClusterer {
+class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
 
-  def cluster(
+  override def cluster(
+    pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter]) = {
-    val runs = centers.length
-    val active = Array.fill(runs)(true)
-    val costs = Array.fill(runs)(0.0)
-    var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
-    var iteration = 0
 
-    /*
+    def cluster(): (Double, Array[BregmanCenter]) = {
+      val runs = centers.length
+      val active = Array.fill(runs)(true)
+      val costs = Array.fill(runs)(0.0)
+      var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
+      var iteration = 0
+
+      /*
      * Execute iterations of Lloyd's algorithm until all runs have converged.
      */
 
-    while (iteration < maxIterations && activeRuns.nonEmpty) {
-      // remove the empty clusters
-      logInfo(s"iteration $iteration")
+      while (iteration < maxIterations && activeRuns.nonEmpty) {
+        // remove the empty clusters
+        logInfo(s"iteration $iteration")
 
-      val activeCenters = activeRuns.map(r => centers(r)).toArray
+        val activeCenters = activeRuns.map(r => centers(r)).toArray
 
-      if (log.isInfoEnabled) {
-        for (r <- 0 until activeCenters.length)
-          logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
-      }
-
-      // Find the sum and count of points mapping to each center
-      val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) = getCentroids(data, activeCenters)
-
-      if (log.isInfoEnabled) {
-        for (run <- activeRuns) logInfo(s"run $run distortion ${runDistortion(run)}")
-      }
-
-      for (run <- activeRuns) active(run) = false
-
-      for (((runIndex: Int, clusterIndex: Int), cn: WeightedVector) <- centroids) {
-        val run = activeRuns(runIndex)
-        if (cn.weight == 0.0) {
-          active(run) = true
-          centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
-        } else {
-          val centroid = pointOps.toPoint(cn)
-          active(run) = active(run) || pointOps.centerMoved(centroid, centers(run)(clusterIndex))
-          centers(run)(clusterIndex) = pointOps.toCenter(centroid)
+        if (log.isInfoEnabled) {
+          for (r <- 0 until activeCenters.length)
+            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
         }
+
+        // Find the sum and count of points mapping to each center
+        val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) = getCentroids(data, activeCenters)
+
+        if (log.isInfoEnabled) {
+          for (run <- activeRuns) logInfo(s"run $run distortion ${runDistortion(run)}")
+        }
+
+        for (run <- activeRuns) active(run) = false
+
+        for (((runIndex: Int, clusterIndex: Int), cn: WeightedVector) <- centroids) {
+          val run = activeRuns(runIndex)
+          if (cn.weight == 0.0) {
+            active(run) = true
+            centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
+          } else {
+            val centroid = pointOps.toPoint(cn)
+            active(run) = active(run) || pointOps.centerMoved(centroid, centers(run)(clusterIndex))
+            centers(run)(clusterIndex) = pointOps.toCenter(centroid)
+          }
+        }
+
+        // filter out null centers
+        for (r <- activeRuns) centers(r) = centers(r).filter(_ != null)
+
+        // update distortions and print log message if run completed during this iteration
+        for ((run, runIndex) <- activeRuns.zipWithIndex) {
+          costs(run) = runDistortion(runIndex)
+          if (!active(run)) logInfo(s"run $run finished in ${iteration + 1} iterations")
+        }
+        activeRuns = activeRuns.filter(active(_))
+        iteration += 1
       }
 
-      // filter out null centers
-      for (r <- activeRuns) centers(r) = centers(r).filter(_ != null)
-
-      // update distortions and print log message if run completed during this iteration
-      for ((run, runIndex) <- activeRuns.zipWithIndex) {
-        costs(run) = runDistortion(runIndex)
-        if (!active(run)) logInfo(s"run $run finished in ${iteration + 1} iterations")
-      }
-      activeRuns = activeRuns.filter(active(_))
-      iteration += 1
+      val best = costs.zipWithIndex.min._2
+      (costs(best), centers(best))
     }
 
-    val best = costs.zipWithIndex.min._2
-    (costs(best), centers(best))
+    def getCentroids(
+      data: RDD[BregmanPoint],
+      activeCenters: Array[Array[BregmanCenter]])
+    : (Array[((Int, Int), WeightedVector)], Array[Double]) = {
+
+      val sc = data.sparkContext
+      val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
+      val bcActiveCenters = sc.broadcast(activeCenters)
+      val result: Array[((Int, Int), WeightedVector)] = data.mapPartitions { points =>
+        val bcCenters = bcActiveCenters.value
+        val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
+        for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
+          val (cluster, cost) = pointOps.findClosest(clusters, point)
+          runDistortion(run) += cost
+          centers(run)(cluster).add(point)
+        }
+
+        val contribution = for (
+          (clusters, run) <- bcCenters.zipWithIndex;
+          (contrib, cluster) <- clusters.zipWithIndex
+        ) yield {
+          ((run, cluster), centers(run)(cluster).asImmutable)
+        }
+
+        contribution.iterator
+      }.aggregateByKey(pointOps.getCentroid)(
+          (x, y) => x.add(y),
+          (x, y) => x.add(y)
+        ).map(x => (x._1, x._2.asImmutable)).collect()
+      bcActiveCenters.unpersist()
+      (result, runDistortion.map(x => x.localValue))
+    }
+
+    cluster()
   }
 
-  def getCentroids(
-    data: RDD[BregmanPoint],
-    activeCenters: Array[Array[BregmanCenter]])
-  : (Array[((Int, Int), WeightedVector)], Array[Double]) = {
-
-    val sc = data.sparkContext
-    val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
-    val bcActiveCenters = sc.broadcast(activeCenters)
-    val result: Array[((Int, Int), WeightedVector)] = data.mapPartitions { points =>
-      val bcCenters = bcActiveCenters.value
-      val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
-      for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
-        val (cluster, cost) = pointOps.findClosest(clusters, point)
-        runDistortion(run) += cost
-        centers(run)(cluster).add(point)
-      }
-
-      val contribution = for (
-        (clusters, run) <- bcCenters.zipWithIndex;
-        (contrib, cluster) <- clusters.zipWithIndex
-      ) yield {
-        ((run, cluster), centers(run)(cluster).asImmutable)
-      }
-
-      contribution.iterator
-    }.aggregateByKey(pointOps.getCentroid)(
-      (x,y) => x.add(y),
-      (x,y) => x.add(y)
-      ).map( x=> (x._1, x._2.asImmutable)).collect()
-    bcActiveCenters.unpersist()
-    (result, runDistortion.map(x => x.localValue))
-  }
 }

@@ -153,7 +153,7 @@ class KMeansParallel(
 
     val centers = bcCenters.value
     val kmeansPlusPlus = new KMeansPlusPlus(pointOps)
-    val trackingKmeans = new MultiKMeans(pointOps, 30)
+    val trackingKmeans = new MultiKMeans(30)
     val sc = data.sparkContext
 
     Array.tabulate(runs) { r =>
@@ -163,7 +163,7 @@ class KMeansParallel(
       val kx = if (k > myCenters.length) myCenters.length else k
       val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
       val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-      trackingKmeans.cluster(parallelCenters, Array(initial))._2
+      trackingKmeans.cluster(pointOps, parallelCenters, Array(initial))._2
     }
   }
 }

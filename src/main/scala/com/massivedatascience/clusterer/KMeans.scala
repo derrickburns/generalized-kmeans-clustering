@@ -84,24 +84,24 @@ object KMeans extends Logging {
       case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps, 0)
       case _ => new KMeansRandom(pointOps, k, runs, 0)
     }
-    train(pointOps, maxIterations)(raw, initializer)._2
+    simpleTrain(pointOps, maxIterations)(raw, initializer)._2
   }
 
-  def train(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+  def simpleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations))
+    kMeans: MultiKMeansClusterer = new MultiKMeans(30))
   : (Double, KMeansModel) = {
 
     val (data, centers) = initializer.init(raw)
-    val (cost, finalCenters) = kMeans.cluster(data, centers)
+    val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
 
   def subSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
+    kMeans: MultiKMeansClusterer = new MultiKMeans(30),
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
 
@@ -112,7 +112,7 @@ object KMeans extends Logging {
   def reSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
+    kMeans: MultiKMeansClusterer = new MultiKMeans(30),
     embeddings: List[Embedding]
     ): (Double, KMeansModel) = {
 
@@ -123,7 +123,7 @@ object KMeans extends Logging {
   def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: List[RDD[Vector]],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
+    kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
     def recurse(data: List[RDD[Vector]]): (Double, KMeansModel) = {
@@ -137,7 +137,7 @@ object KMeans extends Logging {
       } else {
         initializer
       }
-      train(pointOps, maxIterations)(data.head, currentInitializer, kMeans)
+      simpleTrain(pointOps, maxIterations)(data.head, currentInitializer, kMeans)
     }
 
     recurse(raw)
@@ -165,9 +165,7 @@ object KMeans extends Logging {
     if (embeddings.isEmpty) {
       List[RDD[Vector]]()
     } else {
-      raw.map {
-        embeddings.head.embed
-      } :: resample(raw, embeddings.tail)
+      raw.map (embeddings.head.embed) :: resample(raw, embeddings.tail)
     }
   }
 }
