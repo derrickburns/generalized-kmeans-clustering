@@ -35,6 +35,7 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param kMeansImplName which k-means implementation to use
+   * @param embeddingName which embedding to use
    * @return K-Means model
    */
   def train(
@@ -45,8 +46,9 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE)
-  : KMeansModel = {
+    kMeansImplName : String = SIMPLE,
+    embeddingName : String = IDENTITY_EMBEDDING)
+  : KMeansModel = ???
 ```
 
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
@@ -140,6 +142,20 @@ There are two pre-defined seeding algorithms.
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
+#### Dimensionality Reduction via Embeddings
+
+One can embed points into a lower dimensional spaces before clustering in order to speed the
+computation.
+
+
+```scala
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```IDENTITY_EMBEDDING```                  | Identity |
+| ```LOW_DIMENSIONAL_RI```           |  [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```MEDIUM_DIMENSIONAL_RI```           | Random Indexing with dimension 256 and epsilon = 0.1 |
+| ```HIGH_DIMENSIONAL_RI```           | Random Indexing with dimension 1024 and epsilon = 0.1 |
+```
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
 There are several other differences with this clusterer and the Spark K-Means clusterer.
@@ -312,37 +328,7 @@ trait BregmanPointOps  {
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
 are welcome.
 
-#### Embeddings
 
-```PointOps``` also provide a means to embed points into a different space before clustering.
-Embedding is used to provide means to cluster data using generalized symmetrized Bregman
-divergences.
-
-Embedding is also used to support clustering of sparse data which can
-be quite inefficient to cluster directly.
-
-
-```scala
-
-  trait Embedding extends Serializable {
-    def embed(v: Vector): Vector
-  }
-```
-
-Two embedding are provided.  One uses [random indexing](https://www.sics.se/~mange/papers/RI_intro.pdf)
-to reduce the dimension of the data while the other simply converts vectors to isomorphic
-dense vectors. Note that random indexing may result in vectors with negative values, which may
-not be used in divergences that require non-negative values.
-
-
-```scala
-  class RandomIndexEmbedding(dim: Int, on: Int) extends Embedding
-  object DirectEmbedding extends Embedding
-```
-
-Embedding objects are not used directly in the main interface.  Rather, they are used in the
-construction of instances of ```PointOps```. See  the definition of ```RandomIndexedSquaredEuclideanPointOps```
-for an example.
 
 
 

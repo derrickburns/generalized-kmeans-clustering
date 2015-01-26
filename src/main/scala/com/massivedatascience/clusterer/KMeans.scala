@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.RandomIndexEmbedding
 import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
@@ -37,14 +38,15 @@ object KMeans extends Logging {
   val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
   val LOGISTIC_LOSS = "LOGISTIC_LOSS"
   val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
-  val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
-  val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
-  val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
   val TRACKING = "TRACKING"
   val SIMPLE = "SIMPLE"
   val COLUMN_TRACKING = "COLUMN_TRACKING"
 
+  val IDENTITY_EMBEDDING = "IDENTITY"
+  val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
+  val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
+  val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
   /**
    *
@@ -56,6 +58,7 @@ object KMeans extends Logging {
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param kMeansImplName which k-means implementation to use
+   * @param embeddingName which embedding to use
    * @return K-Means model
    */
   def train(
@@ -66,12 +69,15 @@ object KMeans extends Logging {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE)
+    kMeansImplName : String = SIMPLE,
+    embeddingName : String = IDENTITY_EMBEDDING)
   : KMeansModel = {
 
-    val pointOps = getPointOps(distanceFunctionName)
+    val ops = getPointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, k, runs, initializationSteps)
     val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
+    val embedding = getEmbedding(embeddingName)
+    val pointOps = if(embedding == IdentityEmbedding) ops else new DelegatedPointOps(ops,embedding)
 
     simpleTrain(pointOps)(data, initializer, kMeansImpl)._2
   }
@@ -87,12 +93,20 @@ object KMeans extends Logging {
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
-      case LOW_DIMENSIONAL_RI => LowDimensionalRISquaredEuclideanPointOps
-      case MEDIUM_DIMENSIONAL_RI => MediumDimensionalRISquaredEuclideanPointOps
-      case HIGH_DIMENSIONAL_RI => HighDimensionalRISquaredEuclideanPointOps
       case _ => DenseSquaredEuclideanPointOps
     }
   }
+
+  def getEmbedding(embeddingName: String ) : Embedding = {
+    embeddingName match {
+      case IDENTITY_EMBEDDING => IdentityEmbedding
+      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(64, 0.01)
+      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
+      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
+      case _ => IdentityEmbedding
+    }
+  }
+
 
   def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
     kmeansImpl match {
