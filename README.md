@@ -47,6 +47,7 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
     kMeansImplName : String = SIMPLE,
     embeddingName : String = IDENTITY_EMBEDDING)
   : KMeansModel = ???
+}
 ```
 
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
