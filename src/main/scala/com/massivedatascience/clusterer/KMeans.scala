@@ -55,7 +55,8 @@ object KMeans extends Logging {
    * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunction the distance functions to use
-   * @return (distortion, K-Means model)
+   * @param kmeansImpl which k-means implementation to use
+   * @return K-Means model
    */
   def train(
     raw: RDD[Vector],
@@ -85,15 +86,16 @@ object KMeans extends Logging {
     }
 
     val initializer: KMeansInitializer = mode match {
-      case RANDOM => new KMeansRandom(pointOps, k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps, 0)
-      case _ => new KMeansRandom(pointOps, k, runs, 0)
+      case RANDOM => new KMeansRandom(k, runs, 0)
+      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
+      case _ => new KMeansRandom(k, runs, 0)
     }
 
     val kMeans = kmeansImpl match {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans()
       case COLUMN_TRACKING => new ColumnTrackingKMeans(maxIterations)
+      case _ => new MultiKMeans(maxIterations)
     }
 
     simpleTrain(pointOps)(raw, initializer, kMeans)._2
@@ -105,7 +107,7 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30))
   : (Double, KMeansModel) = {
 
-    val (data, centers) = initializer.init(raw)
+    val (data, centers) = initializer.init(pointOps, raw)
     val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
@@ -145,7 +147,7 @@ object KMeans extends Logging {
         val (downCost, model) = recurse(data.tail)
         val assignments = model.predict(downData)
         downData.unpersist(blocking = false)
-        new SampleInitializer(pointOps, assignments)
+        new SampleInitializer(assignments)
       } else {
         initializer
       }

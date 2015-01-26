@@ -31,14 +31,49 @@ import com.massivedatascience.clusterer.util.BLAS.axpy
 
 
 class KMeansParallel(
-  pointOps: BregmanPointOps,
   k: Int,
   runs: Int,
   initializationSteps: Int,
   seedx: Int)
   extends KMeansInitializer with Logging {
 
-  /**
+  def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+
+    /**
+     * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
+     * Weight the points by the distance to the closest cluster center.
+     *
+     * @param data  original points
+     * @param bcCenters  array of sets of candidate centers
+     * @param seed  random number seed
+     * @return  array of sets of cluster centers
+     */
+    def finalCenters(
+      data: RDD[BregmanPoint],
+      bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
+      // for each (run, cluster) compute the sum of the weights of the points in the cluster
+      val weightMap = data.flatMap { point =>
+        val centers = bcCenters.value
+        Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
+      }.reduceByKeyLocally(_ + _)
+
+      val centers = bcCenters.value
+      val kmeansPlusPlus = new KMeansPlusPlus(pointOps)
+      val trackingKmeans = new MultiKMeans(30)
+      val sc = data.sparkContext
+
+      Array.tabulate(runs) { r =>
+        val myCenters = centers(r)
+        logInfo(s"run $r has ${myCenters.length} centers")
+        val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
+        val kx = if (k > myCenters.length) myCenters.length else k
+        val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
+        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
+        trackingKmeans.cluster(pointOps, parallelCenters, Array(initial))._2
+      }
+    }
+
+    /**
    * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
    * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
    * to find  dissimilar cluster centers by starting with a random center and then doing
@@ -47,10 +82,8 @@ class KMeansParallel(
    *
    * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
    *
-   * @param d the RDD of points
    * @return
    */
-  def init(d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
     val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
     data.cache()
@@ -130,40 +163,5 @@ class KMeansParallel(
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
     (data, result)
-  }
-
-
-  /**
-   * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
-   * Weight the points by the distance to the closest cluster center.
-   *
-   * @param data  original points
-   * @param bcCenters  array of sets of candidate centers
-   * @param seed  random number seed
-   * @return  array of sets of cluster centers
-   */
-  def finalCenters(
-    data: RDD[BregmanPoint],
-    bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
-    // for each (run, cluster) compute the sum of the weights of the points in the cluster
-    val weightMap = data.flatMap { point =>
-      val centers = bcCenters.value
-      Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-    }.reduceByKeyLocally(_ + _)
-
-    val centers = bcCenters.value
-    val kmeansPlusPlus = new KMeansPlusPlus(pointOps)
-    val trackingKmeans = new MultiKMeans(30)
-    val sc = data.sparkContext
-
-    Array.tabulate(runs) { r =>
-      val myCenters = centers(r)
-      logInfo(s"run $r has ${myCenters.length} centers")
-      val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
-      val kx = if (k > myCenters.length) myCenters.length else k
-      val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
-      val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-      trackingKmeans.cluster(pointOps, parallelCenters, Array(initial))._2
-    }
   }
 }

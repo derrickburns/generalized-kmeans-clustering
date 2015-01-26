@@ -23,10 +23,17 @@ import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int, seed: Int) extends KMeansInitializer {
+class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
-  def init(d: RDD[Vector]) : (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
-    val data = d.map{ p=>ops.inhomogeneousToPoint(p,1.0)}
+  def init(ops: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+
+    def select(data: RDD[BregmanPoint], count: Int) =
+    {
+      val toCenter = ops.toCenter _
+      data.takeSample(withReplacement = false, count, new XORShiftRandom().nextInt()).map(toCenter)
+    }
+
+    val data = d.map { p => ops.inhomogeneousToPoint(p, 1.0)}
     data.cache()
     val filtered = data.filter(_.weight > ops.weightThreshold)
     val count = filtered.count()
@@ -41,11 +48,7 @@ class KMeansRandom(ops: BregmanPointOps, k: Int, runs: Int, seed: Int) extends K
     }
     (data, centers)
   }
-
-  protected def select(data: RDD[BregmanPoint], count: Int) = {
-    val toCenter = ops.toCenter _
-    data.takeSample(withReplacement = false, count, new XORShiftRandom().nextInt()).map(toCenter)
-  }
 }
+
 
 
