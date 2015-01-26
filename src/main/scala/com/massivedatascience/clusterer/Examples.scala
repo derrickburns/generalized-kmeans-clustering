@@ -21,7 +21,7 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 
-object RecursiveKMeans {
+object Examples {
 
   import KMeans._
 
