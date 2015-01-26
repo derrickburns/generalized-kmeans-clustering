@@ -227,9 +227,7 @@ object KMeans extends Logging {
       List(raw)
     } else {
       val x = subsample(raw, depth - 1)
-      x.head.map {
-        embedding.embed
-      } :: x
+      x.head.map (embedding.embed) :: x
     }
   }
 

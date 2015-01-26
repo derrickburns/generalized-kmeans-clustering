@@ -104,8 +104,36 @@ while the latter applies the same embedding iteratively on the data.
 }
 ```
 
+### Examples
+
+Here are examples of using K-Means recursively.
+
+```scala
+object RecursiveKMeans {
+
+  import KMeans._
+
+  def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+    KMeans.train(raw, k,
+      embeddingNames = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI))
+  }
+
+  def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+    val dim = raw.first().toArray.length
+    require(dim > 0)
+    val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
+    val target = Math.max(maxDepth - 4, 0)
+    KMeans.trainViaSubsampling(raw, k, depth = target)
+  }
+}
+```
+
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
 desire. The method will return a ```KMeansModel``` of the clustering.
+
+### K-Means Model
+
+The value returned from a K-Means clustering is the ```KMeansModel```.
 
 ```scala
 class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
@@ -226,7 +254,7 @@ There are several other differences with this clusterer and the Spark K-Means cl
 
 This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
 The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
-tracks the number of cluster centers. 
+tracks the number of cluster centers.
 
 #### Faster K-Means || implementation
 
