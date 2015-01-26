@@ -15,6 +15,6 @@ object ResamplingRandomIndexingTrainer {
     initializer: KMeansInitializer)(kMeans: MultiKMeansClusterer = new MultiKMeans(30) )
   : KMeansModel = {
 
-    KMeans.reSampleTrain(DenseSquaredEuclideanPointOps)(raw, initializer, kMeans, embeddings)._2
+    KMeans.trainViaResampling(DenseSquaredEuclideanPointOps)(raw, initializer, kMeans, embeddings)._2
   }
 }

@@ -17,13 +17,37 @@ of the Spark MLLIB clusterer.
 
 ### Usage
 
-The simplest way to call the clusterer is to use the ```KMeans.train``` method.
+The simplest way to call the clusterer is to use the ```KMeans.train``` method. At minimum, one
+must provide the data set to cluster and the desired number of clusters.
+
+For high dimensional data, one way wish to embed the data into a lower dimension before clustering to
+reduce running time.
+
+For time series data,
+[the Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+has been used successfully to reduce running time while maintaining or improving quality.
+
+For high-dimensional sparse data,
+[random indexing](http://en.wikipedia.org/wiki/Random_indexing)
+can be used to map the data into a low dimensional dense space.
+
+One may also perform clustering recursively, using lower dimensional clustering to derive initial
+conditions for higher dimensional clustering.
+
+To support recursive clustering, there are actually two training methods, ```KMeans.train``` and
+```KMeans.trainViaSubsampling```.  The former applies a list of embeddings to the input data,
+while the latter applies the same embedding iteratively on the data.
+
+
 
 ```scala
   package com.massivedatascience.clusterer
 
   object KMeans {
   /**
+   *
+   * Train a K-Means model using Lloyd's algorithm.
+   *
    *
    * @param data input data
    * @param k  number of clusters desired
@@ -33,19 +57,49 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param kMeansImplName which k-means implementation to use
-   * @param embeddingName which embedding to use
+   * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
    */
   def train(
     data: RDD[Vector],
-    k: Int = 2,
+    k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     kMeansImplName : String = SIMPLE,
-    embeddingName : String = IDENTITY_EMBEDDING)
+    embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
+  : KMeansModel = ???
+
+
+  /**
+   *
+   * Train a K-Means model by recursively sub-sampling the data via the provided embedding.
+   *
+   * @param data input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param initializerName initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunctionName the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
+   * @param embeddingName embedding to use recursively
+   * @param depth number of times to recurse
+   * @return K-Means model
+   */
+  def trainViaSubsampling(
+    data: RDD[Vector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    initializerName: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName : String = SIMPLE,
+    embeddingName : String = HAAR_EMBEDDING,
+    depth: Int = 2)
   : KMeansModel = ???
 }
 ```
@@ -145,12 +199,13 @@ One can embed points into a lower dimensional spaces before clustering in order 
 computation.
 
 
-| Name (```KMeans._```)            | Algorithm                         |
-|----------------------------------|-----------------------------------|
-| ```IDENTITY_EMBEDDING```                  | Identity |
-| ```LOW_DIMENSIONAL_RI```           |  [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
-| ```MEDIUM_DIMENSIONAL_RI```           | Random Indexing with dimension 256 and epsilon = 0.1 |
-| ```HIGH_DIMENSIONAL_RI```           | Random Indexing with dimension 1024 and epsilon = 0.1 |
+| Name (```KMeans._```)         | Algorithm                                                   |
+|-------------------------------|-------------------------------------------------------------|
+| ```IDENTITY_EMBEDDING```      | Identity                                                    |
+| ```HAAR_EMBEDDING```          | [Haar Transform](http://en.wikipedia.org/wiki/Haar_wavelet) |
+| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
+| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
 
 ### K-Means Implementations
 
