@@ -22,7 +22,7 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 
-object KMeans extends Logging  {
+object KMeans extends Logging {
   // Initialization mode names
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
@@ -101,33 +101,30 @@ object KMeans extends Logging  {
   def subSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    initializationSteps: Int = 5,
     kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
 
     val samples = subsample(raw, depth, embedding)
-    recursivelyTrain( pointOps, maxIterations)(samples, initializer, initializationSteps, kMeans)
+    recursivelyTrain(pointOps, maxIterations)(samples, initializer, kMeans)
   }
 
   def reSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    initializationSteps: Int = 5,
     kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations),
     embeddings: List[Embedding]
     ): (Double, KMeansModel) = {
 
     val samples = resample(raw, embeddings)
-    recursivelyTrain( pointOps, maxIterations)(samples, initializer, initializationSteps, kMeans)
+    recursivelyTrain(pointOps, maxIterations)(samples, initializer, kMeans)
   }
 
   def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: List[RDD[Vector]],
     initializer: KMeansInitializer,
-    initializationSteps: Int = 5,
     kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
-    ) : (Double, KMeansModel) = {
+    ): (Double, KMeansModel) = {
 
     def recurse(data: List[RDD[Vector]]): (Double, KMeansModel) = {
       val currentInitializer = if (data.tail.nonEmpty) {
@@ -140,18 +137,20 @@ object KMeans extends Logging  {
       } else {
         initializer
       }
-      train(pointOps, maxIterations)(data.head,currentInitializer,kMeans)
+      train(pointOps, maxIterations)(data.head, currentInitializer, kMeans)
     }
 
     recurse(raw)
   }
 
-  def subsample( raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
-    if( depth == 0 ) {
+  def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
+    if (depth == 0) {
       List(raw)
     } else {
-      val x = subsample(raw, depth-1)
-      x.head.map{embedding.embed} :: x
+      val x = subsample(raw, depth - 1)
+      x.head.map {
+        embedding.embed
+      } :: x
     }
   }
 
@@ -162,11 +161,14 @@ object KMeans extends Logging  {
    * @return
    */
 
-  def resample( raw: RDD[Vector], embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] = {
-    if( embeddings.isEmpty ) {
+  def resample(raw: RDD[Vector], embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] = {
+    if (embeddings.isEmpty) {
       List[RDD[Vector]]()
     } else {
-      raw.map{embeddings.head.embed} :: resample(raw, embeddings.tail)
+      raw.map {
+        embeddings.head.embed
+      } :: resample(raw, embeddings.tail)
     }
   }
+}
 
