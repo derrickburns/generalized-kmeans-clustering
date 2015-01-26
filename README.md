@@ -17,13 +17,37 @@ of the Spark MLLIB clusterer.
 
 ### Usage
 
-The simplest way to call the clusterer is to use the ```KMeans.train``` method.
+The simplest way to call the clusterer is to use the ```KMeans.train``` method. At minimum, one
+must provide the data set to cluster and the desired number of clusters.
+
+For high dimensional data, one way wish to embed the data into a lower dimension before clustering to
+reduce running time.
+
+For time series data,
+[the Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+has been used successfully to reduce running time while maintaining or improving quality.
+
+For high-dimensional sparse data,
+[random indexing](http://en.wikipedia.org/wiki/Random_indexing)
+can be used to map the data into a low dimensional dense space.
+
+One may also perform clustering recursively, using lower dimensional clustering to derive initial
+conditions for higher dimensional clustering.
+
+To support recursive clustering, there are actually two training methods, ```KMeans.train``` and
+```KMeans.trainViaSubsampling```.  The former applies a list of embeddings to the input data,
+while the latter applies the same embedding iteratively on the data.
+
+
 
 ```scala
   package com.massivedatascience.clusterer
 
   object KMeans {
   /**
+   *
+   * Train a K-Means model using Lloyd's algorithm.
+   *
    *
    * @param data input data
    * @param k  number of clusters desired
@@ -33,25 +57,83 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param kMeansImplName which k-means implementation to use
-   * @param embeddingName which embedding to use
+   * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
    */
   def train(
     data: RDD[Vector],
-    k: Int = 2,
+    k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     kMeansImplName : String = SIMPLE,
-    embeddingName : String = IDENTITY_EMBEDDING)
+    embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = ???
+
+
+  /**
+   *
+   * Train a K-Means model by recursively sub-sampling the data via the provided embedding.
+   *
+   * @param data input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param initializerName initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunctionName the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
+   * @param embeddingName embedding to use recursively
+   * @param depth number of times to recurse
+   * @return K-Means model
+   */
+  def trainViaSubsampling(
+    data: RDD[Vector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    initializerName: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName : String = SIMPLE,
+    embeddingName : String = HAAR_EMBEDDING,
+    depth: Int = 2)
+  : KMeansModel = ???
+}
+```
+
+### Examples
+
+Here are examples of using K-Means recursively.
+
+```scala
+object RecursiveKMeans {
+
+  import KMeans._
+
+  def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+    KMeans.train(raw, k,
+      embeddingNames = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI))
+  }
+
+  def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+    val dim = raw.first().toArray.length
+    require(dim > 0)
+    val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
+    val target = Math.max(maxDepth - 4, 0)
+    KMeans.trainViaSubsampling(raw, k, depth = target)
+  }
 }
 ```
 
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
 desire. The method will return a ```KMeansModel``` of the clustering.
+
+### K-Means Model
+
+The value returned from a K-Means clustering is the ```KMeansModel```.
 
 ```scala
 class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
@@ -88,8 +170,10 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
 
 ### Distance Functions
 
-The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
-a fixed number of clusters.  However, there are many interesting distance functions other than Euclidean distance.
+The Spark MLLIB clusterer is good at one thing: clustering low-medium dimensional data using
+squared Euclidean distance as the metric into a fixed number of clusters.
+
+However, there are many interesting distance functions other than Euclidean distance.
 It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
 modification to the Spark implementation have made it even more difficult.
 
@@ -143,12 +227,13 @@ One can embed points into a lower dimensional spaces before clustering in order 
 computation.
 
 
-| Name (```KMeans._```)            | Algorithm                         |
-|----------------------------------|-----------------------------------|
-| ```IDENTITY_EMBEDDING```                  | Identity |
-| ```LOW_DIMENSIONAL_RI```           |  [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
-| ```MEDIUM_DIMENSIONAL_RI```           | Random Indexing with dimension 256 and epsilon = 0.1 |
-| ```HIGH_DIMENSIONAL_RI```           | Random Indexing with dimension 1024 and epsilon = 0.1 |
+| Name (```KMeans._```)         | Algorithm                                                   |
+|-------------------------------|-------------------------------------------------------------|
+| ```IDENTITY_EMBEDDING```      | Identity                                                    |
+| ```HAAR_EMBEDDING```          | [Haar Transform](http://en.wikipedia.org/wiki/Haar_wavelet) |
+| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
+| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
 
 ### K-Means Implementations
 
@@ -169,7 +254,7 @@ There are several other differences with this clusterer and the Spark K-Means cl
 
 This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
 The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
-tracks the number of cluster centers. 
+tracks the number of cluster centers.
 
 #### Faster K-Means || implementation
 
