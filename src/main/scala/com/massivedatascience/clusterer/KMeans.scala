@@ -57,7 +57,7 @@ object KMeans extends Logging {
    * @param k  number of clusters desired
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
-   * @param initializerName initialization algorithm to use
+   * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param kMeansImplName which k-means implementation to use
@@ -69,7 +69,7 @@ object KMeans extends Logging {
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
-    initializerName: String = K_MEANS_PARALLEL,
+    mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     kMeansImplName : String = SIMPLE,
@@ -77,7 +77,7 @@ object KMeans extends Logging {
   : KMeansModel = {
 
     val ops = getPointOps(distanceFunctionName)
-    val initializer = getInitializer(initializerName, k, runs, initializationSteps)
+    val initializer = getInitializer(mode, k, runs, initializationSteps)
     val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
     val embeddings = embeddingNames.map(getEmbedding)
 
