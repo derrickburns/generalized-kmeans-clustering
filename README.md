@@ -2,14 +2,11 @@ Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support clustering of sparse
-or dense data using distances defined by
+or dense data, in low or high dimension, using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
-
-Two k-means clustering objects are provided: 1) the ```KMeans``` object solved the K-Means
-problem with several iteration of Lloyd's algorithm on the full data set, while 2) the
-```WaveletKMeans``` object recursively solves the K-means problem in lower dimensional spaces and
-maps the lower dimensional solutions back.
+This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
+using the squared Euclidean distance function.
 
 Be aware that work on this project is ongoing.  Parts of this project are being integrated into upcoming releases
 of the Spark MLLIB clusterer.
@@ -17,28 +14,23 @@ of the Spark MLLIB clusterer.
 
 ### Usage
 
-The simplest way to call the clusterer is to use the ```KMeans.train``` method. At minimum, one
-must provide the data set to cluster and the desired number of clusters.
+The simplest way to call the clusterer is to use the ```KMeans.train``` method, which
+will return an instance of the ```KMeansModel``` object.
 
-For high dimensional data, one way wish to embed the data into a lower dimension before clustering to
-reduce running time.
+For dense data in a low dimension space using the squared Euclidean distance function,
+one may simply call KMeans.train with the data and the desired number of clusters:
 
-For time series data,
-[the Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
-has been used successfully to reduce running time while maintaining or improving quality.
-
-For high-dimensional sparse data,
-[random indexing](http://en.wikipedia.org/wiki/Random_indexing)
-can be used to map the data into a low dimensional dense space.
-
-One may also perform clustering recursively, using lower dimensional clustering to derive initial
-conditions for higher dimensional clustering.
-
-To support recursive clustering, there are actually two training methods, ```KMeans.train``` and
-```KMeans.trainViaSubsampling```.  The former applies a list of embeddings to the input data,
-while the latter applies the same embedding iteratively on the data.
+```scala
+  import com.com.massivedatascience.clusterer.KMeans
+  import org.apache.spark.mllib.linalg.Vector
 
 
+  val data = ???
+  val k : Int = 50
+  val model : KMeansModel = KMeans.train(data: RDD[Vector], k: Int)
+```
+
+The full signature of the ```KMeans.train``` method is:
 
 ```scala
   package com.massivedatascience.clusterer
@@ -71,7 +63,32 @@ while the latter applies the same embedding iteratively on the data.
     kMeansImplName : String = SIMPLE,
     embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = ???
+}
+```
 
+For high dimensional data, one way wish to embed the data into a lower dimension before clustering to
+reduce running time.
+
+For time series data,
+[the Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+has been used successfully to reduce running time while maintaining or improving quality.
+
+For high-dimensional sparse data,
+[random indexing](http://en.wikipedia.org/wiki/Random_indexing)
+can be used to map the data into a low dimensional dense space.
+
+One may also perform clustering recursively, using lower dimensional clustering to derive initial
+conditions for higher dimensional clustering.
+
+```KMeans.train``` and ```KMeans.trainViaSubsampling``` also support recursive clustering.
+The former applies a list of embeddings to the input data,
+while the latter applies the same embedding iteratively on the data.
+
+
+```scala
+  package com.massivedatascience.clusterer
+
+  object KMeans {
 
   /**
    *
@@ -230,7 +247,7 @@ computation.
 | Name (```KMeans._```)         | Algorithm                                                   |
 |-------------------------------|-------------------------------------------------------------|
 | ```IDENTITY_EMBEDDING```      | Identity                                                    |
-| ```HAAR_EMBEDDING```          | [Haar Transform](http://en.wikipedia.org/wiki/Haar_wavelet) |
+| ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
 | ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
 | ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
 | ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
