@@ -111,20 +111,17 @@ data is integral. Similarity of frequencies or distributions are best performed 
 Kullback-Leibler divergence.
 
 
-| Name (```KMeans._```)            | Space | Divergence              | Input   | Dimension |
-|----------------------------------|-------|-------------------------|---------|-----------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                | Dense   |  low      |
-| ```LOW_DIMENSIONAL_RI```         | R^d   |Euclidean                | Either  | medium    |
-| ```MEDIUM_DIMENSIONAL_RI```      | R^d   |Euclidean                | Either  | high      |
-| ```HIGH_DIMENSIONAL_RI```        | R^d   |Euclidean                | Either  | very high |
-| ```SPARSE_EUCLIDEAN```           | R^d   |Euclidean                | Sparse  | low       |
-| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | low       |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   | low       |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   | low       |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  | low       |
-| ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   | low       |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         | 1         |
-| ```GENERALIZED_I```              | R     |Generalized I-divergence |         | 1         |
+| Name (```KMeans._```)            | Space | Divergence              | Input   |
+|----------------------------------|-------|-------------------------|---------|
+| ```EUCLIDEAN```                  | R^d   |Euclidean                | Dense   |
+| ```SPARSE_EUCLIDEAN```           | R^d   |Euclidean                | Sparse  |
+| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |
+| ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
+| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |
 
 
 ### Initialization/seeding algorithm
@@ -142,7 +139,7 @@ There are two pre-defined seeding algorithms.
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
-#### Dimensionality Reduction via Embeddings
+### Dimensionality Reduction via Embeddings
 
 One can embed points into a lower dimensional spaces before clustering in order to speed the
 computation.
@@ -156,6 +153,20 @@ computation.
 | ```MEDIUM_DIMENSIONAL_RI```           | Random Indexing with dimension 256 and epsilon = 0.1 |
 | ```HIGH_DIMENSIONAL_RI```           | Random Indexing with dimension 1024 and epsilon = 0.1 |
 ```
+
+### K-Means Implementations
+
+There are three implementations of the K-Means algorithm. Use ```SIMPLE```.  The others
+are experimental for performance testing.
+
+```scala
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```SIMPLE```                  | recomputes closest clusters each iteration |
+| ```TRACKING```           |  clusterer tracks last cluster center in combined RDD |
+| ```COLUMN_TRACKING```           |  clusterer tracks last cluster center  in separate RDD |
+```
+
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
 There are several other differences with this clusterer and the Spark K-Means clusterer.
