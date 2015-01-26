@@ -48,28 +48,36 @@ object KMeans extends Logging {
 
   /**
    *
-   * @param raw input data
+   * @param data input data
    * @param k  number of clusters desired
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
-   * @param mode initialization algorithm to use
+   * @param initializerName initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
-   * @param distanceFunction the distance functions to use
-   * @param kmeansImpl which k-means implementation to use
+   * @param distanceFunctionName the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
    * @return K-Means model
    */
   def train(
-    raw: RDD[Vector],
+    data: RDD[Vector],
     k: Int = 2,
     maxIterations: Int = 20,
     runs: Int = 1,
-    mode: String = K_MEANS_PARALLEL,
+    initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunction: String = EUCLIDEAN,
-    kmeansImpl : String = SIMPLE)
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName : String = SIMPLE)
   : KMeansModel = {
 
-    val pointOps: BregmanPointOps = distanceFunction match {
+    val pointOps = getPointOps(distanceFunctionName)
+    val initializer = getInitializer(initializerName, k, runs, initializationSteps)
+    val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
+
+    simpleTrain(pointOps)(data, initializer, kMeansImpl)._2
+  }
+
+  def getPointOps(distanceFunction: String): BasicPointOps = {
+    distanceFunction match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
@@ -84,21 +92,23 @@ object KMeans extends Logging {
       case HIGH_DIMENSIONAL_RI => HighDimensionalRISquaredEuclideanPointOps
       case _ => DenseSquaredEuclideanPointOps
     }
+  }
 
-    val initializer: KMeansInitializer = mode match {
-      case RANDOM => new KMeansRandom(k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
-      case _ => new KMeansRandom(k, runs, 0)
-    }
-
-    val kMeans = kmeansImpl match {
+  def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
+    kmeansImpl match {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans()
       case COLUMN_TRACKING => new ColumnTrackingKMeans(maxIterations)
       case _ => new MultiKMeans(maxIterations)
     }
+  }
 
-    simpleTrain(pointOps)(raw, initializer, kMeans)._2
+  def getInitializer(mode: String, k: Int, runs: Int, initializationSteps: Int): KMeansInitializer = {
+    mode match {
+      case RANDOM => new KMeansRandom(k, runs, 0)
+      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
+      case _ => new KMeansRandom(k, runs, 0)
+    }
   }
 
   def simpleTrain(pointOps: BregmanPointOps)(

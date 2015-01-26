@@ -25,27 +25,28 @@ The simplest way to call the clusterer is to use the ```KMeans.train``` method.
   package com.massivedatascience.clusterer
 
   object KMeans {
-     /**
-      *
-      * @param raw input data
-      * @param k  number of clusters desired
-      * @param maxIterations maximum number of iterations of Lloyd's algorithm
-      * @param runs number of parallel clusterings to run
-      * @param mode initialization algorithm to use
-      * @param initializationSteps number of steps of the initialization algorithm
-      * @param distanceFunction the distance functions to use
-      * @return (distortion, K-Means model)
-      */
-     def train(
-       raw: RDD[Vector],
-       k: Int,
-       maxIterations: Int = 20,
-       runs: Int = 1,
-       mode: String = K_MEANS_PARALLEL,
-       initializationSteps: Int = 5,
-       distanceFunction: String = EUCLIDEAN)
-     : KMeansModel
-   }
+  /**
+   *
+   * @param data input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param initializerName initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunctionName the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
+   * @return K-Means model
+   */
+  def train(
+    data: RDD[Vector],
+    k: Int = 2,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    initializerName: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName : String = SIMPLE)
+  : KMeansModel = {
 ```
 
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
@@ -296,10 +297,7 @@ points to cluster centers.  These abstractions are easy to understand and easy t
 characteristics of the data to define the fastest methods for evaluating Bregman divergences.
 
 ```scala
-class BregmanPointOps(val divergence: BregmanDivergence, val clusterFactory: ClusterFactory)
-  extends PointOps[BregmanPoint, BregmanCenter]
-  with ClusterFactory {
-
+trait BregmanPointOps  {
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
   def embed(v:Vector) : Vector = ???
