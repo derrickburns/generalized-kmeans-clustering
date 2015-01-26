@@ -17,8 +17,9 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.util.HaarWavelet
 import org.apache.spark.Logging
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
 
@@ -41,6 +42,7 @@ object KMeans extends Logging  {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
+
   /**
    *
    * @param raw input data
@@ -62,7 +64,7 @@ object KMeans extends Logging  {
     distanceFunction: String = EUCLIDEAN)
   : KMeansModel = {
 
-    val pointOps = distanceFunction match {
+    val pointOps: BregmanPointOps = distanceFunction match {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
@@ -78,24 +80,55 @@ object KMeans extends Logging  {
       case _ => DenseSquaredEuclideanPointOps
     }
 
-    val initializer = mode match {
+    val initializer: KMeansInitializer = mode match {
       case RANDOM => new KMeansRandom(pointOps, k, runs, 0)
       case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps, 0)
       case _ => new KMeansRandom(pointOps, k, runs, 0)
     }
-    train(raw, maxIterations, initializer, initializationSteps, pointOps)._2
+    train(pointOps, maxIterations)(raw, initializer)._2
   }
 
-  def train(
+  def train(pointOps: BregmanPointOps, maxIterations: Int = 30)(
     raw: RDD[Vector],
-    maxIterations: Int,
     initializer: KMeansInitializer,
-    initializationSteps: Int,
-    pointOps: BregmanPointOps)
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations))
   : (Double, KMeansModel) = {
 
     val (data, centers) = initializer.init(raw)
-    val (cost, finalCenters) = new MultiKMeans(pointOps, maxIterations).cluster(data, centers)
+    val (cost, finalCenters) = kMeans.cluster(data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
+  
+  def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+    raw: RDD[Vector],
+    initializer: KMeansInitializer,
+    embedding : Embedding = HaarEmbedding,
+    depth: Int = 0,
+    initializationSteps: Int = 5,
+    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
+    ) : (Double, KMeansModel) = {
+
+    def recurse(data: RDD[Vector], remaining: Int) : (Double, KMeansModel) = {
+      val currentInitializer = if (remaining > 0) {
+        val downData = data.map{embedding.embed}
+        downData.cache()
+        val (downCost, model) = recurse(downData, remaining - 1)
+        val assignments = model.predict(downData)
+        downData.unpersist(blocking = false)
+        new SampleInitializer(pointOps, assignments)
+      } else {
+        initializer
+      }
+      train(pointOps, maxIterations)(data,currentInitializer,kMeans)
+    }
+
+    recurse(raw, depth)
+  }
+
+  object HaarEmbedding extends Embedding {
+    def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
+  }
+
+
+
 }
