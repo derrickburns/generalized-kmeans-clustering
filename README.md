@@ -2,9 +2,11 @@ Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support clustering of sparse
-or dense data using distances defined by
+or dense data, in low or high dimension, using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
+This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
+using the squared Euclidean distance function.
 
 Two k-means clustering objects are provided: 1) the ```KMeans``` object solved the K-Means
 problem with several iteration of Lloyd's algorithm on the full data set, while 2) the
