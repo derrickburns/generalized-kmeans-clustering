@@ -41,6 +41,10 @@ object KMeans extends Logging {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
+  val TRACKING = "TRACKING"
+  val SIMPLE = "SIMPLE"
+  val COLUMN_TRACKING = "COLUMN_TRACKING"
+
 
   /**
    *
@@ -60,7 +64,8 @@ object KMeans extends Logging {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunction: String = EUCLIDEAN)
+    distanceFunction: String = EUCLIDEAN,
+    kmeansImpl : String = SIMPLE)
   : KMeansModel = {
 
     val pointOps: BregmanPointOps = distanceFunction match {
@@ -84,10 +89,17 @@ object KMeans extends Logging {
       case K_MEANS_PARALLEL => new KMeansParallel(pointOps, k, runs, initializationSteps, 0)
       case _ => new KMeansRandom(pointOps, k, runs, 0)
     }
-    simpleTrain(pointOps, maxIterations)(raw, initializer)._2
+
+    val kMeans = kmeansImpl match {
+      case SIMPLE => new MultiKMeans(maxIterations)
+      case TRACKING => new TrackingKMeans()
+      case COLUMN_TRACKING => new ColumnTrackingKMeans(maxIterations)
+    }
+
+    simpleTrain(pointOps)(raw, initializer, kMeans)._2
   }
 
-  def simpleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+  def simpleTrain(pointOps: BregmanPointOps)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30))
@@ -98,7 +110,7 @@ object KMeans extends Logging {
     (cost, new KMeansModel(pointOps, finalCenters))
   }
 
-  def subSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+  def subSampleTrain(pointOps: BregmanPointOps)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30),
@@ -106,10 +118,10 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
 
     val samples = subsample(raw, depth, embedding)
-    recursivelyTrain(pointOps, maxIterations)(samples, initializer, kMeans)
+    recursivelyTrain(pointOps)(samples, initializer, kMeans)
   }
 
-  def reSampleTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+  def reSampleTrain(pointOps: BregmanPointOps)(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30),
@@ -117,10 +129,10 @@ object KMeans extends Logging {
     ): (Double, KMeansModel) = {
 
     val samples = resample(raw, embeddings)
-    recursivelyTrain(pointOps, maxIterations)(samples, initializer, kMeans)
+    recursivelyTrain(pointOps)(samples, initializer, kMeans)
   }
 
-  def recursivelyTrain(pointOps: BregmanPointOps, maxIterations: Int = 30)(
+  def recursivelyTrain(pointOps: BregmanPointOps)(
     raw: List[RDD[Vector]],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
@@ -137,7 +149,7 @@ object KMeans extends Logging {
       } else {
         initializer
       }
-      simpleTrain(pointOps, maxIterations)(data.head, currentInitializer, kMeans)
+      simpleTrain(pointOps)(data.head, currentInitializer, kMeans)
     }
 
     recurse(raw)
