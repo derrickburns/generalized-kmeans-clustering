@@ -122,6 +122,7 @@ Kullback-Leibler divergence.
 | ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   |
 | ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
 | ```GENERALIZED_I```              | R     |Generalized I-divergence |         |
+```
 
 
 ### Initialization/seeding algorithm
@@ -135,7 +136,8 @@ There are two pre-defined seeding algorithms.
 | Name (```KMeans._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```RANDOM```                  | Random selection of initial k centers |
-| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)              |
+| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
+```
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
