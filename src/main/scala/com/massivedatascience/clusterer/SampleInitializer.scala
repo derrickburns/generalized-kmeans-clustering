@@ -21,8 +21,10 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-class SampleInitializer(pointOps: BregmanPointOps, val assignments: RDD[Int]) extends KMeansInitializer {
-  def init(d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
+  def init(
+    pointOps: BregmanPointOps,
+    d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
     val data = d.map {pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
     data.cache()

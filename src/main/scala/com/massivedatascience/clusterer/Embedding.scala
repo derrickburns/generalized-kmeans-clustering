@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
 
 trait Embedding extends Serializable {
@@ -35,6 +35,11 @@ object DenseEmbedding extends Embedding {
      case dv: DenseVector => dv
    }
   }
+}
+
+
+object HaarEmbedding extends Embedding {
+  def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
 }
 
 /**

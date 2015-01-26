@@ -121,17 +121,6 @@ class RISquaredEuclideanPointOps(dimension: Int, epsilon: Double = 0.01)
   extends BasicPointOps(embedding = new RandomIndexEmbedding(dimension, epsilon))
 
 /**
- * Implements Squared Euclidean distance on sparse vectors in R ** n by
- * embedding the sparse vectors of various dimensions.
- *
- */
-object LowDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(128)
-
-object MediumDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(256)
-
-object HighDimensionalRISquaredEuclideanPointOps extends RISquaredEuclideanPointOps(512)
-
-/**
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
  */
 

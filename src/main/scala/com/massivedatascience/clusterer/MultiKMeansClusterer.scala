@@ -22,5 +22,9 @@ import org.apache.spark.rdd.RDD
 
 
 trait MultiKMeansClusterer extends Serializable with Logging {
-  def cluster(data: RDD[BregmanPoint], centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter])
+  def cluster(
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter])
+
 }

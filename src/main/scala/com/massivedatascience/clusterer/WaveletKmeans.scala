@@ -1,7 +1,6 @@
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.HaarWavelet
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 /**
@@ -20,7 +19,7 @@ object WaveletKMeans {
     embedding : Embedding = HaarEmbedding,
     depth: Int = 0,
     initializationSteps: Int = 5,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(pointOps, maxIterations)
+    kMeans: MultiKMeansClusterer = new MultiKMeans(maxIterations)
     ) : (Double, KMeansModel) = {
 
 
@@ -31,20 +30,16 @@ object WaveletKMeans {
         val (downCost, model) = recurse(downData, remaining - 1)
         val assignments = model.predict(downData)
         downData.unpersist(blocking = false)
-        new SampleInitializer(pointOps, assignments)
+        new SampleInitializer(assignments)
       } else {
         baseInitializer
       }
 
-      val (points,centerArray) = initializer.init(data)
-      val (cost, centers)  = kMeans.cluster(points, centerArray)
+      val (points,centerArray) = initializer.init(pointOps, data)
+      val (cost, centers)  = kMeans.cluster(pointOps, points, centerArray)
       (cost, new KMeansModel(pointOps, centers))
     }
 
     recurse(raw, depth)
-  }
-
-  object HaarEmbedding extends Embedding {
-    def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
   }
 }
