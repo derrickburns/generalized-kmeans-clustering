@@ -110,7 +110,6 @@ When selecting a distance function, consider the domain of the input data.  For 
 data is integral. Similarity of frequencies or distributions are best performed using the
 Kullback-Leibler divergence.
 
-
 | Name (```KMeans._```)            | Space | Divergence              | Input   |
 |----------------------------------|-------|-------------------------|---------|
 | ```EUCLIDEAN```                  | R^d   |Euclidean                | Dense   |
@@ -122,7 +121,6 @@ Kullback-Leibler divergence.
 | ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   |
 | ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
 | ```GENERALIZED_I```              | R     |Generalized I-divergence |         |
-```
 
 
 ### Initialization/seeding algorithm
@@ -137,7 +135,6 @@ There are two pre-defined seeding algorithms.
 |----------------------------------|-----------------------------------|
 | ```RANDOM```                  | Random selection of initial k centers |
 | ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
-```
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
@@ -147,27 +144,23 @@ One can embed points into a lower dimensional spaces before clustering in order 
 computation.
 
 
-```scala
 | Name (```KMeans._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```IDENTITY_EMBEDDING```                  | Identity |
 | ```LOW_DIMENSIONAL_RI```           |  [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
 | ```MEDIUM_DIMENSIONAL_RI```           | Random Indexing with dimension 256 and epsilon = 0.1 |
 | ```HIGH_DIMENSIONAL_RI```           | Random Indexing with dimension 1024 and epsilon = 0.1 |
-```
 
 ### K-Means Implementations
 
 There are three implementations of the K-Means algorithm. Use ```SIMPLE```.  The others
 are experimental for performance testing.
 
-```scala
 | Name (```KMeans._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```SIMPLE```                  | recomputes closest clusters each iteration |
 | ```TRACKING```           |  clusterer tracks last cluster center in combined RDD |
 | ```COLUMN_TRACKING```           |  clusterer tracks last cluster center  in separate RDD |
-```
 
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
