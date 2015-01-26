@@ -24,9 +24,6 @@ one may simply call KMeans.train with the data and the desired number of cluster
   import com.com.massivedatascience.clusterer.KMeans
   import org.apache.spark.mllib.linalg.Vector
 
-
-  val data = ???
-  val k : Int = 50
   val model : KMeansModel = KMeans.train(data: RDD[Vector], k: Int)
 ```
 
