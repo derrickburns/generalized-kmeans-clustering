@@ -88,8 +88,10 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
 
 ### Distance Functions
 
-The Spark MLLIB clusterer is good at one thing: clustering data using Euclidean distance as the metric into
-a fixed number of clusters.  However, there are many interesting distance functions other than Euclidean distance.
+The Spark MLLIB clusterer is good at one thing: clustering low-medium dimensional data using
+squared Euclidean distance as the metric into a fixed number of clusters.
+
+However, there are many interesting distance functions other than Euclidean distance.
 It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
 modification to the Spark implementation have made it even more difficult.
 
