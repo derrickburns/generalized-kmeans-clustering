@@ -239,7 +239,7 @@ class TrackingKMeans(
       fatCenters
     }
 
-    def distortion(data: RDD[FatPoint]) = data.filter(_.isAssigned).map(_.distance).sum
+    def distortion(data: RDD[FatPoint]) = data.filter(_.isAssigned).map(_.distance).sum()
 
     /**
      * Identify cluster changes.

@@ -17,9 +17,7 @@
  * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
-package com.rincaro.clusterer
-
-import com.massivedatascience.clusterer.KMeans
+package com.massivedatascience.clusterer
 
 import scala.util.Random
 
@@ -61,11 +59,11 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 5)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = RANDOM)
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = RANDOM)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(
-      data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL)
+      data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
   }
 
@@ -124,10 +122,10 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 5)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = RANDOM)
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = RANDOM)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL)
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
   }
 
@@ -169,32 +167,32 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 5)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = RANDOM)
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = RANDOM)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL)
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL,
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionName = RELATIVE_ENTROPY)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL,
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionName = EUCLIDEAN)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL,
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionName = SPARSE_EUCLIDEAN)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL,
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionName = DISCRETE_KL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, initializerName = K_MEANS_PARALLEL,
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionName = SPARSE_SMOOTHED_KL)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
@@ -226,18 +224,18 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     var model = KMeans.train(rdd, k = 5, maxIterations = 1)
 
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Iterations of Lloyd's should not change the answer either
     model = KMeans.train(rdd, k = 5, maxIterations = 10)
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Neither should more runs
     model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5)
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
   }
 
   test("two clusters") {
@@ -253,7 +251,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
       // Two iterations are sufficient no matter where the initial centers are.
-      val model = KMeans.train(rdd, k = 2, maxIterations = 2, runs = 1, initializerName = initMode)
+      val model = KMeans.train(rdd, k = 2, maxIterations = 2, runs = 1, mode = initMode)
 
       val predicts = model.predict(rdd).collect()
 
