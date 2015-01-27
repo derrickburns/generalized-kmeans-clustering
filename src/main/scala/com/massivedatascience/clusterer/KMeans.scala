@@ -108,7 +108,7 @@ object KMeans extends Logging {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
+    kMeansImplName : String = COLUMN_TRACKING,
     embeddingName : String = HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel = {
@@ -152,8 +152,14 @@ object KMeans extends Logging {
   private def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
     kmeansImpl match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans()
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(maxIterations)
+      case TRACKING => new TrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+        s.getNonEmptyClusters == 0 ||
+        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+      })
+      case COLUMN_TRACKING => new ColumnTrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+        s.getNonEmptyClusters == 0 ||
+        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+      })
       case _ => new MultiKMeans(maxIterations)
     }
   }
