@@ -72,7 +72,7 @@ object KMeans extends Logging {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
+    kMeansImplName : String = COLUMN_TRACKING,
     embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = {
 
