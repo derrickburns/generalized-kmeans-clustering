@@ -94,9 +94,9 @@ object BLAS extends Serializable {
    * Computes the sum of the values in y whose values are
    * zero in x.
    *
-   * @param x
-   * @param y
-   * @return
+   * @param x vector
+   * @param y  vector
+   * @return  sum of y values where corresponding x values are zero
    */
   def sumMissing(x: Vector, y: Vector): Double = {
     y match {

@@ -26,7 +26,8 @@ package object clusterer {
 
 
   def preview[T](data: RDD[T], header: String = ""): RDD[T] = {
-    if (data.sparkContext.getConf.getBoolean("com.massivedatascience.clusterer.preview", false)) {
+    if (data.sparkContext.getConf.getBoolean("com.massivedatascience.clusterer.preview",
+      defaultValue=false)) {
       println(header)
       val head = data.take(10)
       head.map(println)
@@ -84,40 +85,40 @@ package object clusterer {
 
     /**
      * convert a vector in homogeneous coordinates into a point
-     * @param v
-     * @param weight
-     * @return
+     * @param v input vector
+     * @param weight weight of vector
+     * @return  weighted vector
      */
     def homogeneousToPoint(v: Vector, weight: Double): P
 
 
     /**
      * convert a vector in inhomogeneous coordinates into a point
-     * @param v
-     * @param weight
-     * @return
+     * @param v input vector
+     * @param weight weight of input vector
+     * @return weighted vector
      */
     def inhomogeneousToPoint(v: Vector, weight: Double): P
 
     /**
      * converted a weighted vector to a point
-     * @param v
-     * @return
+     * @param v input vector
+     * @return weighted vector
      */
     def toPoint(v: WeightedVector): P
 
     /**
      * converted a weighted vector to a center
-     * @param v
-     * @return
+     * @param v input vector
+     * @return center
      */
     def toCenter(v: WeightedVector): C
 
     /**
      * determine if a center has moved appreciably
-     * @param v
-     * @param w
-     * @return
+     * @param v point
+     * @param w center
+     * @return is the point distinct from the center
      */
     def centerMoved(v: P, w: C): Boolean
 

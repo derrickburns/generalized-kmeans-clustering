@@ -17,9 +17,7 @@
  * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
-package com.rincaro.clusterer
-
-import com.massivedatascience.clusterer.KMeans
+package com.massivedatascience.clusterer
 
 import scala.util.Random
 
@@ -226,18 +224,18 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     var model = KMeans.train(rdd, k = 5, maxIterations = 1)
 
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Iterations of Lloyd's should not change the answer either
     model = KMeans.train(rdd, k = 5, maxIterations = 10)
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Neither should more runs
     model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5)
-    assert(model.clusterCenters.sortBy(VectorWithCompare(_))
-      .zip(points.sortBy(VectorWithCompare(_))).forall(x => x._1 ~== (x._2) absTol 1E-5))
+    assert(model.clusterCenters.sortBy(VectorWithCompare)
+      .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
   }
 
   test("two clusters") {
