@@ -179,6 +179,7 @@ object KMeans extends Logging {
   : (Double, KMeansModel) = {
 
     val (data, centers) = initializer.init(pointOps, raw)
+    data.setName("Bregman points")
     val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
@@ -211,12 +212,13 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(data: List[RDD[Vector]]): (Double, KMeansModel) = {
+    def recurse(data: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
       val currentInitializer = if (data.tail.nonEmpty) {
         val downData = data.head
         downData.cache()
-        val (downCost, model) = recurse(data.tail)
+        val (downCost, model) = recurse(data.tail, level + 1)
         val assignments = model.predict(downData)
+        assignments.setName(s"cluster assignments $level")
         downData.unpersist(blocking = false)
         new SampleInitializer(assignments)
       } else {
@@ -225,7 +227,7 @@ object KMeans extends Logging {
       simpleTrain(pointOps)(data.head, currentInitializer, kMeans)
     }
 
-    recurse(raw)
+    recurse(raw, 0)
   }
 
   private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {

@@ -107,12 +107,14 @@ class TrackingKMeans(
       val results = for (centers <- centerArrays) yield {
         var fatCenters = centers.map(FatCenter(_))
         var fatPoints = initialFatPoints(data, fatCenters)
+        fatPoints.setName("fatPoints 0")
         var terminate = false
         var round = 1
         do {
           val stats = new TrackingStats(data.sparkContext, round)
           fatCenters = updatedCenters(round, stats, fatPoints, fatCenters, updateRate)
           fatPoints = reassignedPoints(round, stats, fatCenters, fatPoints, updateRate)
+          fatPoints.setName(s"fatPoint $round")
           updateRoundStats(round, stats, fatCenters, fatPoints)
           stats.report()
           terminate = terminationCondition(stats)

@@ -184,7 +184,7 @@ class ColumnTrackingKMeans(
 
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(centersWithHistory)
-      val result = points.zip(assignments).mapPartitionsWithIndex { (index, points) =>
+      val result: RDD[RecentAssignments] = points.zip(assignments).mapPartitionsWithIndex { (index, points) =>
         val rand = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
         points.map { case (point, a) =>
@@ -193,8 +193,8 @@ class ColumnTrackingKMeans(
             else assignment(round, stats, centers, point, a))
         }
       }
-
-      result.map(updateStats(stats, _))
+      result.setName(s"assignments round $round")
+      result.foreach(updateStats(stats, _))
       bcCenters.unpersist()
       result.persist(StorageLevel.MEMORY_ONLY_SER).count()
       assignments.unpersist()
