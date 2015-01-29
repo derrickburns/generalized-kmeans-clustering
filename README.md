@@ -1,6 +1,8 @@
 Generalized K-Means Clustering
 =============================
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/derrickburns/generalized-kmeans-clustering?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support clustering of sparse
 or dense data, in low or high dimension, using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
