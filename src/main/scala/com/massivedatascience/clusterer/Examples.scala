@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
@@ -25,16 +26,35 @@ object Examples {
 
   import KMeans._
 
-  def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
-    KMeans.train(raw, k, 
-      embeddingNames = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI))
+  def sparseTrain(
+    raw: RDD[Vector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    mode: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingNames: List[String] = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): KMeansModel = {
+
+    KMeans.train(raw, k, maxIterations, runs, mode, initializationSteps, distanceFunctionName, kMeansImplName, embeddingNames)
   }
 
-  def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+  def timeSeriesTrain(
+    raw: RDD[Vector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    initializerName: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionName: String = EUCLIDEAN,
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingName: String = HAAR_EMBEDDING): KMeansModel = {
+
     val dim = raw.first().toArray.length
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)
-    KMeans.trainViaSubsampling(raw, k, depth = target)
+    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName, initializationSteps, distanceFunctionName, kMeansImplName, embeddingName, depth = target)
   }
 }
