@@ -133,7 +133,7 @@ object KMeans extends Logging {
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
-      case _ => DenseSquaredEuclideanPointOps
+      case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
 
@@ -144,7 +144,7 @@ object KMeans extends Logging {
       case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
       case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
       case HAAR_EMBEDDING => HaarEmbedding
-      case _ => IdentityEmbedding
+      case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
     }
   }
 
@@ -160,7 +160,7 @@ object KMeans extends Logging {
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case _ => new MultiKMeans(maxIterations)
+      case _ => throw new RuntimeException(s"unknown kmeans implementation $kmeansImpl")
     }
   }
 
@@ -168,7 +168,7 @@ object KMeans extends Logging {
     mode match {
       case RANDOM => new KMeansRandom(k, runs, 0)
       case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
-      case _ => new KMeansRandom(k, runs, 0)
+      case _ => throw new RuntimeException(s"unknown initializers implementation $mode")
     }
   }
 
