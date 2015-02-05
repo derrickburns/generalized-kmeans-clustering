@@ -72,7 +72,7 @@ object KMeans extends Logging {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
+    kMeansImplName : String = COLUMN_TRACKING,
     embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = {
 
@@ -108,7 +108,7 @@ object KMeans extends Logging {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
+    kMeansImplName : String = COLUMN_TRACKING,
     embeddingName : String = HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel = {
@@ -133,7 +133,7 @@ object KMeans extends Logging {
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
-      case _ => DenseSquaredEuclideanPointOps
+      case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
 
@@ -144,7 +144,7 @@ object KMeans extends Logging {
       case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
       case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
       case HAAR_EMBEDDING => HaarEmbedding
-      case _ => IdentityEmbedding
+      case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
     }
   }
 
@@ -152,9 +152,15 @@ object KMeans extends Logging {
   private def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
     kmeansImpl match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans()
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(maxIterations)
-      case _ => new MultiKMeans(maxIterations)
+      case TRACKING => new TrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+        s.getNonEmptyClusters == 0 ||
+        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+      })
+      case COLUMN_TRACKING => new ColumnTrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+        s.getNonEmptyClusters == 0 ||
+        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+      })
+      case _ => throw new RuntimeException(s"unknown kmeans implementation $kmeansImpl")
     }
   }
 
@@ -162,7 +168,7 @@ object KMeans extends Logging {
     mode match {
       case RANDOM => new KMeansRandom(k, runs, 0)
       case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
-      case _ => new KMeansRandom(k, runs, 0)
+      case _ => throw new RuntimeException(s"unknown initializers implementation $mode")
     }
   }
 
@@ -173,6 +179,7 @@ object KMeans extends Logging {
   : (Double, KMeansModel) = {
 
     val (data, centers) = initializer.init(pointOps, raw)
+    data.setName("Bregman points")
     val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
     (cost, new KMeansModel(pointOps, finalCenters))
   }
@@ -205,12 +212,13 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(data: List[RDD[Vector]]): (Double, KMeansModel) = {
+    def recurse(data: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
       val currentInitializer = if (data.tail.nonEmpty) {
         val downData = data.head
         downData.cache()
-        val (downCost, model) = recurse(data.tail)
+        val (downCost, model) = recurse(data.tail, level + 1)
         val assignments = model.predict(downData)
+        assignments.setName(s"cluster assignments $level")
         downData.unpersist(blocking = false)
         new SampleInitializer(assignments)
       } else {
@@ -219,7 +227,7 @@ object KMeans extends Logging {
       simpleTrain(pointOps)(data.head, currentInitializer, kMeans)
     }
 
-    recurse(raw)
+    recurse(raw, 0)
   }
 
   private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {

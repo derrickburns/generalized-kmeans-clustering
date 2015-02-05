@@ -67,7 +67,7 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
         weight = w
       } else {
         raw = axpy(direction, r, raw)
-        weight = weight + w
+        weight = weight + direction * w
       }
     }
     this
@@ -194,7 +194,7 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
   def sub(p: WeightedVector): this.type = {
     if (p.weight > 0.0) {
       container += p.homogeneous.negativeIterator
-      weight = weight + p.weight
+      weight = weight - p.weight
     }
     this
   }
