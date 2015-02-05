@@ -347,8 +347,7 @@ object BLAS extends Serializable {
    */
   def dot(x: Vector, y: Vector): Double = {
     if( x.size != y.size ) {
-      require(x.size == y.size)
-
+      require(x.size == y.size, s"${x.size} vs ${y.size}")
     }
     (x, y) match {
       case (dx: DenseVector, dy: DenseVector) =>

@@ -212,19 +212,19 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(data: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
-      val currentInitializer = if (data.tail.nonEmpty) {
-        val downData = data.head
-        downData.cache()
-        val (downCost, model) = recurse(data.tail, level + 1)
-        val assignments = model.predict(downData)
-        assignments.setName(s"cluster assignments $level")
-        downData.unpersist(blocking = false)
-        new SampleInitializer(assignments)
-      } else {
-        initializer
+    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
+      dataList match {
+        case data :: Nil =>
+          simpleTrain(pointOps)(data, initializer, kMeans)
+        case data :: tl =>
+          val downData = tl.head
+          downData.cache()
+          val (_, model) = recurse(tl, level + 1)
+          val assignments = model.predict(downData)
+          assignments.setName(s"cluster assignments $level")
+          downData.unpersist(blocking = false)
+          simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
       }
-      simpleTrain(pointOps)(data.head, currentInitializer, kMeans)
     }
 
     recurse(raw, 0)
