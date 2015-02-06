@@ -439,8 +439,6 @@ class ColumnTrackingKMeans(
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
-    points.persist(StorageLevel.MEMORY_AND_DISK_SER)
-
     val results = for (centers <- centerArrays) yield {
       var centersWithHistory = centers.map(CenterWithHistory(_))
       var recentAssignments = initialAssignments(points, centersWithHistory)
