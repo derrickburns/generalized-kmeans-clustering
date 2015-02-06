@@ -27,16 +27,16 @@ import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
 object ColumnTrackingKMeans {
-  val noCluster = -1
-  val unassigned = Assignment(Infinity, noCluster, -2)
+  private[clusterer] val noCluster = -1
+  private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
-  trait CentroidChange
+  private[clusterer] sealed trait CentroidChange
 
-  case class Add(point: BregmanPoint) extends CentroidChange
+  private[clusterer] case class Add(point: BregmanPoint) extends CentroidChange
 
-  case class Sub(point: BregmanPoint) extends CentroidChange
+  private[clusterer] case class Sub(point: BregmanPoint) extends CentroidChange
 
-  case class PointWithDistance(point: BregmanPoint, assignments: RecentAssignments, dist: Double)
+  private[clusterer] case class PointWithDistance(point: BregmanPoint, assignments: RecentAssignments, dist: Double)
 
   /**
    *
@@ -44,7 +44,7 @@ object ColumnTrackingKMeans {
    * @param index the index of the closest cluster, or -1 if no cluster is assigned
    * @param round the round that this assignment was made
    */
-  case class Assignment(dist: Double, index: Int, round: Int) {
+  private[clusterer] case class Assignment(dist: Double, index: Int, round: Int) {
     def isAssigned = index != noCluster
 
     def isUnassigned = index == noCluster
@@ -55,7 +55,7 @@ object ColumnTrackingKMeans {
    * @param current  the current cluster (and distance to that cluster) that this point belongs to
    * @param previous the previous cluster (and distance to that cluster) that this point belongs to
    */
-  case class RecentAssignments(current: Assignment, previous: Assignment) {
+  private[clusterer] case class RecentAssignments(current: Assignment, previous: Assignment) {
     def cluster = current.index
 
     def previousCluster = previous.index
@@ -80,11 +80,12 @@ object ColumnTrackingKMeans {
    * @param center  the centroid of the cluster
    * @param round the round in which his cluster was last moved
    */
-  case class CenterWithHistory(center: BregmanCenter, round: Int = -1) {
+  private[clusterer] case class CenterWithHistory(center: BregmanCenter, round: Int = -1) {
     def movedSince(r: Int): Boolean = round >= r
 
     def initialized: Boolean = round >= 0
   }
+
 }
 
 class ColumnTrackingKMeans(
@@ -104,7 +105,7 @@ class ColumnTrackingKMeans(
    * @param centersWithHistory the cluster centers
    * @param recentAssignments the fat points
    */
-  def updateRoundStats(
+  private def updateRoundStats(
     round: Int,
     stats: TrackingStats,
     centersWithHistory: Array[CenterWithHistory],
@@ -124,10 +125,10 @@ class ColumnTrackingKMeans(
    * @param assignments the assignments
    * @return a map from cluster index to number of points assigned to that cluster
    */
-  def countByCluster(assignments: RDD[RecentAssignments]): Map[Int, Long] =
+  private def countByCluster(assignments: RDD[RecentAssignments]): Map[Int, Long] =
     assignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
-  def updateStats(stats: TrackingStats, p: RecentAssignments): Unit = {
+  private def updateStats(stats: TrackingStats, p: RecentAssignments): Unit = {
     if (p.isAssigned) {
       if (p.wasPreviouslyAssigned) {
         stats.improvement.add(p.improvement)
@@ -140,7 +141,7 @@ class ColumnTrackingKMeans(
     }
   }
 
-  def distortion(data: RDD[RecentAssignments]) = data.filter(_.isAssigned).map(_.distance).sum()
+  private def distortion(data: RDD[RecentAssignments]) = data.filter(_.isAssigned).map(_.distance).sum()
 
   /**
    * Create a K-Means clustering of the input and report on the resulting distortion
@@ -311,11 +312,11 @@ class ColumnTrackingKMeans(
       val end = centers.length
       while (i < end) {
         val center = centers(i)
-          val dist = pointOps.distance(point, center.center)
-          if (dist < bestDist) {
-            bestIndex = i
-            bestDist = dist
-          }
+        val dist = pointOps.distance(point, center.center)
+        if (dist < bestDist) {
+          bestIndex = i
+          bestDist = dist
+        }
         i = i + 1
       }
       if (bestIndex != noCluster) Assignment(bestDist, bestIndex, round) else unassigned
