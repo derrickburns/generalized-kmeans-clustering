@@ -118,6 +118,16 @@ object KMeans extends Logging {
     val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
     val embedding = getEmbedding(embeddingName)
 
+    logInfo(s"k = $k")
+    logInfo(s"maxIterations = $maxIterations")
+    logInfo(s"runs = $runs")
+    logInfo(s"initializerName = $initializerName")
+    logInfo(s"initializationSteps = $initializationSteps")
+    logInfo(s"distanceFunctionName = $distanceFunctionName")
+    logInfo(s"kMeansImplName = $kMeansImplName")
+    logInfo(s"embeddingName = $embeddingName")
+    logInfo(s"depth = $depth")
+
     val samples = subsample(data, depth, embedding)
     recursivelyTrain(ops)(samples, initializer, kMeansImpl)._2
   }
@@ -233,10 +243,15 @@ object KMeans extends Logging {
 
   private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
     if (depth == 0) {
+      log.info(s"initial dimension of ${raw.take(1)(0).size}")
       List(raw)
     } else {
       val x = subsample(raw, depth - 1)
-      x.head.map (embedding.embed) :: x
+      val embedded = x.head.map(embedding.embed)
+      log.info(s"applying embedding $embedding at depth $depth to get data of dimension" +
+        s" ${embedded.take(1)(0).size}")
+      embedded.take(1)(0).size
+      embedded :: x
     }
   }
 
@@ -251,7 +266,11 @@ object KMeans extends Logging {
     if (embeddings.isEmpty) {
       List[RDD[Vector]]()
     } else {
-      raw.map (embeddings.head.embed) :: resample(raw, embeddings.tail)
+      val embedding = embeddings.head
+      val embedded = raw.map(embedding.embed)
+      log.info(s"applying embedding $embedding to get data of dimension" +
+        s" ${embedded.take(1)(0).size}")
+      embedded :: resample(raw, embeddings.tail)
     }
   }
 }
