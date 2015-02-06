@@ -185,8 +185,8 @@ class ColumnTrackingKMeans(
     def updatedAssignments(
       round: Int,
       stats: TrackingStats,
-      centersWithHistory: Array[CenterWithHistory],
-      assignments: RDD[RecentAssignments]): RDD[RecentAssignments] = {
+      assignments: RDD[RecentAssignments],
+      centersWithHistory: Array[CenterWithHistory]): RDD[RecentAssignments] = {
 
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(centersWithHistory)
@@ -435,7 +435,7 @@ class ColumnTrackingKMeans(
       do {
         val stats = new TrackingStats(points.sparkContext, round)
         centersWithHistory = updatedCenters(round, stats, recentAssignments, centersWithHistory)
-        recentAssignments = updatedAssignments(round, stats, centersWithHistory, recentAssignments)
+        recentAssignments = updatedAssignments(round, stats, recentAssignments, centersWithHistory)
         updateRoundStats(round, stats, centersWithHistory, recentAssignments)
         stats.report()
         terminate = terminationCondition(stats)
