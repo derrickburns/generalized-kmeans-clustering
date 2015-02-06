@@ -186,12 +186,13 @@ object KMeans extends Logging {
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30))
-  : (Double, KMeansModel) = {
+  : (Double, KMeansModel, RDD[Int]) = {
 
     val (data, centers) = initializer.init(pointOps, raw)
     data.setName("Bregman points")
     val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
-    (cost, new KMeansModel(pointOps, finalCenters))
+    val assignments: RDD[Int] = data.map(p => pointOps.findClosestCluster(finalCenters, p))
+    (cost, new KMeansModel(pointOps, finalCenters), assignments)
   }
 
   def subSampleTrain(pointOps: BregmanPointOps)(
@@ -222,23 +223,19 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
+    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel, RDD[Int]) = {
       dataList match {
         case data :: Nil =>
           simpleTrain(pointOps)(data, initializer, kMeans)
         case data :: tl =>
-          val downData = tl.head
-          downData.setName(s"vector data at level $level")
-          downData.cache()
-          val (_, model) = recurse(tl, level + 1)
-          val assignments = model.predict(downData)
+          val (_, _, assignments) = recurse(tl, level + 1)
           assignments.setName(s"cluster assignments $level")
-          downData.unpersist(blocking = true)
           simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
       }
     }
 
-    recurse(raw, 0)
+    val result = recurse(raw, 0)
+    (result._1, result._2)
   }
 
   private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
