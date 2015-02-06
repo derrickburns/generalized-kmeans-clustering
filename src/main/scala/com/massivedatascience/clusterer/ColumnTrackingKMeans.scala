@@ -198,13 +198,13 @@ class ColumnTrackingKMeans(
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(centersWithHistory)
 
-      val result: RDD[RecentAssignments] = points.zip(assignments).mapPartitionsWithIndex { (index, points) =>
+      val result = points.zip(assignments).mapPartitionsWithIndex { (index, points) =>
         val rand = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
         points.map { case (point, a) =>
           a.assign(
             if (rand.nextDouble() > rate) unassigned
-            else assignment(round, stats, centers, point, a))
+            else reassignment(round, stats, centers, point, a))
         }
       }
       result.setName(s"assignments round $round")
@@ -306,7 +306,7 @@ class ColumnTrackingKMeans(
       centers: Array[CenterWithHistory],
       point: BregmanPoint,
       assignments: RecentAssignments,
-      f : (CenterWithHistory,Assignment) => Boolean) = {
+      f: (CenterWithHistory, Assignment) => Boolean): Assignment = {
 
       var bestDist = Infinity
       var bestIndex = noCluster
@@ -333,14 +333,14 @@ class ColumnTrackingKMeans(
      * @param assignments the recent assignments of the point
      * @return  the new assignment for the point
      */
-    def assignment(
+    def reassignment(
       round: Int,
       stats: TrackingStats,
       centers: Array[CenterWithHistory],
       point: BregmanPoint,
       assignments: RecentAssignments): Assignment = {
 
-      val closestDirty = closestOf(round, centers, point, assignments, (x, y) => x.movedSince(y.round))
+      val closestDirty: Assignment = closestOf(round, centers, point, assignments, (x, y) => x.movedSince(y.round))
       val assignment = if (assignments.isAssigned) {
         if (closestDirty.dist < assignments.distance) {
           if (closestDirty.index == assignments.cluster) {
