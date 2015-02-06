@@ -159,13 +159,15 @@ class ColumnTrackingKMeans(
         val assignments = RecentAssignments(unassigned, unassigned)
         assignments.copy(current = closestOf(0, centersWithHistory, point, assignments, (_, _) => true))
       }
+      result.setName("initial assignments")
       result.persist()
-      points.unpersist()
       result
     }
 
     /**
      * Identify the new cluster assignments for a sample of the points.
+     * Persists the new assignments in memory, un-persisting the previous assignments.
+     *
      * @param round the number of the round
      * @param stats statistics on round
      * @param centersWithHistory current clusters
@@ -184,6 +186,7 @@ class ColumnTrackingKMeans(
 
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(centersWithHistory)
+
       val result: RDD[RecentAssignments] = points.zip(assignments).mapPartitionsWithIndex { (index, points) =>
         val rand = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
@@ -196,7 +199,7 @@ class ColumnTrackingKMeans(
       result.setName(s"assignments round $round")
       result.foreach(updateStats(stats, _))
       bcCenters.unpersist()
-      result.persist(StorageLevel.MEMORY_ONLY_SER).count()
+      result.persist(StorageLevel.MEMORY_ONLY).count()
       assignments.unpersist()
       result
     }
@@ -423,6 +426,8 @@ class ColumnTrackingKMeans(
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
+    points.persist(StorageLevel.MEMORY_AND_DISK_SER)
+
     val results = for (centers <- centerArrays) yield {
       var centersWithHistory = centers.map(CenterWithHistory(_))
       var recentAssignments = initialAssignments(points, centersWithHistory)
@@ -440,8 +445,11 @@ class ColumnTrackingKMeans(
         round = round + 1
       } while (!terminate)
 
-      (distortion(recentAssignments), centersWithHistory.map(_.center))
+      val d = distortion(recentAssignments)
+      recentAssignments.unpersist(blocking = false)
+      (d, centersWithHistory.map(_.center))
     }
+    points.unpersist(blocking = false)
     results.minBy(_._1)
   }
 }
