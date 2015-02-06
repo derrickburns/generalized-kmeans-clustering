@@ -222,7 +222,7 @@ object KMeans extends Logging {
           val (_, model) = recurse(tl, level + 1)
           val assignments = model.predict(downData)
           assignments.setName(s"cluster assignments $level")
-          downData.unpersist(blocking = false)
+          downData.unpersist(blocking = true)
           simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
       }
     }
