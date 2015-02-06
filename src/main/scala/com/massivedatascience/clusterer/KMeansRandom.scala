@@ -22,6 +22,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
@@ -34,7 +35,7 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
     }
 
     val data = d.map { p => ops.inhomogeneousToPoint(p, 1.0)}
-    data.cache()
+    data.persist(StorageLevel.MEMORY_AND_DISK)
     val filtered = data.filter(_.weight > ops.weightThreshold)
     val count = filtered.count()
     val centers = if (runs * k <= count) {
