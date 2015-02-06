@@ -209,9 +209,9 @@ class ColumnTrackingKMeans(
       }
       result.setName(s"assignments round $round")
       result.foreach(updateStats(stats, _))
-      bcCenters.unpersist()
+      bcCenters.unpersist(blocking = false)
       result.cache()
-      assignments.unpersist()
+      assignments.unpersist(blocking = false)
       result
     }
 
