@@ -295,7 +295,7 @@ class ColumnTrackingKMeans(
       centers: Array[CenterWithHistory],
       point: BregmanPoint,
       assignments: RecentAssignments,
-      f: (CenterWithHistory, Assignment) => Boolean): Assignment = {
+      f: (CenterWithHistory, RecentAssignments) => Boolean): Assignment = {
 
       var bestDist = Infinity
       var bestIndex = noCluster
@@ -303,10 +303,12 @@ class ColumnTrackingKMeans(
       val end = centers.length
       while (i < end) {
         val center = centers(i)
-        val dist = pointOps.distance(point, center.center)
-        if (dist < bestDist) {
-          bestIndex = i
-          bestDist = dist
+        if (f(center, assignments)) {
+          val dist = pointOps.distance(point, center.center)
+          if (dist < bestDist) {
+            bestIndex = i
+            bestDist = dist
+          }
         }
         i = i + 1
       }
@@ -329,7 +331,7 @@ class ColumnTrackingKMeans(
       point: BregmanPoint,
       assignments: RecentAssignments): Assignment = {
 
-      val closestDirty: Assignment = closestOf(round, centers, point, assignments, (x, y) => x.movedSince(y.round))
+      val closestDirty = closestOf(round, centers, point, assignments, (x, y) => x.movedSince(y.round))
       val assignment = if (assignments.isAssigned) {
         if (closestDirty.dist < assignments.distance) {
           if (closestDirty.index == assignments.cluster) {
