@@ -198,7 +198,7 @@ class ColumnTrackingKMeans(
       previous: RDD[Assignment],
       centersWithHistory: Array[CenterWithHistory]): Array[CenterWithHistory] = {
 
-      val changes = if (updateRate < 1.0)
+      val changes: Array[(Int, MutableWeightedVector)] = if (updateRate < 1.0)
         getStochasticCentroidChanges(points, current)
       else
         getExactCentroidChanges(points, current, previous)
