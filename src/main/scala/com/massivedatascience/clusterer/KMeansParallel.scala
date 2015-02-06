@@ -25,6 +25,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.mllib.linalg.{Vectors,Vector}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable.ArrayBuffer
 import com.massivedatascience.clusterer.util.BLAS.axpy
@@ -87,7 +88,7 @@ class KMeansParallel(
 
     val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
     data.setName("initial points")
-    data.cache()
+    data.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
