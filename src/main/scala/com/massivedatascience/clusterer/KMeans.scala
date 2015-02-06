@@ -218,6 +218,7 @@ object KMeans extends Logging {
           simpleTrain(pointOps)(data, initializer, kMeans)
         case data :: tl =>
           val downData = tl.head
+          downData.setName(s"vector data at level $level")
           downData.cache()
           val (_, model) = recurse(tl, level + 1)
           val assignments = model.predict(downData)
