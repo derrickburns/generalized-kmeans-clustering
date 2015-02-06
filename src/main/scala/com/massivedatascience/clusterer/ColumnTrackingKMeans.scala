@@ -27,6 +27,8 @@ import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
 object ColumnTrackingKMeans {
+  val noCluster = -1
+  val unassigned = Assignment(Infinity, noCluster, -2)
 
   trait CentroidChange
 
@@ -34,19 +36,7 @@ object ColumnTrackingKMeans {
 
   case class Sub(point: BregmanPoint) extends CentroidChange
 
-}
-
-class ColumnTrackingKMeans(
-  updateRate: Double = 1.0,
-  terminationCondition: TerminationCondition = DefaultTerminationCondition)
-  extends MultiKMeansClusterer {
-
-  import ColumnTrackingKMeans._
-
-  assert(updateRate <= 1.0 && updateRate >= 0.0)
-
-  val noCluster = -1
-  val unassigned = Assignment(Infinity, noCluster, -2)
+  case class PointWithDistance(point: BregmanPoint, assignments: RecentAssignments, dist: Double)
 
   /**
    *
@@ -85,8 +75,6 @@ class ColumnTrackingKMeans(
     def round = current.round
   }
 
-  case class PointWithDistance(point: BregmanPoint, assignments: RecentAssignments, dist: Double)
-
   /**
    *
    * @param center  the centroid of the cluster
@@ -97,7 +85,16 @@ class ColumnTrackingKMeans(
 
     def initialized: Boolean = round >= 0
   }
+}
 
+class ColumnTrackingKMeans(
+  updateRate: Double = 1.0,
+  terminationCondition: TerminationCondition = DefaultTerminationCondition)
+  extends MultiKMeansClusterer {
+
+  require(updateRate <= 1.0 && updateRate >= 0.0)
+
+  import ColumnTrackingKMeans._
 
   /**
    * Augment the stats with information about the clusters
