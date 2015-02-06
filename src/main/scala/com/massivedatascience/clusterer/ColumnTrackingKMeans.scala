@@ -93,7 +93,6 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer {
 
-  require(updateRate <= 1.0 && updateRate >= 0.0)
 
   import ColumnTrackingKMeans._
 
@@ -180,18 +179,14 @@ class ColumnTrackingKMeans(
      * @param round the number of the round
      * @param stats statistics on round
      * @param centersWithHistory current clusters
-     * @param points the points
      * @param assignments current assignments
-     * @param rate sample rate to use for sampling the points to update
      * @return points and their new assignments
      */
     def updatedAssignments(
       round: Int,
       stats: TrackingStats,
       centersWithHistory: Array[CenterWithHistory],
-      points: RDD[BregmanPoint],
-      assignments: RDD[RecentAssignments],
-      rate: Double): RDD[RecentAssignments] = {
+      assignments: RDD[RecentAssignments]): RDD[RecentAssignments] = {
 
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(centersWithHistory)
@@ -201,7 +196,7 @@ class ColumnTrackingKMeans(
         val centers = bcCenters.value
         points.map { case (point, a) =>
           a.assign(
-            if (rand.nextDouble() > rate) unassigned
+            if (rand.nextDouble() > updateRate) unassigned
             else reassignment(round, stats, centers, point, a))
         }
       }
@@ -218,21 +213,17 @@ class ColumnTrackingKMeans(
      *
      * @param round the round
      * @param stats statistics to keep
-     * @param points the points
      * @param assignments  current assignments
      * @param centersWithHistory  the current clusters
-     * @param rate the sample rate for the points
      * @return
      */
     def updatedCenters(
       round: Int,
       stats: TrackingStats,
-      points: RDD[BregmanPoint],
       assignments: RDD[RecentAssignments],
-      centersWithHistory: Array[CenterWithHistory],
-      rate: Double): Array[CenterWithHistory] = {
+      centersWithHistory: Array[CenterWithHistory]): Array[CenterWithHistory] = {
 
-      val changes = if (rate < 1.0)
+      val changes = if (updateRate < 1.0)
         getStochasticCentroidChanges(points, assignments)
       else
         getExactCentroidChanges(points, assignments)
@@ -432,8 +423,7 @@ class ColumnTrackingKMeans(
       }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}
     }
 
-    assert(updateRate <= 1.0 && updateRate >= 0.0)
-
+    require(updateRate <= 1.0 && updateRate >= 0.0)
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
@@ -444,10 +434,8 @@ class ColumnTrackingKMeans(
       var round = 1
       do {
         val stats = new TrackingStats(points.sparkContext, round)
-        centersWithHistory = updatedCenters(round, stats, points, recentAssignments,
-          centersWithHistory, updateRate)
-        recentAssignments = updatedAssignments(round, stats, centersWithHistory, points,
-          recentAssignments, updateRate)
+        centersWithHistory = updatedCenters(round, stats, recentAssignments, centersWithHistory)
+        recentAssignments = updatedAssignments(round, stats, centersWithHistory, recentAssignments)
         updateRoundStats(round, stats, centersWithHistory, recentAssignments)
         stats.report()
         terminate = terminationCondition(stats)
