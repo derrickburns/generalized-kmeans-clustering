@@ -26,11 +26,22 @@ import org.apache.spark.storage.StorageLevel
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
+object ColumnTrackingKMeans {
+
+  trait CentroidChange
+
+  case class Add(point: BregmanPoint) extends CentroidChange
+
+  case class Sub(point: BregmanPoint) extends CentroidChange
+
+}
 
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer {
+
+  import ColumnTrackingKMeans._
 
   assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -238,6 +249,8 @@ class ColumnTrackingKMeans(
       centersWithHistory
     }
 
+
+
     /**
      * Identify cluster changes.
      *
@@ -252,18 +265,18 @@ class ColumnTrackingKMeans(
       assignments: RDD[RecentAssignments]): Array[(Int, MutableWeightedVector)] = {
 
       points.zip(assignments).mapPartitions { pts =>
-        val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
+        val buffer = new ArrayBuffer[(Int, CentroidChange)]
         for ((point, a) <- pts if a.wasReassigned) {
           assert(a.isAssigned)
-          if (a.isAssigned)
-            buffer.append((a.cluster, (point, true)))
-
-          if (a.wasPreviouslyAssigned)
-            buffer.append((a.previousCluster, (point, false)))
+          if (a.isAssigned) buffer.append((a.cluster, Add(point)))
+          if (a.wasPreviouslyAssigned) buffer.append((a.previousCluster, Sub(point)))
         }
         buffer.iterator
       }.aggregateByKey(pointOps.getCentroid)(
-          (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
+          (x, y) => y match {
+            case Add(p) => x.add(p)
+            case Sub(p) => x.sub(p)
+          },
           (x, y) => x.add(y)
         ).collect()
     }
