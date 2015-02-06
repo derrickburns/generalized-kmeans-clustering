@@ -86,11 +86,14 @@ class KMeansParallel(
    */
 
     val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
+    data.setName("initial points")
     data.cache()
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
-    var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))).cache()
+    var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
+    costs.cache()
+    costs.setName("pre-costs")
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
@@ -119,7 +122,9 @@ class KMeansParallel(
           Array.tabulate(runs) { r =>
             math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
           })
-      }.cache()
+      }
+      costs.cache()
+      costs.setName(s"costs at step $step")
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
