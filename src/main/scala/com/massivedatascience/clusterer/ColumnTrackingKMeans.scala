@@ -210,7 +210,7 @@ class ColumnTrackingKMeans(
       result.setName(s"assignments round $round")
       result.foreach(updateStats(stats, _))
       bcCenters.unpersist()
-      result.persist(StorageLevel.MEMORY_ONLY).count()
+      result.cache()
       assignments.unpersist()
       result
     }
