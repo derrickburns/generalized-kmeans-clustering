@@ -37,7 +37,6 @@ object DenseEmbedding extends Embedding {
   }
 }
 
-
 object HaarEmbedding extends Embedding {
   def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
 }
@@ -58,7 +57,8 @@ object HaarEmbedding extends Embedding {
  * @param dim number of dimensions to use for the dense vector
  * @param epsilon portion of dimensions with non-zero values
  */
-class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
+case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
+
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 

@@ -118,6 +118,16 @@ object KMeans extends Logging {
     val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
     val embedding = getEmbedding(embeddingName)
 
+    logInfo(s"k = $k")
+    logInfo(s"maxIterations = $maxIterations")
+    logInfo(s"runs = $runs")
+    logInfo(s"initializerName = $initializerName")
+    logInfo(s"initializationSteps = $initializationSteps")
+    logInfo(s"distanceFunctionName = $distanceFunctionName")
+    logInfo(s"kMeansImplName = $kMeansImplName")
+    logInfo(s"embeddingName = $embeddingName")
+    logInfo(s"depth = $depth")
+
     val samples = subsample(data, depth, embedding)
     recursivelyTrain(ops)(samples, initializer, kMeansImpl)._2
   }
@@ -176,12 +186,13 @@ object KMeans extends Logging {
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30))
-  : (Double, KMeansModel) = {
+  : (Double, KMeansModel, RDD[Int]) = {
 
     val (data, centers) = initializer.init(pointOps, raw)
     data.setName("Bregman points")
     val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
-    (cost, new KMeansModel(pointOps, finalCenters))
+    val assignments: RDD[Int] = data.map(p => pointOps.findClosestCluster(finalCenters, p))
+    (cost, new KMeansModel(pointOps, finalCenters), assignments)
   }
 
   def subSampleTrain(pointOps: BregmanPointOps)(
@@ -212,30 +223,35 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel) = {
+    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel, RDD[Int]) = {
       dataList match {
         case data :: Nil =>
           simpleTrain(pointOps)(data, initializer, kMeans)
         case data :: tl =>
-          val downData = tl.head
-          downData.cache()
-          val (_, model) = recurse(tl, level + 1)
-          val assignments = model.predict(downData)
+          val (_, _, assignments) = recurse(tl, level + 1)
           assignments.setName(s"cluster assignments $level")
-          downData.unpersist(blocking = false)
-          simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
+          val result = simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
+          data.unpersist(blocking = false)
+          result
       }
     }
 
-    recurse(raw, 0)
+    val result = recurse(raw, 0)
+    (result._1, result._2)
   }
 
   private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
     if (depth == 0) {
+      log.info(s"initial dimension of ${raw.take(1)(0).size}")
       List(raw)
     } else {
-      val x = subsample(raw, depth - 1)
-      x.head.map (embedding.embed) :: x
+      val x: List[RDD[Vector]] = subsample(raw, depth - 1)
+      x.head.cache()
+      val embedded = x.head.map(embedding.embed)
+      log.info(s"applying embedding $embedding at depth $depth to get data of dimension" +
+        s" ${embedded.take(1)(0).size}")
+      embedded.take(1)(0).size
+      embedded :: x
     }
   }
 
@@ -250,7 +266,12 @@ object KMeans extends Logging {
     if (embeddings.isEmpty) {
       List[RDD[Vector]]()
     } else {
-      raw.map (embeddings.head.embed) :: resample(raw, embeddings.tail)
+      val embedding = embeddings.head
+      val embedded = raw.map(embedding.embed)
+      embedded.cache()
+      log.info(s"applying embedding $embedding to get data of dimension" +
+        s" ${embedded.take(1)(0).size}")
+      embedded :: resample(raw, embeddings.tail)
     }
   }
 }

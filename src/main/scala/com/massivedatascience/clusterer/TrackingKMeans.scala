@@ -353,9 +353,9 @@ class TrackingKMeans(
       val assignment = if (p.isAssigned) {
         if (closestDirty.dist < p.distance) {
           if (closestDirty.index == p.cluster) {
-            stats.dirtyOther.add(1)
-          } else {
             stats.dirtySame.add(1)
+          } else {
+            stats.dirtyOther.add(1)
 
           }
           closestDirty
