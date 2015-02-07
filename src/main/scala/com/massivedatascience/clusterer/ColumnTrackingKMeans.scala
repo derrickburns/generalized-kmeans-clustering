@@ -36,7 +36,8 @@ object ColumnTrackingKMeans {
 
   private[clusterer] case class Sub(point: BregmanPoint) extends CentroidChange
 
-  private[clusterer] case class PointWithDistance(point: BregmanPoint, assignment: Assignment, dist: Double)
+  private[clusterer] case class PointWithDistance(point: BregmanPoint,
+    assignment: Assignment, dist: Double)
 
   /**
    *
@@ -389,7 +390,7 @@ class ColumnTrackingKMeans(
       points.zip(assignments).mapPartitions { pts =>
         val bc = bcCenters.value
         pts.flatMap { case (point, a) =>
-          bc.zipWithIndex.map { case (c, i) => (i, PointWithDistance(point, a, pointOps.distance(point, c.center)))
+          bc.map { c => (c.index, PointWithDistance(point, a, pointOps.distance(point, c.center)))
           }
         }
       }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}

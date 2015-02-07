@@ -27,6 +27,7 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
     d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
     val data = d.map {pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
+    data.setName("input to sample initializer")
     data.cache()
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
