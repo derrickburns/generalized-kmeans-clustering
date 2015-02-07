@@ -59,7 +59,7 @@ object KMeans extends Logging {
    * @param runs number of parallel clusterings to run
    * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
-   * @param distanceFunctionName the distance functions to use
+   * @param distanceFunctionNames the distance functions to use
    * @param kMeansImplName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
@@ -71,17 +71,58 @@ object KMeans extends Logging {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
+    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
     embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = {
 
-    val ops = getPointOps(distanceFunctionName)
+    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+
+    val ops = distanceFunctionNames.map(getPointOps)
     val initializer = getInitializer(mode, k, runs, initializationSteps)
-    val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+    val embeddings = embeddingNames.map(getEmbedding)
+    val results = reSampleTrain(data, initializer, ops, embeddings)
+    results._2.assignments.unpersist(blocking = false)
+    results._1
+  }
+
+  /**
+   *
+   * Train a K-Means model using Lloyd's algorithm.
+   *
+   *
+   * @param data input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param mode initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunctionNames the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
+   * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
+   * @return K-Means model and a clustering of the input data
+   */
+  def trainWithResults(
+    data: RDD[Vector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    mode: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingNames: Seq[String] = Seq(IDENTITY_EMBEDDING))
+  : (KMeansModel, KMeansResults) = {
+
+    require(distanceFunctionNames.length == embeddingNames.length)
+
+    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+
+    val ops = distanceFunctionNames.map(x => getPointOps(x))
+    val initializer = getInitializer(mode, k, runs, initializationSteps)
     val embeddings = embeddingNames.map(getEmbedding)
 
-    reSampleTrain(ops, kMeansImpl)(data, initializer, embeddings)._2
+    reSampleTrain(data, initializer, ops, embeddings)
   }
 
   /**
@@ -111,11 +152,12 @@ object KMeans extends Logging {
     clustererName: String = COLUMN_TRACKING,
     embeddingName: String = HAAR_EMBEDDING,
     depth: Int = 2)
-  : KMeansModel = {
+  : (KMeansModel, KMeansResults) = {
 
-    val pointOps = getPointOps(distanceFunctionName)
+    implicit val clusterer = getClustererImpl(clustererName, maxIterations)
+
+    val distanceFunc = getPointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, k, runs, initializationSteps)
-    val clusterer = getClustererImpl(clustererName, maxIterations)
     val embedding = getEmbedding(embeddingName)
 
     logInfo(s"k = $k")
@@ -129,7 +171,8 @@ object KMeans extends Logging {
     logInfo(s"depth = $depth")
 
     val samples = subsample(data, depth, embedding)
-    iterativelyTrain(pointOps, clusterer)(samples, initializer)._2
+    val ops = Array.fill(depth + 1)(distanceFunc)
+    iterativelyTrain(ops, samples, initializer)
   }
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
@@ -158,15 +201,16 @@ object KMeans extends Logging {
     }
   }
 
-
   def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case TRACKING => new TrackingKMeans(terminationCondition = {
+        s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = {
+        s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
@@ -174,89 +218,97 @@ object KMeans extends Logging {
     }
   }
 
-  def getInitializer(initializerName: String, k: Int, runs: Int, initializationSteps: Int): KMeansInitializer = {
+  def getInitializer(initializerName: String, k: Int, runs: Int, initializationSteps: Int)(
+    implicit clusterer: MultiKMeansClusterer): KMeansInitializer = {
     initializerName match {
       case RANDOM => new KMeansRandom(k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
+      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0, clusterer)
       case _ => throw new RuntimeException(s"unknown initializer $initializerName")
     }
   }
 
-  def simpleTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
-    raw: RDD[Vector],
-    initializer: KMeansInitializer)
-  : (Double, KMeansModel, RDD[Int]) = {
+  def simpleTrain(distanceFunc: BregmanPointOps, raw: RDD[Vector], initializer: KMeansInitializer)(
+    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    val (data, centers) = initializer.init(pointOps, raw)
-    data.setName("Bregman points")
-    val (cost, finalCenters) = clusterer.cluster(pointOps, data, centers)
-    val assignments = data.map(p => pointOps.findClosestCluster(finalCenters, p))
-    (cost, new KMeansModel(pointOps, finalCenters), assignments)
+    val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
+    bregmanPoints.setName("Bregman points")
+    val (cost, finalCenters, assignmentOpt) =
+      clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
+    val assignments = assignmentOpt.getOrElse {
+      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments")
+    }
+    (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
   }
 
-  def subSampleTrain(pointOps: BregmanPointOps,
-    clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
+  def subSampleTrain(
+    pointOps: BregmanPointOps,
     raw: RDD[Vector],
     initializer: KMeansInitializer,
     depth: Int = 4,
-    embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
+    embedding: Embedding = HaarEmbedding)(
+    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     val samples = subsample(raw, depth, embedding)
-    iterativelyTrain(pointOps, clusterer)(samples, initializer)
+    iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
   }
 
-  def reSampleTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
+  def reSampleTrain(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    embeddings: List[Embedding]
-    ): (Double, KMeansModel) = {
+    ops: Seq[BregmanPointOps],
+    embeddings: Seq[Embedding]
+    )(implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
+
+    require(ops.length == embeddings.length)
 
     val samples = resample(raw, embeddings)
-    iterativelyTrain(pointOps, clusterer)(samples, initializer)
+    iterativelyTrain(ops, samples, initializer)
   }
 
-  private def iterativelyTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer)(
-    raw: List[RDD[Vector]],
-    initializer: KMeansInitializer): (Double, KMeansModel) = {
+  private def iterativelyTrain(
+    pointOps: Seq[BregmanPointOps],
+    dataSets: Seq[RDD[Vector]],
+    initializer: KMeansInitializer)(
+    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    require(raw.nonEmpty)
-
-    val train = simpleTrain(pointOps, clusterer) _
-    val result = train(raw.head, initializer)
-    val finalResult = raw.tail.foldLeft(result) { case ((_, _, assignments), data) =>
+    require(dataSets.nonEmpty)
+    dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) {
+      case ((_, clustering), (data, op)) =>
       data.cache()
-      val result = train(data, new SampleInitializer(assignments))
+      val result = simpleTrain(op, data, new SampleInitializer(clustering.assignments.map(_._1)))
       data.unpersist(blocking = false)
+      clustering.assignments.unpersist(blocking = false)
       result
     }
-    (finalResult._1, finalResult._2)
   }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
    * the same embedding.
    *
-   * @param raw full resolution data
+   * @param dataSet full resolution data
    * @param depth  number of levels of sub-sampling, 0 means no sub-sampling
    * @param embedding embedding to use iteratively
    * @return
    */
   private def subsample(
-    raw: RDD[Vector],
+    dataSet: RDD[Vector],
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
-    (0 until depth).foldLeft(List(raw)) { case (data, e) => data.head.map(embedding.embed) :: data}
+    (0 until depth).foldLeft(List(dataSet)) {
+      case (data, e) => data.head.map(embedding.embed) :: data
+    }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension
    *
-   * @param raw data set to embed
+   * @param dataSet data set to embed
    * @param embeddings  list of embedding from smallest to largest
    * @return
    */
 
   private def resample(
-    raw: RDD[Vector],
-    embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] =
-    embeddings.map(x => raw.map(x.embed))
+    dataSet: RDD[Vector],
+    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] =
+    embeddings.map(x => dataSet.map(x.embed))
 }

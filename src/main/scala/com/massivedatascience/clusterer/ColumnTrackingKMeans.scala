@@ -131,7 +131,7 @@ class ColumnTrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter]) = {
+    centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
 
     /**
      * The initial assignments of points to clusters
@@ -418,10 +418,13 @@ class ColumnTrackingKMeans(
       } while (!terminate)
 
       val d = distortion(current)
-      current.unpersist(blocking = false)
-      (d, centersWithHistory.map(_.center))
+      (d, centersWithHistory.map(_.center), current)
     }
     points.unpersist(blocking = false)
-    results.minBy(_._1)
+    val clustering = results.minBy(_._1)
+    for (r <- results if r._3 != clustering._3) {
+      r._3.unpersist(blocking = false)
+    }
+    (clustering._1, clustering._2, Some(clustering._3.map(x => (x.cluster, x.distance))))
   }
 }
