@@ -50,10 +50,12 @@ object Examples {
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
+    embeddingNames: Seq[String] = Seq(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI,
+      HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
 
     val distances = Array.fill(embeddingNames.length)(distanceFunctionName)
-    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distances, clustererName, embeddingNames)
+    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distances,
+      clustererName, embeddingNames)
   }
 
   def timeSeriesTrain(
@@ -71,6 +73,7 @@ object Examples {
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)
-    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName, initializationSteps, distanceFunctionName, clustererName, embeddingName, depth = target)
+    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName, initializationSteps,
+      distanceFunctionName, clustererName, embeddingName, depth = target)
   }
 }
