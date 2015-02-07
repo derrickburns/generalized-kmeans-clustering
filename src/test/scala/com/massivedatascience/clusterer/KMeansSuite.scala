@@ -174,26 +174,26 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionName = RELATIVE_ENTROPY)
+      distanceFunctionNames = Seq(RELATIVE_ENTROPY))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionName = EUCLIDEAN)
-    assert(model.clusterCenters.head ~== center absTol 1E-5)
-
-
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionName = SPARSE_EUCLIDEAN)
+      distanceFunctionNames = Seq(EUCLIDEAN))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionName = DISCRETE_KL)
+      distanceFunctionNames = Seq(SPARSE_EUCLIDEAN))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionName = SPARSE_SMOOTHED_KL)
+      distanceFunctionNames = Seq(DISCRETE_KL))
+    assert(model.clusterCenters.head ~== center absTol 1E-5)
+
+
+    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
+      distanceFunctionNames = Seq(SPARSE_SMOOTHED_KL))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     data.unpersist()

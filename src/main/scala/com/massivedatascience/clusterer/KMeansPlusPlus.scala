@@ -31,7 +31,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
+class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) extends Serializable with Logging {
 
   /**
    * K-means++ on the weighted point set `points`. This first does the K-means++
@@ -43,11 +43,10 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     seed: Int,
     points: Array[BregmanCenter],
     weights: Array[Double],
-    k: Int,
-    maxIterations: Int): Array[BregmanCenter] = {
+    k: Int): Array[BregmanCenter] = {
     val centers = getCenters(sc, seed, points, weights, k, 1)
     val pts = sc.parallelize(points.map(ops.toPoint))
-    val clustering = new MultiKMeans(maxIterations).cluster(ops, pts, Array(centers))
+    val clustering = clusterer.cluster(ops, pts, Array(centers))
     clustering._3.map(_.unpersist(blocking = false))
     clustering._2
   }

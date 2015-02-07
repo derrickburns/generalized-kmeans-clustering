@@ -26,6 +26,21 @@ object Examples {
 
   import KMeans._
 
+  /**
+   * Iteratively train using low dimensional embedding of the high dimensional sparse input data
+   * using the same distance function.
+   *
+   * @param raw  input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations per clustering run
+   * @param runs number of different clusterings to perform
+   * @param mode  initialization algorithm to use
+   * @param initializationSteps  number of initialization steps to perform
+   * @param distanceFunctionName distance function
+   * @param clustererName name of the clustering implementation to use
+   * @param embeddingNames  names of the embeddings to use
+   * @return
+   */
   def sparseTrain(
     raw: RDD[Vector],
     k: Int,
@@ -34,10 +49,11 @@ object Examples {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: List[String] = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
+    clustererName: String = COLUMN_TRACKING,
+    embeddingNames: Seq[String] = Seq(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
 
-    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distanceFunctionName, kMeansImplName, embeddingNames)
+    val distances = Array.fill(embeddingNames.length)(distanceFunctionName)
+    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distances, clustererName, embeddingNames)
   }
 
   def timeSeriesTrain(
@@ -48,13 +64,13 @@ object Examples {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName: String = COLUMN_TRACKING,
+    clustererName: String = COLUMN_TRACKING,
     embeddingName: String = HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
 
     val dim = raw.first().toArray.length
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)
-    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName, initializationSteps, distanceFunctionName, kMeansImplName, embeddingName, depth = target)
+    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName, initializationSteps, distanceFunctionName, clustererName, embeddingName, depth = target)
   }
 }

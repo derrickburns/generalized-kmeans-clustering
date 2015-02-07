@@ -35,7 +35,8 @@ class KMeansParallel(
   k: Int,
   runs: Int,
   initializationSteps: Int,
-  seedx: Int)
+  seedx: Int,
+  clusterer: MultiKMeansClusterer)
   extends KMeansInitializer with Logging {
 
   def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
@@ -59,8 +60,7 @@ class KMeansParallel(
       }.reduceByKeyLocally(_ + _)
 
       val centers = bcCenters.value
-      val kmeansPlusPlus = new KMeansPlusPlus(pointOps)
-      val trackingKmeans = new MultiKMeans(30)
+      val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
       val sc = data.sparkContext
 
       Array.tabulate(runs) { r =>
@@ -70,7 +70,7 @@ class KMeansParallel(
         val kx = if (k > myCenters.length) myCenters.length else k
         val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
         val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-        val clustering = trackingKmeans.cluster(pointOps, parallelCenters, Array(initial))
+        val clustering = clusterer.cluster(pointOps, parallelCenters, Array(initial))
         clustering._3.map(_.unpersist(blocking = false))
         clustering._2
       }
