@@ -223,56 +223,51 @@ object KMeans extends Logging {
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
     ): (Double, KMeansModel) = {
 
-    def recurse(dataList: List[RDD[Vector]], level: Int): (Double, KMeansModel, RDD[Int]) = {
-      dataList match {
-        case data :: Nil =>
-          simpleTrain(pointOps)(data, initializer, kMeans)
-        case data :: tl =>
-          val (_, _, assignments) = recurse(tl, level + 1)
-          assignments.setName(s"cluster assignments $level")
-          val result = simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
-          data.unpersist(blocking = false)
-          result
-      }
-    }
+    require(raw.nonEmpty)
 
-    val result = recurse(raw, 0)
-    (result._1, result._2)
-  }
-
-  private def subsample(raw: RDD[Vector], depth: Int = 0, embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
-    if (depth == 0) {
-      log.info(s"initial dimension of ${raw.take(1)(0).size}")
-      List(raw)
-    } else {
-      val x: List[RDD[Vector]] = subsample(raw, depth - 1)
-      x.head.cache()
-      val embedded = x.head.map(embedding.embed)
-      log.info(s"applying embedding $embedding at depth $depth to get data of dimension" +
-        s" ${embedded.take(1)(0).size}")
-      embedded.take(1)(0).size
-      embedded :: x
+    val train = simpleTrain(pointOps)
+    val result = train(raw.head, initializer, kMeans)
+    val finalResult = raw.tail.foldLeft(result) { case ((_, _, assignments), data) =>
+      data.cache()
+      val result = train(data, new SampleInitializer(assignments), kMeans)
+      data.unpersist(blocking = false)
+      result
     }
+    (finalResult._1, finalResult._2)
   }
 
   /**
+   * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
+   * the same embeddding.
+   *
+   * @param raw
+   * @param depth
+   * @param embedding
+   * @return
+   */
+  private def subsample(
+    raw: RDD[Vector],
+    depth: Int = 0,
+    embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
+
+    Array.fill(depth)(embedding).foldLeft(List(raw)) { case (data, e) =>
+      data.head.map {
+        e.embed
+      } :: data
+    }
+
+
+  /**
+   * Returns subsampled data from lowest dimension to highest dimension
    *
    * @param raw data set to embed
    * @param embeddings  list of embedding from smallest to largest
    * @return
    */
 
-  private def resample(raw: RDD[Vector], embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] = {
-    if (embeddings.isEmpty) {
-      List[RDD[Vector]]()
-    } else {
-      val embedding = embeddings.head
-      val embedded = raw.map(embedding.embed)
-      embedded.cache()
-      log.info(s"applying embedding $embedding to get data of dimension" +
-        s" ${embedded.take(1)(0).size}")
-      embedded :: resample(raw, embeddings.tail)
-    }
-  }
+  private def resample(
+    raw: RDD[Vector],
+    embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] =
+    embeddings.map(x => raw.map(x.embed))
 }
 
