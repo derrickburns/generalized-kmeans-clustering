@@ -95,7 +95,7 @@ object KMeans extends Logging {
    * @param initializerName initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingName embedding to use recursively
    * @param depth number of times to recurse                     
    * @return K-Means model
@@ -108,14 +108,14 @@ object KMeans extends Logging {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName: String = COLUMN_TRACKING,
+    clustererName: String = COLUMN_TRACKING,
     embeddingName: String = HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel = {
 
     val pointOps = getPointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, k, runs, initializationSteps)
-    val clusterer = getClustererImpl(kMeansImplName, maxIterations)
+    val clusterer = getClustererImpl(clustererName, maxIterations)
     val embedding = getEmbedding(embeddingName)
 
     logInfo(s"k = $k")
@@ -124,7 +124,7 @@ object KMeans extends Logging {
     logInfo(s"initializer = $initializerName")
     logInfo(s"initialization steps = $initializationSteps")
     logInfo(s"distance function = $distanceFunctionName")
-    logInfo(s"clusterer implementation = $kMeansImplName")
+    logInfo(s"clusterer implementation = $clustererName")
     logInfo(s"embedding = $embeddingName")
     logInfo(s"depth = $depth")
 
@@ -147,7 +147,7 @@ object KMeans extends Logging {
     }
   }
 
-  private def getEmbedding(embeddingName: String): Embedding = {
+  def getEmbedding(embeddingName: String): Embedding = {
     embeddingName match {
       case IDENTITY_EMBEDDING => IdentityEmbedding
       case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(64, 0.01)
@@ -159,7 +159,7 @@ object KMeans extends Logging {
   }
 
 
-  private def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
+  def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
@@ -174,11 +174,11 @@ object KMeans extends Logging {
     }
   }
 
-  private def getInitializer(mode: String, k: Int, runs: Int, initializationSteps: Int): KMeansInitializer = {
-    mode match {
+  def getInitializer(initializerName: String, k: Int, runs: Int, initializationSteps: Int): KMeansInitializer = {
+    initializerName match {
       case RANDOM => new KMeansRandom(k, runs, 0)
       case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
-      case _ => throw new RuntimeException(s"unknown initializers implementation $mode")
+      case _ => throw new RuntimeException(s"unknown initializer $initializerName")
     }
   }
 
@@ -247,9 +247,8 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
     (0 until depth).foldLeft(List(raw)) { case (data, e) => data.head.map(embedding.embed) :: data}
 
-
   /**
-   * Returns subsampled data from lowest dimension to highest dimension
+   * Returns sub-sampled data from lowest dimension to highest dimension
    *
    * @param raw data set to embed
    * @param embeddings  list of embedding from smallest to largest
@@ -261,4 +260,3 @@ object KMeans extends Logging {
     embeddings: List[Embedding] = List(IdentityEmbedding)): List[RDD[Vector]] =
     embeddings.map(x => raw.map(x.embed))
 }
-
