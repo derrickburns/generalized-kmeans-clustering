@@ -230,7 +230,9 @@ object KMeans extends Logging {
         case data :: tl =>
           val (_, _, assignments) = recurse(tl, level + 1)
           assignments.setName(s"cluster assignments $level")
-          simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
+          val result = simpleTrain(pointOps)(data, new SampleInitializer(assignments), kMeans)
+          data.unpersist(blocking = false)
+          result
       }
     }
 
@@ -243,7 +245,8 @@ object KMeans extends Logging {
       log.info(s"initial dimension of ${raw.take(1)(0).size}")
       List(raw)
     } else {
-      val x = subsample(raw, depth - 1)
+      val x: List[RDD[Vector]] = subsample(raw, depth - 1)
+      x.head.cache()
       val embedded = x.head.map(embedding.embed)
       log.info(s"applying embedding $embedding at depth $depth to get data of dimension" +
         s" ${embedded.take(1)(0).size}")
@@ -265,6 +268,7 @@ object KMeans extends Logging {
     } else {
       val embedding = embeddings.head
       val embedded = raw.map(embedding.embed)
+      embedded.cache()
       log.info(s"applying embedding $embedding to get data of dimension" +
         s" ${embedded.take(1)(0).size}")
       embedded :: resample(raw, embeddings.tail)
