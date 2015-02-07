@@ -49,7 +49,7 @@ object KMeans extends Logging {
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
   /**
-   * 
+   *
    * Train a K-Means model using Lloyd's algorithm.  
    *
    *
@@ -72,8 +72,8 @@ object KMeans extends Logging {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = COLUMN_TRACKING,
-    embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
   : KMeansModel = {
 
     val ops = getPointOps(distanceFunctionName)
@@ -83,9 +83,9 @@ object KMeans extends Logging {
 
     reSampleTrain(ops)(data, initializer, kMeansImpl, embeddings)._2
   }
-  
+
   /**
-   * 
+   *
    * Train a K-Means model by recursively sub-sampling the data via the provided embedding.
    *
    * @param data input data
@@ -108,8 +108,8 @@ object KMeans extends Logging {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = COLUMN_TRACKING,
-    embeddingName : String = HAAR_EMBEDDING,
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingName: String = HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel = {
 
@@ -129,7 +129,7 @@ object KMeans extends Logging {
     logInfo(s"depth = $depth")
 
     val samples = subsample(data, depth, embedding)
-    recursivelyTrain(ops)(samples, initializer, kMeansImpl)._2
+    iterativelyTrain(ops)(samples, initializer, kMeansImpl)._2
   }
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
@@ -147,7 +147,7 @@ object KMeans extends Logging {
     }
   }
 
-  private def getEmbedding(embeddingName: String ) : Embedding = {
+  private def getEmbedding(embeddingName: String): Embedding = {
     embeddingName match {
       case IDENTITY_EMBEDDING => IdentityEmbedding
       case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(64, 0.01)
@@ -162,11 +162,11 @@ object KMeans extends Logging {
   private def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
     kmeansImpl match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case COLUMN_TRACKING => new ColumnTrackingKMeans( terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
@@ -203,7 +203,7 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
 
     val samples = subsample(raw, depth, embedding)
-    recursivelyTrain(pointOps)(samples, initializer, kMeans)
+    iterativelyTrain(pointOps)(samples, initializer, kMeans)
   }
 
   def reSampleTrain(pointOps: BregmanPointOps)(
@@ -214,10 +214,10 @@ object KMeans extends Logging {
     ): (Double, KMeansModel) = {
 
     val samples = resample(raw, embeddings)
-    recursivelyTrain(pointOps)(samples, initializer, kMeans)
+    iterativelyTrain(pointOps)(samples, initializer, kMeans)
   }
 
-  private def recursivelyTrain(pointOps: BregmanPointOps)(
+  private def iterativelyTrain(pointOps: BregmanPointOps)(
     raw: List[RDD[Vector]],
     initializer: KMeansInitializer,
     kMeans: MultiKMeansClusterer = new MultiKMeans(30)
@@ -238,23 +238,18 @@ object KMeans extends Logging {
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
-   * the same embeddding.
+   * the same embedding.
    *
-   * @param raw
-   * @param depth
-   * @param embedding
+   * @param raw full resolution data
+   * @param depth  number of levels of sub-sampling, 0 means no sub-sampling
+   * @param embedding embedding to use iteratively
    * @return
    */
   private def subsample(
     raw: RDD[Vector],
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
-
-    Array.fill(depth)(embedding).foldLeft(List(raw)) { case (data, e) =>
-      data.head.map {
-        e.embed
-      } :: data
-    }
+    (0 until depth).foldLeft(List(raw)) { case (data, e) => data.head.map(embedding.embed) :: data}
 
 
   /**
