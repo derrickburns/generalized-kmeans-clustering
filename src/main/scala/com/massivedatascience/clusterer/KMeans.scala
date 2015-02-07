@@ -81,7 +81,9 @@ object KMeans extends Logging {
     val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
     val embeddings = embeddingNames.map(getEmbedding)
 
-    reSampleTrain(ops, kMeansImpl)(data, initializer, embeddings)._1
+    val results = reSampleTrain(ops, kMeansImpl)(data, initializer, embeddings)
+    results._2.assignments.unpersist(blocking = false)
+    results._1
   }
 
   /**
