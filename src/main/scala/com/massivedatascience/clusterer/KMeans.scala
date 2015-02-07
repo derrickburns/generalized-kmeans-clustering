@@ -204,11 +204,13 @@ object KMeans extends Logging {
   def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case TRACKING => new TrackingKMeans(terminationCondition = {
+        s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
+      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = {
+        s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
@@ -230,7 +232,8 @@ object KMeans extends Logging {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
     bregmanPoints.setName("Bregman points")
-    val (cost, finalCenters, assignmentOpt) = clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
+    val (cost, finalCenters, assignmentOpt) =
+      clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
     val assignments = assignmentOpt.getOrElse {
       bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments")
     }
@@ -269,7 +272,8 @@ object KMeans extends Logging {
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     require(dataSets.nonEmpty)
-    dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) { case ((_, clustering), (data, op)) =>
+    dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) {
+      case ((_, clustering), (data, op)) =>
       data.cache()
       val result = simpleTrain(op, data, new SampleInitializer(clustering.assignments.map(_._1)))
       data.unpersist(blocking = false)
@@ -291,7 +295,9 @@ object KMeans extends Logging {
     dataSet: RDD[Vector],
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
-    (0 until depth).foldLeft(List(dataSet)) { case (data, e) => data.head.map(embedding.embed) :: data}
+    (0 until depth).foldLeft(List(dataSet)) {
+      case (data, e) => data.head.map(embedding.embed) :: data
+    }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension
