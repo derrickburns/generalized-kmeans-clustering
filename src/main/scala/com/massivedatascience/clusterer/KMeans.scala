@@ -221,7 +221,7 @@ object KMeans extends Logging {
 
     require(raw.nonEmpty)
 
-    val train = simpleTrain(pointOps, clusterer)
+    val train = simpleTrain(pointOps, clusterer) _
     val result = train(raw.head, initializer)
     val finalResult = raw.tail.foldLeft(result) { case ((_, _, assignments), data) =>
       data.cache()
