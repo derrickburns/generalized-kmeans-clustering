@@ -25,6 +25,6 @@ trait MultiKMeansClusterer extends Serializable with Logging {
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter])
+    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])
 
 }

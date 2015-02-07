@@ -35,9 +35,9 @@ object Examples {
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: List[String] = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): KMeansModel = {
+    embeddingNames: List[String] = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
 
-    KMeans.train(raw, k, maxIterations, runs, mode, initializationSteps, distanceFunctionName, kMeansImplName, embeddingNames)
+    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distanceFunctionName, kMeansImplName, embeddingNames)
   }
 
   def timeSeriesTrain(
@@ -49,7 +49,7 @@ object Examples {
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingName: String = HAAR_EMBEDDING): KMeansModel = {
+    embeddingName: String = HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
 
     val dim = raw.first().toArray.length
     require(dim > 0)

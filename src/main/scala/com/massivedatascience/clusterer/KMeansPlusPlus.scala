@@ -47,7 +47,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     maxIterations: Int): Array[BregmanCenter] = {
     val centers = getCenters(sc, seed, points, weights, k, 1)
     val pts = sc.parallelize(points.map(ops.toPoint))
-    new MultiKMeans(maxIterations).cluster(ops, pts, Array(centers))._2
+    val clustering = new MultiKMeans(maxIterations).cluster(ops, pts, Array(centers))
+    clustering._3.map(_.unpersist(blocking = false))
+    clustering._2
   }
 
   /**

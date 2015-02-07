@@ -36,9 +36,9 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
   override def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter]) = {
+    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
 
-    def cluster(): (Double, Array[BregmanCenter]) = {
+    def cluster(): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
       val runs = centers.length
       val active = Array.fill(runs)(true)
       val costs = Array.fill(runs)(0.0)
@@ -94,7 +94,7 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
       }
 
       val best = costs.zipWithIndex.min._2
-      (costs(best), centers(best))
+      (costs(best), centers(best), None)
     }
 
     def getCentroids(
