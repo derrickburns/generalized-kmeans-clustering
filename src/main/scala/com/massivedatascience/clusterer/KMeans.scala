@@ -78,10 +78,10 @@ object KMeans extends Logging {
 
     val ops = getPointOps(distanceFunctionName)
     val initializer = getInitializer(mode, k, runs, initializationSteps)
-    val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
+    val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
     val embeddings = embeddingNames.map(getEmbedding)
 
-    reSampleTrain(ops)(data, initializer, kMeansImpl, embeddings)._2
+    reSampleTrain(ops, kMeansImpl)(data, initializer, embeddings)._2
   }
 
   /**
@@ -113,23 +113,23 @@ object KMeans extends Logging {
     depth: Int = 2)
   : KMeansModel = {
 
-    val ops = getPointOps(distanceFunctionName)
+    val pointOps = getPointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, k, runs, initializationSteps)
-    val kMeansImpl = getKMeansImpl(kMeansImplName, maxIterations)
+    val clusterer = getClustererImpl(kMeansImplName, maxIterations)
     val embedding = getEmbedding(embeddingName)
 
     logInfo(s"k = $k")
     logInfo(s"maxIterations = $maxIterations")
     logInfo(s"runs = $runs")
-    logInfo(s"initializerName = $initializerName")
-    logInfo(s"initializationSteps = $initializationSteps")
-    logInfo(s"distanceFunctionName = $distanceFunctionName")
-    logInfo(s"kMeansImplName = $kMeansImplName")
-    logInfo(s"embeddingName = $embeddingName")
+    logInfo(s"initializer = $initializerName")
+    logInfo(s"initialization steps = $initializationSteps")
+    logInfo(s"distance function = $distanceFunctionName")
+    logInfo(s"clusterer implementation = $kMeansImplName")
+    logInfo(s"embedding = $embeddingName")
     logInfo(s"depth = $depth")
 
     val samples = subsample(data, depth, embedding)
-    iterativelyTrain(ops)(samples, initializer, kMeansImpl)._2
+    iterativelyTrain(pointOps, clusterer)(samples, initializer)._2
   }
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
@@ -159,8 +159,8 @@ object KMeans extends Logging {
   }
 
 
-  private def getKMeansImpl(kmeansImpl: String, maxIterations: Int): MultiKMeansClusterer = {
-    kmeansImpl match {
+  private def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
+    clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
@@ -170,7 +170,7 @@ object KMeans extends Logging {
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case _ => throw new RuntimeException(s"unknown kmeans implementation $kmeansImpl")
+      case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
   }
 
@@ -182,54 +182,50 @@ object KMeans extends Logging {
     }
   }
 
-  def simpleTrain(pointOps: BregmanPointOps)(
+  def simpleTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
     raw: RDD[Vector],
-    initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(30))
+    initializer: KMeansInitializer)
   : (Double, KMeansModel, RDD[Int]) = {
 
     val (data, centers) = initializer.init(pointOps, raw)
     data.setName("Bregman points")
-    val (cost, finalCenters) = kMeans.cluster(pointOps, data, centers)
-    val assignments: RDD[Int] = data.map(p => pointOps.findClosestCluster(finalCenters, p))
+    val (cost, finalCenters) = clusterer.cluster(pointOps, data, centers)
+    val assignments = data.map(p => pointOps.findClosestCluster(finalCenters, p))
     (cost, new KMeansModel(pointOps, finalCenters), assignments)
   }
 
-  def subSampleTrain(pointOps: BregmanPointOps)(
+  def subSampleTrain(pointOps: BregmanPointOps,
+    clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(30),
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding): (Double, KMeansModel) = {
 
     val samples = subsample(raw, depth, embedding)
-    iterativelyTrain(pointOps)(samples, initializer, kMeans)
+    iterativelyTrain(pointOps, clusterer)(samples, initializer)
   }
 
-  def reSampleTrain(pointOps: BregmanPointOps)(
+  def reSampleTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer = new MultiKMeans(30))(
     raw: RDD[Vector],
     initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(30),
     embeddings: List[Embedding]
     ): (Double, KMeansModel) = {
 
     val samples = resample(raw, embeddings)
-    iterativelyTrain(pointOps)(samples, initializer, kMeans)
+    iterativelyTrain(pointOps, clusterer)(samples, initializer)
   }
 
-  private def iterativelyTrain(pointOps: BregmanPointOps)(
+  private def iterativelyTrain(pointOps: BregmanPointOps, clusterer: MultiKMeansClusterer)(
     raw: List[RDD[Vector]],
-    initializer: KMeansInitializer,
-    kMeans: MultiKMeansClusterer = new MultiKMeans(30)
-    ): (Double, KMeansModel) = {
+    initializer: KMeansInitializer): (Double, KMeansModel) = {
 
     require(raw.nonEmpty)
 
-    val train = simpleTrain(pointOps)
-    val result = train(raw.head, initializer, kMeans)
+    val train = simpleTrain(pointOps, clusterer)
+    val result = train(raw.head, initializer)
     val finalResult = raw.tail.foldLeft(result) { case ((_, _, assignments), data) =>
       data.cache()
-      val result = train(data, new SampleInitializer(assignments), kMeans)
+      val result = train(data, new SampleInitializer(assignments))
       data.unpersist(blocking = false)
       result
     }
