@@ -170,7 +170,7 @@ class ColumnTrackingKMeans(
       changes.foreach { case (index, delta) =>
         val c = currentCenters(index)
         val oldPosition = pointOps.toPoint(c.center)
-        val x = if (c.initialized) delta.add(oldPosition) else delta
+        val x = (if (c.initialized) delta.add(oldPosition) else delta).asImmutable
         currentCenters(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
       }
       currentCenters
