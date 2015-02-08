@@ -142,7 +142,7 @@ class ColumnTrackingKMeans(
             else reassignment(point, current, round, centers)
           }
       }
-      bcCenters.unpersist(blocking = false)
+      bcCenters.unpersist(blocking = true)
       currentAssignments.setName(s"assignments round $round").cache()
     }
 
@@ -407,7 +407,7 @@ class ColumnTrackingKMeans(
       do {
         val previousCenters = centers
         centers = updatedCenters(round, assignments, previousAssignments, previousCenters)
-        previousAssignments.unpersist(blocking = false)
+        previousAssignments.unpersist(blocking = true)
         previousAssignments = assignments
         assignments = updatedAssignments(round, previousAssignments, centers)
         terminate = shouldTerminate(round, centers, previousCenters, assignments, previousAssignments)
