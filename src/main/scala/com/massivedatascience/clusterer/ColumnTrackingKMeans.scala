@@ -192,6 +192,7 @@ class ColumnTrackingKMeans(
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Boolean = {
 
+      logInfo("start of stats collection")
       stats.currentRound.setValue(round)
 
       stats.movement.setValue(0.0)
@@ -227,6 +228,7 @@ class ColumnTrackingKMeans(
       stats.emptyClusters.setValue(currentCenters.size - clusterCounts.size)
       stats.report()
 
+      logInfo("end of stats collection")
       terminationCondition(stats)
     }
 
