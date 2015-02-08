@@ -58,12 +58,19 @@ object ColumnTrackingKMeans {
    */
   private[clusterer] case class CenterWithHistory(center: BregmanCenter, index: Int, round: Int = -1) {
     def movedSince(r: Int): Boolean = round >= r
-
     def initialized: Boolean = round >= 0
   }
 
 }
 
+/**
+ * A KMeans implementation that tracks which clusters moved and which points are assigned to which
+ * clusters and the distance to the closest cluster.
+ *
+ *
+ * @param updateRate
+ * @param terminationCondition
+ */
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
@@ -183,7 +190,7 @@ class ColumnTrackingKMeans(
     }
 
     /**
-     * Update the clusters (stochastically if rate < 1.0)
+     * Update the clusters in place (stochastically if rate < 1.0)
      *
      * @param round the round
      * @param stats statistics to keep
@@ -204,14 +211,16 @@ class ColumnTrackingKMeans(
       else
         getExactCentroidChanges(points, current, previous)
 
-      changes.map { case (index, delta) =>
-        val c = centersWithHistory(index)
+      val newCenters = centersWithHistory.clone()
+
+      changes.foreach { case (index, delta) =>
+        val c = newCenters(index)
         val oldPosition = pointOps.toPoint(c.center)
-        val x = if (c.initialized) delta.add(oldPosition) else delta
-        centersWithHistory(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
-        stats.movement.add(pointOps.distance(oldPosition, centersWithHistory(index).center))
+        val x = (if (c.initialized) delta.add(oldPosition) else delta).asImmutable
+        newCenters(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
+        stats.movement.add(pointOps.distance(oldPosition, newCenters(index).center))
       }
-      centersWithHistory
+      newCenters
     }
 
     /**
@@ -237,7 +246,9 @@ class ColumnTrackingKMeans(
         for ((point, (curr, prev)) <- pts if curr.cluster != prev.cluster) {
           assert(curr.isAssigned)
           if (curr.isAssigned) buffer.append((curr.cluster, Add(point)))
-          if (prev.isAssigned) buffer.append((prev.cluster, Sub(point)))
+          if (prev.isAssigned) {
+            buffer.append((prev.cluster, Sub(point)))
+          }
         }
         buffer.iterator
       }.aggregateByKey(pointOps.getCentroid)(
@@ -302,6 +313,7 @@ class ColumnTrackingKMeans(
       ): Assignment = {
 
       val filteredCenters = centers.withFilter(_.movedSince(assignment.round))
+
       val closestDirty = bestAssignment(point, round, filteredCenters)
       val newAssignment = if (assignment.isAssigned) {
         if (closestDirty.distance < assignment.distance) {
@@ -402,14 +414,30 @@ class ColumnTrackingKMeans(
 
     val results = for (centers <- centerArrays) yield {
       var centersWithHistory = centers.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
-      var previous = points.map(x => unassigned)
+      var previous = points.map { x => unassigned}
       var current = initialAssignments(points, centersWithHistory)
       var terminate = false
       var round = 1
+
+      /**
+       * preconditions:
+       *
+       * centers are initialized to a set of points, round is set to -1
+       * previously, points were unassigned, so round is set to -2
+       * current, points have been assigned to closest clusters in round 0
+       */
       do {
         val stats = new TrackingStats(points.sparkContext, round)
+
+        /*
+         * move centers to new positions, set round on moved centers
+         */
         centersWithHistory = updatedCenters(round, stats, current, previous, centersWithHistory)
         previous = current
+
+        /*
+         * move points, set round on moved points
+         */
         current = updatedAssignments(round, stats, current, centersWithHistory)
         updateRoundStats(round, stats, centersWithHistory, current)
         stats.report()
