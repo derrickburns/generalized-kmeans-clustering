@@ -97,7 +97,6 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
       distances = updateDistances(points, distances, newCenters)
       logInfo(s"chose ${newCenters.length} new centers")
       for (c <- newCenters) {
-        logInfo(s"  chose center $c")
         centers += c
       }
       more = selected.nonEmpty

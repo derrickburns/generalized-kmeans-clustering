@@ -204,13 +204,13 @@ object KMeans extends Logging {
   def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans(terminationCondition = {
-        s: BasicStats => s.getRound > maxIterations ||
+      case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats =>
+        s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = {
-        s: BasicStats => s.getRound > maxIterations ||
+      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats =>
+        s.getRound > maxIterations ||
         s.getNonEmptyClusters == 0 ||
         s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
@@ -273,11 +273,11 @@ object KMeans extends Logging {
 
     require(dataSets.nonEmpty)
     dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) {
-      case ((_, clustering), (data, op)) =>
+      case ((_, KMeansResults(_, assignments)), (data, op)) =>
       data.cache()
-      val result = simpleTrain(op, data, new SampleInitializer(clustering.assignments.map(_._1)))
+        val result = simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))
       data.unpersist(blocking = false)
-      clustering.assignments.unpersist(blocking = false)
+        assignments.unpersist(blocking = false)
       result
     }
   }
