@@ -198,10 +198,10 @@ class ColumnTrackingKMeans(
       stats.movement.setValue(0.0)
       stats.relocatedCenters.setValue(0)
       currentCenters.zip(previousCenters).foreach { case (current, previous) =>
-        if (current.round != previous.round)
+        if (current.round == round) {
           stats.movement.add(pointOps.distance(pointOps.toPoint(previous.center), current.center))
-        if (current.round == round)
           stats.relocatedCenters.add(1)
+        }
       }
 
       stats.reassignedPoints.setValue(0)
