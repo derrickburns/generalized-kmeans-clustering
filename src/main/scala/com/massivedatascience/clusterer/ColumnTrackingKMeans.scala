@@ -177,11 +177,9 @@ class ColumnTrackingKMeans(
           if (rand.nextDouble() > updateRate) unassigned
           else reassignment(point, current, round, stats, centers)
         }
-      }
-      newAssignments.setName(s"assignments round $round")
+      }.setName(s"assignments round $round").cache()
       newAssignments.zip(assignments).foreach { case (c, p) => updateStats(stats, c, p)}
       bcCenters.unpersist(blocking = false)
-      newAssignments.cache()
       assignments.unpersist(blocking = false)
       newAssignments
     }
