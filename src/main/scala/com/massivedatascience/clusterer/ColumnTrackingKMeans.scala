@@ -147,12 +147,9 @@ class ColumnTrackingKMeans(
      * @param centers cluster centers
      * @return the assignments
      */
-    def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
-      val result = points.map(pt => bestAssignment(pt, 0, centers))
-      result.setName("initial assignments")
-      result.persist()
-      result
-    }
+    def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) =
+      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").cache()
+
 
     /**
      * Identify the new cluster assignments for a sample of the points.
@@ -216,7 +213,7 @@ class ColumnTrackingKMeans(
       changes.foreach { case (index, delta) =>
         val c = newCenters(index)
         val oldPosition = pointOps.toPoint(c.center)
-        val x = (if (c.initialized) delta.add(oldPosition) else delta).asImmutable
+        val x = if (c.initialized) delta.add(oldPosition) else delta
         newCenters(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
         stats.movement.add(pointOps.distance(oldPosition, newCenters(index).center))
       }
@@ -414,7 +411,7 @@ class ColumnTrackingKMeans(
 
     val results = for (centers <- centerArrays) yield {
       var centersWithHistory = centers.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
-      var previous = points.map { x => unassigned}
+      var previous = nullAssignments(points)
       var current = initialAssignments(points, centersWithHistory)
       var terminate = false
       var round = 1
@@ -428,17 +425,9 @@ class ColumnTrackingKMeans(
        */
       do {
         val stats = new TrackingStats(points.sparkContext, round)
-
-        /*
-         * move centers to new positions, set round on moved centers
-         */
         centersWithHistory = updatedCenters(round, stats, current, previous, centersWithHistory)
         previous = current
-
-        /*
-         * move points, set round on moved points
-         */
-        current = updatedAssignments(round, stats, current, centersWithHistory)
+        current = updatedAssignments(round, stats, previous, centersWithHistory)
         updateRoundStats(round, stats, centersWithHistory, current)
         stats.report()
         terminate = terminationCondition(stats)
@@ -454,5 +443,9 @@ class ColumnTrackingKMeans(
       r._3.unpersist(blocking = false)
     }
     (clustering._1, clustering._2, Some(clustering._3.map(x => (x.cluster, x.distance))))
+  }
+
+  def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] = {
+    points.map { x => unassigned}.cache()
   }
 }

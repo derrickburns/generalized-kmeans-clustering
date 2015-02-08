@@ -23,20 +23,21 @@ import org.apache.spark.{Logging, SparkContext}
 
 
 class TrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Serializable with Logging {
-  val newlyAssignedPoints = sc.accumulator[Int](0, s"Newly Assigned Points $round")
-  val reassignedPoints = sc.accumulator[Int](0, s"Reassigned Points $round")
-  val unassignedPoints = sc.accumulator[Int](0, s"Unassigned Points $round")
-  val improvement = sc.accumulator[Double](0.0, s"Improvement $round")
-  val relocatedCenters = sc.accumulator[Int](0, s"Relocated Centers $round")
-  val dirtyOther = sc.accumulator[Int](0, s"=> Other Moving $round")
-  val dirtySame = sc.accumulator[Int](0, s"=> Same Moving $round")
-  val stationary = sc.accumulator[Int](0, s"Stationary $round")
-  val closestClean = sc.accumulator[Int](0, s"Moving => Other Stationary $round")
-  val closestDirty = sc.accumulator[Int](0, s"Stationary => Other Moving $round")
-  val movement = sc.accumulator[Double](0.0, s"Center Movement $round")
-  val nonemptyClusters = sc.accumulator[Int](0, s"Non-Empty Clusters $round")
-  val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters $round")
-  val largestCluster = sc.accumulator[Long](0, s"Largest Cluster $round")
+  val currentRound = sc.accumulator[Int](round, s"$round")
+  val newlyAssignedPoints = sc.accumulator[Int](0, s"Newly Assigned Points")
+  val reassignedPoints = sc.accumulator[Int](0, s"Reassigned Points")
+  val unassignedPoints = sc.accumulator[Int](0, s"Unassigned Points")
+  val improvement = sc.accumulator[Double](0.0, s"Improvement")
+  val relocatedCenters = sc.accumulator[Int](0, s"Relocated Centers")
+  val dirtyOther = sc.accumulator[Int](0, s"=> Other Moving")
+  val dirtySame = sc.accumulator[Int](0, s"=> Same Moving")
+  val stationary = sc.accumulator[Int](0, s"Stationary")
+  val closestClean = sc.accumulator[Int](0, s"Moving => Other Stationary")
+  val closestDirty = sc.accumulator[Int](0, s"Stationary => Other Moving")
+  val movement = sc.accumulator[Double](0.0, s"Center Movement")
+  val nonemptyClusters = sc.accumulator[Int](0, s"Non-Empty Clusters")
+  val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters")
+  val largestCluster = sc.accumulator[Long](0, s"Largest Cluster")
 
   def getMovement = movement.value
 
@@ -47,7 +48,7 @@ class TrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Se
   def getRound = round
 
   def report() = {
-    logInfo(s"round $round")
+    logInfo(s"round ${currentRound.value}")
     logInfo(s"relocated centers = ${relocatedCenters.value}")
     logInfo(s"lowered distortion by ${improvement.value}")
     logInfo(s"center movement by ${movement.value}")
