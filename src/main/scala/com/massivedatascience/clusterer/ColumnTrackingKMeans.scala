@@ -141,9 +141,9 @@ class ColumnTrackingKMeans(
             if (rand.nextDouble() > updateRate) unassigned
             else reassignment(point, current, round, centers)
           }
-      }.setName(s"assignments round $round").cache()
+      }
       bcCenters.unpersist(blocking = false)
-      currentAssignments
+      currentAssignments.setName(s"assignments round $round").cache()
     }
 
     /**
@@ -257,6 +257,7 @@ class ColumnTrackingKMeans(
             buffer.append((prev.cluster, Sub(point)))
           }
         }
+        logInfo(s"buffer size ${buffer.size}")
         buffer.iterator
       }.aggregateByKey(pointOps.getCentroid)(
           (x, y) => y match {
@@ -404,10 +405,10 @@ class ColumnTrackingKMeans(
       do {
         val previousCenters = centers
         centers = updatedCenters(round, assignments, previousAssignments, previousCenters)
+        previousAssignments.unpersist(blocking = false)
         previousAssignments = assignments
         assignments = updatedAssignments(round, previousAssignments, centers)
         terminate = shouldTerminate(round, centers, previousCenters, assignments, previousAssignments)
-        previousAssignments.unpersist(blocking = false)
         round = round + 1
       } while (!terminate)
 
@@ -424,5 +425,4 @@ class ColumnTrackingKMeans(
   }
 
   def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] = points.map(x => unassigned).cache()
-
 }
