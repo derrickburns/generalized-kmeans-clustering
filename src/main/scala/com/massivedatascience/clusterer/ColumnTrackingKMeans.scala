@@ -115,7 +115,7 @@ class ColumnTrackingKMeans(
      * @return the assignments
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) =
-      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").cache()
+      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist()
 
 
     /**
@@ -145,7 +145,7 @@ class ColumnTrackingKMeans(
           }
       }
       bcCenters.unpersist()
-      currentAssignments.setName(s"assignments round $round").cache()
+      currentAssignments.setName(s"assignments round $round").persist()
     }
 
     /**
@@ -256,7 +256,7 @@ class ColumnTrackingKMeans(
 
       val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
         (curr.cluster, prev.cluster)
-      }.setName("changes").cache()
+      }.setName("changes").persist()
 
       val results = points.zip(changes).mapPartitions { pts =>
         val buffer = new ArrayBuffer[(Int, CentroidChange)]
@@ -442,11 +442,11 @@ class ColumnTrackingKMeans(
 
     val candidates = clusterings(points, centerArrays)
     val (d, centers, assignments) = candidates.minBy(_._1)
-    val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).cache()))
+    val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).persist()))
     for ((_, _, a) <- candidates) a.unpersist()
     best
   }
 
   def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] =
-    points.map(x => unassigned).cache()
+    points.map(x => unassigned).persist()
 }
