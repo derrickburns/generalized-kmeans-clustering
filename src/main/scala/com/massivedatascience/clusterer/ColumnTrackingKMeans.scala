@@ -377,13 +377,15 @@ class ColumnTrackingKMeans(
       centers: Array[CenterWithHistory]): Map[Int, PointWithDistance] = {
 
       val bcCenters = assignments.sparkContext.broadcast(centers)
-      points.zip(assignments).mapPartitions { pts =>
+      val result = points.zip(assignments).mapPartitions { pts =>
         val bc = bcCenters.value
         pts.flatMap { case (point, a) =>
           bc.map { c => (c.index, PointWithDistance(point, a, pointOps.distance(point, c.center)))
           }
         }
       }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}
+      bcCenters.unpersist(blocking = true)
+      result
     }
 
     require(updateRate <= 1.0 && updateRate >= 0.0)
@@ -420,7 +422,7 @@ class ColumnTrackingKMeans(
     points.unpersist(blocking = false)
 
     val (finalDistortion, finalCenters, finalAssignment) = results.minBy(_._1)
-    for ((_, _, assignment) <- results if assignment != finalAssignment) {
+    for ((_, _, assignment) <- results if assignment.id != finalAssignment.id) {
       assignment.unpersist(blocking = false)
     }
     (finalDistortion, finalCenters, Some(finalAssignment.map(x => (x.cluster, x.distance))))
