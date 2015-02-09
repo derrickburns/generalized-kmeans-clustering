@@ -250,7 +250,7 @@ class ColumnTrackingKMeans(
 
       val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
         (curr.cluster, prev.cluster)
-      }.cache()
+      }.setName("changes").cache()
 
       val results = points.zip(changes).mapPartitions { pts =>
         val buffer = new ArrayBuffer[(Int, CentroidChange)]
