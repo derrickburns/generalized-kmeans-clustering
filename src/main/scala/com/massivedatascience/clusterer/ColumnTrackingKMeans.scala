@@ -22,6 +22,7 @@ import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+import scala.annotation.tailrec
 import scala.collection.Map
 import scala.collection.generic.FilterMonadic
 import scala.collection.mutable.ArrayBuffer
@@ -78,7 +79,6 @@ class ColumnTrackingKMeans(
   extends MultiKMeansClusterer {
 
   import ColumnTrackingKMeans._
-
 
   /**
    * count number of points assigned to each cluster
@@ -309,6 +309,16 @@ class ColumnTrackingKMeans(
     /**
      * Find the closest cluster assignment to a given point
      *
+     * This implementation is optimized for the cases when:
+     *
+     * a) one of the clusters that moved is closer than the previous cluster
+     *
+     * b) the previous cluster did not move.
+     *
+     * In these case distances to other stationary clusters need not be computed.  As Lloyd's
+     * algorithm proceeds, more and more clusters are stationary, so fewer and fewer distnace
+     * calculations are needed.
+     *
      * @param point point
      * @param assignment the current assignment of the point
      * @param round the current round
@@ -388,44 +398,49 @@ class ColumnTrackingKMeans(
       result
     }
 
+    case class Result(distortion: Double, centers: Array[BregmanCenter], assignments: RDD[Assignment])
+
+    def clusterings(
+      points: RDD[BregmanPoint],
+      initialCenterSets: Array[Array[BregmanCenter]]):
+    Array[Result] = {
+
+      for (initialCenters <- initialCenterSets) yield {
+        val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
+        val emptyAssignments = nullAssignments(points)
+        val assignments = lloyds(1, centers, initialAssignments(points, centers), emptyAssignments)
+        val d = distortion(assignments)
+        val finalCenters = centers.map(_.center)
+        Result(d, finalCenters, assignments)
+      }
+    }
+
+    @tailrec
+    def lloyds(
+      round: Int,
+      centers: Array[CenterWithHistory],
+      assignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]): RDD[Assignment] = {
+
+      val newCenters = updatedCenters(round, assignments, previousAssignments, centers)
+      previousAssignments.unpersist(blocking = true)
+      val newAssignments = updatedAssignments(round, assignments, newCenters)
+      val terminate = shouldTerminate(round, newCenters, centers, newAssignments, assignments)
+      if (terminate) newAssignments else lloyds(round + 1, newCenters, newAssignments, assignments)
+    }
+
     require(updateRate <= 1.0 && updateRate >= 0.0)
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
-    val results = for (initialCenters <- centerArrays) yield {
-      var centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
-      var previousAssignments = nullAssignments(points)
-      var assignments = initialAssignments(points, centers)
-      var terminate = false
-      var round = 1
-
-      /**
-       * Preconditions:
-       *
-       * centers are initialized to a set of points, round is set to -1
-       * previously, points were unassigned, so round is set to -2
-       * current, points have been assigned to closest clusters in round 0
-       */
-      do {
-        val previousCenters = centers
-        centers = updatedCenters(round, assignments, previousAssignments, previousCenters)
-        previousAssignments.unpersist(blocking = true)
-        previousAssignments = assignments
-        assignments = updatedAssignments(round, previousAssignments, centers)
-        terminate = shouldTerminate(round, centers, previousCenters, assignments, previousAssignments)
-        round = round + 1
-      } while (!terminate)
-
-      val d = distortion(assignments)
-      (d, centers.map(_.center), assignments)
-    }
+    val candidates = clusterings(points, centerArrays)
     points.unpersist(blocking = false)
-
-    val (finalDistortion, finalCenters, finalAssignment) = results.minBy(_._1)
-    val best = (finalDistortion, finalCenters, Some(finalAssignment.map(x => (x.cluster, x.distance)).cache()))
-    for ((_, _, assignment) <- results) assignment.unpersist(blocking = true)
+    val Result(d, centers, assignments) = candidates.minBy(_.distortion)
+    val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).cache()))
+    for (candidate <- candidates) candidate.assignments.unpersist(blocking = true)
     best
   }
 
-  def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] = points.map(x => unassigned).cache()
+  def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] =
+    points.map(x => unassigned).cache()
 }
