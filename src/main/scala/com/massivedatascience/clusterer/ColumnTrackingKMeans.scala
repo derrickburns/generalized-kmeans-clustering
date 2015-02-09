@@ -398,12 +398,9 @@ class ColumnTrackingKMeans(
       result
     }
 
-    case class Result(distortion: Double, centers: Array[BregmanCenter], assignments: RDD[Assignment])
-
     def clusterings(
       points: RDD[BregmanPoint],
-      initialCenterSets: Array[Array[BregmanCenter]]):
-    Array[Result] = {
+      initialCenterSets: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], RDD[Assignment])] = {
 
       for (initialCenters <- initialCenterSets) yield {
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
@@ -411,7 +408,7 @@ class ColumnTrackingKMeans(
         val assignments = lloyds(1, centers, initialAssignments(points, centers), emptyAssignments)
         val d = distortion(assignments)
         val finalCenters = centers.map(_.center)
-        Result(d, finalCenters, assignments)
+        (d, finalCenters, assignments)
       }
     }
 
@@ -435,9 +432,9 @@ class ColumnTrackingKMeans(
 
     val candidates = clusterings(points, centerArrays)
     points.unpersist(blocking = false)
-    val Result(d, centers, assignments) = candidates.minBy(_.distortion)
+    val (d, centers, assignments) = candidates.minBy(_._1)
     val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).cache()))
-    for (candidate <- candidates) candidate.assignments.unpersist(blocking = true)
+    for ((_, _, a) <- candidates) a.unpersist(blocking = true)
     best
   }
 
