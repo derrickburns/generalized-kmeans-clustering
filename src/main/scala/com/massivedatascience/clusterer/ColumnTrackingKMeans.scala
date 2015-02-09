@@ -422,10 +422,9 @@ class ColumnTrackingKMeans(
     points.unpersist(blocking = false)
 
     val (finalDistortion, finalCenters, finalAssignment) = results.minBy(_._1)
-    for ((_, _, assignment) <- results if assignment.id != finalAssignment.id) {
-      assignment.unpersist(blocking = false)
-    }
-    (finalDistortion, finalCenters, Some(finalAssignment.map(x => (x.cluster, x.distance))))
+    val best = (finalDistortion, finalCenters, Some(finalAssignment.map(x => (x.cluster, x.distance)).cache()))
+    for ((_, _, assignment) <- results) assignment.unpersist(blocking = true)
+    best
   }
 
   def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] = points.map(x => unassigned).cache()
