@@ -20,6 +20,7 @@ package com.massivedatascience.clusterer
 import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 
 object KMeans extends Logging {
@@ -231,7 +232,7 @@ object KMeans extends Logging {
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
-    bregmanPoints.setName("Bregman points").cache()
+    bregmanPoints.setName("Bregman points").persist(StorageLevel.MEMORY_ONLY_SER)
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
     val assignments = assignmentOpt.getOrElse {
