@@ -349,9 +349,10 @@ object BLAS extends Serializable {
     if( x.size != y.size ) {
       require(x.size == y.size, s"${x.size} vs ${y.size}")
     }
-    (x, y) match {
-      case (dx: DenseVector, dy: DenseVector) =>
-        dot(dx, dy)
+
+    if (x.isInstanceOf[DenseVector] && y.isInstanceOf[DenseVector])
+      denseDot(x.asInstanceOf[DenseVector], y.asInstanceOf[DenseVector])
+    else (x, y) match {
       case (sx: SparseVector, dy: DenseVector) =>
         dot(sx, dy)
       case (dx: DenseVector, sy: SparseVector) =>
@@ -366,7 +367,7 @@ object BLAS extends Serializable {
   /**
    * dot(x, y)
    */
-  private def dot(x: DenseVector, y: DenseVector): Double = {
+  private def denseDot(x: DenseVector, y: DenseVector): Double = {
     val n = x.size
     f2jBLAS.ddot(n, x.values, 1, y.values, 1)
   }
