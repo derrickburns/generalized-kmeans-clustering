@@ -138,7 +138,7 @@ class ColumnTrackingKMeans(
           val rand = new XORShiftRandom(round ^ (index << 16))
           val centers = bcCenters.value
           assignedPoints.map { case (point, current) =>
-            if (rand.nextDouble() > updateRate) unassigned
+            if (rand.nextDouble() > updateRate) current
             else reassignment(point, current, round, centers)
           }
       }
@@ -155,26 +155,30 @@ class ColumnTrackingKMeans(
      * @param previousCenters  the cluster centers
      * @return the new cluster centers
      */
-    def updatedCenters(
+    def updateCenters(
       round: Int,
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
       previousCenters: Array[CenterWithHistory]): Array[CenterWithHistory] = {
 
-      val changes = if (updateRate < 1.0)
-        getStochasticCentroidChanges(points, currentAssignments)
-      else
-        getExactCentroidChanges(points, currentAssignments, previousAssignments)
-
       val currentCenters = previousCenters.clone()
-      changes.foreach { case (index, delta) =>
-        val c = currentCenters(index)
-        val oldPosition = pointOps.toPoint(c.center)
-        val x = (if (c.initialized) delta.add(oldPosition) else delta).asImmutable
-        currentCenters(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
+      if (updateRate < 1.0) {
+        val results = getStochasticCentroidChanges(points, currentAssignments)
+        results.foreach { case (index, location) =>
+          currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
+        }
+      } else {
+        val changes = getExactCentroidChanges(points, currentAssignments, previousAssignments)
+        changes.foreach { case (index, delta) =>
+          val c = currentCenters(index)
+          val oldPosition = pointOps.toPoint(c.center)
+          val x = (if (c.initialized) delta.add(oldPosition) else delta).asImmutable
+          currentCenters(index) = CenterWithHistory(pointOps.toCenter(x), index, round)
+        }
       }
       currentCenters
     }
+
 
     /**
      * Collect and report the statistics about this round
@@ -423,7 +427,7 @@ class ColumnTrackingKMeans(
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): RDD[Assignment] = {
 
-      val newCenters = updatedCenters(round, assignments, previousAssignments, centers)
+      val newCenters = updateCenters(round, assignments, previousAssignments, centers)
       previousAssignments.unpersist()
       val newAssignments = updatedAssignments(round, assignments, newCenters)
       val terminate = shouldTerminate(round, newCenters, centers, newAssignments, assignments)
