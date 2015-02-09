@@ -248,15 +248,16 @@ class ColumnTrackingKMeans(
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
 
-      val pairs = currentAssignments.zip(previousAssignments)
+      val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
+        (curr.cluster, prev.cluster)
+      }.cache()
 
-      points.zip(pairs).mapPartitions { pts =>
+      val results = points.zip(changes).mapPartitions { pts =>
         val buffer = new ArrayBuffer[(Int, CentroidChange)]
-        for ((point, (curr, prev)) <- pts if curr.cluster != prev.cluster) {
-          assert(curr.isAssigned)
-          if (curr.isAssigned) buffer.append((curr.cluster, Add(point)))
-          if (prev.isAssigned) {
-            buffer.append((prev.cluster, Sub(point)))
+        for ((point, (add, sub)) <- pts) {
+          if (add != sub) {
+            if (add >= 0) buffer.append((add, Add(point)))
+            if (sub >= 0) buffer.append((sub, Sub(point)))
           }
         }
         logInfo(s"buffer size ${buffer.size}")
@@ -268,6 +269,9 @@ class ColumnTrackingKMeans(
           },
           (x, y) => x.add(y)
         ).collect()
+
+      changes.unpersist()
+      results
     }
 
     def getStochasticCentroidChanges(
