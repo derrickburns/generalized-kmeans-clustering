@@ -142,7 +142,7 @@ class ColumnTrackingKMeans(
             else reassignment(point, current, round, centers)
           }
       }
-      bcCenters.unpersist(blocking = false)
+      bcCenters.unpersist()
       currentAssignments.setName(s"assignments round $round").cache()
     }
 
@@ -398,7 +398,7 @@ class ColumnTrackingKMeans(
           }
         }
       }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}
-      bcCenters.unpersist(blocking = false)
+      bcCenters.unpersist()
       result
     }
 
@@ -424,7 +424,7 @@ class ColumnTrackingKMeans(
       previousAssignments: RDD[Assignment]): RDD[Assignment] = {
 
       val newCenters = updatedCenters(round, assignments, previousAssignments, centers)
-      previousAssignments.unpersist(blocking = false)
+      previousAssignments.unpersist()
       val newAssignments = updatedAssignments(round, assignments, newCenters)
       val terminate = shouldTerminate(round, newCenters, centers, newAssignments, assignments)
       if (terminate) newAssignments else lloyds(round + 1, newCenters, newAssignments, assignments)
@@ -435,10 +435,9 @@ class ColumnTrackingKMeans(
     logInfo(s"runs = ${centerArrays.size}")
 
     val candidates = clusterings(points, centerArrays)
-    points.unpersist(blocking = false)
     val (d, centers, assignments) = candidates.minBy(_._1)
     val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).cache()))
-    for ((_, _, a) <- candidates) a.unpersist(blocking = false)
+    for ((_, _, a) <- candidates) a.unpersist()
     best
   }
 

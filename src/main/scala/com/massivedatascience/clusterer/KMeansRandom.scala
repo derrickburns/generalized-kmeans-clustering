@@ -28,15 +28,13 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
   def init(ops: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
-    def select(data: RDD[BregmanPoint], count: Int) =
-    {
+    def select(data: RDD[BregmanPoint], count: Int) = {
       val toCenter = ops.toCenter _
       data.takeSample(withReplacement = false, count, new XORShiftRandom().nextInt()).map(toCenter)
     }
 
     val data = d.map { p => ops.inhomogeneousToPoint(p, 1.0)}
-    data.persist(StorageLevel.MEMORY_AND_DISK)
-    val filtered = data.filter(_.weight > ops.weightThreshold)
+    val filtered = data.filter(_.weight > ops.weightThreshold).cache()
     val count = filtered.count()
     val centers = if (runs * k <= count) {
       val centers = select(filtered, runs * k)
@@ -47,6 +45,7 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
       val all = filtered.collect().map(ops.toCenter)
       Array.fill(runs)(all)
     }
+    filtered.unpersist()
     (data, centers)
   }
 }

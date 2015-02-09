@@ -70,9 +70,9 @@ class KMeansParallel(
         val kx = if (k > myCenters.length) myCenters.length else k
         val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
         val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-        val clustering = clusterer.cluster(pointOps, parallelCenters, Array(initial))
-        clustering._3.map(_.unpersist(blocking = false))
-        clustering._2
+        val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
+        assignments.map(_.unpersist(blocking = false))
+        clusters
       }
     }
 

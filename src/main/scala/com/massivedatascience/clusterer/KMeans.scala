@@ -231,12 +231,13 @@ object KMeans extends Logging {
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
-    bregmanPoints.setName("Bregman points")
+    bregmanPoints.setName("Bregman points").cache()
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
     val assignments = assignmentOpt.getOrElse {
       bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments")
     }
+    bregmanPoints.unpersist()
     (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
   }
 
