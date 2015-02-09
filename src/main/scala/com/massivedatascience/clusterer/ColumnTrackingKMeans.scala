@@ -80,6 +80,8 @@ class ColumnTrackingKMeans(
 
   import ColumnTrackingKMeans._
 
+  val addOnly = true
+
   /**
    * count number of points assigned to each cluster
    *
@@ -162,7 +164,7 @@ class ColumnTrackingKMeans(
       previousCenters: Array[CenterWithHistory]): Array[CenterWithHistory] = {
 
       val currentCenters = previousCenters.clone()
-      if (updateRate < 1.0) {
+      if (addOnly) {
         val results = getStochasticCentroidChanges(points, currentAssignments)
         results.foreach { case (index, location) =>
           currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
