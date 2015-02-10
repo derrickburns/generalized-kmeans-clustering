@@ -80,7 +80,7 @@ class ColumnTrackingKMeans(
 
   import ColumnTrackingKMeans._
 
-  val addOnly = false
+  val addOnly = true
 
   /**
    * count number of points assigned to each cluster
