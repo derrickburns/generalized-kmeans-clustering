@@ -33,6 +33,7 @@ object KMeans extends Logging {
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
+  val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
   val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
   val EUCLIDEAN = "DENSE_EUCLIDEAN"
   val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
@@ -181,6 +182,7 @@ object KMeans extends Logging {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
+      case SIMPLEX_SMOOTHED_KL => DiscreteDenseSimplexSmoothedKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps

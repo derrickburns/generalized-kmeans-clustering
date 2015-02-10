@@ -356,7 +356,7 @@ object BLAS extends Serializable {
           case sx: SparseVector =>
             dot(sx, dy)
           case dx: DenseVector =>
-            dot(dx, dy)
+            denseDot(dx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"sum doesn't support x type ${x.getClass}.")
@@ -378,6 +378,7 @@ object BLAS extends Serializable {
   /**
    * dot(x, y)
    */
+  @inline
   private def denseDot(x: DenseVector, y: DenseVector): Double = {
     val n = x.size
     f2jBLAS.ddot(n, x.values, 1, y.values, 1)
@@ -386,6 +387,7 @@ object BLAS extends Serializable {
   /**
    * dot(x, y)
    */
+
   private def dot(x: SparseVector, y: DenseVector): Double = {
     val nnz = x.indices.size
     var sum = 0.0

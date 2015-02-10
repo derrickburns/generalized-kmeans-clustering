@@ -167,6 +167,9 @@ object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, SparseCluste
   }
 }
 
+
+object DiscreteDenseSimplexSmoothedKLPointOps extends BasicPointOps(NaturalKullbackLeiblerSimplexDivergence)
+
 /**
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
