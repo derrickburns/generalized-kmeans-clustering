@@ -90,7 +90,7 @@ class KMeansParallel(
 
     val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
     data.setName("initial points")
-    data.persist(StorageLevel.MEMORY_ONLY_SER)
+    data.persist()
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])

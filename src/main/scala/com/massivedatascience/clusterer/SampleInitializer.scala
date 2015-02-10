@@ -29,7 +29,7 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
 
     val data = d.map {pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
     data.setName("input to sample initializer")
-    data.persist(StorageLevel.MEMORY_ONLY_SER)
+    data.persist(StorageLevel)
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),

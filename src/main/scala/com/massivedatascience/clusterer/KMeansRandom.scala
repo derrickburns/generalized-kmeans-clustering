@@ -35,7 +35,7 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
 
     val data = d.map { p => ops.inhomogeneousToPoint(p, 1.0)}
     val filtered = data.filter(_.weight > ops.weightThreshold).setName("random initial")
-    filtered.persist(StorageLevel.MEMORY_ONLY_SER)
+    filtered.persist()
 
     val count = filtered.count()
     val centers = if (runs * k <= count) {
