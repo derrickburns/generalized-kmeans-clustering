@@ -249,6 +249,8 @@ class ColumnTrackingKMeans(
 
      * @return changes to cluster position
      */
+
+    /*
     def getExactCentroidChanges(
       points: RDD[BregmanPoint],
       currentAssignments: RDD[Assignment],
@@ -275,6 +277,47 @@ class ColumnTrackingKMeans(
       points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
         (p.cluster, o)
       }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collectAsMap()
+
+
+*/
+    def getExactCentroidChanges(
+      points: RDD[BregmanPoint],
+      currentAssignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
+
+      val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
+        (curr.cluster, prev.cluster)
+      }.setName("changes").cache()
+
+      val results = points.zip(changes).mapPartitions { pts =>
+        val buffer = new ArrayBuffer[(Int, CentroidChange)]
+        for ((point, (add, sub)) <- pts) {
+          if (add != sub) {
+            if (add >= 0) buffer.append((add, Add(point)))
+            if (sub >= 0) buffer.append((sub, Sub(point)))
+          }
+        }
+        logInfo(s"buffer size ${buffer.size}")
+        buffer.iterator
+      }.aggregateByKey(pointOps.getCentroid)(
+          (x, y) => y match {
+            case Add(p) => x.add(p)
+            case Sub(p) => x.sub(p)
+          },
+          (x, y) => x.add(y)
+        ).collect()
+
+      changes.unpersist()
+      results
+    }
+
+    def getStochasticCentroidChanges(
+      points: RDD[BregmanPoint],
+      assignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] =
+
+      points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
+        (p.cluster, o)
+      }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
 
 
     /**
