@@ -71,7 +71,7 @@ object ColumnTrackingKMeans {
  *
  *
  * @param updateRate for stochastic sampling, the percentage of points to update on each round
- * @param terminationCondition when to terminate the clusering
+ * @param terminationCondition when to terminate the clustering
  */
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
