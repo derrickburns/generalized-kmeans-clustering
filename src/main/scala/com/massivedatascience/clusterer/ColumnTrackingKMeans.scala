@@ -80,7 +80,7 @@ class ColumnTrackingKMeans(
 
   import ColumnTrackingKMeans._
 
-  val addOnly = true
+  val addOnly = false
 
   /**
    * count number of points assigned to each cluster
@@ -252,41 +252,29 @@ class ColumnTrackingKMeans(
     def getExactCentroidChanges(
       points: RDD[BregmanPoint],
       currentAssignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
+      previousAssignments: RDD[Assignment]): Map[Int, MutableWeightedVector] = {
 
-      val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
-        (curr.cluster, prev.cluster)
-      }.setName("changes").persist()
+      val additions = add(pointOps, points, changes(currentAssignments, previousAssignments))
+      val subtractions = subtract(pointOps, points, changes(previousAssignments, currentAssignments))
+      val map = collection.mutable.Map(additions.toSeq: _*)
+      for ((index, vector) <- subtractions)
+        map(index) = if (map.contains(index)) map(index).add(vector) else vector
+      map
+    }
 
-      val results = points.zip(changes).mapPartitions { pts =>
-        val buffer = new ArrayBuffer[(Int, CentroidChange)]
-        for ((point, (add, sub)) <- pts) {
-          if (add != sub) {
-            if (add >= 0) buffer.append((add, Add(point)))
-            if (sub >= 0) buffer.append((sub, Sub(point)))
-          }
-        }
-        logInfo(s"buffer size ${buffer.size}")
-        buffer.iterator
-      }.aggregateByKey(pointOps.getCentroid)(
-          (x, y) => y match {
-            case Add(p) => x.add(p)
-            case Sub(p) => x.sub(p)
-          },
-          (x, y) => x.add(y)
-        ).collect()
-
-      changes.unpersist()
-      results
+    def changes(to: RDD[Assignment], from: RDD[Assignment]): RDD[Int] = {
+      to.zip(from).map { case (curr, prev) =>
+        if (curr.cluster != prev.cluster) curr.cluster else -1
+      }
     }
 
     def getStochasticCentroidChanges(
       points: RDD[BregmanPoint],
-      assignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] =
+      assignments: RDD[Assignment]): Map[Int, MutableWeightedVector] =
 
       points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
         (p.cluster, o)
-      }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
+      }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collectAsMap()
 
 
     /**
@@ -445,6 +433,30 @@ class ColumnTrackingKMeans(
     val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).persist()))
     for ((_, _, a) <- candidates) a.unpersist()
     best
+  }
+
+  def add(
+    pointOps: BregmanPointOps,
+    points: RDD[BregmanPoint],
+    subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
+
+    subs.zip(points).filter(_._1 != noCluster)
+      .aggregateByKey(pointOps.getCentroid)(
+        (x, y) => x.add(y),
+        (x, y) => x.add(y)
+      ).collectAsMap()
+  }
+
+  def subtract(
+    pointOps: BregmanPointOps,
+    points: RDD[BregmanPoint],
+    subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
+
+    subs.zip(points).filter(_._1 != noCluster)
+      .aggregateByKey(pointOps.getCentroid)(
+        (x, y) => x.sub(y),
+        (x, y) => x.sub(y)
+      ).collectAsMap()
   }
 
   def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] =
