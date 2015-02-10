@@ -20,7 +20,6 @@ package com.massivedatascience.clusterer
 import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
   def init(
@@ -29,7 +28,7 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
 
     val data = d.map {pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
     data.setName("input to sample initializer")
-    data.persist(StorageLevel)
+    data.persist()
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),
