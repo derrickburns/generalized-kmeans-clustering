@@ -346,21 +346,32 @@ object BLAS extends Serializable {
    * dot(x, y)
    */
   def dot(x: Vector, y: Vector): Double = {
-    if( x.size != y.size ) {
+    if (x.size != y.size) {
       require(x.size == y.size, s"${x.size} vs ${y.size}")
     }
 
-    if (x.isInstanceOf[DenseVector] && y.isInstanceOf[DenseVector])
-      denseDot(x.asInstanceOf[DenseVector], y.asInstanceOf[DenseVector])
-    else (x, y) match {
-      case (sx: SparseVector, dy: DenseVector) =>
-        dot(sx, dy)
-      case (dx: DenseVector, sy: SparseVector) =>
-        dot(sy, dx)
-      case (sx: SparseVector, sy: SparseVector) =>
-        dot(sx, sy)
-      case _ =>
-        throw new IllegalArgumentException(s"dot doesn't support (${x.getClass}, ${y.getClass}).")
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case sx: SparseVector =>
+            dot(sx, dy)
+          case dx: DenseVector =>
+            dot(dx, dy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"sum doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            dot(sx, sy)
+          case dx: DenseVector =>
+            dot(new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"sum doesn't support x type ${x.getClass}.")
+
+        }
     }
   }
 
