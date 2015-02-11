@@ -314,7 +314,7 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
     val subs = (0 until depth).foldLeft(List(dataSet)) {
       case (data, e) => {
-        data.head.map(embedding.embed).cache() :: data
+        data.head.map(embedding.embed).cache().setName(s"embedded data at depth $depth with $embedding") :: data
       }
     }
     subs
@@ -331,7 +331,7 @@ object KMeans extends Logging {
   private def resample(
     dataSet: RDD[Vector],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] = {
-    embeddings.map(x => dataSet.map(x.embed).cache())
+    embeddings.map(x => dataSet.map(x.embed).cache().setName(s"embedded data with $x"))
   }
 
 }
