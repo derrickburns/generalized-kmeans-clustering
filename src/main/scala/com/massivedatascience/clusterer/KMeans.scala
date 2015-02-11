@@ -235,12 +235,16 @@ object KMeans extends Logging {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
     bregmanPoints.setName("Bregman points")
-    assert(bregmanPoints.getStorageLevel.useMemory)
+    require(bregmanPoints.getStorageLevel.useMemory)
+    logInfo("completed initialization of cluster centers")
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
+    logInfo("completed clustering")
     val assignments = assignmentOpt.getOrElse {
-      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments")
+      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments").cache()
     }
+    logInfo("completed assignments")
+
     bregmanPoints.unpersist()
     (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
   }
