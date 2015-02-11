@@ -105,6 +105,8 @@ class ColumnTrackingKMeans(
     points: RDD[BregmanPoint],
     centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
 
+    require(points.getStorageLevel.useMemory)
+
     val stats = new TrackingStats(points.sparkContext)
 
     /**
@@ -114,8 +116,10 @@ class ColumnTrackingKMeans(
      * @param centers cluster centers
      * @return the assignments
      */
-    def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) =
+    def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
+      require(points.getStorageLevel.useMemory)
       points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist()
+    }
 
 
     /**
@@ -134,6 +138,8 @@ class ColumnTrackingKMeans(
 
       val sc = points.sparkContext
       val bcCenters = sc.broadcast(currentCenters)
+
+      require(previousAssignments.getStorageLevel.useMemory)
 
       val currentAssignments = points.zip(previousAssignments).mapPartitionsWithIndex {
         (index, assignedPoints) =>
@@ -162,6 +168,9 @@ class ColumnTrackingKMeans(
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
       previousCenters: Array[CenterWithHistory]): Array[CenterWithHistory] = {
+
+      require(currentAssignments.getStorageLevel.useMemory)
+      require(previousAssignments.getStorageLevel.useMemory)
 
       val currentCenters = previousCenters.clone()
       if (addOnly) {
@@ -197,6 +206,9 @@ class ColumnTrackingKMeans(
       previousCenters: Array[CenterWithHistory],
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Boolean = {
+
+      require(currentAssignments.getStorageLevel.useMemory)
+      require(previousAssignments.getStorageLevel.useMemory)
 
       logInfo("start of stats collection")
       stats.currentRound.setValue(round)
@@ -285,6 +297,10 @@ class ColumnTrackingKMeans(
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
 
+      require(points.getStorageLevel.useMemory)
+      require(currentAssignments.getStorageLevel.useMemory)
+      require(previousAssignments.getStorageLevel.useMemory)
+
       val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
         (curr.cluster, prev.cluster)
       }.setName("changes").cache()
@@ -313,11 +329,16 @@ class ColumnTrackingKMeans(
 
     def getStochasticCentroidChanges(
       points: RDD[BregmanPoint],
-      assignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] =
+      assignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
+
+      require(points.getStorageLevel.useMemory)
+      require(assignments.getStorageLevel.useMemory)
 
       points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
         (p.cluster, o)
       }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
+
+    }
 
 
     /**
@@ -408,7 +429,7 @@ class ColumnTrackingKMeans(
           println(s"closest center to that point is $closerCluster =" +
             s"' ${centersWithHistory(closerCluster)} at distance $d2")
           println()
-          assert(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
+          require(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
             s"to point $d2")
         }
       }
@@ -427,6 +448,9 @@ class ColumnTrackingKMeans(
       assignments: RDD[Assignment],
       centers: Array[CenterWithHistory]): Map[Int, PointWithDistance] = {
 
+      require(assignments.getStorageLevel.useMemory)
+      require(points.getStorageLevel.useMemory)
+
       val bcCenters = assignments.sparkContext.broadcast(centers)
       val result = points.zip(assignments).mapPartitions { pts =>
         val bc = bcCenters.value
@@ -442,6 +466,8 @@ class ColumnTrackingKMeans(
     def clusterings(
       points: RDD[BregmanPoint],
       initialCenterSets: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], RDD[Assignment])] = {
+
+      require(points.getStorageLevel.useMemory)
 
       for (initialCenters <- initialCenterSets) yield {
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
@@ -460,6 +486,8 @@ class ColumnTrackingKMeans(
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): RDD[Assignment] = {
 
+      require(assignments.getStorageLevel.useMemory)
+      
       val newCenters = updateCenters(round, assignments, previousAssignments, centers)
       previousAssignments.unpersist()
       val newAssignments = updatedAssignments(round, assignments, newCenters)
@@ -483,6 +511,8 @@ class ColumnTrackingKMeans(
     points: RDD[BregmanPoint],
     subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
 
+    require(points.getStorageLevel.useMemory)
+
     subs.zip(points).filter(_._1 != noCluster)
       .aggregateByKey(pointOps.getCentroid)(
         (x, y) => x.add(y),
@@ -494,6 +524,8 @@ class ColumnTrackingKMeans(
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
     subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
+
+    require(points.getStorageLevel.useMemory)
 
     subs.zip(points).filter(_._1 != noCluster)
       .aggregateByKey(pointOps.getCentroid)(

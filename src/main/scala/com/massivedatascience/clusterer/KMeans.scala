@@ -235,6 +235,7 @@ object KMeans extends Logging {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
     bregmanPoints.setName("Bregman points")
+    assert(bregmanPoints.getStorageLevel.useMemory)
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
     val assignments = assignmentOpt.getOrElse {

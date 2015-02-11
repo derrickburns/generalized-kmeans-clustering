@@ -69,7 +69,7 @@ class KMeansParallel(
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (k > myCenters.length) myCenters.length else k
         val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
-        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
+        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint)).cache()
         val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
         assignments.map(_.unpersist(blocking = false))
         clusters
@@ -118,6 +118,8 @@ class KMeansParallel(
     // and new centers are computed in each iteration.
     var step = 0
     while (step < initializationSteps) {
+      assert(data.getStorageLevel.useMemory)
+
       val bcNewCenters = data.context.broadcast(newCenters)
       val preCosts = costs
       costs = data.zip(preCosts).map { case (point, cost) =>
@@ -140,6 +142,8 @@ class KMeansParallel(
           }
         )
       preCosts.unpersist(blocking = false)
+      assert(data.getStorageLevel.useMemory)
+      assert(costs.getStorageLevel.useMemory)
       val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
         val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
         val range = 0 until runs
@@ -170,6 +174,7 @@ class KMeansParallel(
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
+    assert(data.getStorageLevel.useMemory)
     (data, result)
   }
 }
