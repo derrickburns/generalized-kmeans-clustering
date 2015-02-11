@@ -175,7 +175,6 @@ object KMeans extends Logging {
     val samples = subsample(data, depth, embedding)
     val ops = Array.fill(depth + 1)(distanceFunc)
     val results = iterativelyTrain(ops, samples, initializer)
-    samples.reverse.tail.map(_.unpersist())
     results
   }
 
@@ -261,7 +260,6 @@ object KMeans extends Logging {
 
     val samples = subsample(raw, depth, embedding)
     val results = iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
-    samples.reverse.tail.map(_.unpersist())
     results
   }
 
@@ -276,7 +274,6 @@ object KMeans extends Logging {
 
     val samples = resample(raw, embeddings)
     val results = iterativelyTrain(ops, samples, initializer)
-    samples.map(_.unpersist())
     results
   }
 
@@ -314,7 +311,7 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
     val subs = (0 until depth).foldLeft(List(dataSet)) {
       case (data, e) => {
-        data.head.map(embedding.embed).cache().setName(s"embedded data at depth $depth with $embedding") :: data
+        data.head.map(embedding.embed).setName(s"embedded data at depth $depth with $embedding") :: data
       }
     }
     subs
@@ -331,7 +328,7 @@ object KMeans extends Logging {
   private def resample(
     dataSet: RDD[Vector],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] = {
-    embeddings.map(x => dataSet.map(x.embed).cache().setName(s"embedded data with $x"))
+    embeddings.map(x => dataSet.map(x.embed).setName(s"embedded data with $x"))
   }
 
 }
