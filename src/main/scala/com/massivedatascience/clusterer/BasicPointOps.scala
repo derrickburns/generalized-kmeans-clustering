@@ -25,7 +25,7 @@ case class BasicPointOps(
   clusterFactory: ClusterFactory = DenseClusterFactory,
   embedding: Embedding = IdentityEmbedding) extends BregmanPointOps {
 
-  val weightThreshold = 1e-4
+  @inline val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
 
   def getCentroid = clusterFactory.getCentroid

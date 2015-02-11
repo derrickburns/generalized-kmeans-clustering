@@ -59,9 +59,9 @@ object ColumnTrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   private[clusterer] case class CenterWithHistory(center: BregmanCenter, index: Int, round: Int = -1) {
-    def movedSince(r: Int): Boolean = round >= r
+    @inline def movedSince(r: Int): Boolean = round >= r
 
-    def initialized: Boolean = round >= 0
+    @inline def initialized: Boolean = round >= 0
   }
 
 }
