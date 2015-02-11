@@ -129,7 +129,7 @@ class KMeansParallel(
           })
       }
       costs.cache()
-      costs.setName(s"costs at step $step")
+      costs.setName(s"costs at step $step,")
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
