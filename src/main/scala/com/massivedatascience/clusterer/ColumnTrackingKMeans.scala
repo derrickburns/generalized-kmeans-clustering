@@ -21,6 +21,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 import scala.annotation.tailrec
 import scala.collection.Map
@@ -118,7 +119,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist()
+      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist(StorageLevel.MEMORY_ONLY_SER)
     }
 
 
@@ -151,7 +152,7 @@ class ColumnTrackingKMeans(
           }
       }
       bcCenters.unpersist()
-      currentAssignments.setName(s"assignments round $round").persist()
+      currentAssignments.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY_SER)
     }
 
     /**
