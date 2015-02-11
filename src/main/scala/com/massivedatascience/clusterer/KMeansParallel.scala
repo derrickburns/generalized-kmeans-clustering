@@ -57,7 +57,7 @@ class KMeansParallel(
       val weightMap = data.flatMap { point =>
         val centers = bcCenters.value
         Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-      }.reduceByKeyLocally(_ + _)
+      }.reduceByKey(_ + _).collectAsMap()
 
       val centers = bcCenters.value
       val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
