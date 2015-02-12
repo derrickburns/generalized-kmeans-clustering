@@ -226,7 +226,7 @@ object KMeans extends Logging {
     implicit clusterer: MultiKMeansClusterer): KMeansInitializer = {
     initializerName match {
       case RANDOM => new KMeansRandom(k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0, clusterer)
+      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0, new TrackingKMeans(terminationCondition = { s: BasicStats => s.getRound > 3}))
       case _ => throw new RuntimeException(s"unknown initializer $initializerName")
     }
   }
