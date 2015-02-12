@@ -123,7 +123,7 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     points.zip(distances).par.map { case (p, d) =>
       val dist = ops.pointCost(centers, p)
       if(dist < d) dist else d
-    }
+    }.toArray
   }
 
   /**
