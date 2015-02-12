@@ -175,12 +175,12 @@ class ColumnTrackingKMeans(
 
       val currentCenters = previousCenters.clone()
       if (addOnly) {
-        val results = getStochasticCentroidChanges(points, currentAssignments)
+        val results = getCompleteCentroids(points, currentAssignments)
         results.foreach { case (index, location) =>
           currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
         }
       } else {
-        val changes = getExactCentroidChanges(points, currentAssignments, previousAssignments)
+        val changes = getCentroidChanges(points, currentAssignments, previousAssignments)
         changes.foreach { case (index, delta) =>
           val c = currentCenters(index)
           val oldPosition = pointOps.toPoint(c.center)
@@ -254,17 +254,16 @@ class ColumnTrackingKMeans(
     /**
      * Identify cluster changes.
      *
-     * Create an array of the changes per cluster.  Some clusters may not have changes.  They will
-     * not be represented in the change set.
+     * Create a map of the CHANGES per cluster.  Some clusters may not have changes.  They will
+     * not be represented in the change set.  The changes must be added to the previous cluster
+     * position.  This method does not do that.
      *
      * @param currentAssignments current assignments
      * @param previousAssignments previous assignments
 
      * @return changes to cluster position
-
-
-
-    def getExactCentroidChanges(
+     */
+    def getCentroidChanges(
       points: RDD[BregmanPoint],
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Map[Int, MutableWeightedVector] = {
@@ -286,69 +285,19 @@ class ColumnTrackingKMeans(
         if (curr.cluster != prev.cluster) curr.cluster else -1
       }
     }
-     */
 
-
-    def getStochasticCentroidChanges(
+    def getCompleteCentroids(
       points: RDD[BregmanPoint],
-      assignments: RDD[Assignment]): Map[Int, MutableWeightedVector] =
+      assignments: RDD[Assignment]): Map[Int, MutableWeightedVector] = {
+
+      require(points.getStorageLevel.useMemory)
+      require(assignments.getStorageLevel.useMemory)
 
       points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
         (p.cluster, o)
       }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collectAsMap()
-
-
-    def getExactCentroidChanges(
-      points: RDD[BregmanPoint],
-      currentAssignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
-
-      require(points.getStorageLevel.useMemory)
-      require(currentAssignments.getStorageLevel.useMemory)
-      require(previousAssignments.getStorageLevel.useMemory)
-
-      val changes = currentAssignments.zip(previousAssignments).map { case (curr, prev) =>
-        (curr.cluster, prev.cluster)
-      }.setName("changes").cache()
-
-      val results = points.zip(changes).mapPartitions { pts =>
-        val buffer = new ArrayBuffer[(Int, CentroidChange)]
-        for ((point, (add, sub)) <- pts) {
-          if (add != sub) {
-            if (add >= 0) buffer.append((add, Add(point)))
-            if (sub >= 0) buffer.append((sub, Sub(point)))
-          }
-        }
-        logInfo(s"buffer size ${buffer.size}")
-        buffer.iterator
-      }.aggregateByKey(pointOps.getCentroid)(
-          (x, y) => y match {
-            case Add(p) => x.add(p)
-            case Sub(p) => x.sub(p)
-          },
-          (x, y) => x.add(y)
-        ).collect()
-
-      changes.unpersist()
-      results
     }
 
-    /*
-
-      def getStochasticCentroidChanges(
-        points: RDD[BregmanPoint],
-        assignments: RDD[Assignment]): Array[(Int, MutableWeightedVector)] = {
-
-        require(points.getStorageLevel.useMemory)
-        require(assignments.getStorageLevel.useMemory)
-
-        points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
-          (p.cluster, o)
-        }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
-
-      }
-
-  */
 
     /**
      * Find the closest cluster from a given set of clusters
