@@ -90,7 +90,7 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     distances = updateDistances(points, distances, IndexedSeq(newCenter.get))
     var more = true
     while (centers.length < k && more) {
-      val selected = (0 until perRound).flatMap {_ =>
+      val selected = (0 until perRound).par.flatMap { _ =>
         pickWeighted(rand, points.zip(distances).map{ case (p,d) => p.weight * d})
       }
       val newCenters = selected.toArray.map(candidateCenters(_))
@@ -119,8 +119,8 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     points: Array[BregmanPoint],
     distances: Array[Double],
     centers: IndexedSeq[BregmanCenter]): Array[Double] = {
-    
-    points.zip(distances).map { case (p, d) =>
+
+    points.zip(distances).par.map { case (p, d) =>
       val dist = ops.pointCost(centers, p)
       if(dist < d) dist else d
     }
