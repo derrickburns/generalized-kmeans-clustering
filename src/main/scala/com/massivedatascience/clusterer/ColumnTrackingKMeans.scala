@@ -119,7 +119,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist(StorageLevel.MEMORY_ONLY_SER)
+      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist(StorageLevel.MEMORY_ONLY)
     }
 
 
@@ -152,7 +152,7 @@ class ColumnTrackingKMeans(
           }
       }
       bcCenters.unpersist()
-      currentAssignments.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY_SER)
+      currentAssignments.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY)
     }
 
     /**
