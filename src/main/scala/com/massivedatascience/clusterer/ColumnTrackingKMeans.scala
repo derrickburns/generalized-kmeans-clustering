@@ -32,8 +32,6 @@ object ColumnTrackingKMeans {
   private[clusterer] val noCluster = -1
   private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
-  private[clusterer] sealed trait CentroidChange
-
   private[clusterer] case class PointWithDistance(point: BregmanPoint,
     assignment: Assignment, dist: Double)
 
