@@ -34,10 +34,6 @@ object ColumnTrackingKMeans {
 
   private[clusterer] sealed trait CentroidChange
 
-  private[clusterer] case class Add(point: BregmanPoint) extends CentroidChange
-
-  private[clusterer] case class Sub(point: BregmanPoint) extends CentroidChange
-
   private[clusterer] case class PointWithDistance(point: BregmanPoint,
     assignment: Assignment, dist: Double)
 
