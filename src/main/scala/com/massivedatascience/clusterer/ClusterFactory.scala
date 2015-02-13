@@ -43,8 +43,6 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
   def inhomogeneous = asInhomogeneous
 
-  def isEmpty = weight == 0.0
-
   private var raw: Vector = empty
 
   var weight: Double = 0.0
@@ -62,7 +60,8 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
    */
   private def add(r: Vector, w: Double, direction: Double): this.type = {
     if (w > 0.0) {
-      if (weight == 0.0) {
+      if (raw == empty) {
+        assert(r != empty)
         raw = r.copy
         weight = w
       } else {

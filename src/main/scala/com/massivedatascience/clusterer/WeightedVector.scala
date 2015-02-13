@@ -34,6 +34,7 @@ trait WeightedVector extends Serializable {
   override def toString: String = weight + "," + homogeneous.toString
 
   def asImmutable = new ImmutableHomogeneousVector(homogeneous, weight).asInstanceOf[WeightedVector]
+
 }
 
 trait MutableWeightedVector extends WeightedVector {
@@ -42,15 +43,20 @@ trait MutableWeightedVector extends WeightedVector {
   def sub(p: WeightedVector): this.type
 
   def asImmutable: WeightedVector
+
 }
 
 class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
   override val inhomogeneous = raw
   override lazy val homogeneous = asHomogeneous
+
+  def copy = asImmutable
 }
 
 class ImmutableHomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
   override lazy val inhomogeneous: Vector = asInhomogeneous
   override val homogeneous: Vector = raw
+
+  def copy = asImmutable
 }
 
