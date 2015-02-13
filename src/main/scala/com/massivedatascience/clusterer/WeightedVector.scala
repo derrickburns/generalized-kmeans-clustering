@@ -27,13 +27,13 @@ trait WeightedVector extends Serializable {
 
   def homogeneous: Vector
 
-  def asInhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
+  def asInhomogeneous: Vector = clusterer.asInhomogeneous(homogeneous, weight)
 
-  def asHomogeneous = clusterer.asHomogeneous(inhomogeneous, weight)
+  def asHomogeneous: Vector = clusterer.asHomogeneous(inhomogeneous, weight)
 
   override def toString: String = weight + "," + homogeneous.toString
 
-  def asImmutable = new ImmutableHomogeneousVector(homogeneous, weight).asInstanceOf[WeightedVector]
+  def asImmutable: WeightedVector = new ImmutableHomogeneousVector(homogeneous, weight)
 
 }
 
@@ -44,21 +44,15 @@ trait MutableWeightedVector extends WeightedVector {
 
   def asImmutable: WeightedVector
 
-  def toArray = inhomogeneous.toArray
-
 }
 
 class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
   override val inhomogeneous = raw
   override lazy val homogeneous = asHomogeneous
-
-  def copy = asImmutable
 }
 
 class ImmutableHomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
   override lazy val inhomogeneous: Vector = asInhomogeneous
   override val homogeneous: Vector = raw
-
-  def copy = asImmutable
 }
 
