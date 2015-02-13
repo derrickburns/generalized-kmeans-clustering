@@ -310,9 +310,8 @@ object KMeans extends Logging {
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
     val subs = (0 until depth).foldLeft(List(dataSet)) {
-      case (data, e) => {
+      case (data, e) =>
         data.head.map(embedding.embed).setName(s"embedded data at depth $depth with $embedding") :: data
-      }
     }
     subs
   }
