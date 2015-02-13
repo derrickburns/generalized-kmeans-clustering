@@ -26,7 +26,7 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
     pointOps: BregmanPointOps,
     d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
-    val data = d.map {pt => pointOps.inhomogeneousToPoint(pt, 1.0)}
+    val data = d.map { pt => pointOps.vectorToPoint(pt)}
     data.setName("input to sample initializer")
     data.persist()
 

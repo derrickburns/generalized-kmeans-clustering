@@ -71,22 +71,13 @@ package object clusterer {
 
     def distance(p: P, c: C): Double
 
-    /**
-     * convert a vector in homogeneous coordinates into a point
-     * @param v input vector
-     * @param weight weight of vector
-     * @return  weighted vector
-     */
-    def homogeneousToPoint(v: Vector, weight: Double): P
-
 
     /**
      * convert a vector in inhomogeneous coordinates into a point
      * @param v input vector
-     * @param weight weight of input vector
      * @return weighted vector
      */
-    def inhomogeneousToPoint(v: Vector, weight: Double): P
+    def vectorToPoint(v: Vector): P
 
     /**
      * converted a weighted vector to a point

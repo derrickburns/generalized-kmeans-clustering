@@ -88,7 +88,7 @@ class KMeansParallel(
    * @return
    */
 
-    val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
+    val data = d.map(pointOps.vectorToPoint)
     data.setName("initial points")
     data.persist()
 

@@ -177,7 +177,7 @@ class ColumnTrackingKMeans(
       if (addOnly) {
         val results = getCompleteCentroids(points, currentAssignments, previousCenters.length)
         results.foreach { case (index, location) =>
-          val change = location.asImmutable
+          val change: WeightedVector = location.asImmutable
           logInfo(s"$index change is $change")
           currentCenters(index) = CenterWithHistory(pointOps.toCenter(change), index, round)
         }
