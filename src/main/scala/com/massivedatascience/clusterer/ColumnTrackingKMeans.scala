@@ -312,6 +312,7 @@ class ColumnTrackingKMeans(
         val indexBuffer = new mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
 
+        var i = 0
         while (y.hasNext && x.hasNext) {
           val point = x.next()
           val assignment = y.next()
@@ -323,8 +324,10 @@ class ColumnTrackingKMeans(
             }
             centroids(index).add(point)
           }
+          i = i + 1
         }
         assert(y.hasNext == x.hasNext)
+        logInfo(s"partition had $i points")
 
         val changedClusters = indexBuffer.result()
         logInfo(s"number of clusters changed = ${changedClusters.length}")

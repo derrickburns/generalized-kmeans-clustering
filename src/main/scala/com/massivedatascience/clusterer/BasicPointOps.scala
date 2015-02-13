@@ -110,7 +110,7 @@ object DenseSquaredEuclideanPointOps extends BasicPointOps()
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n
  */
-object SparseSquaredEuclideanPointOps extends BasicPointOps(clusterFactory = SparseClusterFactory)
+object SparseSquaredEuclideanPointOps extends BasicPointOps(clusterFactory = DenseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n by
@@ -145,7 +145,7 @@ object ItakuraSaitoPointOps extends BasicPointOps(new ItakuraSaitoDivergence(Gen
  * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
-object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, SparseClusterFactory) {
+object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, DenseClusterFactory) {
     /**
    * Smooth the center using a variant Laplacian smoothing.
    *

@@ -203,11 +203,3 @@ trait LateCentroid extends MutableWeightedVector with Serializable {
 object DenseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new EagerCentroid
 }
-
-object SparseClusterFactory extends ClusterFactory {
-  def getCentroid: MutableWeightedVector = new LateCentroid with FullCollector
-}
-
-object SparseTopKClusterFactory extends ClusterFactory {
-  def getCentroid: MutableWeightedVector = new LateCentroid with TopKCollector
-}
