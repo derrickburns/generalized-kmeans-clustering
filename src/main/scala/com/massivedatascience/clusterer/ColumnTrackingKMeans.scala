@@ -286,6 +286,19 @@ class ColumnTrackingKMeans(
       }
     }
 
+    /**
+     * Create the centers that changes.
+     *
+     * This implementation avoids object allocation per BregmanPoint.
+     *
+     * A previous implementation that uses aggregateByKey on (index, point) tuples was observed
+     * to cause to much garbage collection overhead.
+     *
+     * @param points points
+     * @param assignments assignments of points
+     * @param numCenters current number of non-empty clusters
+     * @return
+     */
     def getCompleteCentroids(
       points: RDD[BregmanPoint],
       assignments: RDD[Assignment],
@@ -297,16 +310,18 @@ class ColumnTrackingKMeans(
       points.zipPartitions(assignments) { (x: Iterator[BregmanPoint], y: Iterator[Assignment]) =>
         val centroids = new Array[MutableWeightedVector](numCenters)
         val indexBuffer = new mutable.ArrayBuilder.ofInt
+        indexBuffer.sizeHint(numCenters)
 
-        while (y.hasNext) {
+        while (y.hasNext && x.hasNext) {
           val point = x.next()
           val assignment = y.next()
           if (assignment.cluster != -1) {
-            if (centroids(assignment.cluster) == null) {
-              centroids(assignment.cluster) = pointOps.getCentroid
-              indexBuffer += assignment.cluster
+            val index = assignment.cluster
+            if (centroids(index) == null) {
+              centroids(index) = pointOps.getCentroid
+              indexBuffer += index
             }
-            centroids(assignment.cluster).add(point)
+            centroids(index).add(point)
           }
         }
         indexBuffer.result().map(index => (index, centroids(index))).iterator
