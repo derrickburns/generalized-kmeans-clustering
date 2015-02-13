@@ -286,9 +286,8 @@ class ColumnTrackingKMeans(
         var i = 0
         while (y.hasNext && x.hasNext) {
           val point = x.next()
-          val assignment = y.next()
-          if (assignment.cluster != -1) {
-            val index = assignment.cluster
+          val index = y.next().cluster
+          if (index != -1) {
             if (centroids(index) == null) {
               centroids(index) = pointOps.getCentroid
               indexBuffer += index
