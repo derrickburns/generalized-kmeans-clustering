@@ -324,8 +324,12 @@ class ColumnTrackingKMeans(
             centroids(index).add(point)
           }
         }
-        indexBuffer.result().map(index => (index, centroids(index))).iterator
-      }.reduceByKey((x, y) => x.add(y))
+        assert(y.hasNext == x.hasNext)
+
+        val changedClusters = indexBuffer.result()
+        logInfo(s"number of clusters changed = ${changedClusters.length}")
+        changedClusters.map(index => (index, centroids(index))).iterator
+      }.reduceByKey(_.add(_))
     }
 
 
