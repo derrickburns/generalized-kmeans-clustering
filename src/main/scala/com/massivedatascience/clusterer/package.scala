@@ -24,18 +24,6 @@ import org.apache.spark.rdd.RDD
 
 package object clusterer {
 
-
-  def preview[T](data: RDD[T], header: String = ""): RDD[T] = {
-    if (data.sparkContext.getConf.getBoolean("com.massivedatascience.clusterer.preview",
-      defaultValue=false)) {
-      println(header)
-      val head = data.take(10)
-      head.map(println)
-    }
-    data
-  }
-
-
   val Infinity = Double.MaxValue
   val Unknown = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())

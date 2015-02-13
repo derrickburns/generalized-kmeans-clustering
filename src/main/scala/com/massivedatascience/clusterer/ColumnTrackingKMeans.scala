@@ -180,7 +180,7 @@ class ColumnTrackingKMeans(
           currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
         }
       } else {
-        val changes = getCentroidChanges(points, currentAssignments, previousAssignments)
+        val changes = getCentroidChanges(points, currentAssignments, previousAssignments, previousCenters.length)
         changes.foreach { case (index, delta) =>
           val c = currentCenters(index)
           val oldPosition = pointOps.toPoint(c.center)
@@ -251,35 +251,6 @@ class ColumnTrackingKMeans(
       terminationCondition(stats)
     }
 
-    /**
-     * Identify cluster changes.
-     *
-     * Create a map of the CHANGES per cluster.  Some clusters may not have changes.  They will
-     * not be represented in the change set.  The changes must be added to the previous cluster
-     * position.  This method does not do that.
-     *
-     * @param currentAssignments current assignments
-     * @param previousAssignments previous assignments
-
-     * @return changes to cluster position
-     */
-    def getCentroidChanges(
-      points: RDD[BregmanPoint],
-      currentAssignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment]): Map[Int, MutableWeightedVector] = {
-
-      require(points.getStorageLevel.useMemory)
-      require(currentAssignments.getStorageLevel.useMemory)
-      require(previousAssignments.getStorageLevel.useMemory)
-
-      val additions = add(pointOps, points, changes(currentAssignments, previousAssignments))
-      val subtractions = subtract(pointOps, points, changes(previousAssignments, currentAssignments))
-      val map = collection.mutable.Map(additions.toSeq: _*)
-      for ((index, vector) <- subtractions)
-        map(index) = if (map.contains(index)) map(index).add(vector) else vector
-      map
-    }
-
     def changes(to: RDD[Assignment], from: RDD[Assignment]): RDD[Int] = {
       to.zip(from).map { case (curr, prev) =>
         if (curr.cluster != prev.cluster) curr.cluster else -1
@@ -332,6 +303,54 @@ class ColumnTrackingKMeans(
         val changedClusters = indexBuffer.result()
         logInfo(s"number of clusters changed = ${changedClusters.length}")
         changedClusters.map(index => (index, centroids(index))).iterator
+      }.reduceByKey(_.add(_))
+    }
+
+    def getCentroidChanges(
+      points: RDD[BregmanPoint],
+      assignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment],
+      numCenters: Int): RDD[(Int, MutableWeightedVector)] = {
+
+      require(points.getStorageLevel.useMemory)
+      require(assignments.getStorageLevel.useMemory)
+      require(previousAssignments.getStorageLevel.useMemory)
+
+      points.zipPartitions(assignments, previousAssignments) {
+        (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+
+          val centroids = new Array[MutableWeightedVector](numCenters)
+          val indexBuffer = new mutable.ArrayBuilder.ofInt
+          indexBuffer.sizeHint(numCenters)
+
+          @inline def initialize(index: Int) = {
+            if (centroids(index) == null) {
+              centroids(index) = pointOps.getCentroid
+              indexBuffer += index
+            }
+          }
+
+          while (z.hasNext && y.hasNext && x.hasNext) {
+            val point = x.next()
+            val assignment = y.next()
+            val previousAssignment = z.next()
+            if (previousAssignment.cluster != assignment.cluster) {
+              val previous = previousAssignment.cluster
+              if (previous != -1) {
+                initialize(previous)
+                centroids(previous).sub(point)
+              }
+              val current = assignment.cluster
+              if (current != -1) {
+                initialize(current)
+                centroids(current).add(point)
+              }
+            }
+          }
+          assert(y.hasNext == x.hasNext && z.hasNext == y.hasNext)
+          val changedClusters = indexBuffer.result()
+          logInfo(s"number of clusters changed = ${changedClusters.length}")
+          changedClusters.map(index => (index, centroids(index))).iterator
       }.reduceByKey(_.add(_))
     }
 
@@ -501,33 +520,6 @@ class ColumnTrackingKMeans(
     best
   }
 
-  def add(
-    pointOps: BregmanPointOps,
-    points: RDD[BregmanPoint],
-    subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
-
-    require(points.getStorageLevel.useMemory)
-
-    subs.zip(points).filter(_._1 != noCluster)
-      .aggregateByKey(pointOps.getCentroid)(
-        (x, y) => x.add(y),
-        (x, y) => x.add(y)
-      ).collectAsMap()
-  }
-
-  def subtract(
-    pointOps: BregmanPointOps,
-    points: RDD[BregmanPoint],
-    subs: RDD[Int]): Map[Int, MutableWeightedVector] = {
-
-    require(points.getStorageLevel.useMemory)
-
-    subs.zip(points).filter(_._1 != noCluster)
-      .aggregateByKey(pointOps.getCentroid)(
-        (x, y) => x.sub(y),
-        (x, y) => x.sub(y)
-      ).collectAsMap()
-  }
 
   def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] =
     points.map(x => unassigned).persist()
