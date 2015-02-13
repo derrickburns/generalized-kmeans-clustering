@@ -24,7 +24,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
 import scala.annotation.tailrec
-import scala.collection.Map
+import scala.collection.{mutable, Map}
 import scala.collection.generic.FilterMonadic
 import scala.collection.mutable.ArrayBuffer
 
@@ -175,7 +175,7 @@ class ColumnTrackingKMeans(
 
       val currentCenters = previousCenters.clone()
       if (addOnly) {
-        val results = getCompleteCentroids(points, currentAssignments)
+        val results = getCompleteCentroids(points, currentAssignments, previousCenters.length)
         results.foreach { case (index, location) =>
           currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
         }
@@ -288,14 +288,29 @@ class ColumnTrackingKMeans(
 
     def getCompleteCentroids(
       points: RDD[BregmanPoint],
-      assignments: RDD[Assignment]): Map[Int, MutableWeightedVector] = {
+      assignments: RDD[Assignment],
+      numCenters: Int): RDD[(Int, MutableWeightedVector)] = {
 
       require(points.getStorageLevel.useMemory)
       require(assignments.getStorageLevel.useMemory)
 
-      points.zip(assignments).filter(_._2.isAssigned).map { case (o, p) =>
-        (p.cluster, o)
-      }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collectAsMap()
+      points.zipPartitions(assignments) { (x: Iterator[BregmanPoint], y: Iterator[Assignment]) =>
+        val centroids = new Array[MutableWeightedVector](numCenters)
+        val indexBuffer = new mutable.ArrayBuilder.ofInt
+
+        while (y.hasNext) {
+          val point = x.next()
+          val assignment = y.next()
+          if (assignment.cluster != -1) {
+            if (centroids(assignment.cluster) == null) {
+              centroids(assignment.cluster) = pointOps.getCentroid
+              indexBuffer += assignment.cluster
+            }
+            centroids(assignment.cluster).add(point)
+          }
+        }
+        indexBuffer.result().map(index => (index, centroids(index))).iterator
+      }.reduceByKey((x, y) => x.add(y))
     }
 
 
