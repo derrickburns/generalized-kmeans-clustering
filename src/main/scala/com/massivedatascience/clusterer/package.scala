@@ -38,7 +38,7 @@ package object clusterer {
 
   val Infinity = Double.MaxValue
   val Unknown = -1.0
-  val empty: Vector = new SparseVector(0, Array[Int](), Array[Double]())
+  val empty: Vector = new DenseVector(Array[Double]())
 
   def asInhomogeneous(homogeneous: Vector, weight: Double) = {
     val x = homogeneous.copy
