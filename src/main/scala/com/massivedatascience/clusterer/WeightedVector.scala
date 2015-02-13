@@ -44,6 +44,8 @@ trait MutableWeightedVector extends WeightedVector {
 
   def asImmutable: WeightedVector
 
+  def toArray = inhomogeneous.toArray
+
 }
 
 class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {

@@ -52,7 +52,7 @@ object BLAS extends Serializable {
           case sx: SparseVector =>
             axpy(a, sx, dy)
           case dx: DenseVector =>
-            axpy(a, dx, dy)
+            denseAxpy(a, dx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"axpy doesn't support x type ${x.getClass}.")
@@ -315,7 +315,7 @@ object BLAS extends Serializable {
   /**
    * y += a * x
    */
-  private def axpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
+  def denseAxpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
     val n = x.size
     f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
     y
