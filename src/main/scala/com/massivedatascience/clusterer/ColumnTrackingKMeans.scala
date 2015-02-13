@@ -323,28 +323,21 @@ class ColumnTrackingKMeans(
           val indexBuffer = new mutable.ArrayBuilder.ofInt
           indexBuffer.sizeHint(numCenters)
 
-          @inline def initialize(index: Int) = {
+          @inline def centroidAt(index: Int): MutableWeightedVector = {
             if (centroids(index) == null) {
               centroids(index) = pointOps.getCentroid
               indexBuffer += index
             }
+            centroids(index)
           }
 
           while (z.hasNext && y.hasNext && x.hasNext) {
             val point = x.next()
-            val assignment = y.next()
-            val previousAssignment = z.next()
-            if (previousAssignment.cluster != assignment.cluster) {
-              val previous = previousAssignment.cluster
-              if (previous != -1) {
-                initialize(previous)
-                centroids(previous).sub(point)
-              }
-              val current = assignment.cluster
-              if (current != -1) {
-                initialize(current)
-                centroids(current).add(point)
-              }
+            val current = y.next().cluster
+            val previous = z.next().cluster
+            if (previous != current) {
+              if (previous != -1) centroidAt(previous).sub(point)
+              if (current != -1) centroidAt(current).add(point)
             }
           }
           assert(y.hasNext == x.hasNext && z.hasNext == y.hasNext)
