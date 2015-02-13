@@ -179,7 +179,7 @@ class ColumnTrackingKMeans(
         results.foreach { case (index, location) =>
           val change = location.asImmutable
           logInfo(s"$index change is $change")
-          currentCenters(index) = CenterWithHistory(pointOps.toCenter(location.asImmutable), index, round)
+          currentCenters(index) = CenterWithHistory(pointOps.toCenter(change), index, round)
         }
       } else {
         val changes = getCentroidChanges(points, currentAssignments, previousAssignments, previousCenters.length)
