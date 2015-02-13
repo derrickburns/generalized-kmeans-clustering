@@ -169,11 +169,12 @@ class ColumnTrackingKMeans(
 
       val currentCenters = previousCenters.clone()
       if (addOnly) {
-        val results = getCompleteCentroids(points, currentAssignments, previousCenters.length)
+        val results: Array[(Int, MutableWeightedVector)] = getCompleteCentroids(points, currentAssignments, previousCenters.length)
         results.foreach { case (index, location) =>
           val change: WeightedVector = location.asImmutable
-          logInfo(s"$index change is $change")
-          currentCenters(index) = CenterWithHistory(pointOps.toCenter(change), index, round)
+          val newCenter = CenterWithHistory(pointOps.toCenter(change), index, round)
+          logInfo(s"new center at $index  is $newCenter")
+          currentCenters(index) = newCenter
         }
       } else {
         val changes = getCentroidChanges(points, currentAssignments, previousAssignments, previousCenters.length)
@@ -269,7 +270,7 @@ class ColumnTrackingKMeans(
     def getCompleteCentroids(
       points: RDD[BregmanPoint],
       assignments: RDD[Assignment],
-      numCenters: Int): RDD[(Int, MutableWeightedVector)] = {
+      numCenters: Int): Array[(Int, MutableWeightedVector)] = {
 
       require(points.getStorageLevel.useMemory)
       require(assignments.getStorageLevel.useMemory)
@@ -298,14 +299,14 @@ class ColumnTrackingKMeans(
         val changedClusters = indexBuffer.result()
         logInfo(s"number of clusters changed = ${changedClusters.length}")
         changedClusters.map(index => (index, centroids(index))).iterator
-      }.reduceByKey(_.add(_))
+      }.reduceByKey(_.add(_)).collect()
     }
 
     def getCentroidChanges(
       points: RDD[BregmanPoint],
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
-      numCenters: Int): RDD[(Int, MutableWeightedVector)] = {
+      numCenters: Int): Array[(Int, MutableWeightedVector)] = {
 
       require(points.getStorageLevel.useMemory)
       require(assignments.getStorageLevel.useMemory)
@@ -339,7 +340,7 @@ class ColumnTrackingKMeans(
           val changedClusters = indexBuffer.result()
           logInfo(s"number of clusters changed = ${changedClusters.length}")
           changedClusters.map(index => (index, centroids(index))).iterator
-      }.reduceByKey(_.add(_))
+      }.reduceByKey(_.add(_)).collect()
     }
 
 

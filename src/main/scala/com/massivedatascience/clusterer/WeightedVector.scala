@@ -33,7 +33,7 @@ trait WeightedVector extends Serializable {
 
   override def toString: String = weight + "," + homogeneous.toString
 
-  def asImmutable: WeightedVector = new ImmutableHomogeneousVector(homogeneous, weight)
+  def asImmutable: WeightedVector = new ImmutableHomogeneousVector(homogeneous.copy, weight)
 
 }
 

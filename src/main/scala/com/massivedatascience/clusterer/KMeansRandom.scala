@@ -34,6 +34,7 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
     }
 
     val data = d.map(ops.vectorToPoint)
+    data.persist()
     val filtered = data.filter(_.weight > ops.weightThreshold).setName("random initial")
     filtered.persist()
 
