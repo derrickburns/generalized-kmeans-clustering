@@ -475,9 +475,9 @@ class ColumnTrackingKMeans(
       for (initialCenters <- initialCenterSets) yield {
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
         val emptyAssignments = nullAssignments(points)
-        val assignments = lloyds(1, centers, initialAssignments(points, centers), emptyAssignments)
+        val (assignments, newCenters) = lloyds(1, centers, initialAssignments(points, centers), emptyAssignments)
         val d = distortion(assignments)
-        val finalCenters = centers.map(_.center)
+        val finalCenters = newCenters.map(_.center)
         (d, finalCenters, assignments)
       }
     }
@@ -487,15 +487,15 @@ class ColumnTrackingKMeans(
       round: Int,
       centers: Array[CenterWithHistory],
       assignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment]): RDD[Assignment] = {
+      previousAssignments: RDD[Assignment]): (RDD[Assignment], Array[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
 
-      val newCenters = updateCenters(round, assignments, previousAssignments, centers)
+      val newCenters: Array[CenterWithHistory] = updateCenters(round, assignments, previousAssignments, centers)
       previousAssignments.unpersist()
       val newAssignments = updatedAssignments(round, assignments, newCenters)
       val terminate = shouldTerminate(round, newCenters, centers, newAssignments, assignments)
-      if (terminate) newAssignments else lloyds(round + 1, newCenters, newAssignments, assignments)
+      if (terminate) (newAssignments, newCenters) else lloyds(round + 1, newCenters, newAssignments, assignments)
     }
 
     require(updateRate <= 1.0 && updateRate >= 0.0)
