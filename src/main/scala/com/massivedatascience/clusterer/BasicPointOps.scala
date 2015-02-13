@@ -182,8 +182,9 @@ object DiscreteDenseKLPointOps extends BasicPointOps(NaturalKLDivergence)
 object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence) {
 
   override def vectorToPoint(inh: Vector): BregmanPoint = {
-    val embedded = embed(inh)
-    new BregmanPoint(embedded, embedded.toArray.sum, divergence.F(embedded))
+    val embedded: Vector = embed(inh)
+    val weight = embedded.toArray.sum
+    new BregmanPoint(asInhomogeneous(embedded, weight), embedded.toArray.sum, divergence.F(embedded, weight))
   }
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
