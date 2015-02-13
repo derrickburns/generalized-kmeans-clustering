@@ -61,7 +61,6 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 5)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = RANDOM)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
