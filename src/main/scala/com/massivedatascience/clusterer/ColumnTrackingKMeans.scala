@@ -173,7 +173,6 @@ class ColumnTrackingKMeans(
         results.foreach { case (index, location) =>
           val change: WeightedVector = location.asImmutable
           val newCenter = CenterWithHistory(pointOps.toCenter(change), index, round)
-          logInfo(s"new center at $index  is $newCenter")
           currentCenters(index) = newCenter
         }
       } else {
