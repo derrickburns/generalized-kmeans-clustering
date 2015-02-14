@@ -223,22 +223,17 @@ class ColumnTrackingKMeans(
       stats.unassignedPoints.setValue(0)
       stats.improvement.setValue(0)
       stats.newlyAssignedPoints.setValue(0)
-      currentAssignments.zipPartitions(previousAssignments) { case (c, p) =>
-        while (c.hasNext && p.hasNext) {
-          val current = c.next()
-          val previous = p.next()
-          if (current.isAssigned) {
-            if (previous.isAssigned) {
-              stats.improvement.add(previous.distance - current.distance)
-              if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
-            } else {
-              stats.newlyAssignedPoints.add(1)
-            }
+      currentAssignments.zip(previousAssignments).foreach { case (current, previous) =>
+        if (current.isAssigned) {
+          if (previous.isAssigned) {
+            stats.improvement.add(previous.distance - current.distance)
+            if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
           } else {
-            stats.unassignedPoints.add(1)
+            stats.newlyAssignedPoints.add(1)
           }
+        } else {
+          stats.unassignedPoints.add(1)
         }
-        null
       }
 
       val clusterCounts = countByCluster(currentAssignments)
