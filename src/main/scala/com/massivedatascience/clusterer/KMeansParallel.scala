@@ -118,10 +118,12 @@ class KMeansParallel(
     // and new centers are computed in each iteration.
     var step = 0
     while (step < initializationSteps) {
+      logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
 
       val bcNewCenters = data.context.broadcast(newCenters)
       val preCosts = costs
+      logInfo(s"constructing costs")
       costs = data.zip(preCosts).map { case (point, cost) =>
         Vectors.dense(
           Array.tabulate(runs) { r =>
@@ -130,6 +132,7 @@ class KMeansParallel(
       }
       costs.cache()
       costs.setName(s"costs at step $step,")
+      logInfo(s"summing costs")
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
@@ -144,6 +147,7 @@ class KMeansParallel(
       preCosts.unpersist(blocking = false)
       assert(data.getStorageLevel.useMemory)
       assert(costs.getStorageLevel.useMemory)
+      logInfo(s"collecting chosen")
       val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
         val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
         val range = 0 until runs
@@ -156,6 +160,7 @@ class KMeansParallel(
           selectedRuns.map((_, center))
         }
       }.collect()
+      logInfo(s"merging centers")
       mergeNewCenters()
       chosen.foreach { case (r, center) =>
         newCenters(r) += center
@@ -172,9 +177,11 @@ class KMeansParallel(
 
     costs.unpersist(blocking = false)
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
+    logInfo("creating final centers")
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
     assert(data.getStorageLevel.useMemory)
+    logInfo("returning results")
     (data, result)
   }
 }
