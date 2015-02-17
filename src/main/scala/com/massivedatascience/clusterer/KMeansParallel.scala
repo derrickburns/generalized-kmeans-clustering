@@ -32,12 +32,18 @@ import com.massivedatascience.clusterer.util.BLAS.axpy
 
 
 class KMeansParallel(
-  k: Int,
-  runs: Int,
+  numClusters: Int,
+  r: Int,
   initializationSteps: Int,
   seedx: Int,
   clusterer: MultiKMeansClusterer)
   extends KMeansInitializer with Logging {
+
+  class NotSerializable {
+
+  }
+
+  val x = new NotSerializable
 
   def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
@@ -53,6 +59,10 @@ class KMeansParallel(
     def finalCenters(
       data: RDD[BregmanPoint],
       bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
+
+      val runs = r
+
+
       // for each (run, cluster) compute the sum of the weights of the points in the cluster
       val weightMap = data.flatMap { point =>
         val centers = bcCenters.value
@@ -63,6 +73,7 @@ class KMeansParallel(
       val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
       val sc = data.sparkContext
 
+      val k = numClusters
       Array.tabulate(runs) { r =>
         val myCenters = centers(r)
         logInfo(s"run $r has ${myCenters.length} centers")
@@ -91,6 +102,9 @@ class KMeansParallel(
     val data = d.map(pointOps.vectorToPoint)
     data.setName("initial points")
     data.persist()
+
+    val runs = r
+
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
@@ -148,6 +162,8 @@ class KMeansParallel(
       assert(data.getStorageLevel.useMemory)
       assert(costs.getStorageLevel.useMemory)
       logInfo(s"collecting chosen")
+
+      val k = numClusters
       val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
         val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
         val range = 0 until runs
