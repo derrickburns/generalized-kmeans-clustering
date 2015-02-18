@@ -94,7 +94,7 @@ class KMeansParallel(
 
     val data = d.map(pointOps.vectorToPoint)
     data.setName("initial points")
-    data.persist(StorageLevel.OFF_HEAP)
+    data.persist()
     data.count()
 
     val runs = r
@@ -102,7 +102,7 @@ class KMeansParallel(
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
     var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
-    costs.persist(StorageLevel.OFF_HEAP)
+    costs.persist()
     costs.setName("pre-costs")
     costs.count()
 
