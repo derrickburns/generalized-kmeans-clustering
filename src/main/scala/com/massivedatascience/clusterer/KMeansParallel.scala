@@ -39,12 +39,6 @@ class KMeansParallel(
   clusterer: MultiKMeansClusterer)
   extends KMeansInitializer with Logging {
 
-  class NotSerializable {
-
-  }
-
-  val x = new NotSerializable
-
   def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
     /**
@@ -61,7 +55,6 @@ class KMeansParallel(
       bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
 
       val runs = r
-
 
       // for each (run, cluster) compute the sum of the weights of the points in the cluster
       val weightMap = data.flatMap { point =>
@@ -105,13 +98,11 @@ class KMeansParallel(
 
     val runs = r
 
-
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
     var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
     costs.persist(StorageLevel.OFF_HEAP)
     costs.setName("pre-costs")
-
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
@@ -179,8 +170,8 @@ class KMeansParallel(
       }.collect()
       logInfo(s"merging centers")
       mergeNewCenters()
-      chosen.foreach { case (r, center) =>
-        newCenters(r) += center
+      chosen.foreach { case (index, center) =>
+        newCenters(index) += center
       }
       step += 1
     }
