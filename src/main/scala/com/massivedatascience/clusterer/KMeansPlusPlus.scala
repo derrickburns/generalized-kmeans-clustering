@@ -51,16 +51,6 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     clustering._2
   }
 
-  def showMemory() {
-    val mb: Int = 1024 * 1024
-    val runtime: Runtime = Runtime.getRuntime
-    logInfo("##### Heap utilization statistics [MB] #####")
-    logInfo("Used Memory:" + (runtime.totalMemory - runtime.freeMemory) / mb)
-    logInfo("Free Memory:" + runtime.freeMemory / mb)
-    logInfo("Total Memory:" + runtime.totalMemory / mb)
-    logInfo("Max Memory:" + runtime.maxMemory / mb)
-  }
-
   /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
    * selection equal to the product of the given weights and distance to the closest cluster center
@@ -94,15 +84,12 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     val rand = new XORShiftRandom(seed)
     val newCenter = pickWeighted(rand, weights).map(candidateCenters(_))
     centers += newCenter.get
-    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
-
-    showMemory()
+    logInfo(s"starting kMeansPlusPlus initializatieon on ${candidateCenters.length} points")
 
     var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
     distances = updateDistances(points, distances, IndexedSeq(newCenter.get))
     var more = true
     while (centers.length < k && more) {
-      showMemory()
       val selected = (0 until perRound).par.flatMap { _ =>
         pickWeighted(rand, points.zip(distances).map{ case (p,d) => p.weight * d})
       }
