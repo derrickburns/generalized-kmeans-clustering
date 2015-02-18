@@ -44,7 +44,9 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     // No matter how many runs or iterations we use, we should get one cluster,
     // centered at the mean of the points
 
-    var model = KMeans.train(data, k = 1, maxIterations = 1)
+    var
+
+    model = KMeans.train(data, k = 1, maxIterations = 1)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 2)

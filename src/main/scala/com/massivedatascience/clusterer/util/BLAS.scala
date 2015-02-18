@@ -52,7 +52,7 @@ object BLAS extends Serializable {
           case sx: SparseVector =>
             axpy(a, sx, dy)
           case dx: DenseVector =>
-            axpy(a, dx, dy)
+            denseAxpy(a, dx, dy)
           case _ =>
             throw new UnsupportedOperationException(
               s"axpy doesn't support x type ${x.getClass}.")
@@ -315,7 +315,7 @@ object BLAS extends Serializable {
   /**
    * y += a * x
    */
-  private def axpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
+  def denseAxpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
     val n = x.size
     f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
     y
@@ -346,27 +346,40 @@ object BLAS extends Serializable {
    * dot(x, y)
    */
   def dot(x: Vector, y: Vector): Double = {
-    if( x.size != y.size ) {
+    if (x.size != y.size) {
       require(x.size == y.size, s"${x.size} vs ${y.size}")
     }
-    (x, y) match {
-      case (dx: DenseVector, dy: DenseVector) =>
-        dot(dx, dy)
-      case (sx: SparseVector, dy: DenseVector) =>
-        dot(sx, dy)
-      case (dx: DenseVector, sy: SparseVector) =>
-        dot(sy, dx)
-      case (sx: SparseVector, sy: SparseVector) =>
-        dot(sx, sy)
-      case _ =>
-        throw new IllegalArgumentException(s"dot doesn't support (${x.getClass}, ${y.getClass}).")
+
+    y match {
+      case dy: DenseVector =>
+        x match {
+          case sx: SparseVector =>
+            dot(sx, dy)
+          case dx: DenseVector =>
+            denseDot(dx, dy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"sum doesn't support x type ${x.getClass}.")
+        }
+      case sy: SparseVector =>
+        x match {
+          case sx: SparseVector =>
+            dot(sx, sy)
+          case dx: DenseVector =>
+            dot(new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"sum doesn't support x type ${x.getClass}.")
+
+        }
     }
   }
 
   /**
    * dot(x, y)
    */
-  private def dot(x: DenseVector, y: DenseVector): Double = {
+  @inline
+  private def denseDot(x: DenseVector, y: DenseVector): Double = {
     val n = x.size
     f2jBLAS.ddot(n, x.values, 1, y.values, 1)
   }
@@ -374,6 +387,7 @@ object BLAS extends Serializable {
   /**
    * dot(x, y)
    */
+
   private def dot(x: SparseVector, y: DenseVector): Double = {
     val nnz = x.indices.size
     var sum = 0.0

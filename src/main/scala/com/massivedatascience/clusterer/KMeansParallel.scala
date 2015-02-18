@@ -32,8 +32,8 @@ import com.massivedatascience.clusterer.util.BLAS.axpy
 
 
 class KMeansParallel(
-  k: Int,
-  runs: Int,
+  numClusters: Int,
+  r: Int,
   initializationSteps: Int,
   seedx: Int,
   clusterer: MultiKMeansClusterer)
@@ -53,26 +53,30 @@ class KMeansParallel(
     def finalCenters(
       data: RDD[BregmanPoint],
       bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
+
+      val runs = r
+
       // for each (run, cluster) compute the sum of the weights of the points in the cluster
       val weightMap = data.flatMap { point =>
         val centers = bcCenters.value
         Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-      }.reduceByKeyLocally(_ + _)
+      }.reduceByKey(_ + _).collectAsMap()
 
       val centers = bcCenters.value
       val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
       val sc = data.sparkContext
 
+      val k = numClusters
       Array.tabulate(runs) { r =>
         val myCenters = centers(r)
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (k > myCenters.length) myCenters.length else k
         val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
-        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint))
-        val clustering = clusterer.cluster(pointOps, parallelCenters, Array(initial))
-        clustering._3.map(_.unpersist(blocking = false))
-        clustering._2
+        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint)).cache()
+        val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
+        assignments.map(_.unpersist(blocking = false))
+        clusters
       }
     }
 
@@ -88,15 +92,19 @@ class KMeansParallel(
    * @return
    */
 
-    val data = d.map{p=>pointOps.inhomogeneousToPoint(p,1.0)}
+    val data = d.map(pointOps.vectorToPoint)
     data.setName("initial points")
-    data.cache()
+    data.persist()
+    data.count()
+
+    val runs = r
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
     var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
-    costs.cache()
+    costs.persist()
     costs.setName("pre-costs")
+    costs.count()
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
@@ -118,8 +126,12 @@ class KMeansParallel(
     // and new centers are computed in each iteration.
     var step = 0
     while (step < initializationSteps) {
+      logInfo(s"starting step $step")
+      assert(data.getStorageLevel.useMemory)
+
       val bcNewCenters = data.context.broadcast(newCenters)
       val preCosts = costs
+      logInfo(s"constructing costs")
       costs = data.zip(preCosts).map { case (point, cost) =>
         Vectors.dense(
           Array.tabulate(runs) { r =>
@@ -127,7 +139,8 @@ class KMeansParallel(
           })
       }
       costs.cache()
-      costs.setName(s"costs at step $step")
+      costs.setName(s"costs at step $step,")
+      logInfo(s"summing costs")
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
@@ -140,6 +153,11 @@ class KMeansParallel(
           }
         )
       preCosts.unpersist(blocking = false)
+      assert(data.getStorageLevel.useMemory)
+      assert(costs.getStorageLevel.useMemory)
+      logInfo(s"collecting chosen")
+
+      val k = numClusters
       val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
         val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
         val range = 0 until runs
@@ -152,9 +170,10 @@ class KMeansParallel(
           selectedRuns.map((_, center))
         }
       }.collect()
+      logInfo(s"merging centers")
       mergeNewCenters()
-      chosen.foreach { case (r, center) =>
-        newCenters(r) += center
+      chosen.foreach { case (index, center) =>
+        newCenters(index) += center
       }
       step += 1
     }
@@ -168,8 +187,11 @@ class KMeansParallel(
 
     costs.unpersist(blocking = false)
     val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
+    logInfo("creating final centers")
     val result = finalCenters(data, bcCenters, seed)
     bcCenters.unpersist()
+    assert(data.getStorageLevel.useMemory)
+    logInfo("returning results")
     (data, result)
   }
 }

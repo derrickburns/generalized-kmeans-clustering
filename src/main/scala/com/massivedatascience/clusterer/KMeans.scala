@@ -20,6 +20,7 @@ package com.massivedatascience.clusterer
 import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 
 object KMeans extends Logging {
@@ -32,6 +33,7 @@ object KMeans extends Logging {
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
+  val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
   val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
   val EUCLIDEAN = "DENSE_EUCLIDEAN"
   val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
@@ -172,7 +174,8 @@ object KMeans extends Logging {
 
     val samples = subsample(data, depth, embedding)
     val ops = Array.fill(depth + 1)(distanceFunc)
-    iterativelyTrain(ops, samples, initializer)
+    val results = iterativelyTrain(ops, samples, initializer)
+    results
   }
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
@@ -180,6 +183,7 @@ object KMeans extends Logging {
       case EUCLIDEAN => DenseSquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
+      case SIMPLEX_SMOOTHED_KL => DiscreteDenseSimplexSmoothedKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
@@ -206,13 +210,13 @@ object KMeans extends Logging {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats =>
         s.getRound > maxIterations ||
-        s.getNonEmptyClusters == 0 ||
-        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+          s.getNonEmptyClusters == 0 ||
+          s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
       case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats =>
         s.getRound > maxIterations ||
-        s.getNonEmptyClusters == 0 ||
-        s.getMovement / s.getNonEmptyClusters < 1.0E-5
+          s.getNonEmptyClusters == 0 ||
+          s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
@@ -232,11 +236,17 @@ object KMeans extends Logging {
 
     val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
     bregmanPoints.setName("Bregman points")
+    require(bregmanPoints.getStorageLevel.useMemory)
+    logInfo("completed initialization of cluster centers")
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
+    logInfo("completed clustering")
     val assignments = assignmentOpt.getOrElse {
-      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments")
+      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments").cache()
     }
+    logInfo("completed assignments")
+
+    bregmanPoints.unpersist()
     (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
   }
 
@@ -249,7 +259,8 @@ object KMeans extends Logging {
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     val samples = subsample(raw, depth, embedding)
-    iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
+    val results = iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
+    results
   }
 
   def reSampleTrain(
@@ -262,7 +273,8 @@ object KMeans extends Logging {
     require(ops.length == embeddings.length)
 
     val samples = resample(raw, embeddings)
-    iterativelyTrain(ops, samples, initializer)
+    val results = iterativelyTrain(ops, samples, initializer)
+    results
   }
 
   private def iterativelyTrain(
@@ -274,17 +286,19 @@ object KMeans extends Logging {
     require(dataSets.nonEmpty)
     dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) {
       case ((_, KMeansResults(_, assignments)), (data, op)) =>
-      data.cache()
+        data.cache()
         val result = simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))
-      data.unpersist(blocking = false)
+        data.unpersist(blocking = false)
         assignments.unpersist(blocking = false)
-      result
+        result
     }
   }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
    * the same embedding.
+   *
+   * All data that is embedded is cached.
    *
    * @param dataSet full resolution data
    * @param depth  number of levels of sub-sampling, 0 means no sub-sampling
@@ -294,10 +308,13 @@ object KMeans extends Logging {
   private def subsample(
     dataSet: RDD[Vector],
     depth: Int = 0,
-    embedding: Embedding = HaarEmbedding): List[RDD[Vector]] =
-    (0 until depth).foldLeft(List(dataSet)) {
-      case (data, e) => data.head.map(embedding.embed) :: data
+    embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
+    val subs = (0 until depth).foldLeft(List(dataSet)) {
+      case (data, e) =>
+        data.head.map(embedding.embed).setName(s"embedded data at depth $depth with $embedding") :: data
     }
+    subs
+  }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension
@@ -309,6 +326,8 @@ object KMeans extends Logging {
 
   private def resample(
     dataSet: RDD[Vector],
-    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] =
-    embeddings.map(x => dataSet.map(x.embed))
+    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] = {
+    embeddings.map(x => dataSet.map(x.embed).setName(s"embedded data with $x"))
+  }
+
 }

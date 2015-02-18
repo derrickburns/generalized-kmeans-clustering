@@ -39,15 +39,15 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
 
   /** Returns the cluster index that a given point belongs to. */
   def predict(point: Vector): Int =
-    pointOps.findClosestCluster(centers, pointOps.inhomogeneousToPoint(point, 1.0))
+    pointOps.findClosestCluster(centers, pointOps.vectorToPoint(point))
 
 
   def predictClusterAndDistance(point: Vector): (Int, Double) =
-    pointOps.findClosest(centers, pointOps.inhomogeneousToPoint(point, 1.0))
+    pointOps.findClosest(centers, pointOps.vectorToPoint(point))
 
   /** Maps given points to their cluster indices. */
   def predict(points: RDD[Vector]): RDD[Int] =
-    points.map(p => pointOps.findClosestCluster(centers, pointOps.inhomogeneousToPoint(p, 1.0)))
+    points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(p)))
 
 
   /** Maps given points to their cluster indices. */
@@ -59,6 +59,6 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
    * model on the given data.
    */
   def computeCost(data: RDD[Vector]): Double =
-    data.map(p => pointOps.findClosest(centers, pointOps.inhomogeneousToPoint(p, 1.0))._2).sum()
+    data.map(p => pointOps.findClosest(centers, pointOps.vectorToPoint(p))._2).sum()
 
 }

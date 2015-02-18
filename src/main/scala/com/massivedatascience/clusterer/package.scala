@@ -24,21 +24,9 @@ import org.apache.spark.rdd.RDD
 
 package object clusterer {
 
-
-  def preview[T](data: RDD[T], header: String = ""): RDD[T] = {
-    if (data.sparkContext.getConf.getBoolean("com.massivedatascience.clusterer.preview",
-      defaultValue=false)) {
-      println(header)
-      val head = data.take(10)
-      head.map(println)
-    }
-    data
-  }
-
-
   val Infinity = Double.MaxValue
   val Unknown = -1.0
-  val empty: Vector = new SparseVector(0, Array[Int](), Array[Double]())
+  val empty: DenseVector = new DenseVector(Array[Double]())
 
   def asInhomogeneous(homogeneous: Vector, weight: Double) = {
     val x = homogeneous.copy
@@ -83,22 +71,13 @@ package object clusterer {
 
     def distance(p: P, c: C): Double
 
-    /**
-     * convert a vector in homogeneous coordinates into a point
-     * @param v input vector
-     * @param weight weight of vector
-     * @return  weighted vector
-     */
-    def homogeneousToPoint(v: Vector, weight: Double): P
-
 
     /**
      * convert a vector in inhomogeneous coordinates into a point
      * @param v input vector
-     * @param weight weight of input vector
      * @return weighted vector
      */
-    def inhomogeneousToPoint(v: Vector, weight: Double): P
+    def vectorToPoint(v: Vector): P
 
     /**
      * converted a weighted vector to a point
@@ -186,8 +165,15 @@ package object clusterer {
    * @param weight weight of point
    * @param f f(point)
    */
-  class BregmanPoint(embedding: Vector, weight: Double, val f: Double)
-    extends ImmutableInhomogeneousVector(embedding, weight)
+  class BregmanPoint(
+    embedding: Vector,
+    val weight: Double,
+    val f: Double,
+    isHomogeneous: Boolean = false) extends WeightedVector {
+
+    override lazy val inhomogeneous = if (isHomogeneous) asInhomogeneous else embedding
+    override lazy val homogeneous = if (!isHomogeneous) asHomogeneous else embedding
+  }
 
   /**
    * A cluster center with an additional Double and an additional vector containing the gradient
@@ -198,8 +184,16 @@ package object clusterer {
    * @param dotGradMinusF  center dot gradient(center) - f(center)
    * @param gradient gradient of center
    */
-  class BregmanCenter(h: Vector, weight: Double, val dotGradMinusF: Double, val gradient: Vector)
-    extends ImmutableHomogeneousVector(h, weight)
+  class BregmanCenter(
+    h: Vector,
+    val weight: Double,
+    val dotGradMinusF: Double,
+    val gradient: Vector,
+    isHomogeneous: Boolean = true) extends WeightedVector {
+
+    override lazy val inhomogeneous = if (isHomogeneous) asInhomogeneous else h
+    override lazy val homogeneous = if (!isHomogeneous) asHomogeneous else h
+  }
 
   trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter]
 }

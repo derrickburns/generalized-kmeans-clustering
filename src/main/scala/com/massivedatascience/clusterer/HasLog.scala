@@ -27,7 +27,7 @@ object GeneralLog extends HasLog {
 }
 
 object DiscreteLog extends HasLog{
-  private val logTable = new Array[Double](4096 * 1000)
+  private val logTable = new Array[Double](1000)
 
   override def log(d: Double): Double = {
     if (d == 0.0 || d == 1.0) {

@@ -25,7 +25,7 @@ case class BasicPointOps(
   clusterFactory: ClusterFactory = DenseClusterFactory,
   embedding: Embedding = IdentityEmbedding) extends BregmanPointOps {
 
-  val weightThreshold = 1e-4
+  @inline val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
 
   def getCentroid = clusterFactory.getCentroid
@@ -53,14 +53,9 @@ case class BasicPointOps(
     }
   }
 
-  def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = {
-    val embedded = embed(asInhomogeneous(h, weight))
-    new BregmanPoint(embedded, weight, divergence.F(embedded))
-  }
-
-  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = {
+  def vectorToPoint(inh: Vector): BregmanPoint = {
     val embedded = embed(inh)
-    new BregmanPoint(embedded, weight, divergence.F(embedded))
+    new BregmanPoint(embedded, 1.0, divergence.F(embedded))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
@@ -85,8 +80,8 @@ class DelegatedPointOps(ops: BregmanPointOps, embedding: Embedding) extends Breg
   def getCentroid = ops.getCentroid
   def distance(p: BregmanPoint, c: BregmanCenter) = ops.distance(p,c)
   def toCenter(v: WeightedVector) = ops.toCenter(v)
-  def inhomogeneousToPoint(v: Vector, weight: Double) = ops. inhomogeneousToPoint(v,weight)
-  def homogeneousToPoint(v: Vector, weight: Double) = ops.homogeneousToPoint(v,weight)
+
+  def vectorToPoint(v: Vector) = ops.vectorToPoint(v)
   def centerMoved(v: BregmanPoint, w: BregmanCenter) = ops.centerMoved(v,w)
   def toPoint(v: WeightedVector) = ops.toPoint(v)
 }
@@ -110,7 +105,7 @@ object DenseSquaredEuclideanPointOps extends BasicPointOps()
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n
  */
-object SparseSquaredEuclideanPointOps extends BasicPointOps(clusterFactory = SparseClusterFactory)
+object SparseSquaredEuclideanPointOps extends BasicPointOps(clusterFactory = DenseClusterFactory)
 
 /**
  * Implements Squared Euclidean distance on sparse vectors in R ** n by
@@ -145,7 +140,7 @@ object ItakuraSaitoPointOps extends BasicPointOps(new ItakuraSaitoDivergence(Gen
  * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
-object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, SparseClusterFactory) {
+object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, DenseClusterFactory) {
     /**
    * Smooth the center using a variant Laplacian smoothing.
    *
@@ -167,6 +162,9 @@ object SparseRealKLPointOps extends BasicPointOps(RealKLDivergence, SparseCluste
   }
 }
 
+
+object DiscreteDenseSimplexSmoothedKLPointOps extends BasicPointOps(NaturalKullbackLeiblerSimplexDivergence)
+
 /**
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
@@ -182,6 +180,12 @@ object DiscreteDenseKLPointOps extends BasicPointOps(NaturalKLDivergence)
  *
  */
 object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence) {
+
+  override def vectorToPoint(h: Vector): BregmanPoint = {
+    val weight = h.toArray.sum
+    new BregmanPoint(h, weight, divergence.F(h, weight), true)
+  }
+
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
     val w = v.weight + v.homogeneous.size
