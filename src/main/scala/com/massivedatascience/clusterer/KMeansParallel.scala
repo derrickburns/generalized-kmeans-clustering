@@ -95,6 +95,7 @@ class KMeansParallel(
     val data = d.map(pointOps.vectorToPoint)
     data.setName("initial points")
     data.persist(StorageLevel.OFF_HEAP)
+    data.count()
 
     val runs = r
 
@@ -103,6 +104,7 @@ class KMeansParallel(
     var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
     costs.persist(StorageLevel.OFF_HEAP)
     costs.setName("pre-costs")
+    costs.count()
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
