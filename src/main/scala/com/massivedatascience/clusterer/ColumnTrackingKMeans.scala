@@ -18,7 +18,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
@@ -71,7 +71,7 @@ object ColumnTrackingKMeans {
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
-  extends MultiKMeansClusterer {
+  extends MultiKMeansClusterer with SparkHelper {
 
   import ColumnTrackingKMeans._
 
@@ -131,22 +131,19 @@ class ColumnTrackingKMeans(
       previousAssignments: RDD[Assignment],
       currentCenters: Array[CenterWithHistory]): RDD[Assignment] = {
 
-      val sc = points.sparkContext
-      val bcCenters = sc.broadcast(currentCenters)
-
       require(previousAssignments.getStorageLevel.useMemory)
 
-      val currentAssignments = points.zip(previousAssignments).mapPartitionsWithIndex {
-        (index, assignedPoints) =>
-          val rand = new XORShiftRandom(round ^ (index << 16))
-          val centers = bcCenters.value
-          assignedPoints.map { case (point, current) =>
-            if (rand.nextDouble() > updateRate) current
-            else reassignment(point, current, round, centers)
-          }
-      }
-      bcCenters.unpersist()
-      currentAssignments.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY)
+      withBroadcast(currentCenters) { bcCenters =>
+        points.zip(previousAssignments).mapPartitionsWithIndex {
+          (index, assignedPoints) =>
+            val rand = new XORShiftRandom(round ^ (index << 16))
+            val centers = bcCenters.value
+            assignedPoints.map { case (point, current) =>
+              if (rand.nextDouble() > updateRate) current
+              else reassignment(point, current, round, centers)
+            }
+        }
+      }.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY)
     }
 
     /**
@@ -408,61 +405,6 @@ class ColumnTrackingKMeans(
         assignment
       else
         bestAssignment(point, round, stationaryCenters, closestNonStationary)
-    }
-
-    def showEmpty(
-      centersWithHistory: Array[CenterWithHistory],
-      points: RDD[BregmanPoint],
-      currentAssignments: RDD[Assignment]) = {
-
-      val cp = closestPoints(points, currentAssignments, centersWithHistory)
-
-      val clusterMap = countByCluster(currentAssignments)
-      Array.tabulate(centersWithHistory.length) { i =>
-        val count = clusterMap.getOrElse(i, 0)
-        if (count == 0) {
-          val c = centersWithHistory(i)
-          val d1 = cp(i).dist
-
-          println(s"center: $i = $c")
-          println(s"closest point is ${cp(i)}")
-          val closerCluster = cp(i).assignment.cluster
-          val d2 = pointOps.distance(cp(i).point, centersWithHistory(closerCluster).center)
-          println(s"closest center to that point is $closerCluster =" +
-            s"' ${centersWithHistory(closerCluster)} at distance $d2")
-          println()
-          require(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
-            s"to point $d2")
-        }
-      }
-    }
-
-    /**
-     * Find the closest point and distance to each cluster
-     *
-     * @param points the points
-     * @param assignments the assignments
-     * @param centers the clusters
-     * @return a map from cluster index to the closest point to that cluster and the distance
-     */
-    def closestPoints(
-      points: RDD[BregmanPoint],
-      assignments: RDD[Assignment],
-      centers: Array[CenterWithHistory]): Map[Int, PointWithDistance] = {
-
-      require(assignments.getStorageLevel.useMemory)
-      require(points.getStorageLevel.useMemory)
-
-      val bcCenters = assignments.sparkContext.broadcast(centers)
-      val result = points.zip(assignments).mapPartitions { pts =>
-        val bc = bcCenters.value
-        pts.flatMap { case (point, a) =>
-          bc.map { c => (c.index, PointWithDistance(point, a, pointOps.distance(point, c.center)))
-          }
-        }
-      }.reduceByKeyLocally { (x, y) => if (x.dist < y.dist) x else y}
-      bcCenters.unpersist()
-      result
     }
 
     def clusterings(
