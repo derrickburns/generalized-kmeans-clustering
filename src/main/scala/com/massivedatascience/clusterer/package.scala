@@ -58,7 +58,7 @@ package object clusterer {
 
   type TerminationCondition = BasicStats => Boolean
 
-  val DefaultTerminationCondition = { s: BasicStats => s.getRound > 20 ||
+  val DefaultTerminationCondition = { s: BasicStats => s.getRound > 40 ||
     s.getNonEmptyClusters == 0 ||
     s.getMovement / s.getNonEmptyClusters < 1.0E-5
   }
