@@ -25,6 +25,12 @@ trait SparkHelper extends Logging {
     data
   }
 
+  def exchange[T](name: String, from: RDD[T])(f: RDD[T] => RDD[T]): RDD[T] = {
+    val to = f(from)
+    from.unpersist()
+    to.setName(name).persist()
+  }
+
   def withCached[T, Q](
     name: String, v: RDD[T],
     blocking: Boolean = false,

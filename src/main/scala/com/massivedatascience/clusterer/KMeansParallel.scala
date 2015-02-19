@@ -41,6 +41,8 @@ class KMeansParallel(
 
   def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
 
+    implicit val sc = d.sparkContext
+
     /**
      * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
      * Weight the points by the distance to the closest cluster center.
@@ -92,19 +94,12 @@ class KMeansParallel(
      * @return
      */
 
-    val data = d.map(pointOps.vectorToPoint)
-    data.setName("initial points")
-    data.persist()
-    data.count()
-
+    val data = sync("initial points", d.map(pointOps.vectorToPoint))
     val runs = r
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
-    var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
-    costs.persist()
-    costs.setName("pre-costs")
-    costs.count()
+    var costs = sync("pre-costs", data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
@@ -129,19 +124,19 @@ class KMeansParallel(
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
 
-      val preCosts = costs
-
-      costs = withBroadcast(newCenters) { bcNewCenters =>
-        logInfo(s"constructing costs")
-        data.zip(preCosts).map { case (point, cost) =>
-          Vectors.dense(Array.tabulate(runs) { r =>
-            math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
-          })
+      costs = exchange(s"costs at step $step", costs) { preCosts =>
+        withBroadcast(newCenters) { bcNewCenters =>
+          logInfo(s"constructing costs")
+          data.zip(preCosts).map { case (point, cost) =>
+            Vectors.dense(Array.tabulate(runs) { r =>
+              math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
+            })
+          }
         }
       }
-      costs.cache()
-      costs.setName(s"costs at step $step")
+
       logInfo(s"summing costs")
+
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
@@ -153,7 +148,7 @@ class KMeansParallel(
             axpy(1.0, s1, s0)
           }
         )
-      preCosts.unpersist(blocking = false)
+
       assert(data.getStorageLevel.useMemory)
       assert(costs.getStorageLevel.useMemory)
       logInfo(s"collecting chosen")
@@ -187,12 +182,13 @@ class KMeansParallel(
 
 
     costs.unpersist(blocking = false)
-    val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
-    logInfo("creating final centers")
-    val result = finalCenters(data, bcCenters, seed)
-    bcCenters.unpersist()
-    assert(data.getStorageLevel.useMemory)
-    logInfo("returning results")
-    (data, result)
+
+    withBroadcast(centers.map(_.toArray)) { bcCenters =>
+      logInfo("creating final centers")
+      val result = finalCenters(data, bcCenters, seed)
+      assert(data.getStorageLevel.useMemory)
+      logInfo("returning results")
+      (data, result)
+    }
   }
 }

@@ -100,6 +100,8 @@ class ColumnTrackingKMeans(
     points: RDD[BregmanPoint],
     centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
 
+    implicit val sc = points.sparkContext
+
     require(points.getStorageLevel.useMemory)
 
     val stats = new TrackingStats(points.sparkContext)
@@ -113,7 +115,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(pt => bestAssignment(pt, 0, centers)).setName("initial assignments").persist(StorageLevel.MEMORY_ONLY)
+      points.map(pt => bestAssignment(pt, 0, centers))
     }
 
 
@@ -134,16 +136,15 @@ class ColumnTrackingKMeans(
       require(previousAssignments.getStorageLevel.useMemory)
 
       withBroadcast(currentCenters) { bcCenters =>
-        points.zip(previousAssignments).mapPartitionsWithIndex {
-          (index, assignedPoints) =>
-            val rand = new XORShiftRandom(round ^ (index << 16))
-            val centers = bcCenters.value
-            assignedPoints.map { case (point, current) =>
-              if (rand.nextDouble() > updateRate) current
-              else reassignment(point, current, round, centers)
-            }
+        points.zip(previousAssignments).mapPartitionsWithIndex { (index, assignedPoints) =>
+          val rand = new XORShiftRandom(round ^ (index << 16))
+          val centers = bcCenters.value
+          assignedPoints.map { case (point, current) =>
+            if (rand.nextDouble() > updateRate) current
+            else reassignment(point, current, round, centers)
+          }
         }
-      }.setName(s"assignments round $round").persist(StorageLevel.MEMORY_ONLY)
+      }
     }
 
     /**
@@ -166,7 +167,7 @@ class ColumnTrackingKMeans(
 
       val currentCenters = previousCenters.clone()
       if (addOnly) {
-        val results: Array[(Int, MutableWeightedVector)] = getCompleteCentroids(points, currentAssignments, previousCenters.length)
+        val results = getCompleteCentroids(points, currentAssignments, previousCenters.length)
         results.foreach { case (index, location) =>
           val change: WeightedVector = location.asImmutable
           val newCenter = CenterWithHistory(pointOps.toCenter(change), index, round)
@@ -244,12 +245,6 @@ class ColumnTrackingKMeans(
       terminationCondition(stats)
     }
 
-    def changes(to: RDD[Assignment], from: RDD[Assignment]): RDD[Int] = {
-      to.zip(from).map { case (curr, prev) =>
-        if (curr.cluster != prev.cluster) curr.cluster else -1
-      }
-    }
-
     /**
      * Create the centers that changes.
      *
@@ -289,8 +284,6 @@ class ColumnTrackingKMeans(
           }
           i = i + 1
         }
-        assert(y.hasNext == x.hasNext)
-        logInfo(s"partition had $i points")
 
         val changedClusters = indexBuffer.result()
         logInfo(s"number of clusters changed = ${changedClusters.length}")
@@ -310,12 +303,11 @@ class ColumnTrackingKMeans(
 
       points.zipPartitions(assignments, previousAssignments) {
         (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-
           val centroids = new Array[MutableWeightedVector](numCenters)
           val indexBuffer = new mutable.ArrayBuilder.ofInt
           indexBuffer.sizeHint(numCenters)
 
-          @inline def centroidAt(index: Int): MutableWeightedVector = {
+          @inline def centroidAt(index: Int) = {
             if (centroids(index) == null) {
               centroids(index) = pointOps.getCentroid
               indexBuffer += index
@@ -332,7 +324,6 @@ class ColumnTrackingKMeans(
               if (current != -1) centroidAt(current).add(point)
             }
           }
-          assert(y.hasNext == x.hasNext && z.hasNext == y.hasNext)
           val changedClusters = indexBuffer.result()
           logInfo(s"number of clusters changed = ${changedClusters.length}")
           changedClusters.map(index => (index, centroids(index))).iterator
@@ -415,11 +406,12 @@ class ColumnTrackingKMeans(
 
       for (initialCenters <- initialCenterSets) yield {
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(c, i)}
-        val emptyAssignments = nullAssignments(points)
-        val (assignments, newCenters) = lloyds(1, centers, initialAssignments(points, centers), emptyAssignments)
-        val d = distortion(assignments)
-        val finalCenters = newCenters.map(_.center)
-        (d, finalCenters, assignments)
+        withCached("empty assignments", points.map(x => unassigned)) { empty =>
+          withCached("initial assignments", initialAssignments(points, centers)) { initial =>
+            val (assignments, newCenters) = lloyds(1, centers, initial, empty)
+            (distortion(assignments), newCenters.map(_.center), assignments)
+          }
+        }
       }
     }
 
@@ -434,7 +426,7 @@ class ColumnTrackingKMeans(
 
       val newCenters: Array[CenterWithHistory] = updateCenters(round, assignments, previousAssignments, centers)
       previousAssignments.unpersist()
-      val newAssignments = updatedAssignments(round, assignments, newCenters)
+      val newAssignments = sync(s"assignments round $round", updatedAssignments(round, assignments, newCenters))
       val terminate = shouldTerminate(round, newCenters, centers, newAssignments, assignments)
       if (terminate) (newAssignments, newCenters) else lloyds(round + 1, newCenters, newAssignments, assignments)
     }
@@ -449,8 +441,4 @@ class ColumnTrackingKMeans(
     for ((_, _, a) <- candidates) a.unpersist()
     best
   }
-
-
-  def nullAssignments(points: RDD[BregmanPoint]): RDD[Assignment] =
-    points.map(x => unassigned).persist()
 }
