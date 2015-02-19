@@ -144,13 +144,8 @@ package object clusterer {
       bestIndex
     }
 
-    def distortion(data: RDD[P], centers: IndexedSeq[C]) = {
-      data.mapPartitions { points =>
-        Array(points.foldLeft(0.0) { case (total, p) =>
-          total + findClosest(centers, p)._2
-        }).iterator
-      }.reduce(_ + _)
-    }
+    def distortion(data: RDD[P], centers: IndexedSeq[C]) =
+      data.aggregate(0.0)(_ + findClosest(centers, _)._2, _ + _)
 
     /**
      * Return the K-means cost of a given point against the given cluster centers.
