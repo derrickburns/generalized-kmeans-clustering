@@ -84,7 +84,7 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
     val rand = new XORShiftRandom(seed)
     val newCenter = pickWeighted(rand, weights).map(candidateCenters(_))
     centers += newCenter.get
-    logInfo(s"starting kMeansPlusPlus initializatieon on ${candidateCenters.length} points")
+    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
     var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
     distances = updateDistances(points, distances, IndexedSeq(newCenter.get))
