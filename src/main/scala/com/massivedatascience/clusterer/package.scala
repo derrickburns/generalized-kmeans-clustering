@@ -161,38 +161,34 @@ package object clusterer {
   /**
    * A point with an additional single Double value that is used in distance computation.
    *
-   * @param embedding  inhomogeneous coordinates of point following embedding
+   * @param homogeneous  homogeneous coordinates of point following embedding
    * @param weight weight of point
    * @param f f(point)
    */
   class BregmanPoint(
-    embedding: Vector,
+    val homogeneous: Vector,
     val weight: Double,
-    val f: Double,
-    isHomogeneous: Boolean = false) extends WeightedVector {
+    val f: Double) extends WeightedVector {
 
-    override lazy val inhomogeneous = if (isHomogeneous) asInhomogeneous else embedding
-    override lazy val homogeneous = if (!isHomogeneous) asHomogeneous else embedding
+    val inhomogeneous = asInhomogeneous
   }
 
   /**
    * A cluster center with an additional Double and an additional vector containing the gradient
    * that are used in distance computation.
    *
-   * @param h inhomogeneous coordinates of center in the embedded space
+   * @param homogeneous homogeneous coordinates of center in the embedded space
    * @param weight weight of vector
    * @param dotGradMinusF  center dot gradient(center) - f(center)
    * @param gradient gradient of center
    */
   class BregmanCenter(
-    h: Vector,
+    val homogeneous: Vector,
     val weight: Double,
     val dotGradMinusF: Double,
-    val gradient: Vector,
-    isHomogeneous: Boolean = true) extends WeightedVector {
+    val gradient: Vector) extends WeightedVector {
 
-    override lazy val inhomogeneous = if (isHomogeneous) asInhomogeneous else h
-    override lazy val homogeneous = if (!isHomogeneous) asHomogeneous else h
+    override lazy val inhomogeneous = asInhomogeneous
   }
 
   trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter]
