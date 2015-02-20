@@ -159,7 +159,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(pt => bestAssignment(-1, pt, centers))
+      points.map(bestAssignment(-1, _, centers))
     }
 
 
@@ -468,7 +468,11 @@ class ColumnTrackingKMeans(
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
         withCached("empty assignments", points.map(x => unassigned)) { empty =>
           withCached("initial assignments", initialAssignments(points, centers)) { initial =>
+            val initialNumClusters = initial.map(_.round).distinct().count()
+            logInfo(s"number of clusters after initial assignment is $initialNumClusters")
             val (assignments, newCenters) = lloyds(1, centers, initial, empty)
+            val finalNumCluster = assignments.map(_.round).distinct().count()
+            logInfo(s"number of clusters after final assignment is $finalNumCluster")
             (distortion(assignments), newCenters.map(_.center), assignments)
           }
         }
