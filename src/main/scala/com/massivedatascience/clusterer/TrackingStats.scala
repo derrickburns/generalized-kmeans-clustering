@@ -44,13 +44,13 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
 
   def report() = {
     logInfo(s"round ${currentRound.value}")
-    logInfo(s"relocated centers = ${relocatedCenters.value}")
-    logInfo(s"lowered distortion by ${improvement.value}")
-    logInfo(s"center movement by ${movement.value}")
-    logInfo(s"reassigned points = ${reassignedPoints.value}")
-    logInfo(s"newly assigned points = ${newlyAssignedPoints.value}")
-    logInfo(s"unassigned points = ${unassignedPoints.value}")
-    logInfo(s"non-empty clusters = ${nonemptyClusters.value}")
-    logInfo(s"largest cluster size ${largestCluster.value}")
+    logInfo(s"round ${currentRound.value}, relocated centers, ${relocatedCenters.value}")
+    logInfo(s"round ${currentRound.value}, lowered distortion, ${improvement.value}")
+    logInfo(s"round ${currentRound.value}, center movement, ${movement.value}")
+    logInfo(s"round ${currentRound.value}, reassigned points, ${reassignedPoints.value}")
+    logInfo(s"round ${currentRound.value}, newly assigned points, ${newlyAssignedPoints.value}")
+    logInfo(s"round ${currentRound.value}, unassigned points,${unassignedPoints.value}")
+    logInfo(s"round ${currentRound.value}, non-empty clusters, ${nonemptyClusters.value}")
+    logInfo(s"round ${currentRound.value}, largest cluster size, ${largestCluster.value}")
   }
 }
