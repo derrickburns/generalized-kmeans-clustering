@@ -158,7 +158,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(bestAssignment(-1, _, centers))
+      points.map(bestAssignment(-1, _, centers.filter(_.center.weight > pointOps.weightThreshold)))
     }
 
 
@@ -251,7 +251,7 @@ class ColumnTrackingKMeans(
       stats.movement.setValue(0.0)
       stats.relocatedCenters.setValue(0)
       currentCenters.zip(previousCenters).foreach { case (current, previous) =>
-        if (current.round != previous.round && previous.center.weight > 0.0 && current.center.weight > 0.0) {
+        if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold && current.center.weight > pointOps.weightThreshold) {
           val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
           println(s"$delta, ${previous.center}, ${current.center}")
           stats.movement.add(delta)
@@ -444,8 +444,8 @@ class ColumnTrackingKMeans(
       centers: Seq[CenterWithHistory]
       ): Assignment = {
 
-      val nonStationaryCenters = centers.withFilter(_.movedSince(assignment.round))
-      val stationaryCenters = centers.withFilter(!_.movedSince(assignment.round))
+      val nonStationaryCenters = centers.withFilter(c => c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
+      val stationaryCenters = centers.withFilter(c => !c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
       val bestNonStationary = bestAssignment(round, point, nonStationaryCenters)
 
       assignment match {
@@ -466,10 +466,10 @@ class ColumnTrackingKMeans(
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
         withCached("empty assignments", points.map(x => unassigned)) { empty =>
           withCached("initial assignments", initialAssignments(points, centers)) { initial =>
-            val initialNumClusters = initial.map(_.round).distinct().count()
+            val initialNumClusters = initial.map(_.cluster).distinct().count()
             logInfo(s"number of clusters after initial assignment is $initialNumClusters")
             val (assignments, newCenters) = lloyds(1, centers, initial, empty)
-            val finalNumCluster = assignments.map(_.round).distinct().count()
+            val finalNumCluster = assignments.map(_.cluster).distinct().count()
             logInfo(s"number of clusters after final assignment is $finalNumCluster")
             (distortion(assignments), newCenters.map(_.center), assignments)
           }
