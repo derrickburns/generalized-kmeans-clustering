@@ -180,9 +180,9 @@ object DiscreteDenseKLPointOps extends BasicPointOps(NaturalKLDivergence)
  */
 object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence) {
 
-  override def vectorToPoint(h: Vector): BregmanPoint = {
-    val h = add(h, 1.0)
-    val w = h.toArray.sum + h.size
+  override def vectorToPoint(v: Vector): BregmanPoint = {
+    val h = add(v, 1.0)
+    val w = v.toArray.sum + v.size
     new BregmanPoint(h, w, divergence.F(h, w))
   }
 
