@@ -214,7 +214,7 @@ object KMeans extends Logging {
           s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })
       case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats =>
-        s.getRound > maxIterations ||
+        s.getRound > maxIterations * 2 ||
           s.getNonEmptyClusters == 0 ||
           s.getMovement / s.getNonEmptyClusters < 1.0E-5
       })

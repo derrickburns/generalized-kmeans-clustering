@@ -66,8 +66,7 @@ case class BasicPointOps(
   }
 
   def toPoint(v: WeightedVector): BregmanPoint = {
-    val inh = v.inhomogeneous
-    new BregmanPoint(inh, v.weight, divergence.F(inh))
+    new BregmanPoint(v.homogeneous, v.weight, divergence.F(v.homogeneous, v.weight))
   }
 
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean =
@@ -183,14 +182,14 @@ object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence
 
   override def vectorToPoint(h: Vector): BregmanPoint = {
     val weight = h.toArray.sum
-    new BregmanPoint(h, weight, divergence.F(h, weight), true)
+    new BregmanPoint(h, weight, divergence.F(h, weight))
   }
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
     val h = add(v.homogeneous, 1.0)
     val w = v.weight + v.homogeneous.size
     val df = divergence.gradF(h, w)
-    new BregmanCenter(v.homogeneous, w, dot(h, df) / w - divergence.F(h, w), df)
+    new BregmanCenter(v.homogeneous, v.weight, dot(h, df) / w - divergence.F(h, w), df)
   }
 }
 

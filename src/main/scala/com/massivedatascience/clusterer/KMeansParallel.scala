@@ -19,11 +19,11 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.mllib.linalg.{Vectors,Vector}
+import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
@@ -37,9 +37,11 @@ class KMeansParallel(
   initializationSteps: Int,
   seedx: Int,
   clusterer: MultiKMeansClusterer)
-  extends KMeansInitializer with Logging {
+  extends KMeansInitializer with SparkHelper {
 
   def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+
+    implicit val sc = d.sparkContext
 
     /**
      * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
@@ -60,7 +62,7 @@ class KMeansParallel(
       val weightMap = data.flatMap { point =>
         val centers = bcCenters.value
         Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-      }.reduceByKey(_ + _).collectAsMap()
+      }.reduceByKeyLocally(_ + _)
 
       val centers = bcCenters.value
       val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
@@ -81,30 +83,23 @@ class KMeansParallel(
     }
 
     /**
-   * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
-   * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
-   * to find  dissimilar cluster centers by starting with a random center and then doing
-   * passes where more centers are chosen with probability proportional to their squared distance
-   * to the current cluster set. It results in a provable approximation to an optimal clustering.
-   *
-   * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
-   *
-   * @return
-   */
+     * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
+     * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
+     * to find  dissimilar cluster centers by starting with a random center and then doing
+     * passes where more centers are chosen with probability proportional to their squared distance
+     * to the current cluster set. It results in a provable approximation to an optimal clustering.
+     *
+     * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
+     *
+     * @return
+     */
 
-    val data = d.map(pointOps.vectorToPoint)
-    data.setName("initial points")
-    data.persist()
-    data.count()
-
+    val data = sync("initial points", d.map(pointOps.vectorToPoint))
     val runs = r
 
     // Initialize empty centers and point costs.
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
-    var costs = data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity)))
-    costs.persist()
-    costs.setName("pre-costs")
-    costs.count()
+    var costs = sync("pre-costs", data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
 
     // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
@@ -129,18 +124,19 @@ class KMeansParallel(
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
 
-      val bcNewCenters = data.context.broadcast(newCenters)
-      val preCosts = costs
-      logInfo(s"constructing costs")
-      costs = data.zip(preCosts).map { case (point, cost) =>
-        Vectors.dense(
-          Array.tabulate(runs) { r =>
-            math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
-          })
+      costs = exchange(s"costs at step $step", costs) { preCosts =>
+        withBroadcast(newCenters) { bcNewCenters =>
+          logInfo(s"constructing costs")
+          data.zip(preCosts).map { case (point, cost) =>
+            Vectors.dense(Array.tabulate(runs) { r =>
+              math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
+            })
+          }
+        }
       }
-      costs.cache()
-      costs.setName(s"costs at step $step,")
+
       logInfo(s"summing costs")
+
       val sumCosts = costs
         .aggregate(Vectors.zeros(runs))(
           seqOp = (s, v) => {
@@ -152,7 +148,7 @@ class KMeansParallel(
             axpy(1.0, s1, s0)
           }
         )
-      preCosts.unpersist(blocking = false)
+
       assert(data.getStorageLevel.useMemory)
       assert(costs.getStorageLevel.useMemory)
       logInfo(s"collecting chosen")
@@ -166,7 +162,7 @@ class KMeansParallel(
             rand.nextDouble() < 2.0 * c(r) * k / sumCosts(r)
           }
           val nullCenter = null.asInstanceOf[BregmanCenter]
-          val center = if(selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
+          val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
           selectedRuns.map((_, center))
         }
       }.collect()
@@ -186,12 +182,13 @@ class KMeansParallel(
 
 
     costs.unpersist(blocking = false)
-    val bcCenters = data.sparkContext.broadcast(centers.map(_.toArray))
-    logInfo("creating final centers")
-    val result = finalCenters(data, bcCenters, seed)
-    bcCenters.unpersist()
-    assert(data.getStorageLevel.useMemory)
-    logInfo("returning results")
-    (data, result)
+
+    withBroadcast(centers.map(_.toArray)) { bcCenters =>
+      logInfo("creating final centers")
+      val result = finalCenters(data, bcCenters, seed)
+      assert(data.getStorageLevel.useMemory)
+      logInfo("returning results")
+      (data, result)
+    }
   }
 }
