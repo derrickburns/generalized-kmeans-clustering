@@ -175,20 +175,20 @@ object DiscreteDenseKLPointOps extends BasicPointOps(NaturalKLDivergence)
  * weights equal the sum of the frequencies.
  *
  * Because KL divergence is not defined on
- * zero values, we smooth the points by adding the unit vector to each point.
+ * zero values, we smooth the points by adding 1 to all entries.
  *
  */
 object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence) {
 
   override def vectorToPoint(v: Vector): BregmanPoint = {
     val h = add(v, 1.0)
-    val w = v.toArray.sum + v.size
-    new BregmanPoint(h, w, divergence.F(h, w))
+    val weight = v.toArray.sum + v.size
+    new BregmanPoint(h, weight, divergence.F(h, weight))
   }
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
-    val h = add(v.homogeneous, 1.0)
-    val w = v.weight + v.homogeneous.size
+    val h = v.homogeneous
+    val w = v.weight
     val df = divergence.gradF(h, w)
     new BregmanCenter(v.homogeneous, v.weight, dot(h, df) / w - divergence.F(h, w), df)
   }
