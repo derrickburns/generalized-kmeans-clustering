@@ -23,7 +23,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec
-import scala.collection.{mutable, Map}
+import scala.collection.mutable
 import scala.collection.generic.FilterMonadic
 import ColumnTrackingKMeans._
 
@@ -311,7 +311,8 @@ class ColumnTrackingKMeans(
       require(points.getStorageLevel.useMemory)
       require(assignments.getStorageLevel.useMemory)
 
-      points.zipPartitions(assignments, previousAssignments) { (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+      points.zipPartitions(assignments, previousAssignments) {
+        (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
         val centroids = new Array[MutableWeightedVector](numCenters)
         val changed = new Array[Boolean](numCenters)
 
