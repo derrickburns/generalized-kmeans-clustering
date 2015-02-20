@@ -21,12 +21,12 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 import scala.annotation.tailrec
 import scala.collection.{mutable, Map}
 import scala.collection.generic.FilterMonadic
-import scala.collection.mutable.ArrayBuffer
+import ColumnTrackingKMeans._
+
 
 object ColumnTrackingKMeans {
   private[clusterer] val noCluster = -1
@@ -117,7 +117,6 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
-  import ColumnTrackingKMeans._
 
   val addOnly = true
 
@@ -127,10 +126,10 @@ class ColumnTrackingKMeans(
    * @param currentAssignments the assignments
    * @return a map from cluster index to number of points assigned to that cluster
    */
-  private def countByCluster(currentAssignments: RDD[Assignment]) =
+  private[this] def countByCluster(currentAssignments: RDD[Assignment]) =
     currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
-  private def distortion(data: RDD[Assignment]) = data.filter(_.isAssigned).map(_.distance).sum()
+  private[this] def distortion(data: RDD[Assignment]) = data.filter(_.isAssigned).map(_.distance).sum()
 
   /**
    * Create a K-Means clustering of the input and report on the resulting distortion
@@ -446,16 +445,14 @@ class ColumnTrackingKMeans(
 
       val nonStationaryCenters = centers.withFilter(_.movedSince(assignment.round))
       val stationaryCenters = centers.withFilter(!_.movedSince(assignment.round))
-      val closestNonStationary = bestAssignment(round, point, nonStationaryCenters)
+      val bestNonStationary = bestAssignment(round, point, nonStationaryCenters)
 
-      if (!assignment.isAssigned)
-        bestAssignment(round, point, stationaryCenters, closestNonStationary)
-      else if (closestNonStationary.distance < assignment.distance)
-        closestNonStationary
-      else if (!centers(assignment.cluster).movedSince(assignment.round))
-        assignment
-      else
-        bestAssignment(round, point, stationaryCenters, closestNonStationary)
+      assignment match {
+        case a if !a.isAssigned => bestAssignment(round, point, stationaryCenters, bestNonStationary)
+        case a if a.distance > bestNonStationary.distance => bestNonStationary
+        case a if !centers(a.cluster).movedSince(a.round) => a
+        case _ => bestAssignment(round, point, stationaryCenters, bestNonStationary)
+      }
     }
 
     def clusterings(
