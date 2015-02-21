@@ -22,20 +22,14 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
-  def init(
-    pointOps: BregmanPointOps,
-    d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
-
-    val data = d.map(pointOps.vectorToPoint(_, 1.0))
-    data.setName("input to sample initializer")
-    data.persist()
+  def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),
       (c1, c2) => c1.add(c2)
     )
 
-    val bregmanCenters = centroids.map {p => pointOps.toCenter(p._2.asImmutable)}
-    (data, Array(bregmanCenters.collect()))
+    val bregmanCenters = centroids.map { p => pointOps.toCenter(p._2.asImmutable)}
+    Array(bregmanCenters.collect())
   }
 }

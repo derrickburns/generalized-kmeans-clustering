@@ -17,13 +17,12 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.Logging
+import com.massivedatascience.clusterer.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 
-object KMeans extends Logging {
+object KMeans extends SparkHelper {
   // Initialization mode names
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
@@ -172,7 +171,7 @@ object KMeans extends Logging {
     logInfo(s"embedding = $embeddingName")
     logInfo(s"depth = $depth")
 
-    val samples = subsample(data, depth, embedding)
+    val samples = subsample(data, distanceFunc, depth, embedding)
     val ops = Array.fill(depth + 1)(distanceFunc)
     val results = iterativelyTrain(ops, samples, initializer)
     results
@@ -231,22 +230,24 @@ object KMeans extends Logging {
     }
   }
 
-  def simpleTrain(distanceFunc: BregmanPointOps, raw: RDD[Vector], initializer: KMeansInitializer)(
+  def simpleTrain(distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    val (bregmanPoints, initialCenters) = initializer.init(distanceFunc, raw)
-    bregmanPoints.setName("Bregman points")
+    implicit val sc = bregmanPoints.sparkContext
+
+    val initialCenters = initializer.init(distanceFunc, bregmanPoints)
     require(bregmanPoints.getStorageLevel.useMemory)
     logInfo("completed initialization of cluster centers")
+
     val (cost, finalCenters, assignmentOpt) =
       clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
     logInfo("completed clustering")
-    val assignments = assignmentOpt.getOrElse {
-      bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)).setName("assignments").cache()
-    }
+
+    val assignments = assignmentOpt.getOrElse(
+      sync("cluster assignments", bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)))
+    )
     logInfo("completed assignments")
 
-    bregmanPoints.unpersist()
     (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
   }
 
@@ -258,7 +259,7 @@ object KMeans extends Logging {
     embedding: Embedding = HaarEmbedding)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    val samples = subsample(raw, depth, embedding)
+    val samples = subsample(raw, pointOps, depth, embedding)
     val results = iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
     results
   }
@@ -272,62 +273,70 @@ object KMeans extends Logging {
 
     require(ops.length == embeddings.length)
 
-    val samples = resample(raw, embeddings)
+    val samples = resample(raw, ops, embeddings)
     val results = iterativelyTrain(ops, samples, initializer)
     results
   }
 
   private def iterativelyTrain(
     pointOps: Seq[BregmanPointOps],
-    dataSets: Seq[RDD[Vector]],
+    dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
+    implicit val sc = dataSets.head.sparkContext
+
     require(dataSets.nonEmpty)
-    dataSets.zip(pointOps).tail.foldLeft(simpleTrain(pointOps.head, dataSets.head, initializer)) {
-      case ((_, KMeansResults(_, assignments)), (data, op)) =>
-        data.cache()
-        val result = simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))
-        data.unpersist(blocking = false)
-        assignments.unpersist(blocking = false)
-        result
+
+    withCached("original", dataSets.head) { original =>
+      val remaining = dataSets.zip(pointOps).tail
+      remaining.foldLeft(simpleTrain(pointOps.head, original, initializer)) {
+        case ((_, KMeansResults(_, assignments)), (data, op)) =>
+          val result = simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))
+          assignments.unpersist(blocking = false)
+          result
+      }
     }
   }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
-   * the same embedding.
+   * the same embedding.  Data is returned cached.
    *
    * All data that is embedded is cached.
    *
-   * @param dataSet full resolution data
+   * @param input input data set to embed
    * @param depth  number of levels of sub-sampling, 0 means no sub-sampling
    * @param embedding embedding to use iteratively
    * @return
    */
   private def subsample(
-    dataSet: RDD[Vector],
+    input: RDD[Vector],
+    ops: BregmanPointOps,
     depth: Int = 0,
-    embedding: Embedding = HaarEmbedding): List[RDD[Vector]] = {
-    val subs = (0 until depth).foldLeft(List(dataSet)) {
-      case (data, e) =>
-        data.head.map(embedding.embed).setName(s"embedded data at depth $depth with $embedding") :: data
+    embedding: Embedding = HaarEmbedding): List[RDD[BregmanPoint]] = {
+    val subs = (0 until depth).foldLeft(List(input)) {
+      case (data, e) => data.head.map(embedding.embed) :: data
     }
-    subs
+    implicit val sc = input.sparkContext
+    subs.zipWithIndex.map { case (data, i) => sync(s"data embedded at depth $i", data.map(y => ops.vectorToPoint(y)))}
   }
 
   /**
-   * Returns sub-sampled data from lowest dimension to highest dimension
+   * Returns sub-sampled data from lowest dimension to highest dimension.
    *
-   * @param dataSet data set to embed
+   * All data that is embedded is cached.
+   *
+   * @param input input data set to embed
    * @param embeddings  list of embedding from smallest to largest
    * @return
    */
 
   private def resample(
-    dataSet: RDD[Vector],
-    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[Vector]] = {
-    embeddings.map(x => dataSet.map(x.embed).setName(s"embedded data with $x"))
+    input: RDD[Vector],
+    ops: Seq[BregmanPointOps],
+    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
+    implicit val sc = input.sparkContext
+    embeddings.zip(ops).map { case (x, o) => sync(s"data embedded with $x", input.map(x.embed).map(o.vectorToPoint(_)))}
   }
-
 }
