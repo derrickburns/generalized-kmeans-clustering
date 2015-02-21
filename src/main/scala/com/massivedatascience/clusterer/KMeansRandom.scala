@@ -33,7 +33,7 @@ class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer {
       data.takeSample(withReplacement = false, count, new XORShiftRandom().nextInt()).map(toCenter)
     }
 
-    val data = d.map(ops.vectorToPoint)
+    val data = d.map(ops.vectorToPoint(_, 1.0))
     data.persist()
     val filtered = data.filter(_.weight > ops.weightThreshold).setName("random initial")
     filtered.persist()

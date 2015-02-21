@@ -1,0 +1,155 @@
+package com.massivedatascience.clusterer
+
+
+import org.scalatest.FunSuite
+import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.Vectors
+
+import scala.annotation.tailrec
+
+
+class BregmanTestSuite extends FunSuite {
+
+  import com.massivedatascience.clusterer.TestingUtils._
+
+  test("DenseSquaredEuclideanPointOps") {
+
+    val ops = DenseSquaredEuclideanPointOps
+    val v1 = Vectors.dense(1.0, 2.0, 4.0)
+    val v2 = Vectors.dense(2.0, 2.0, 8.0)
+    val p1 = ops.vectorToPoint(v1)
+    val p2 = ops.vectorToPoint(v2)
+    val c1 = ops.toCenter(p1)
+    val c2 = ops.toCenter(p2)
+    val distance11 = ops.distance(p1, c1)
+    assert(distance11 ~= 0.0 absTol 1.0e-8)
+    val distance12 = ops.distance(p1, c2)
+    assert(distance12 ~= 17.0 absTol 1.0e-8)
+
+    val euclideanDistanceSquared = divergence(v1.toArray, v2.toArray, x => x * x)
+    assert(euclideanDistanceSquared ~= 17.0 absTol 1.0e-8)
+  }
+
+  test("DenseSimplexKLPointOps") {
+    val ops = DiscreteDenseSimplexSmoothedKLPointOps
+
+    val vh1 = Vectors.dense(1.0, 2.0, 4.0)
+    val vh2 = Vectors.dense(2.0, 2.0, 8.0)
+    val p1 = ops.vectorToPoint(vh1, 7.0)
+    val p2 = ops.vectorToPoint(vh2, 12.0)
+
+    val c1 = ops.toCenter(p1)
+    val c2 = ops.toCenter(p2)
+
+    val distance11 = ops.distance(p1, c1)
+    assert(distance11 ~= 0.0 absTol 1.0e-8)
+
+    val distance12 = ops.distance(p1, c2)
+
+    val kl1 = divergence(p1.inhomogeneous.toArray, p2.inhomogeneous.toArray, klf)
+    val kl2 = kl(p1.inhomogeneous, p2.inhomogeneous)
+
+    assert(kl1 ~= kl2 absTol 1.0e-7)
+
+    assert(distance12 ~= kl1 absTol 1.0e-8)
+  }
+
+  test("DenseKLPointOps") {
+    val ops = DenseKLPointOps
+
+    val v1 = Vectors.dense(1.0 / 7.0, 2.0 / 7.0, 4.0 / 7.0)
+    val v2 = Vectors.dense(2.0 / 12.0, 2.0 / 12.0, 8.0 / 12.0)
+    val p1 = ops.vectorToPoint(v1)
+    val p2 = ops.vectorToPoint(v2)
+
+    val c1 = ops.toCenter(p1)
+    val c2 = ops.toCenter(p2)
+
+    val distance11 = ops.distance(p1, c1)
+    assert(distance11 ~= 0.0 absTol 1.0e-8)
+
+    val distance12 = ops.distance(p1, c2)
+
+    val kl1 = divergence(v1.toArray, v2.toArray, klf)
+    val kl2 = kl(v1, v2)
+
+    assert(kl1 ~= kl2 absTol 1.0e-7)
+
+    assert(distance12 ~= kl1 absTol 1.0e-8)
+  }
+
+  test("DenseKLPointOps homogeneous") {
+    val ops = DenseKLPointOps
+
+    val v1 = Vectors.dense(1.0 / 7.0, 2.0 / 7.0, 4.0 / 7.0)
+    val v2 = Vectors.dense(2.0 / 12.0, 2.0 / 12.0, 8.0 / 12.0)
+    val vh1 = Vectors.dense(1.0, 2.0, 4.0)
+    val vh2 = Vectors.dense(2.0, 2.0, 8.0)
+    val p1 = ops.vectorToPoint(vh1, 7.0)
+    val p2 = ops.vectorToPoint(vh2, 12.0)
+
+    val c1 = ops.toCenter(p1)
+    val c2 = ops.toCenter(p2)
+
+    val distance11 = ops.distance(p1, c1)
+    assert(distance11 ~= 0.0 absTol 1.0e-8)
+
+    val distance12 = ops.distance(p1, c2)
+
+    val kl1 = divergence(v1.toArray, v2.toArray, klf)
+    val kl2 = kl(v1, v2)
+
+    assert(kl1 ~= kl2 absTol 1.0e-7)
+    assert(distance12 ~= kl1 absTol 1.0e-8)
+  }
+
+  test("gradient") {
+
+    val x = gradient(2.0)(x => x)
+    assert(x ~= 1.0 absTol 1.0e-8)
+
+    val y = gradient(23.0)(x => 2.0 * x)
+    assert(y ~= 2.0 absTol 1.0e-8)
+
+    val z = gradient(23.0)(x => x * x)
+    assert(z ~= 46.0 absTol 1.0e-8)
+  }
+
+  def klf(x: Double) = x * Math.log(x) - x
+
+  def kl(v: Vector, w: Vector): Double = {
+    v.toArray.zip(w.toArray).foldLeft(0.0) { case (agg, (x, y)) =>
+      agg + x * Math.log(x / y) - x + y
+    }
+  }
+
+  def divergence(v: Array[Double], w: Array[Double], f: (Double => Double)): Double = {
+    F(v)(f) - F(w)(f) - dot(gradient(w)(f), diff(v, w))
+  }
+
+  def F(v: Array[Double])(implicit f: (Double => Double)): Double = {
+    v.foldLeft(0.0) { case (agg, y) => agg + f(y)}
+  }
+
+  def dot(v: Array[Double], w: Array[Double]): Double = {
+    v.zip(w).foldLeft(0.0) { case (agg, (x, y)) => agg + x * y}
+  }
+
+  def diff(v: Array[Double], w: Array[Double]): Array[Double] = {
+    v.zip(w).map { case (x, y) => x - y}
+  }
+
+  def gradient(v: Array[Double])(f: (Double => Double)): Array[Double] = {
+    v.map(x => gradient(x)(f))
+  }
+
+  def gradient(v: Double)(f: (Double => Double)): Double = {
+    @tailrec
+    def recurse(delta: Double, previous: Double): Double = {
+      val grad = (f(v + delta) - f(v)) / delta
+      if (Math.abs(grad - previous) > 1e-10) recurse(delta / 2.0, grad) else grad
+    }
+
+    recurse(1.0, Double.PositiveInfinity)
+  }
+}

@@ -106,8 +106,8 @@ object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 /**
  * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
  *
- * If we know that the points are on the simplex, then we may simplify the implementation
- * of KL divergence.  This trait implements that simplification.
+ * If we know that the points are on the simplex, then we may simplify the implementation of KL
+ * divergence. This trait implements that simplification.
  *
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
@@ -117,17 +117,16 @@ class KullbackLeiblerSimplexDivergence(logFunc: HasLog) extends BregmanDivergenc
   def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def F(v: Vector, w: Double) = {
-    val logW = logFunc.log(w)
-    dot(trans(v, logFunc.log(_) - logW), v) / w
+    F(v) / w - logFunc.log(w) - 1.0
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + logFunc.log(_))
+    trans(v, logFunc.log)
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - logFunc.log(w)
-    trans(v, c + logFunc.log(_))
+    val c = logFunc.log(w)
+    trans(v, x => logFunc.log(x) - c)
   }
 }
 
@@ -143,22 +142,21 @@ object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDiv
  */
 class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
 
-  @inline def logMinusOne(x: Double) = logFunc.log(x) - 1
-
-  def F(v: Vector): Double = dot(trans(v, logMinusOne), v)
+  def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
   def F(v: Vector, w: Double) = {
-    val logWMinusOne = logMinusOne(w)
-    dot(trans(v, logMinusOne(_) - logWMinusOne), v) / w
+    val c = v.copy
+    scal(1.0 / w, c)
+    F(c)
   }
 
   def gradF(v: Vector): Vector = {
-    trans(v, 1.0 + logMinusOne(_))
+    trans(v, logFunc.log)
   }
 
   def gradF(v: Vector, w: Double): Vector = {
-    val c = 1.0 - logMinusOne(w)
-    trans(v, c + logMinusOne(_))
+    val c = logFunc.log(w)
+    trans(v, x => logFunc.log(x) - c)
   }
 }
 

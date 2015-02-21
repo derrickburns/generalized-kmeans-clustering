@@ -77,7 +77,7 @@ package object clusterer {
      * @param v input vector
      * @return weighted vector
      */
-    def vectorToPoint(v: Vector): P
+    def vectorToPoint(v: Vector, weight: Double = 1.0): P
 
     /**
      * converted a weighted vector to a point
