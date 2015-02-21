@@ -199,11 +199,7 @@ class ColumnTrackingKMeans(
      * @param previousCenters  the cluster centers
      * @return the new cluster centers
      */
-    def updateCenters(
-      round: Int,
-      currentAssignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment],
-      previousCenters: Array[CenterWithHistory]): Array[CenterWithHistory] = {
+    def updateCenters(round: Int, previousCenters: Array[CenterWithHistory], currentAssignments: RDD[Assignment], previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
 
       require(currentAssignments.getStorageLevel.useMemory)
       require(previousAssignments.getStorageLevel.useMemory)
@@ -465,14 +461,8 @@ class ColumnTrackingKMeans(
       for (initialCenters <- initialCenterSets) yield {
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
         withCached("empty assignments", points.map(x => unassigned)) { empty =>
-          withCached("initial assignments", initialAssignments(points, centers)) { initial =>
-            val initialNumClusters = initial.map(_.cluster).distinct().count()
-            logInfo(s"number of clusters after initial assignment is $initialNumClusters")
-            val (assignments, newCenters) = lloyds(1, centers, initial, empty)
-            val finalNumCluster = assignments.map(_.cluster).distinct().count()
-            logInfo(s"number of clusters after final assignment is $finalNumCluster")
-            (distortion(assignments), newCenters.map(_.center), assignments)
-          }
+          val (assignments, newCenters) = lloyds(0, centers, empty)
+          (distortion(assignments), newCenters.map(_.center), assignments)
         }
       }
     }
@@ -481,16 +471,15 @@ class ColumnTrackingKMeans(
     def lloyds(
       round: Int,
       centers: Array[CenterWithHistory],
-      assignments: RDD[Assignment],
-      previousAssignments: RDD[Assignment]): (RDD[Assignment], Array[CenterWithHistory]) = {
+      assignments: RDD[Assignment]): (RDD[Assignment], Array[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
 
-      val newCenters: Array[CenterWithHistory] = updateCenters(round, assignments, previousAssignments, centers)
-      previousAssignments.unpersist()
-      val newAssignments = sync(s"assignments round $round", updatedAssignments(round + 1, assignments, newCenters))
+      val newAssignments = sync(s"assignments round $round", updatedAssignments(round, assignments, centers))
+      val newCenters = updateCenters(round + 1, centers, newAssignments, assignments)
       val terminate = shouldTerminate(round + 1, newCenters, centers, newAssignments, assignments)
-      if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newCenters, newAssignments, assignments)
+      assignments.unpersist()
+      if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newCenters, newAssignments)
     }
 
     require(updateRate <= 1.0 && updateRate >= 0.0)
