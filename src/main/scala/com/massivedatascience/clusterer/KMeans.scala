@@ -172,9 +172,11 @@ object KMeans extends SparkHelper {
     logInfo(s"depth = $depth")
 
     val samples = subsample(data, distanceFunc, depth, embedding)
-    val ops = Array.fill(depth + 1)(distanceFunc)
-    val results = iterativelyTrain(ops, samples, initializer)
-    results
+    val names = Array.tabulate(samples.length)(i => s"data embedded at depth $i")
+    withCached(names, samples) { samples =>
+      val ops = Array.fill(samples.length)(distanceFunc)
+      iterativelyTrain(ops, samples, initializer)
+    }
   }
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
@@ -233,8 +235,6 @@ object KMeans extends SparkHelper {
   def simpleTrain(distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    implicit val sc = bregmanPoints.sparkContext
-
     val initialCenters = initializer.init(distanceFunc, bregmanPoints)
     require(bregmanPoints.getStorageLevel.useMemory)
     logInfo("completed initialization of cluster centers")
@@ -260,8 +260,10 @@ object KMeans extends SparkHelper {
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
     val samples = subsample(raw, pointOps, depth, embedding)
-    val results = iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
-    results
+    val names = Array.tabulate(depth)(i => s"data embedded at depth $i")
+    withCached(names, samples) { samples =>
+      iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
+    }
   }
 
   def reSampleTrain(
@@ -274,8 +276,10 @@ object KMeans extends SparkHelper {
     require(ops.length == embeddings.length)
 
     val samples = resample(raw, ops, embeddings)
-    val results = iterativelyTrain(ops, samples, initializer)
-    results
+    val names = embeddings.map(embedding => s"data embedded with $embedding")
+    withCached(names, samples) { samples =>
+      iterativelyTrain(ops, samples, initializer)
+    }
   }
 
   private def iterativelyTrain(
@@ -283,8 +287,6 @@ object KMeans extends SparkHelper {
     dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
-
-    implicit val sc = dataSets.head.sparkContext
 
     require(dataSets.nonEmpty)
 
@@ -303,8 +305,6 @@ object KMeans extends SparkHelper {
    * Returns sub-sampled data from lowest dimension to highest dimension, repeatedly applying
    * the same embedding.  Data is returned cached.
    *
-   * All data that is embedded is cached.
-   *
    * @param input input data set to embed
    * @param depth  number of levels of sub-sampling, 0 means no sub-sampling
    * @param embedding embedding to use iteratively
@@ -318,14 +318,11 @@ object KMeans extends SparkHelper {
     val subs = (0 until depth).foldLeft(List(input)) {
       case (data, e) => data.head.map(embedding.embed) :: data
     }
-    implicit val sc = input.sparkContext
-    subs.zipWithIndex.map { case (data, i) => sync(s"data embedded at depth $i", data.map(y => ops.vectorToPoint(y)))}
+    subs.map(_.map(ops.vectorToPoint(_)))
   }
 
   /**
    * Returns sub-sampled data from lowest dimension to highest dimension.
-   *
-   * All data that is embedded is cached.
    *
    * @param input input data set to embed
    * @param embeddings  list of embedding from smallest to largest
@@ -336,7 +333,7 @@ object KMeans extends SparkHelper {
     input: RDD[Vector],
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
-    implicit val sc = input.sparkContext
-    embeddings.zip(ops).map { case (x, o) => sync(s"data embedded with $x", input.map(x.embed).map(o.vectorToPoint(_)))}
+
+    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.vectorToPoint(_))}
   }
 }
