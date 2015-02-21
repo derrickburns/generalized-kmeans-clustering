@@ -94,7 +94,7 @@ class KMeansParallel(
      * @return
      */
 
-    val data = sync("initial points", d.map(pointOps.vectorToPoint))
+    val data = sync("initial points", d.map(pointOps.vectorToPoint(_, 1.0)))
     val runs = r
 
     // Initialize empty centers and point costs.

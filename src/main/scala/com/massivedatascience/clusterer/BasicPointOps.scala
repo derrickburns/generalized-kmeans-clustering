@@ -53,9 +53,9 @@ case class BasicPointOps(
     }
   }
 
-  def vectorToPoint(inh: Vector): BregmanPoint = {
-    val embedded = embed(inh)
-    new BregmanPoint(embedded, 1.0, divergence.F(embedded))
+  def vectorToPoint(homogeneous: Vector, weight: Double): BregmanPoint = {
+    val embedded = embed(homogeneous)
+    new BregmanPoint(embedded, weight, divergence.F(embedded, weight))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
@@ -80,7 +80,7 @@ class DelegatedPointOps(ops: BregmanPointOps, embedding: Embedding) extends Breg
   def distance(p: BregmanPoint, c: BregmanCenter) = ops.distance(p,c)
   def toCenter(v: WeightedVector) = ops.toCenter(v)
 
-  def vectorToPoint(v: Vector) = ops.vectorToPoint(v)
+  def vectorToPoint(v: Vector, weight: Double = 1.0) = ops.vectorToPoint(v, weight)
   def centerMoved(v: BregmanPoint, w: BregmanCenter) = ops.centerMoved(v,w)
   def toPoint(v: WeightedVector) = ops.toPoint(v)
 }
@@ -180,17 +180,16 @@ object DiscreteDenseKLPointOps extends BasicPointOps(NaturalKLDivergence)
  */
 object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence) {
 
-  override def vectorToPoint(v: Vector): BregmanPoint = {
-    val h = add(v, 1.0)
-    val weight = v.toArray.sum + v.size
-    new BregmanPoint(h, weight, divergence.F(h, weight))
+  override def vectorToPoint(h: Vector, weight: Double = 1.0): BregmanPoint = {
+    val w = h.toArray.sum
+    new BregmanPoint(h, w, divergence.F(h, w))
   }
 
   override def toCenter(v: WeightedVector): BregmanCenter = {
-    val h = v.homogeneous
-    val w = v.weight
+    val h = add(v.homogeneous, 1.0)
+    val w = v.weight + v.homogeneous.size
     val df = divergence.gradF(h, w)
-    new BregmanCenter(v.homogeneous, v.weight, dot(h, df) / w - divergence.F(h, w), df)
+    new BregmanCenter(h, w, dot(h, df) / w - divergence.F(h, w), df)
   }
 }
 

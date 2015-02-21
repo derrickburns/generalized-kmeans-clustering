@@ -21,12 +21,12 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 import scala.annotation.tailrec
-import scala.collection.{mutable, Map}
+import scala.collection.mutable
 import scala.collection.generic.FilterMonadic
-import scala.collection.mutable.ArrayBuffer
+import ColumnTrackingKMeans._
+
 
 object ColumnTrackingKMeans {
   private[clusterer] val noCluster = -1
@@ -117,7 +117,6 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
-  import ColumnTrackingKMeans._
 
   val addOnly = true
 
@@ -127,10 +126,10 @@ class ColumnTrackingKMeans(
    * @param currentAssignments the assignments
    * @return a map from cluster index to number of points assigned to that cluster
    */
-  private def countByCluster(currentAssignments: RDD[Assignment]) =
+  private[this] def countByCluster(currentAssignments: RDD[Assignment]) =
     currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
-  private def distortion(data: RDD[Assignment]) = data.filter(_.isAssigned).map(_.distance).sum()
+  private[this] def distortion(data: RDD[Assignment]) = data.filter(_.isAssigned).map(_.distance).sum()
 
   /**
    * Create a K-Means clustering of the input and report on the resulting distortion
@@ -159,7 +158,7 @@ class ColumnTrackingKMeans(
      */
     def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
       require(points.getStorageLevel.useMemory)
-      points.map(bestAssignment(-1, _, centers))
+      points.map(bestAssignment(-1, _, centers.filter(_.center.weight > pointOps.weightThreshold)))
     }
 
 
@@ -252,7 +251,7 @@ class ColumnTrackingKMeans(
       stats.movement.setValue(0.0)
       stats.relocatedCenters.setValue(0)
       currentCenters.zip(previousCenters).foreach { case (current, previous) =>
-        if (current.round != previous.round && previous.center.weight > 0.0 && current.center.weight > 0.0) {
+        if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold && current.center.weight > pointOps.weightThreshold) {
           val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
           println(s"$delta, ${previous.center}, ${current.center}")
           stats.movement.add(delta)
@@ -312,7 +311,8 @@ class ColumnTrackingKMeans(
       require(points.getStorageLevel.useMemory)
       require(assignments.getStorageLevel.useMemory)
 
-      points.zipPartitions(assignments, previousAssignments) { (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+      points.zipPartitions(assignments, previousAssignments) {
+        (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
         val centroids = new Array[MutableWeightedVector](numCenters)
         val changed = new Array[Boolean](numCenters)
 
@@ -444,18 +444,16 @@ class ColumnTrackingKMeans(
       centers: Seq[CenterWithHistory]
       ): Assignment = {
 
-      val nonStationaryCenters = centers.withFilter(_.movedSince(assignment.round))
-      val stationaryCenters = centers.withFilter(!_.movedSince(assignment.round))
-      val closestNonStationary = bestAssignment(round, point, nonStationaryCenters)
+      val nonStationaryCenters = centers.withFilter(c => c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
+      val stationaryCenters = centers.withFilter(c => !c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
+      val bestNonStationary = bestAssignment(round, point, nonStationaryCenters)
 
-      if (!assignment.isAssigned)
-        bestAssignment(round, point, stationaryCenters, closestNonStationary)
-      else if (closestNonStationary.distance < assignment.distance)
-        closestNonStationary
-      else if (!centers(assignment.cluster).movedSince(assignment.round))
-        assignment
-      else
-        bestAssignment(round, point, stationaryCenters, closestNonStationary)
+      assignment match {
+        case a if !a.isAssigned => bestAssignment(round, point, stationaryCenters, bestNonStationary)
+        case a if a.distance > bestNonStationary.distance => bestNonStationary
+        case a if !centers(a.cluster).movedSince(a.round) => a
+        case _ => bestAssignment(round, point, stationaryCenters, bestNonStationary)
+      }
     }
 
     def clusterings(
@@ -468,10 +466,10 @@ class ColumnTrackingKMeans(
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
         withCached("empty assignments", points.map(x => unassigned)) { empty =>
           withCached("initial assignments", initialAssignments(points, centers)) { initial =>
-            val initialNumClusters = initial.map(_.round).distinct().count()
+            val initialNumClusters = initial.map(_.cluster).distinct().count()
             logInfo(s"number of clusters after initial assignment is $initialNumClusters")
             val (assignments, newCenters) = lloyds(1, centers, initial, empty)
-            val finalNumCluster = assignments.map(_.round).distinct().count()
+            val finalNumCluster = assignments.map(_.cluster).distinct().count()
             logInfo(s"number of clusters after final assignment is $finalNumCluster")
             (distortion(assignments), newCenters.map(_.center), assignments)
           }
