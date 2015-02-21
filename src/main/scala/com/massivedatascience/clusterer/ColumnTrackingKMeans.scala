@@ -150,19 +150,6 @@ class ColumnTrackingKMeans(
     val stats = new TrackingStats(points.sparkContext)
 
     /**
-     * The initial assignments of points to clusters
-     *
-     * @param points the incoming data
-     * @param centers cluster centers
-     * @return the assignments
-     */
-    def initialAssignments(points: RDD[BregmanPoint], centers: Array[CenterWithHistory]) = {
-      require(points.getStorageLevel.useMemory)
-      points.map(bestAssignment(-1, _, centers.filter(_.center.weight > pointOps.weightThreshold)))
-    }
-
-
-    /**
      * Identify the new cluster assignments for a sample of the points.
      * Persists the new assignments in memory, un-persisting the previous assignments.
      *
