@@ -22,7 +22,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.Vector
 
 
-
 object KMeans extends SparkHelper {
   // Initialization mode names
   val RANDOM = "random"
@@ -34,9 +33,7 @@ object KMeans extends SparkHelper {
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
   val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
-  val GENERALIZED_SYMMETRIZED_KL = "GENERALIZED_SYMMETRIZED_KL"
-  val EUCLIDEAN = "DENSE_EUCLIDEAN"
-  val SPARSE_EUCLIDEAN = "SPARSE_EUCLIDEAN"
+  val EUCLIDEAN = "EUCLIDEAN"
   val LOGISTIC_LOSS = "LOGISTIC_LOSS"
   val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
 
@@ -46,6 +43,8 @@ object KMeans extends SparkHelper {
 
   val IDENTITY_EMBEDDING = "IDENTITY"
   val HAAR_EMBEDDING = "HAAR"
+  val SYMMETRIZING_KL_EMBEDDING = "SYMMETRIZING_KL_EMBEDDING"
+
   val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
@@ -224,16 +223,14 @@ object KMeans extends SparkHelper {
 
   def getPointOps(distanceFunction: String): BasicPointOps = {
     distanceFunction match {
-      case EUCLIDEAN => DenseSquaredEuclideanPointOps
+      case EUCLIDEAN => SquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
       case DISCRETE_KL => DiscreteDenseKLPointOps
       case SIMPLEX_SMOOTHED_KL => DiscreteDenseSimplexSmoothedKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
-      case SPARSE_EUCLIDEAN => SparseSquaredEuclideanPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
-      case GENERALIZED_SYMMETRIZED_KL => GeneralizedSymmetrizedKLPointOps
       case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
@@ -245,6 +242,7 @@ object KMeans extends SparkHelper {
       case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
       case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
       case HAAR_EMBEDDING => HaarEmbedding
+      case SYMMETRIZING_KL_EMBEDDING => SymmetrizingKLEmbedding
       case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
     }
   }
@@ -361,7 +359,7 @@ object KMeans extends SparkHelper {
     val subs = (0 until depth).foldLeft(List(input)) {
       case (data, e) => data.head.map(embedding.embed) :: data
     }
-    subs.map(_.map(ops.vectorToPoint))
+    subs.map(_.map(ops.toPoint))
   }
 
   /**
@@ -377,6 +375,6 @@ object KMeans extends SparkHelper {
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
 
-    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.vectorToPoint)}
+    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint)}
   }
 }

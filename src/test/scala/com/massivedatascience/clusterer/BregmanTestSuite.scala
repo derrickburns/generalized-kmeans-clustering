@@ -17,8 +17,8 @@ class BregmanTestSuite extends FunSuite {
     val ops = DenseSquaredEuclideanPointOps
     val v1 = ImmutableInhomogeneousVector(Vectors.dense(1.0, 2.0, 4.0))
     val v2 = ImmutableInhomogeneousVector(Vectors.dense(2.0, 2.0, 8.0))
-    val p1 = ops.vectorToPoint(v1)
-    val p2 = ops.vectorToPoint(v2)
+    val p1 = ops.toPoint(v1)
+    val p2 = ops.toPoint(v2)
     val c1 = ops.toCenter(p1)
     val c2 = ops.toCenter(p2)
     val distance11 = ops.distance(p1, c1)
@@ -35,8 +35,8 @@ class BregmanTestSuite extends FunSuite {
 
     val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
     val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
-    val p1 = ops.vectorToPoint(v1)
-    val p2 = ops.vectorToPoint(v2)
+    val p1 = ops.toPoint(v1)
+    val p2 = ops.toPoint(v2)
 
     val c1 = ops.toCenter(p1)
     val c2 = ops.toCenter(p2)
@@ -59,8 +59,8 @@ class BregmanTestSuite extends FunSuite {
 
     val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
     val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
-    val p1 = ops.vectorToPoint(v1)
-    val p2 = ops.vectorToPoint(v2)
+    val p1 = ops.toPoint(v1)
+    val p2 = ops.toPoint(v2)
 
     val c1 = ops.toCenter(p1)
     val c2 = ops.toCenter(p2)
@@ -84,8 +84,8 @@ class BregmanTestSuite extends FunSuite {
     val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
     val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
 
-    val p1 = ops.vectorToPoint(v1)
-    val p2 = ops.vectorToPoint(v2)
+    val p1 = ops.toPoint(v1)
+    val p2 = ops.toPoint(v2)
 
     val c1 = ops.toCenter(p1)
     val c2 = ops.toCenter(p2)

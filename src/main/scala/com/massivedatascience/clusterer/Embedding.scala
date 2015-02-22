@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
 
@@ -41,6 +42,30 @@ object HaarEmbedding extends Embedding {
   def embed(raw: WeightedVector): WeightedVector =
     new ImmutableHomogeneousVector(Vectors.dense(HaarWavelet.average(raw.homogeneous.toArray)), raw.weight)
 }
+
+/**
+ * One can create a symmetric version of any Kullback Leibler Divergence that can be clustered
+ * by embedding the input points (which are a simplex in R+ ** n) into a new Euclidean space R ** N.
+ *
+ * See http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf
+ *
+ * This one is
+ *
+ * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+ *
+ * The embedding is simply
+ *
+ * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+ *
+ */
+class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
+  def embed(v: WeightedVector): WeightedVector = {
+    val embedded = v.homogeneous.copy
+    new ImmutableHomogeneousVector(axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
+  }
+}
+
+object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
 
 /**
  *

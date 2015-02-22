@@ -76,19 +76,9 @@ package object clusterer {
 
   trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable  with ClusterFactory {
 
-    def embed(v: WeightedVector): WeightedVector
-
     val weightThreshold : Double
 
     def distance(p: P, c: C): Double
-
-
-    /**
-     * convert a vector in inhomogeneous coordinates into a point
-     * @param v input vector
-     * @return weighted vector
-     */
-    def vectorToPoint(v: WeightedVector): P
 
     /**
      * converted a weighted vector to a point
@@ -111,14 +101,6 @@ package object clusterer {
      * @return is the point distinct from the center
      */
     def centerMoved(v: P, w: C): Boolean
-
-
-    /**
-     * convert a weighted point to an inhomogeneous vector
-     * @param v weighted point
-     * @return
-     */
-    def toInhomogeneous(v: WeightedVector): Vector = v.inhomogeneous
 
     /**
      * Return the index of the closest point in `centers` to `point`, as well as its distance.

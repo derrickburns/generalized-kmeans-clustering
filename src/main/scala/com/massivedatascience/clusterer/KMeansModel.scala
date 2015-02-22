@@ -33,18 +33,18 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) exte
   lazy val weightedClusterCenters: Array[WeightedVector] = centers.map(pointOps.toPoint)
 
   /** Returns the cluster index that a given point belongs to. */
-  def predictWeighted(point: WeightedVector): Int = pointOps.findClosestCluster(centers, pointOps.vectorToPoint(point))
+  def predictWeighted(point: WeightedVector): Int = pointOps.findClosestCluster(centers, pointOps.toPoint(point))
 
   def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) =
-    pointOps.findClosest(centers, pointOps.vectorToPoint(point))
+    pointOps.findClosest(centers, pointOps.toPoint(point))
 
   /** Maps given points to their cluster indices. */
   def predictWeighted(points: RDD[WeightedVector]): RDD[Int] = {
-    points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(p)))
+    points.map(p => pointOps.findClosestCluster(centers, pointOps.toPoint(p)))
   }
 
   def computeCostWeighted(data: RDD[WeightedVector]): Double =
-    data.map(p => pointOps.findClosest(centers, pointOps.vectorToPoint(p))._2).sum()
+    data.map(p => pointOps.findClosest(centers, pointOps.toPoint(p))._2).sum()
 
   def clusterCenters: Array[Vector] = weightedClusterCenters.map(_.inhomogeneous)
 
