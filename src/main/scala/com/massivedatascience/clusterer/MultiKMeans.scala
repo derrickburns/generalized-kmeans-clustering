@@ -69,14 +69,14 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
 
         for (run <- activeRuns) active(run) = false
 
-        for (((runIndex: Int, clusterIndex: Int), cn: WeightedVector) <- centroids) {
+        for (((runIndex: Int, clusterIndex: Int), cn: MutableWeightedVector) <- centroids) {
           val run = activeRuns(runIndex)
           if (cn.weight == 0.0) {
             active(run) = true
             centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
           } else {
-            val centroid = pointOps.toPoint(cn)
-            active(run) = active(run) || pointOps.centerMoved(centroid, centers(run)(clusterIndex))
+            val centroid = cn.asImmutable
+            active(run) = active(run) || pointOps.centerMoved(pointOps.toPoint(centroid), centers(run)(clusterIndex))
             centers(run)(clusterIndex) = pointOps.toCenter(centroid)
           }
         }

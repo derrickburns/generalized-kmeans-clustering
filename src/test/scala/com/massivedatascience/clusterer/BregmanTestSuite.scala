@@ -14,9 +14,9 @@ class BregmanTestSuite extends FunSuite {
 
   test("DenseSquaredEuclideanPointOps") {
 
-    val ops = DenseSquaredEuclideanPointOps
-    val v1 = ImmutableInhomogeneousVector(Vectors.dense(1.0, 2.0, 4.0))
-    val v2 = ImmutableInhomogeneousVector(Vectors.dense(2.0, 2.0, 8.0))
+    val ops = SquaredEuclideanPointOps
+    val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0))
+    val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0))
     val p1 = ops.toPoint(v1)
     val p2 = ops.toPoint(v2)
     val c1 = ops.toCenter(p1)
@@ -33,8 +33,8 @@ class BregmanTestSuite extends FunSuite {
   test("DenseSimplexKLPointOps") {
     val ops = DiscreteDenseSimplexSmoothedKLPointOps
 
-    val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
-    val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
+    val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
+    val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
     val p1 = ops.toPoint(v1)
     val p2 = ops.toPoint(v2)
 
@@ -57,8 +57,8 @@ class BregmanTestSuite extends FunSuite {
   test("DenseKLPointOps") {
     val ops = DenseKLPointOps
 
-    val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
-    val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
+    val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
+    val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
     val p1 = ops.toPoint(v1)
     val p2 = ops.toPoint(v2)
 
@@ -81,8 +81,8 @@ class BregmanTestSuite extends FunSuite {
   test("DenseKLPointOps homogeneous") {
     val ops = DenseKLPointOps
 
-    val v1 = new ImmutableHomogeneousVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
-    val v2 = new ImmutableHomogeneousVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
+    val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
+    val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)
 
     val p1 = ops.toPoint(v1)
     val p2 = ops.toPoint(v2)

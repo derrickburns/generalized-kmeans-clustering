@@ -17,7 +17,6 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.Vector
 
@@ -37,9 +36,7 @@ trait ClusterFactory extends  Serializable {
 class EagerCentroid extends MutableWeightedVector with Serializable {
   def homogeneous = raw
 
-  def inhomogeneous = clusterer.asInhomogeneous(raw, weight)
-
-  def asImmutable = new ImmutableHomogeneousVector(raw, weight)
+  def asImmutable = WeightedVector(raw, weight)
 
   private var raw: Vector = empty
 
@@ -48,6 +45,10 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
   def add(p: WeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
   def sub(p: WeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
+
+  def add(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
+
+  def sub(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
   /**
    * Add in a vector, preserving the sparsity of the original/first vector.
@@ -69,8 +70,8 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
     }
     this
   }
-}
 
+}
 
 object DenseClusterFactory extends ClusterFactory {
   def getCentroid: MutableWeightedVector = new EagerCentroid

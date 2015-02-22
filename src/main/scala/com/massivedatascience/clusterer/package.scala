@@ -27,18 +27,6 @@ package object clusterer {
   val Unknown = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())
 
-  implicit class WWeightedVector(val s: WeightedVector) extends AnyVal {
-
-    def asInhomogeneous: Vector = clusterer.asInhomogeneous(s.homogeneous, s.weight)
-
-    def asHomogeneous: Vector = clusterer.asHomogeneous(s.inhomogeneous, s.weight)
-
-    override def toString: String = s.weight + "," + s.homogeneous.toString
-
-    def asImmutable: WeightedVector = ImmutableHomogeneousVector(s)
-
-  }
-
   def asInhomogeneous(homogeneous: Vector, weight: Double) = {
     val x = homogeneous.copy
     scal(1.0 / weight, x)

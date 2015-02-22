@@ -79,7 +79,7 @@ object KMeans extends SparkHelper {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
-    withCached("weighted vectors", data.map(x => ImmutableInhomogeneousVector.apply(x))) { data =>
+    withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
       val ops = distanceFunctionNames.map(getPointOps)
       val initializer = getInitializer(mode, k, runs, initializationSteps)
       val embeddings = embeddingNames.map(getEmbedding)

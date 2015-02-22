@@ -49,15 +49,15 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) exte
   def clusterCenters: Array[Vector] = weightedClusterCenters.map(_.inhomogeneous)
 
   /** Returns the cluster index that a given point belongs to. */
-  def predict(point: Vector): Int = predictWeighted(ImmutableInhomogeneousVector(point))
+  def predict(point: Vector): Int = predictWeighted(WeightedVector(point))
 
   /** Returns the cluster index that a given point belongs to. */
   def predictClusterAndDistance(point: Vector): (Int, Double) =
-    predictClusterAndDistanceWeighted(ImmutableInhomogeneousVector(point))
+    predictClusterAndDistanceWeighted(WeightedVector(point))
 
   /** Maps given points to their cluster indices. */
   def predict(points: RDD[Vector]): RDD[Int] =
-    predictWeighted(points.map(ImmutableInhomogeneousVector.apply))
+    predictWeighted(points.map(WeightedVector.apply))
 
   /** Maps given points to their cluster indices. */
   def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] =
@@ -68,5 +68,5 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) exte
    * model on the given data.
    */
   def computeCost(data: RDD[Vector]): Double =
-    computeCostWeighted(data.map(ImmutableInhomogeneousVector.apply))
+    computeCostWeighted(data.map(point => WeightedVector(point)))
 }

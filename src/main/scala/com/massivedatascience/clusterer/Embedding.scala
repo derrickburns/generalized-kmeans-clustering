@@ -32,7 +32,7 @@ object IdentityEmbedding extends Embedding {
 object DenseEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
    v match {
-     case sv: SparseVector => new ImmutableHomogeneousVector(Vectors.dense(v.homogeneous.toArray), v.weight)
+     case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
      case dv: DenseVector => dv
    }
   }
@@ -40,7 +40,7 @@ object DenseEmbedding extends Embedding {
 
 object HaarEmbedding extends Embedding {
   def embed(raw: WeightedVector): WeightedVector =
-    new ImmutableHomogeneousVector(Vectors.dense(HaarWavelet.average(raw.homogeneous.toArray)), raw.weight)
+    WeightedVector(HaarWavelet.average(raw.homogeneous.toArray), raw.weight)
 }
 
 /**
@@ -61,7 +61,7 @@ object HaarEmbedding extends Embedding {
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
     val embedded = v.homogeneous.copy
-    new ImmutableHomogeneousVector(axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
+    WeightedVector(axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
   }
 }
 
@@ -112,7 +112,7 @@ case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
       }
       tinySet.clear()
     }
-    new ImmutableHomogeneousVector(Vectors.dense(rep), v.weight)
+    WeightedVector(rep, v.weight)
   }
 }
 
