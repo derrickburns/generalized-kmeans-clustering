@@ -24,7 +24,7 @@ import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) {
+class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) extends Serializable {
   lazy val k: Int = centers.length
 
   /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
@@ -39,8 +39,9 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter]) {
     pointOps.findClosest(centers, pointOps.vectorToPoint(point))
 
   /** Maps given points to their cluster indices. */
-  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] = {
     points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(p)))
+  }
 
   def computeCostWeighted(data: RDD[WeightedVector]): Double =
     data.map(p => pointOps.findClosest(centers, pointOps.vectorToPoint(p))._2).sum()

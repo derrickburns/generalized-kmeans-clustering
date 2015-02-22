@@ -41,6 +41,10 @@ trait SparkHelper extends Logging {
     result
   }
 
+  def sideEffect[T](v: T)(f: T => Unit): T = {
+    f(v)
+    v
+  }
 
   def withCached[T, Q](
     name: String, v: RDD[T],

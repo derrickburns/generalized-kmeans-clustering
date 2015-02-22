@@ -124,9 +124,10 @@ object KMeans extends SparkHelper {
     val ops = distanceFunctionNames.map(getPointOps)
     val initializer = getInitializer(mode, k, runs, initializationSteps)
     val embeddings = embeddingNames.map(getEmbedding)
-    val results = reSampleTrain(data, initializer, ops, embeddings)
-    results._2.assignments.unpersist(blocking = false)
-    results._1
+
+    sideEffect(reSampleTrain(data, initializer, ops, embeddings)) { case (_, y) =>
+      y.assignments.unpersist(blocking = false)
+    }._1
   }
 
   /**
@@ -336,9 +337,9 @@ object KMeans extends SparkHelper {
       val remaining = dataSets.zip(pointOps).tail
       remaining.foldLeft(simpleTrain(pointOps.head, original, initializer)) {
         case ((_, KMeansResults(_, assignments)), (data, op)) =>
-          val result = simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))
-          assignments.unpersist(blocking = false)
-          result
+          sideEffect(simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))) { result =>
+            assignments.unpersist(blocking = false)
+          }
       }
     }
   }

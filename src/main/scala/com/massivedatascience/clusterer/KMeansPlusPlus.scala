@@ -104,9 +104,9 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
       }
       more = selected.nonEmpty
     }
-    val result = centers.take(k)
-    logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $k requested")
-    result.toArray
+    sideEffect(centers.take(k).toArray) { result =>
+      logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $k requested")
+    }
   }
 
   /**
@@ -131,11 +131,10 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
 
   def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] = {
     var cumulative = 0.0
-    val cumulativeWeights = weights map { weight =>
+    weights map { weight =>
       cumulative = cumulative + weight
       cumulative
     }
-    cumulativeWeights
   }
 
   /**
