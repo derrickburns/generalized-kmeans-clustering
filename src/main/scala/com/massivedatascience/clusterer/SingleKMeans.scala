@@ -44,12 +44,12 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
       logInfo(s"iteration $iteration number of centers ${activeCenters.length}")
       active = false
       for ((clusterIndex: Int, cn: MutableWeightedVector) <- getCentroids(data, activeCenters)) {
-        if (cn.weight == 0.0) {
+        val centroid = cn.asImmutable
+        if (centroid.weight == 0.0) {
           active = true
           activeCenters(clusterIndex) = null.asInstanceOf[BregmanCenter]
         } else {
-          val centroid = pointOps.toPoint(cn)
-          active = active || pointOps.centerMoved(centroid, activeCenters(clusterIndex))
+          active = active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
           activeCenters(clusterIndex) = pointOps.toCenter(centroid)
         }
       }

@@ -17,7 +17,6 @@
 
 package com.massivedatascience
 
-import com.massivedatascience.clusterer.{ClusterFactory, PointOps}
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 import org.apache.spark.rdd.RDD
@@ -65,19 +64,9 @@ package object clusterer {
 
   trait PointOps[P <: WeightedVector, C <: WeightedVector] extends Serializable  with ClusterFactory {
 
-    def embed(v: Vector): Vector
-
     val weightThreshold : Double
 
     def distance(p: P, c: C): Double
-
-
-    /**
-     * convert a vector in inhomogeneous coordinates into a point
-     * @param v input vector
-     * @return weighted vector
-     */
-    def vectorToPoint(v: Vector, weight: Double = 1.0): P
 
     /**
      * converted a weighted vector to a point
@@ -100,14 +89,6 @@ package object clusterer {
      * @return is the point distinct from the center
      */
     def centerMoved(v: P, w: C): Boolean
-
-
-    /**
-     * convert a weighted point to an inhomogeneous vector
-     * @param c
-     * @return
-     */
-    def toInhomogeneous(c: WeightedVector): Vector = c.inhomogeneous
 
     /**
      * Return the index of the closest point in `centers` to `point`, as well as its distance.
@@ -156,24 +137,16 @@ package object clusterer {
   /**
    * A point with an additional single Double value that is used in distance computation.
    *
-   * @param homogeneous  homogeneous coordinates of point following embedding
-   * @param weight weight of point
-   * @param f f(point)
    */
-  class BregmanPoint(
-    val homogeneous: Vector,
-    val weight: Double,
-    val f: Double) extends WeightedVector {
-
-    val inhomogeneous = asInhomogeneous
+  class BregmanPoint(val homogeneous: Vector, val weight: Double, val f: Double) extends WeightedVector {
+    lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
   }
 
   /**
    * A cluster center with an additional Double and an additional vector containing the gradient
    * that are used in distance computation.
    *
-   * @param homogeneous homogeneous coordinates of center in the embedded space
-   * @param weight weight of vector
+   * @param homogeneous point
    * @param dotGradMinusF  center dot gradient(center) - f(center)
    * @param gradient gradient of center
    */
@@ -183,7 +156,17 @@ package object clusterer {
     val dotGradMinusF: Double,
     val gradient: Vector) extends WeightedVector {
 
-    override lazy val inhomogeneous = asInhomogeneous
+    lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
+  }
+
+  object BregmanPoint {
+    def apply(v: WeightedVector, f: Double): BregmanPoint =
+      new BregmanPoint(v.homogeneous, v.weight, f)
+  }
+
+  object BregmanCenter {
+    def apply(v: WeightedVector, dotGradMinusF: Double, gradient: Vector): BregmanCenter =
+      new BregmanCenter(v.homogeneous, v.weight, dotGradMinusF, gradient)
   }
 
   trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter]

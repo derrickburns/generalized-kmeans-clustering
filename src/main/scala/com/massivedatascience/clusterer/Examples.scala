@@ -17,8 +17,6 @@
 
 package com.massivedatascience.clusterer
 
-
-import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 
@@ -42,7 +40,7 @@ object Examples {
    * @return
    */
   def sparseTrain(
-    raw: RDD[Vector],
+    raw: RDD[WeightedVector],
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
@@ -59,7 +57,7 @@ object Examples {
   }
 
   def timeSeriesTrain(
-    raw: RDD[Vector],
+    raw: RDD[WeightedVector],
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
@@ -69,7 +67,7 @@ object Examples {
     clustererName: String = COLUMN_TRACKING,
     embeddingName: String = HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
 
-    val dim = raw.first().toArray.length
+    val dim = raw.first().homogeneous.toArray.length
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)

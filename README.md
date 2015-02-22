@@ -44,9 +44,9 @@ The full signature of the ```KMeans.train``` method is:
    * @param k  number of clusters desired
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
-   * @param initializerName initialization algorithm to use
+   * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
-   * @param distanceFunctionName the distance functions to use
+   * @param distanceFunctionNames the distance functions to use
    * @param kMeansImplName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
@@ -56,12 +56,12 @@ The full signature of the ```KMeans.train``` method is:
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
-    initializerName: String = K_MEANS_PARALLEL,
+    mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
-    embeddingNames : List[String] = List(IDENTITY_EMBEDDING))
-  : KMeansModel = ???
+    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
+  : KMeansModel = { ???
 }
 ```
 
@@ -100,23 +100,23 @@ while the latter applies the same embedding iteratively on the data.
    * @param initializerName initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingName embedding to use recursively
    * @param depth number of times to recurse
    * @return K-Means model
    */
   def trainViaSubsampling(
-    data: RDD[Vector],
+    data: RDD[WeightedVector],
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = EUCLIDEAN,
-    kMeansImplName : String = SIMPLE,
-    embeddingName : String = HAAR_EMBEDDING,
+    clustererName: String = COLUMN_TRACKING,
+    embeddingName: String = HAAR_EMBEDDING,
     depth: Int = 2)
-  : KMeansModel = ???
+  : (KMeansModel, KMeansResults) = ???
 }
 ```
 
@@ -211,13 +211,11 @@ Kullback-Leibler divergence.
 
 | Name (```KMeans._```)            | Space | Divergence              | Input   |
 |----------------------------------|-------|-------------------------|---------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                | Dense   |
-| ```SPARSE_EUCLIDEAN```           | R^d   |Euclidean                | Sparse  |
+| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |
 | ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   |
 | ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |
 | ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |
 | ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |
-| ```GENERALIZED_SYMMETRIZED_KL``` | R+^d  |Kullback-Leibler         | Dense   |
 | ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
 | ```GENERALIZED_I```              | R     |Generalized I-divergence |         |
 
@@ -250,6 +248,8 @@ computation.
 | ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
 | ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
 | ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
+| ```SYMMETRIZING_KL_EMBEDDING```     | Symmetrizing KL Embedding       |
+
 
 ### K-Means Implementations
 
@@ -281,9 +281,8 @@ Additionally, this implementation performs the implementation in time quadratic 
 
 #### Sparse Data
 
-This clusterer works well on sparse input data of high dimension.  Note, some distance functions are not defined on
-sparse data (i.e. Kullback-Leibler).  However, one can approximate those distance functions to
-achieve similar results.  This implementation provides such approximations.
+This clusterer works on dense and sparce data.  However, for best performance, we recommend that you convert youd sparse data into dense data before clustering.
+In high dimensions (say > 1024), it is recommended that you embed your sparse data into a lower dimensional dense space using random indexing.
 
 ### Scalability and Testing
 
@@ -422,10 +421,7 @@ characteristics of the data to define the fastest methods for evaluating Bregman
 trait BregmanPointOps  {
   val weightThreshold = 1e-4
   val distanceThreshold = 1e-8
-  def embed(v:Vector) : Vector = ???
   def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
-  def homogeneousToPoint(h: Vector, weight: Double): BregmanPoint = ???
-  def inhomogeneousToPoint(inh: Vector, weight: Double): BregmanPoint = ???
   def toCenter(v: WeightedVector): BregmanCenter = ???
   def toPoint(v: WeightedVector): BregmanPoint =  ???
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???

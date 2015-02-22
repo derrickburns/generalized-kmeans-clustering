@@ -16,7 +16,7 @@ trait SparkHelper extends Logging {
    * @tparam T type of data in RDD
    * @return the input RDD
    */
-  def sync[T](name: String, data: RDD[T], synchronous: Boolean = true)(implicit sc: SparkContext): RDD[T] = {
+  def sync[T](name: String, data: RDD[T], synchronous: Boolean = true): RDD[T] = {
     data.setName(name).cache()
     if (synchronous) {
       val count = data.count()
@@ -32,9 +32,24 @@ trait SparkHelper extends Logging {
   }
 
   def withCached[T, Q](
+    names: Seq[String],
+    rdds: Seq[RDD[T]])(f: Seq[RDD[T]] => Q): Q = {
+
+    rdds.zip(names).foreach { case (r, n) => sync(n, r, true)}
+    val result = f(rdds)
+    rdds.foreach(_.unpersist())
+    result
+  }
+
+  def sideEffect[T](v: T)(f: T => Unit): T = {
+    f(v)
+    v
+  }
+
+  def withCached[T, Q](
     name: String, v: RDD[T],
     blocking: Boolean = false,
-    synchronous: Boolean = true)(f: RDD[T] => Q)(implicit sc: SparkContext): Q = {
+    synchronous: Boolean = true)(f: RDD[T] => Q): Q = {
 
     sync(name, v, synchronous)
     val result = f(v)
@@ -42,7 +57,7 @@ trait SparkHelper extends Logging {
     result
   }
 
-  def withNamed[T, Q](name: String, v: RDD[T])(f: RDD[T] => Q)(implicit sc: SparkContext): Q = {
+  def withNamed[T, Q](name: String, v: RDD[T])(f: RDD[T] => Q): Q = {
     noSync(name, v)
     f(v)
   }
@@ -54,8 +69,7 @@ trait SparkHelper extends Logging {
     result
   }
 
-  def noSync[T](name: String, data: RDD[T])(implicit sc: SparkContext): RDD[T] = data.setName(name)
-
+  def noSync[T](name: String, data: RDD[T]): RDD[T] = data.setName(name)
 }
 
 

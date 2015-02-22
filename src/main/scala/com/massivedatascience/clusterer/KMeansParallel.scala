@@ -39,9 +39,9 @@ class KMeansParallel(
   clusterer: MultiKMeansClusterer)
   extends KMeansInitializer with SparkHelper {
 
-  def init(pointOps: BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]]) = {
+  def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
 
-    implicit val sc = d.sparkContext
+    implicit val sc = data.sparkContext
 
     /**
      * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
@@ -66,7 +66,6 @@ class KMeansParallel(
 
       val centers = bcCenters.value
       val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
-      val sc = data.sparkContext
 
       val k = numClusters
       Array.tabulate(runs) { r =>
@@ -75,10 +74,12 @@ class KMeansParallel(
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (k > myCenters.length) myCenters.length else k
         val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
-        val parallelCenters = sc.parallelize(myCenters.map(pointOps.toPoint)).cache()
-        val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
-        assignments.map(_.unpersist(blocking = false))
-        clusters
+
+        withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { parallelCenters =>
+          val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
+          assignments.map(_.unpersist(blocking = false))
+          clusters
+        }
       }
     }
 
@@ -94,7 +95,6 @@ class KMeansParallel(
      * @return
      */
 
-    val data = sync("initial points", d.map(pointOps.vectorToPoint(_, 1.0)))
     val runs = r
 
     // Initialize empty centers and point costs.
@@ -188,7 +188,7 @@ class KMeansParallel(
       val result = finalCenters(data, bcCenters, seed)
       assert(data.getStorageLevel.useMemory)
       logInfo("returning results")
-      (data, result)
+      result
     }
   }
 }

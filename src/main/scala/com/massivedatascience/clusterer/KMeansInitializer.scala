@@ -17,11 +17,10 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 trait KMeansInitializer extends Serializable {
-  def init(ops:BregmanPointOps, d: RDD[Vector]): (RDD[BregmanPoint], Array[Array[BregmanCenter]])
+  def init(ops: BregmanPointOps, d: RDD[BregmanPoint]): Array[Array[BregmanCenter]]
 }
 
 

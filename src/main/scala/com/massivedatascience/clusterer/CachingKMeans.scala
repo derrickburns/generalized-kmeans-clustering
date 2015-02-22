@@ -217,7 +217,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
         val c = fatCenters(index)
         if (delta.weight != 0.0) {
           val x = if (c.nonEmpty) delta.add(c.center) else delta
-          FatCenter(ops.toCenter(x), c.index, moved = true, nonEmpty = true)
+          val centroid = x.asImmutable
+          FatCenter(ops.toCenter(centroid), c.index, moved = true, nonEmpty = true)
         } else {
           c.copy(moved = false)
         }
@@ -227,7 +228,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
   def distortion(data: RDD[FatPoint]): Double = {
     data.mapPartitions {
       points =>
-        Array(points.map { p => p.assignment(p.current).dist}.reduce(_ + _)).iterator
+        Array(points.map { p => p.assignment(p.current).dist}.sum).iterator
     }.reduce(_ + _)
   }
 

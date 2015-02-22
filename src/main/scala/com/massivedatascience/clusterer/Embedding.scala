@@ -17,29 +17,55 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
 
 trait Embedding extends Serializable {
-  def embed(v: Vector): Vector
+  def embed(v: WeightedVector): WeightedVector
 }
 
 object IdentityEmbedding extends Embedding {
-  def embed(v: Vector): Vector = v
+  def embed(v: WeightedVector): WeightedVector = v
 }
 
 object DenseEmbedding extends Embedding {
-  def embed(v: Vector): Vector = {
+  def embed(v: WeightedVector): WeightedVector = {
    v match {
-     case sv: SparseVector => Vectors.dense(v.toArray)
+     case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
      case dv: DenseVector => dv
    }
   }
 }
 
 object HaarEmbedding extends Embedding {
-  def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
+  def embed(raw: WeightedVector): WeightedVector =
+    WeightedVector(HaarWavelet.average(raw.homogeneous.toArray), raw.weight)
 }
+
+/**
+ * One can create a symmetric version of any Kullback Leibler Divergence that can be clustered
+ * by embedding the input points (which are a simplex in R+ ** n) into a new Euclidean space R ** N.
+ *
+ * See http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf
+ *
+ * This one is
+ *
+ * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+ *
+ * The embedding is simply
+ *
+ * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+ *
+ */
+class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
+  def embed(v: WeightedVector): WeightedVector = {
+    val embedded = v.homogeneous.copy
+    WeightedVector(axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
+  }
+}
+
+object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
 
 /**
  *
@@ -66,8 +92,8 @@ case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
 
   val tinySet = new TinyIntSet(on)
 
-  def embed(v: Vector): Vector = {
-    val iterator = v.iterator
+  def embed(v: WeightedVector): WeightedVector = {
+    val iterator = v.homogeneous.iterator
     val rep = new Array[Double](dim)
 
     while (iterator.hasNext) {
@@ -86,7 +112,7 @@ case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
       }
       tinySet.clear()
     }
-    Vectors.dense(rep)
+    WeightedVector(rep, v.weight)
   }
 }
 

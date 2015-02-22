@@ -287,7 +287,8 @@ class TrackingKMeans(
         val c = fatCenters(index)
         val oldPosition = pointOps.toPoint(c.center)
         val x = if (c.initialized) delta.add(oldPosition) else delta
-        fatCenters(index) = FatCenter(pointOps.toCenter(x), round)
+        val centroid = x.asImmutable
+        fatCenters(index) = FatCenter(pointOps.toCenter(centroid), round)
         stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
       }
       fatCenters
