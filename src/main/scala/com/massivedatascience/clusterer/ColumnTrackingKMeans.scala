@@ -442,20 +442,20 @@ class ColumnTrackingKMeans(
     def bestOfCenters(centerArrays: Array[Array[BregmanCenter]]): (Double, Array[CenterWithHistory], Option[RDD[Assignment]]) = {
       require(points.getStorageLevel.useMemory)
 
-      val noCenters = null.asInstanceOf[Array[CenterWithHistory]]
-      val noAssignments = Option[RDD[Assignment]](null)
+      val noCenters = Array[CenterWithHistory]()
+      val noAssignments: Option[RDD[Assignment]] = None
       val unsolved = (Double.MaxValue, noCenters, noAssignments)
 
       withCached("empty assignments", points.map(x => unassigned)) { empty =>
-        centerArrays.foldLeft(unsolved) { case (agg, initialCenters) =>
+        centerArrays.foldLeft(unsolved) { case (best, initialCenters) =>
           val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
           val (assignments, newCenters) = lloyds(0, empty, centers)
           val d = distortion(assignments)
-          if (d < agg._1) {
-            agg._3.map(_.unpersist())
+          if (d < best._1) {
+            best._3.map(_.unpersist())
             (d, newCenters, Some(assignments))
           } else {
-            agg
+            best
           }
         }
       }
