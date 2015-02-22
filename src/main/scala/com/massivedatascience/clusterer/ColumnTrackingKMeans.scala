@@ -439,17 +439,24 @@ class ColumnTrackingKMeans(
       }
     }
 
-    def clusterings(
-      points: RDD[BregmanPoint],
-      initialCenterSets: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], RDD[Assignment])] = {
-
+    def bestOfCenters(centerArrays: Array[Array[BregmanCenter]]): (Double, Array[CenterWithHistory], Option[RDD[Assignment]]) = {
       require(points.getStorageLevel.useMemory)
 
-      for (initialCenters <- initialCenterSets) yield {
-        val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
-        withCached("empty assignments", points.map(x => unassigned)) { empty =>
-          val (assignments, newCenters) = lloyds(0, centers, empty)
-          (distortion(assignments), newCenters.map(_.center), assignments)
+      val noCenters = null.asInstanceOf[Array[CenterWithHistory]]
+      val noAssignments = Option[RDD[Assignment]](null)
+      val unsolved = (Double.MaxValue, noCenters, noAssignments)
+
+      withCached("empty assignments", points.map(x => unassigned)) { empty =>
+        centerArrays.foldLeft(unsolved) { case (agg, initialCenters) =>
+          val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
+          val (assignments, newCenters) = lloyds(0, empty, centers)
+          val d = distortion(assignments)
+          if (d < agg._1) {
+            agg._3.map(_.unpersist())
+            (d, newCenters, Some(assignments))
+          } else {
+            agg
+          }
         }
       }
     }
@@ -457,26 +464,27 @@ class ColumnTrackingKMeans(
     @tailrec
     def lloyds(
       round: Int,
-      centers: Array[CenterWithHistory],
-      assignments: RDD[Assignment]): (RDD[Assignment], Array[CenterWithHistory]) = {
+      assignments: RDD[Assignment],
+      centers: Array[CenterWithHistory]): (RDD[Assignment], Array[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
 
       val newAssignments = sync(s"assignments round $round", updatedAssignments(round, assignments, centers))
       val newCenters = updateCenters(round + 1, centers, newAssignments, assignments)
       val terminate = shouldTerminate(round + 1, newCenters, centers, newAssignments, assignments)
-      assignments.unpersist()
-      if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newCenters, newAssignments)
+      if (round != 0) assignments.unpersist()
+      if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newAssignments, newCenters)
     }
 
     require(updateRate <= 1.0 && updateRate >= 0.0)
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
-    val candidates = clusterings(points, centerArrays)
-    val (d, centers, assignments) = candidates.minBy(_._1)
-    val best = (d, centers, Some(assignments.map(x => (x.cluster, x.distance)).persist()))
-    for ((_, _, a) <- candidates) a.unpersist()
-    best
+    val (clusterDistortion, centers, assignments) = bestOfCenters(centerArrays)
+
+    val finalAssignments = assignments.map(x => sync("final", x.map(y => (y.cluster, y.distance))))
+    val finalCenters = centers.map(_.center)
+    assignments.map(_.unpersist())
+    (clusterDistortion, finalCenters, finalAssignments)
   }
 }
