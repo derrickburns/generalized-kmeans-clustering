@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 import org.apache.spark.mllib.linalg.Vector
 
@@ -36,7 +37,9 @@ trait ClusterFactory extends  Serializable {
 class EagerCentroid extends MutableWeightedVector with Serializable {
   def homogeneous = raw
 
-  def inhomogeneous = asInhomogeneous
+  def inhomogeneous = clusterer.asInhomogeneous(raw, weight)
+
+  def asImmutable = new ImmutableHomogeneousVector(raw, weight)
 
   private var raw: Vector = empty
 

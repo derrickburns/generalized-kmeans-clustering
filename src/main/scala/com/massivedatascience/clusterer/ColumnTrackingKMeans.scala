@@ -186,7 +186,7 @@ class ColumnTrackingKMeans(
      * @param previousCenters  the cluster centers
      * @return the new cluster centers
      */
-    def updateCenters(round: Int, previousCenters: Array[CenterWithHistory], currentAssignments: RDD[Assignment], previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
+    def updatedCenters(round: Int, previousCenters: Array[CenterWithHistory], currentAssignments: RDD[Assignment], previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
 
       require(currentAssignments.getStorageLevel.useMemory)
       require(previousAssignments.getStorageLevel.useMemory)
@@ -470,7 +470,7 @@ class ColumnTrackingKMeans(
       require(assignments.getStorageLevel.useMemory)
 
       val newAssignments = sync(s"assignments round $round", updatedAssignments(round, assignments, centers))
-      val newCenters = updateCenters(round + 1, centers, newAssignments, assignments)
+      val newCenters = updatedCenters(round + 1, centers, newAssignments, assignments)
       val terminate = shouldTerminate(round + 1, newCenters, centers, newAssignments, assignments)
       if (round != 0) assignments.unpersist()
       if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newAssignments, newCenters)

@@ -18,8 +18,9 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.SparkHelper
-import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.apache.spark.mllib.linalg.Vector
+
 
 
 object KMeans extends SparkHelper {
@@ -79,6 +80,47 @@ object KMeans extends SparkHelper {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
+    withCached("weighted vectors", data.map(x => ImmutableInhomogeneousVector.apply(x))) { data =>
+      val ops = distanceFunctionNames.map(getPointOps)
+      val initializer = getInitializer(mode, k, runs, initializationSteps)
+      val embeddings = embeddingNames.map(getEmbedding)
+      val results = reSampleTrain(data, initializer, ops, embeddings)
+      results._2.assignments.unpersist(blocking = false)
+      results._1
+    }
+  }
+
+
+  /**
+   *
+   * Train a K-Means model using Lloyd's algorithm.
+   *
+   *
+   * @param data input data
+   * @param k  number of clusters desired
+   * @param maxIterations maximum number of iterations of Lloyd's algorithm
+   * @param runs number of parallel clusterings to run
+   * @param mode initialization algorithm to use
+   * @param initializationSteps number of steps of the initialization algorithm
+   * @param distanceFunctionNames the distance functions to use
+   * @param kMeansImplName which k-means implementation to use
+   * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
+   * @return K-Means model
+   */
+  def trainWeighted(
+    data: RDD[WeightedVector],
+    k: Int,
+    maxIterations: Int = 20,
+    runs: Int = 1,
+    mode: String = K_MEANS_PARALLEL,
+    initializationSteps: Int = 5,
+    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    kMeansImplName: String = COLUMN_TRACKING,
+    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
+  : KMeansModel = {
+
+    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+
     val ops = distanceFunctionNames.map(getPointOps)
     val initializer = getInitializer(mode, k, runs, initializationSteps)
     val embeddings = embeddingNames.map(getEmbedding)
@@ -104,7 +146,7 @@ object KMeans extends SparkHelper {
    * @return K-Means model and a clustering of the input data
    */
   def trainWithResults(
-    data: RDD[Vector],
+    data: RDD[WeightedVector],
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
@@ -143,7 +185,7 @@ object KMeans extends SparkHelper {
    * @return K-Means model
    */
   def trainViaSubsampling(
-    data: RDD[Vector],
+    data: RDD[WeightedVector],
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
@@ -253,7 +295,7 @@ object KMeans extends SparkHelper {
 
   def subSampleTrain(
     pointOps: BregmanPointOps,
-    raw: RDD[Vector],
+    raw: RDD[WeightedVector],
     initializer: KMeansInitializer,
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding)(
@@ -267,7 +309,7 @@ object KMeans extends SparkHelper {
   }
 
   def reSampleTrain(
-    raw: RDD[Vector],
+    raw: RDD[WeightedVector],
     initializer: KMeansInitializer,
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding]
@@ -311,14 +353,14 @@ object KMeans extends SparkHelper {
    * @return
    */
   private def subsample(
-    input: RDD[Vector],
+    input: RDD[WeightedVector],
     ops: BregmanPointOps,
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[BregmanPoint]] = {
     val subs = (0 until depth).foldLeft(List(input)) {
       case (data, e) => data.head.map(embedding.embed) :: data
     }
-    subs.map(_.map(ops.vectorToPoint(_)))
+    subs.map(_.map(ops.vectorToPoint))
   }
 
   /**
@@ -330,10 +372,10 @@ object KMeans extends SparkHelper {
    */
 
   private def resample(
-    input: RDD[Vector],
+    input: RDD[WeightedVector],
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
 
-    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.vectorToPoint(_))}
+    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.vectorToPoint)}
   }
 }

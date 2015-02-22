@@ -35,20 +35,29 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
   /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
     * takes place, which may be different from the space of the input vectors!
     */
-  lazy val clusterCenters: Array[Vector] = centers.map(pointOps.toInhomogeneous)
+  lazy val weightedClusterCenters: Array[WeightedVector] = centers.map(pointOps.toPoint)
+
+  def clusterCenters: Array[Vector] = weightedClusterCenters.map(_.inhomogeneous)
 
   /** Returns the cluster index that a given point belongs to. */
-  def predict(point: Vector): Int =
-    pointOps.findClosestCluster(centers, pointOps.vectorToPoint(point))
+  def predict(point: Vector): Int = predictWeighted(ImmutableInhomogeneousVector(point))
 
+  /** Returns the cluster index that a given point belongs to. */
+  def predictWeighted(point: WeightedVector): Int = pointOps.findClosestCluster(centers, pointOps.vectorToPoint(point))
 
   def predictClusterAndDistance(point: Vector): (Int, Double) =
+    predictClusterAndDistanceWeighted(ImmutableInhomogeneousVector(point))
+
+  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) =
     pointOps.findClosest(centers, pointOps.vectorToPoint(point))
 
   /** Maps given points to their cluster indices. */
   def predict(points: RDD[Vector]): RDD[Int] =
-    points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(p)))
+    points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(ImmutableInhomogeneousVector(p))))
 
+  /** Maps given points to their cluster indices. */
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
+    points.map(p => pointOps.findClosestCluster(centers, pointOps.vectorToPoint(p)))
 
   /** Maps given points to their cluster indices. */
   def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] =
@@ -59,6 +68,9 @@ class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
    * model on the given data.
    */
   def computeCost(data: RDD[Vector]): Double =
+    data.map(p => pointOps.findClosest(centers, pointOps.vectorToPoint(ImmutableInhomogeneousVector(p)))._2).sum()
+
+  def computeCostWeighted(data: RDD[WeightedVector]): Double =
     data.map(p => pointOps.findClosest(centers, pointOps.vectorToPoint(p))._2).sum()
 
 }

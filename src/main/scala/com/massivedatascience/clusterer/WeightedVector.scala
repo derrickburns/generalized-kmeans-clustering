@@ -17,8 +17,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.{Vectors, Vector}
 
 trait WeightedVector extends Serializable {
   def weight: Double
@@ -26,16 +25,8 @@ trait WeightedVector extends Serializable {
   def inhomogeneous: Vector
 
   def homogeneous: Vector
-
-  def asInhomogeneous: Vector = clusterer.asInhomogeneous(homogeneous, weight)
-
-  def asHomogeneous: Vector = clusterer.asHomogeneous(inhomogeneous, weight)
-
-  override def toString: String = weight + "," + homogeneous.toString
-
-  def asImmutable: WeightedVector = new ImmutableHomogeneousVector(homogeneous.copy, weight)
-
 }
+
 
 trait MutableWeightedVector extends WeightedVector {
   def add(p: WeightedVector): this.type
@@ -46,13 +37,28 @@ trait MutableWeightedVector extends WeightedVector {
 
 }
 
-class ImmutableInhomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
-  override val inhomogeneous = raw
-  override lazy val homogeneous = asHomogeneous
+object ImmutableInhomogeneousVector {
+  def apply(v: WeightedVector): WeightedVector = new ImmutableInhomogeneousVector(v.inhomogeneous, v.weight)
+
+  def apply(v: Vector): WeightedVector = new ImmutableInhomogeneousVector(v, 1.0)
+
+  def apply(v: Array[Double]): WeightedVector = new ImmutableInhomogeneousVector(Vectors.dense(v), 1.0)
+
 }
 
-class ImmutableHomogeneousVector(raw: Vector, val weight: Double) extends WeightedVector {
-  override lazy val inhomogeneous: Vector = asInhomogeneous
-  override val homogeneous: Vector = raw
+object ImmutableHomogeneousVector {
+  def apply(v: WeightedVector): WeightedVector = new ImmutableHomogeneousVector(v.homogeneous, v.weight)
+
+  def apply(v: Vector): WeightedVector = new ImmutableHomogeneousVector(v, 1.0)
+}
+
+class ImmutableInhomogeneousVector(v: Vector, val weight: Double) extends WeightedVector {
+  override val inhomogeneous = v.copy
+  override lazy val homogeneous = asHomogeneous(v, weight)
+}
+
+class ImmutableHomogeneousVector(v: Vector, val weight: Double) extends WeightedVector {
+  override lazy val inhomogeneous: Vector = asInhomogeneous(v, weight)
+  override val homogeneous: Vector = v.copy
 }
 

@@ -21,24 +21,25 @@ import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
 
 trait Embedding extends Serializable {
-  def embed(v: Vector): Vector
+  def embed(v: WeightedVector): WeightedVector
 }
 
 object IdentityEmbedding extends Embedding {
-  def embed(v: Vector): Vector = v
+  def embed(v: WeightedVector): WeightedVector = v
 }
 
 object DenseEmbedding extends Embedding {
-  def embed(v: Vector): Vector = {
+  def embed(v: WeightedVector): WeightedVector = {
    v match {
-     case sv: SparseVector => Vectors.dense(v.toArray)
+     case sv: SparseVector => new ImmutableHomogeneousVector(Vectors.dense(v.homogeneous.toArray), v.weight)
      case dv: DenseVector => dv
    }
   }
 }
 
 object HaarEmbedding extends Embedding {
-  def embed(raw: Vector): Vector = Vectors.dense(HaarWavelet.average(raw.toArray))
+  def embed(raw: WeightedVector): WeightedVector =
+    new ImmutableHomogeneousVector(Vectors.dense(HaarWavelet.average(raw.homogeneous.toArray)), raw.weight)
 }
 
 /**
@@ -66,8 +67,8 @@ case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
 
   val tinySet = new TinyIntSet(on)
 
-  def embed(v: Vector): Vector = {
-    val iterator = v.iterator
+  def embed(v: WeightedVector): WeightedVector = {
+    val iterator = v.homogeneous.iterator
     val rep = new Array[Double](dim)
 
     while (iterator.hasNext) {
@@ -86,7 +87,7 @@ case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
       }
       tinySet.clear()
     }
-    Vectors.dense(rep)
+    new ImmutableHomogeneousVector(Vectors.dense(rep), v.weight)
   }
 }
 
