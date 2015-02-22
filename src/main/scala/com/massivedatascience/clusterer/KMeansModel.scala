@@ -30,7 +30,7 @@ import org.apache.spark.rdd.RDD
 class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
   extends Serializable {
 
-  lazy val k: Int = clusterCenters.length
+  lazy val k: Int = centers.length
 
   /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
     * takes place, which may be different from the space of the input vectors!
