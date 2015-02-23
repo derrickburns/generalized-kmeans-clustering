@@ -149,6 +149,7 @@ class KMeansParallel(
       }
     }
 
+    result.map(_._3.map(_.unpersist()))
     assert(data.getStorageLevel.useMemory)
     logInfo("returning results")
     result.map(_._2).toArray
