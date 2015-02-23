@@ -107,7 +107,7 @@ object ColumnTrackingKMeans {
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
-  extends MultiKMeansClusterer with SparkHelper with WeightedSelector {
+  extends MultiKMeansClusterer with SparkHelper {
 
   import MultiKMeansClusterer._
 

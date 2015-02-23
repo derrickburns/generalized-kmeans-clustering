@@ -26,6 +26,7 @@ import org.apache.spark.storage.StorageLevel
 
 class KMeansRandom extends KMeansInitializer with SparkHelper {
 
+  // TODO use seed?
   def init(
     ops: BregmanPointOps,
     data: RDD[BregmanPoint],
