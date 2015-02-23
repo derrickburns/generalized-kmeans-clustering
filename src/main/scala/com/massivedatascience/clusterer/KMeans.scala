@@ -279,8 +279,7 @@ object KMeans extends SparkHelper {
     require(bregmanPoints.getStorageLevel.useMemory)
     logInfo("completed initialization of cluster centers")
 
-    val (cost, finalCenters, assignmentOpt) =
-      clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
+    val (cost, finalCenters, assignmentOpt) = MultiKMeansClusterer.bestOf(clusterer.cluster(distanceFunc, bregmanPoints, initialCenters))
     logInfo("completed clustering")
 
     val assignments = assignmentOpt.getOrElse(

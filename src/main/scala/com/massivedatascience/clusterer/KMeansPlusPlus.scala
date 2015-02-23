@@ -34,31 +34,10 @@ import scala.collection.mutable.ArrayBuffer
 class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) extends Serializable with SparkHelper {
 
   /**
-   * K-means++ on the weighted point set `points`. This first does the K-means++
-   * initialization procedure and then rounds of Lloyd's algorithm.
-   */
-
-  def cluster(
-    sc: SparkContext,
-    seed: Int,
-    points: Array[BregmanCenter],
-    weights: Array[Double],
-    k: Int): Array[BregmanCenter] = {
-    val centers: Array[BregmanCenter] = getCenters(sc, seed, points, weights, k, 1)
-
-    withNamed("points for kmeans++", sc.parallelize(points.map(ops.toPoint))) { pts =>
-      val (_, finalCenters, assignments) = clusterer.cluster(ops, pts, Array(centers))
-      assignments.map(_.unpersist(blocking = false))
-      finalCenters
-    }
-  }
-
-  /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
    * selection equal to the product of the given weights and distance to the closest cluster center
    * of the previous round.
    *
-   * @param sc the Spark context
    * @param seed a random number seed
    * @param candidateCenters  the candidate centers
    * @param weights  the weights on the candidate centers
@@ -66,8 +45,8 @@ class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) exte
    * @param perRound the number of centers to add per round
    * @return   an array of at most k cluster centers
    */
+
   def getCenters(
-    sc: SparkContext,
     seed: Int,
     candidateCenters: Array[BregmanCenter],
     weights: Array[Double],

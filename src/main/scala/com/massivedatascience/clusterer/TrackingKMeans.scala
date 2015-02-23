@@ -143,11 +143,11 @@ class TrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
+    centerArrays: Array[Array[BregmanCenter]]) = {
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
-    def cluster(): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
+    def cluster(): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
 
       assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -173,9 +173,7 @@ class TrackingKMeans(
 
         (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
       }
-      val clustering = results.minBy(_._1)
-      val assignment = clustering._3.map(x => (x.cluster, x.distance))
-      (clustering._1, clustering._2, Some(assignment))
+      results.map(x => (x._1, x._2, Option(x._3.map(y => (y.cluster, y.distance)))))
     }
 
     /**
