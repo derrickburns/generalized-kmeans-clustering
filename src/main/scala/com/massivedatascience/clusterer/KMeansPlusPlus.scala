@@ -21,7 +21,6 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
-import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -31,7 +30,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps, clusterer: MultiKMeansClusterer) extends Serializable with SparkHelper {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper {
 
   /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of

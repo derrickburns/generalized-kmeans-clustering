@@ -195,19 +195,16 @@ class ColumnTrackingKMeans(
         }
       }
       // adjust centers to fill in empty slots
-
-      val emptyCenters: Array[CenterWithHistory] = centers.filter(_.center.weight < pointOps.weightThreshold)
-
-      /*
-      new KMeansPlusPlus(pointOps, this).getCenters(
-        0,
-        candidateCenters: Array[BregmanCenter],
-        weights: Array[Double],
-        emptyClusters.size(),
-        perRound: Int)
-        */
-
-      centers
+      val emptyCenters = centers.filter(_.center.weight < pointOps.weightThreshold)
+      if (emptyCenters.length != 0) {
+        val nonEmptyCenters = centers.filter(_.center.weight >= pointOps.weightThreshold)
+        val newCenters = new DistanceSelector(emptyCenters.length, 0).cluster(pointOps, points, Array(nonEmptyCenters.map(_.center)))(0)
+        logInfo(s"replacing ${emptyCenters.length} empty clusters")
+        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y)}
+        nonEmptyCenters ++ replacements ++ emptyCenters.drop(replacements.length)
+      } else {
+        centers
+      }
     }
 
 
@@ -467,8 +464,6 @@ class ColumnTrackingKMeans(
         (d, newCenters, assignments)
       }
     }
-    candidates.map(x => (x._1, x._2.map {
-      _.center
-    }, Option(x._3.map { y => (y.cluster, y.distance)})))
+    candidates.map(x => (x._1, x._2.map(_.center), Option(x._3.map(y => (y.cluster, y.distance)))))
   }
 }

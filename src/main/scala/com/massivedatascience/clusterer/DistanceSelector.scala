@@ -11,13 +11,9 @@ import scala.collection.Map
  * Select k points randomly, weighted by their distance to the closest cluster center.
  * @param k number of points to select
  * @param seed  random number seed
- * @param clusterer clusterer to use
  * @return  array of sets of cluster centers
  */
-class WeighedDistanceClusterer(
-  k: Int,
-  seed: Int,
-  clusterer: MultiKMeansClusterer) extends MultiKMeansClusterer with SparkHelper {
+class DistanceSelector(k: Int, seed: Int) extends SparkHelper {
 
   /**
    * @param pointOps  distance function
@@ -28,7 +24,7 @@ class WeighedDistanceClusterer(
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
+    centerArrays: Array[Array[BregmanCenter]]): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 
@@ -40,18 +36,14 @@ class WeighedDistanceClusterer(
       }.reduceByKeyLocally(_ + _)
     }
 
-    val kMeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
+    val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
 
     Array.tabulate(centerArrays.length) { r =>
       val myCenters = centerArrays(r)
       logInfo(s"run $r has ${myCenters.length} centers")
       val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
       val kx = if (k > myCenters.length) myCenters.length else k
-      val initialCenters = kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1)
-
-      withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { points =>
-        clusterer.cluster(pointOps, points, Array(initialCenters)).head
-      }
+      kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1)
     }
   }
 }

@@ -140,8 +140,15 @@ class KMeansParallel(
     costs.unpersist(blocking = false)
 
     logInfo("creating final centers")
-    val centers1 = centers.map(_.toArray)
-    val result = new WeighedDistanceClusterer(numClusters, seed, clusterer).cluster(pointOps, data, centers1)
+    val centerArrays = centers.map(_.toArray)
+    val selected = new DistanceSelector(numClusters, seed).cluster(pointOps, data, centerArrays)
+
+    val result = selected.map { myCenters =>
+      withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { points =>
+        clusterer.cluster(pointOps, points, Array(myCenters)).head
+      }
+    }
+
     assert(data.getStorageLevel.useMemory)
     logInfo("returning results")
     result.map(_._2).toArray
