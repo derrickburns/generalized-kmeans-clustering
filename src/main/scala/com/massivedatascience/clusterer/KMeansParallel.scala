@@ -19,24 +19,25 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
 
 
-class KMeansParallel(
-  numClusters: Int,
-  r: Int,
-  initializationSteps: Int,
-  seedx: Int,
-  initial: Option[Array[Array[BregmanCenter]]] = None)
-  extends KMeansInitializer with SparkHelper with WeightedSelector {
+class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with SparkHelper {
 
-  def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
+  def init(
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    numClusters: Int,
+    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
+    r: Int,
+    seedx: Int): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 
@@ -59,7 +60,7 @@ class KMeansParallel(
     var costs = sync("pre-costs", data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
 
     val seed = new XORShiftRandom(seedx).nextInt()
-    val newCenters: Array[ArrayBuffer[BregmanCenter]] = initial.map(_.map(new ArrayBuffer[BregmanCenter] ++= _)).getOrElse(initialCenters(seed, pointOps, data, runs))
+    val newCenters: Seq[ArrayBuffer[BregmanCenter]] = initial.map(_.map(new ArrayBuffer[BregmanCenter] ++= _)).getOrElse(initialCenters(seed, pointOps, data, runs))
 
     /** Merges new centers to centers. */
     def mergeNewCenters(): Unit = {
@@ -80,7 +81,7 @@ class KMeansParallel(
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
 
-      val (newCosts, additionalCenters) = select(pointOps, data, 2 * numClusters, seed ^ (step << 16), runs, costs, newCenters)
+      val (newCosts, additionalCenters) = select(pointOps, data, 2 * numClusters, seed ^ (step << 16), runs, Some(costs), newCenters)
       costs.unpersist(blocking = false)
       costs = newCosts
       costs.persist()
@@ -114,8 +115,60 @@ class KMeansParallel(
       logInfo(s"run $r has ${myCenters.length} centers")
       val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
       val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-      kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1)
+      kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, initial.map(_(r).length).getOrElse(0))
     }
+  }
+
+  /**
+   * Select approximately k points at random with probability proportional to distance from closest cluster
+   * center, given an (optional) initial set of distances.
+   *
+   */
+  def select(
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    k: Int,
+    seed: Int,
+    runs: Int,
+    priorCosts: Option[RDD[Vector]],
+    newCenters: Seq[IndexedSeq[BregmanCenter]]): (RDD[Vector], Array[(Int, BregmanCenter)]) = {
+
+    implicit val sc = data.sparkContext
+
+    val oldCosts = priorCosts.getOrElse(data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
+
+    val costs = withBroadcast(newCenters) { bcNewCenters =>
+      logInfo(s"constructing updated costs per point")
+      data.zip(oldCosts).map { case (point, cost) =>
+        Vectors.dense(Array.tabulate(runs) { r =>
+          math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
+        })
+      }
+    }
+
+    logInfo(s"summing costs per run")
+    val sumCosts = costs
+      .aggregate(Vectors.zeros(runs))(
+        (s, v) => axpy(1.0, v, s),
+        (s0, s1) => axpy(1.0, s1, s0)
+      )
+
+    assert(data.getStorageLevel.useMemory)
+    logInfo(s"collecting chosen")
+
+    val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
+      val rand = new XORShiftRandom(seed ^ index)
+      val range = 0 until runs
+      pointsWithCosts.flatMap { case (p, c) =>
+        val selectedRuns = range.filter { r =>
+          rand.nextDouble() < c(r) * k / sumCosts(r)
+        }
+        val nullCenter = null.asInstanceOf[BregmanCenter]
+        val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
+        selectedRuns.map((_, center))
+      }
+    }.collect()
+    (costs, chosen)
   }
 
   def initialCenters(seed: Int, pointOps: BregmanPointOps, data: RDD[BregmanPoint], runs: Int): Array[ArrayBuffer[BregmanCenter]] = {

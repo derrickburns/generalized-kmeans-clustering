@@ -24,9 +24,15 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
-class KMeansRandom(k: Int, runs: Int, seed: Int) extends KMeansInitializer with SparkHelper {
+class KMeansRandom extends KMeansInitializer with SparkHelper {
 
-  def init(ops: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
+  def init(
+    ops: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    k: Int,
+    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
+    runs: Int,
+    seed: Int): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 

@@ -26,6 +26,7 @@ import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
+import scala.collection.immutable.IndexedSeq
 import scala.collection.{immutable, mutable}
 import scala.collection.generic.FilterMonadic
 import ColumnTrackingKMeans._
@@ -204,9 +205,11 @@ class ColumnTrackingKMeans(
         val nonEmptyCenters = centers.filter(_.center.weight >= pointOps.weightThreshold)
         val bregmanCenters = Seq(nonEmptyCenters.toIndexedSeq.map(_.center))
         val seed = new DateTime().getMillis.toInt
-        val (_, newCenters) = select(pointOps, points, emptyCenters.length, seed, 1, bregmanCenters)
+        val incrementer = new KMeansParallel(2)
+        val newCenters = incrementer.init(pointOps, points, emptyCenters.length, Some(bregmanCenters), 1, seed)(0).drop(bregmanCenters(0).length)
+
         logInfo(s"replacing ${emptyCenters.length} empty clusters")
-        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y._2)}
+        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y)}
         nonEmptyCenters ++ replacements ++ emptyCenters.drop(replacements.length)
       } else {
         centers
