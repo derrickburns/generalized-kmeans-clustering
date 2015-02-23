@@ -45,6 +45,4 @@ object MultiKMeansClusterer {
   def bestOf(candidates: Seq[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])]) = {
     candidates.minBy(x => x._1)
   }
-
-
 }

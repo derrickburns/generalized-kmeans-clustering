@@ -20,11 +20,12 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
+
 import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
-import com.massivedatascience.clusterer.util.BLAS.axpy
 
 
 class KMeansParallel(
@@ -32,8 +33,8 @@ class KMeansParallel(
   r: Int,
   initializationSteps: Int,
   seedx: Int,
-  clusterer: MultiKMeansClusterer)
-  extends KMeansInitializer with SparkHelper {
+  initial: Option[Array[Array[BregmanCenter]]] = None)
+  extends KMeansInitializer with SparkHelper with WeightedSelector {
 
   def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
 
@@ -57,10 +58,8 @@ class KMeansParallel(
     val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
     var costs = sync("pre-costs", data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
 
-    // Initialize each run's first center to a random point.
     val seed = new XORShiftRandom(seedx).nextInt()
-    val sample = data.takeSample(withReplacement = true, runs, seed).map(pointOps.toCenter)
-    val newCenters = Array.tabulate(runs)(r => ArrayBuffer(sample(r)))
+    val newCenters: Array[ArrayBuffer[BregmanCenter]] = initial.map(_.map(new ArrayBuffer[BregmanCenter] ++= _)).getOrElse(initialCenters(seed, pointOps, data, runs))
 
     /** Merges new centers to centers. */
     def mergeNewCenters(): Unit = {
@@ -76,82 +75,52 @@ class KMeansParallel(
     // to their squared distance from that run's centers. Note that only distances between points
     // and new centers are computed in each iteration.
     var step = 0
+
     while (step < initializationSteps) {
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
 
-      costs = exchange(s"costs at step $step", costs) { preCosts =>
-        withBroadcast(newCenters) { bcNewCenters =>
-          logInfo(s"constructing costs")
-          data.zip(preCosts).map { case (point, cost) =>
-            Vectors.dense(Array.tabulate(runs) { r =>
-              math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
-            })
-          }
-        }
-      }
+      val (newCosts, additionalCenters) = select(pointOps, data, 2 * numClusters, seed ^ (step << 16), runs, costs, newCenters)
+      costs.unpersist(blocking = false)
+      costs = newCosts
+      costs.persist()
 
-      logInfo(s"summing costs")
-
-      val sumCosts = costs
-        .aggregate(Vectors.zeros(runs))(
-          seqOp = (s, v) => {
-            // s += v
-            axpy(1.0, v, s)
-          },
-          combOp = (s0, s1) => {
-            // s0 += s1
-            axpy(1.0, s1, s0)
-          }
-        )
-
-      assert(data.getStorageLevel.useMemory)
-      assert(costs.getStorageLevel.useMemory)
-      logInfo(s"collecting chosen")
-
-      val k = numClusters
-      val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
-        val rand = new XORShiftRandom(seed ^ (step << 16) ^ index)
-        val range = 0 until runs
-        pointsWithCosts.flatMap { case (p, c) =>
-          val selectedRuns = range.filter { r =>
-            rand.nextDouble() < 2.0 * c(r) * k / sumCosts(r)
-          }
-          val nullCenter = null.asInstanceOf[BregmanCenter]
-          val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
-          selectedRuns.map((_, center))
-        }
-      }.collect()
       logInfo(s"merging centers")
       mergeNewCenters()
-      chosen.foreach { case (index, center) =>
+      additionalCenters.foreach { case (index, center) =>
         newCenters(index) += center
       }
       step += 1
     }
 
     mergeNewCenters()
-
-    // Finally, we might have a set of more than k candidate centers for each run; weigh each
-    // candidate by the number of points in the dataset mapping to it and run a local k-means++
-    // on the weighted centers to pick just k of them
-
-
     costs.unpersist(blocking = false)
-
     logInfo("creating final centers")
-    val centerArrays = centers.map(_.toArray)
-    val selected = new DistanceSelector(numClusters, seed).cluster(pointOps, data, centerArrays)
 
-    val result = selected.map { myCenters =>
-      withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { points =>
-        clusterer.cluster(pointOps, points, Array(myCenters)).head
-      }
+    val centerArrays = centers.map(_.toArray)
+
+    val weightMap = withBroadcast(centerArrays) { bcCenters =>
+      // for each (run, cluster) compute the sum of the weights of the points in the cluster
+      data.flatMap { point =>
+        val centers = bcCenters.value
+        Array.tabulate(centers.length)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
+      }.reduceByKeyLocally(_ + _)
     }
 
-    result.map(_._3.map(_.unpersist()))
-    assert(data.getStorageLevel.useMemory)
-    logInfo("returning results")
-    result.map(_._2).toArray
+    val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
+
+    Array.tabulate(centerArrays.length) { r =>
+      val myCenters = centerArrays(r)
+      logInfo(s"run $r has ${myCenters.length} centers")
+      val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
+      val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
+      kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1)
+    }
+  }
+
+  def initialCenters(seed: Int, pointOps: BregmanPointOps, data: RDD[BregmanPoint], runs: Int): Array[ArrayBuffer[BregmanCenter]] = {
+    // Initialize each run's first center to a random point.
+    val sample = data.takeSample(withReplacement = true, runs, seed).map(pointOps.toCenter)
+    Array.tabulate(runs)(r => ArrayBuffer(sample(r)))
   }
 }

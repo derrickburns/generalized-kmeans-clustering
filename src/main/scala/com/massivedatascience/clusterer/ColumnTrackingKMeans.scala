@@ -21,12 +21,16 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.MultiKMeansClusterer.Assignment
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.joda.time.DateTime
 
 import scala.annotation.tailrec
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.collection.generic.FilterMonadic
 import ColumnTrackingKMeans._
+
+import scala.collection.mutable.ArrayBuffer
 
 
 object ColumnTrackingKMeans {
@@ -102,7 +106,7 @@ object ColumnTrackingKMeans {
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
-  extends MultiKMeansClusterer with SparkHelper {
+  extends MultiKMeansClusterer with SparkHelper with WeightedSelector {
 
   import MultiKMeansClusterer._
 
@@ -198,9 +202,11 @@ class ColumnTrackingKMeans(
       val emptyCenters = centers.filter(_.center.weight < pointOps.weightThreshold)
       if (emptyCenters.length != 0) {
         val nonEmptyCenters = centers.filter(_.center.weight >= pointOps.weightThreshold)
-        val newCenters = new DistanceSelector(emptyCenters.length, 0).cluster(pointOps, points, Array(nonEmptyCenters.map(_.center)))(0)
+        val bregmanCenters = Seq(nonEmptyCenters.toIndexedSeq.map(_.center))
+        val seed = new DateTime().getMillis.toInt
+        val (_, newCenters) = select(pointOps, points, emptyCenters.length, seed, 1, bregmanCenters)
         logInfo(s"replacing ${emptyCenters.length} empty clusters")
-        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y)}
+        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y._2)}
         nonEmptyCenters ++ replacements ++ emptyCenters.drop(replacements.length)
       } else {
         centers

@@ -263,11 +263,15 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def getInitializer(initializerName: String, k: Int, runs: Int, initializationSteps: Int)(
-    implicit clusterer: MultiKMeansClusterer): KMeansInitializer = {
+  def getInitializer(
+    initializerName: String,
+    k: Int,
+    runs: Int,
+    initializationSteps: Int): KMeansInitializer = {
+
     initializerName match {
       case RANDOM => new KMeansRandom(k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0, clusterer)
+      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0)
       case _ => throw new RuntimeException(s"unknown initializer $initializerName")
     }
   }
