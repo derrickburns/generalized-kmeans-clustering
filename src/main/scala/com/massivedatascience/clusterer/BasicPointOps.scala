@@ -155,6 +155,6 @@ object DiscreteDenseSmoothedKLPointOps extends BasicPointOps(NaturalKLDivergence
     val h = add(v.homogeneous, 1.0)
     val w = v.weight + v.homogeneous.size
     val df = divergence.gradF(h, w)
-    new BregmanCenter(h, w, dot(h, df) / w - divergence.F(h, w), df)
+    BregmanCenter(h, w, dot(h, df) / w - divergence.F(h, w), df)
   }
 }

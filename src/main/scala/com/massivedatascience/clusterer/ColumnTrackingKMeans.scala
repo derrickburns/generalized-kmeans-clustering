@@ -18,6 +18,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.Assignment
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
@@ -29,23 +30,9 @@ import ColumnTrackingKMeans._
 
 
 object ColumnTrackingKMeans {
-  private[clusterer] val noCluster = -1
-  private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
   private[clusterer] case class PointWithDistance(point: BregmanPoint,
     assignment: Assignment, dist: Double)
-
-  /**
-   *
-   * @param distance the distance to the closest cluster
-   * @param cluster the index of the closest cluster, or -1 if no cluster is assigned
-   * @param round the round that this assignment was made
-   */
-  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
-    def isAssigned = cluster != noCluster
-
-    def isUnassigned = cluster == noCluster
-  }
 
   /**
    *
@@ -117,6 +104,8 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
+  import MultiKMeansClusterer._
+
 
   val addOnly = true
 
@@ -141,7 +130,7 @@ class ColumnTrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]]) = {
+    centerArrays: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
 
     implicit val sc = points.sparkContext
 
@@ -205,7 +194,17 @@ class ColumnTrackingKMeans(
           centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable))
         }
       }
-      centers
+      // adjust centers to fill in empty slots
+      val emptyCenters = centers.filter(_.center.weight < pointOps.weightThreshold)
+      if (emptyCenters.length != 0) {
+        val nonEmptyCenters = centers.filter(_.center.weight >= pointOps.weightThreshold)
+        val newCenters = new DistanceSelector(emptyCenters.length, 0).cluster(pointOps, points, Array(nonEmptyCenters.map(_.center)))(0)
+        logInfo(s"replacing ${emptyCenters.length} empty clusters")
+        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round, center = y)}
+        nonEmptyCenters ++ replacements ++ emptyCenters.drop(replacements.length)
+      } else {
+        centers
+      }
     }
 
 
@@ -439,28 +438,6 @@ class ColumnTrackingKMeans(
       }
     }
 
-    def bestOfCenters(centerArrays: Array[Array[BregmanCenter]]): (Double, Array[CenterWithHistory], Option[RDD[Assignment]]) = {
-      require(points.getStorageLevel.useMemory)
-
-      val noCenters = Array[CenterWithHistory]()
-      val noAssignments: Option[RDD[Assignment]] = None
-      val unsolved = (Double.MaxValue, noCenters, noAssignments)
-
-      withCached("empty assignments", points.map(x => unassigned)) { empty =>
-        centerArrays.foldLeft(unsolved) { case (best, initialCenters) =>
-          val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
-          val (assignments, newCenters) = lloyds(0, empty, centers)
-          val d = distortion(assignments)
-          if (d < best._1) {
-            best._3.map(_.unpersist())
-            (d, newCenters, Some(assignments))
-          } else {
-            best
-          }
-        }
-      }
-    }
-
     @tailrec
     def lloyds(
       round: Int,
@@ -468,7 +445,6 @@ class ColumnTrackingKMeans(
       centers: Array[CenterWithHistory]): (RDD[Assignment], Array[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
-
       val newAssignments = sync(s"assignments round $round", updatedAssignments(round, assignments, centers))
       val newCenters = updatedCenters(round + 1, centers, newAssignments, assignments)
       val terminate = shouldTerminate(round + 1, newCenters, centers, newAssignments, assignments)
@@ -480,11 +456,14 @@ class ColumnTrackingKMeans(
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
-    val (clusterDistortion, centers, assignments) = bestOfCenters(centerArrays)
-
-    val finalAssignments = assignments.map(x => sync("final", x.map(y => (y.cluster, y.distance))))
-    val finalCenters = centers.map(_.center)
-    assignments.map(_.unpersist())
-    (clusterDistortion, finalCenters, finalAssignments)
+    val candidates = withCached("empty assignments", points.map(x => unassigned)) { empty =>
+      centerArrays.map { initialCenters =>
+        val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c)}
+        val (assignments, newCenters) = lloyds(0, empty, centers)
+        val d = distortion(assignments)
+        (d, newCenters, assignments)
+      }
+    }
+    candidates.map(x => (x._1, x._2.map(_.center), Option(x._3.map(y => (y.cluster, y.distance)))))
   }
 }

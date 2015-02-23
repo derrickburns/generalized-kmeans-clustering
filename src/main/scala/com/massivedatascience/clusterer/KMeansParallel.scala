@@ -20,12 +20,8 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
-import org.apache.spark.Logging
-import org.apache.spark.SparkContext._
-import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable.ArrayBuffer
 import com.massivedatascience.clusterer.util.BLAS.axpy
@@ -42,46 +38,6 @@ class KMeansParallel(
   def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint]): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
-
-    /**
-     * Reduce sets of candidate cluster centers to at most k points per set using KMeansPlusPlus.
-     * Weight the points by the distance to the closest cluster center.
-     *
-     * @param data  original points
-     * @param bcCenters  array of sets of candidate centers
-     * @param seed  random number seed
-     * @return  array of sets of cluster centers
-     */
-    def finalCenters(
-      data: RDD[BregmanPoint],
-      bcCenters: Broadcast[Array[Array[BregmanCenter]]], seed: Int): Array[Array[BregmanCenter]] = {
-
-      val runs = r
-
-      // for each (run, cluster) compute the sum of the weights of the points in the cluster
-      val weightMap = data.flatMap { point =>
-        val centers = bcCenters.value
-        Array.tabulate(runs)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-      }.reduceByKeyLocally(_ + _)
-
-      val centers = bcCenters.value
-      val kmeansPlusPlus = new KMeansPlusPlus(pointOps, clusterer)
-
-      val k = numClusters
-      Array.tabulate(runs) { r =>
-        val myCenters = centers(r)
-        logInfo(s"run $r has ${myCenters.length} centers")
-        val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
-        val kx = if (k > myCenters.length) myCenters.length else k
-        val initial = kmeansPlusPlus.getCenters(sc, seed, myCenters, weights, kx, 1)
-
-        withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { parallelCenters =>
-          val (_, clusters, assignments) = clusterer.cluster(pointOps, parallelCenters, Array(initial))
-          assignments.map(_.unpersist(blocking = false))
-          clusters
-        }
-      }
-    }
 
     /**
      * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
@@ -183,12 +139,19 @@ class KMeansParallel(
 
     costs.unpersist(blocking = false)
 
-    withBroadcast(centers.map(_.toArray)) { bcCenters =>
-      logInfo("creating final centers")
-      val result = finalCenters(data, bcCenters, seed)
-      assert(data.getStorageLevel.useMemory)
-      logInfo("returning results")
-      result
+    logInfo("creating final centers")
+    val centerArrays = centers.map(_.toArray)
+    val selected = new DistanceSelector(numClusters, seed).cluster(pointOps, data, centerArrays)
+
+    val result = selected.map { myCenters =>
+      withCached("parallel centers", sc.parallelize(myCenters.map(pointOps.toPoint))) { points =>
+        clusterer.cluster(pointOps, points, Array(myCenters)).head
+      }
     }
+
+    result.map(_._3.map(_.unpersist()))
+    assert(data.getStorageLevel.useMemory)
+    logInfo("returning results")
+    result.map(_._2).toArray
   }
 }

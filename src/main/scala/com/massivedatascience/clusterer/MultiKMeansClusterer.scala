@@ -17,13 +17,34 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.ColumnTrackingKMeans.CenterWithHistory
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
-
 
 trait MultiKMeansClusterer extends Serializable with Logging {
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Array[Array[BregmanCenter]]): (Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])
+    centers: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])]
+}
+
+object MultiKMeansClusterer {
+  private[clusterer] val noCluster = -1
+  private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
+
+  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
+    def isAssigned = cluster != noCluster
+
+    def isUnassigned = cluster == noCluster
+  }
+
+  private[clusterer] val noCenters = Array[CenterWithHistory]()
+  private[clusterer] val noAssignments: Option[RDD[Assignment]] = None
+  private[clusterer] val unsolved = (Double.MaxValue, noCenters, noAssignments)
+
+  def bestOf(candidates: Seq[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])]) = {
+    candidates.minBy(x => x._1)
+  }
+
+
 }

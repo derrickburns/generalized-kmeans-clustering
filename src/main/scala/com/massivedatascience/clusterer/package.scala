@@ -138,7 +138,7 @@ package object clusterer {
    * A point with an additional single Double value that is used in distance computation.
    *
    */
-  class BregmanPoint(val homogeneous: Vector, val weight: Double, val f: Double) extends WeightedVector {
+  case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends WeightedVector {
     lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
   }
 
@@ -150,11 +150,11 @@ package object clusterer {
    * @param dotGradMinusF  center dot gradient(center) - f(center)
    * @param gradient gradient of center
    */
-  class BregmanCenter(
-    val homogeneous: Vector,
-    val weight: Double,
-    val dotGradMinusF: Double,
-    val gradient: Vector) extends WeightedVector {
+  case class BregmanCenter(
+    homogeneous: Vector,
+    weight: Double,
+    dotGradMinusF: Double,
+    gradient: Vector) extends WeightedVector {
 
     lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
   }
