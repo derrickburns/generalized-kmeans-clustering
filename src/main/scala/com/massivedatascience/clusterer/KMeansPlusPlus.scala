@@ -60,7 +60,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     require(k > 0)
     require(perRound > 0)
     require(keep >= 0)
-    require(keep <= k)
     require(k <= candidateCenters.length)
     require(perRound <= k)
 
