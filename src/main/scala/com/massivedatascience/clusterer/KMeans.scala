@@ -229,7 +229,7 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def getPointOps(distanceFunction: String): BasicPointOps = {
+  def getPointOps(distanceFunction: String): BregmanPointOps = {
     distanceFunction match {
       case EUCLIDEAN => SquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps

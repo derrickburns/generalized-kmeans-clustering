@@ -33,7 +33,7 @@ class KMeansRandom extends KMeansInitializer with SparkHelper {
     k: Int,
     initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
     runs: Int,
-    seed: Int): Array[Array[BregmanCenter]] = {
+    seed: Long): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 

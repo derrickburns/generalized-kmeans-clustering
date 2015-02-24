@@ -37,7 +37,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     numClusters: Int,
     initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
     r: Int,
-    seedx: Int): Array[Array[BregmanCenter]] = {
+    seedx: Long): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 

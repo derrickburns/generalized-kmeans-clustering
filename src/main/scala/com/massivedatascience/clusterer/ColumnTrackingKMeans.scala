@@ -18,7 +18,6 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.MultiKMeansClusterer.Assignment
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
@@ -209,21 +208,25 @@ class ColumnTrackingKMeans(
             initialized = true)
         }
       }
+
+      val weightThreshold = if (true) 500.0 else pointOps.weightThreshold
       // adjust centers to fill in empty slots
-      val emptyCenters = centers.filter(_.center.weight < pointOps.weightThreshold)
-      if (emptyCenters.length != 0) {
-        val nonEmptyCenters = centers.filter(_.center.weight >= pointOps.weightThreshold)
-        val bregmanCenters = Seq(nonEmptyCenters.toIndexedSeq.map(_.center))
-        val seed = new DateTime().getMillis.toInt
+      val weakClusters = centers.filter(_.center.weight < weightThreshold)
+      if (weakClusters.length != 0) {
+        val strongClusters = centers.filter(_.center.weight >= weightThreshold)
+        val bregmanCenters = Seq(strongClusters.toIndexedSeq.map(_.center))
+        val seed = new DateTime().getMillis
         val incrementer = new KMeansParallel(2)
-        val newCenters = incrementer.init(pointOps, points, emptyCenters.length,
+        val newCenters = incrementer.init(pointOps, points, weakClusters.length,
           Some(bregmanCenters), 1, seed)(0).drop(bregmanCenters(0).length)
 
-        logInfo(s"replacing ${emptyCenters.length} empty clusters")
-        val replacements = emptyCenters.zip(newCenters).map { case (x, y) => x.copy(round = round,
+        logInfo(s"replacing ${weakClusters.length} empty clusters")
+        val replacements = weakClusters.zip(newCenters).map { case (x, y) => x.copy(round = round,
           center = y, initialized = false)
         }
-        nonEmptyCenters ++ replacements ++ emptyCenters.drop(replacements.length)
+        logInfo(s"replaced ${replacements.length} clusters")
+
+        strongClusters ++ replacements ++ weakClusters.drop(replacements.length)
       } else {
         centers
       }

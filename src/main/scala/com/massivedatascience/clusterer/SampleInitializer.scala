@@ -23,7 +23,7 @@ import org.apache.spark.rdd.RDD
 
 class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
   def init(pointOps: BregmanPointOps, data: RDD[BregmanPoint], numClusters: Int,
-    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None, runs: Int, seed: Int): Array[Array[BregmanCenter]] = {
+    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None, runs: Int, seed: Long): Array[Array[BregmanCenter]] = {
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),
