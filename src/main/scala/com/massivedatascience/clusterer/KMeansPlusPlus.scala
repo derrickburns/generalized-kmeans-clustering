@@ -88,7 +88,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
       }
       val newCenters = selected.toArray.map(candidateCenters(_))
       distances = updateDistances(points, distances, newCenters)
-      logInfo(s"chose ${newCenters.length} new centers")
       for (c <- newCenters) {
         centers += c
       }
