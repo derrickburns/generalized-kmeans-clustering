@@ -20,7 +20,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 
 
-trait BasicPointOps {
+private[clusterer] trait BasicPointOps {
 
   val divergence: BregmanDivergence
 
@@ -54,6 +54,7 @@ trait BasicPointOps {
     distance(v, w) > distanceThreshold
 }
 
+private[clusterer]
 trait NonSmoothed {
   val divergence: BregmanDivergence
 
@@ -69,6 +70,7 @@ trait NonSmoothed {
   }
 }
 
+private[clusterer]
 trait Smoothed {
   val divergence: BregmanDivergence
   val smoothingFactor = 1.0
@@ -88,6 +90,7 @@ trait Smoothed {
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
+private[clusterer]
 case object DenseKLPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
   val divergence = RealKLDivergence
 }
@@ -95,13 +98,15 @@ case object DenseKLPointOps extends BregmanPointOps with BasicPointOps with NonS
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
+private[clusterer]
 case object GeneralizedIPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
-  val divergence = new GeneralizedIDivergence(GeneralLog)
+  val divergence = GeneralizedIDivergence
 }
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
+private[clusterer]
 case object SquaredEuclideanPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
   val divergence = SquaredEuclideanDistanceDivergence
 }
@@ -111,6 +116,7 @@ case object SquaredEuclideanPointOps extends BregmanPointOps with BasicPointOps 
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
  */
 
+private[clusterer]
 case object LogisticLossPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
   val divergence = LogisticLossDivergence
 }
@@ -118,8 +124,9 @@ case object LogisticLossPointOps extends BregmanPointOps with BasicPointOps with
 /**
  * Implements Itakura-Saito divergence on dense vectors in R+ ** n
  */
+private[clusterer]
 case object ItakuraSaitoPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
-  val divergence = new ItakuraSaitoDivergence(GeneralLog)
+  val divergence = ItakuraSaitoDivergence
 }
 
 /**
@@ -136,6 +143,7 @@ case object ItakuraSaitoPointOps extends BregmanPointOps with BasicPointOps with
  * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
+private[clusterer]
 case object SparseRealKLPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
 
   val divergence = RealKLDivergence
@@ -160,7 +168,7 @@ case object SparseRealKLPointOps extends BregmanPointOps with BasicPointOps with
   }
 }
 
-
+private[clusterer]
 case object DiscreteDenseSimplexSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
   val divergence = NaturalKullbackLeiblerSimplexDivergence
 }
@@ -169,6 +177,7 @@ case object DiscreteDenseSimplexSmoothedKLPointOps extends BregmanPointOps with 
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
+private[clusterer]
 case object DiscreteDenseKLPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
   val divergence = NaturalKLDivergence
 }
@@ -181,6 +190,7 @@ case object DiscreteDenseKLPointOps extends BregmanPointOps with BasicPointOps w
  * zero values, we smooth the points by adding 1 to all entries.
  *
  */
+private[clusterer]
 case object DiscreteDenseSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
   val divergence = NaturalKLDivergence
 }

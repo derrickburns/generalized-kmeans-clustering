@@ -17,16 +17,19 @@
 
 package com.massivedatascience.clusterer
 
-trait HasLog extends Serializable {
+private[clusterer]
+sealed trait MathLog extends Serializable {
   def log(x: Double) : Double
 }
 
-object GeneralLog extends HasLog {
+private[clusterer]
+case object GeneralLog extends MathLog {
   @inline
   override def log(x: Double) : Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
-object DiscreteLog extends HasLog{
+private[clusterer]
+case object DiscreteLog extends MathLog {
   private val logTable = new Array[Double](1000)
 
   override def log(d: Double): Double = {
