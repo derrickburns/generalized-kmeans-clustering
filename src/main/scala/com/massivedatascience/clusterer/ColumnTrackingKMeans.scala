@@ -209,7 +209,7 @@ class ColumnTrackingKMeans(
         }
       }
 
-      val weightThreshold = if (true) 500.0 else pointOps.weightThreshold
+      val weightThreshold = pointOps.weightThreshold
       // adjust centers to fill in empty slots
       val weakClusters = centers.filter(_.center.weight < weightThreshold)
       if (weakClusters.length != 0) {
