@@ -213,15 +213,16 @@ class ColumnTrackingKMeans(
       // adjust centers to fill in empty slots
       val weakClusters = centers.filter(_.center.weight < weightThreshold)
       if (weakClusters.length != 0) {
+        logInfo(s"replacing ${weakClusters.length} empty clusters")
         val strongClusters = centers.filter(_.center.weight >= weightThreshold)
         val bregmanCenters = Seq(strongClusters.toIndexedSeq.map(_.center))
         val seed = new DateTime().getMillis
         val incrementer = new KMeansParallel(2)
-        val newCenters = incrementer.init(pointOps, points, weakClusters.length,
-          Some(bregmanCenters), 1, seed)(0).drop(bregmanCenters(0).length)
-
-        logInfo(s"replacing ${weakClusters.length} empty clusters")
-        val replacements = weakClusters.zip(newCenters).map { case (x, y) => x.copy(round = round,
+        val newCenters = incrementer.init(pointOps, points, centers.length,
+          Some(bregmanCenters), 1, seed)(0)
+        logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters(0).length}")
+        val additional = newCenters.drop(bregmanCenters(0).length)
+        val replacements = weakClusters.zip(additional).map { case (x, y) => x.copy(round = round,
           center = y, initialized = false)
         }
         logInfo(s"replaced ${replacements.length} clusters")

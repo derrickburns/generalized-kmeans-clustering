@@ -21,6 +21,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
+import org.apache.spark.broadcast.Broadcast
 
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.SparkContext._
@@ -137,38 +138,47 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
 
     val oldCosts = priorCosts.getOrElse(data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
 
-    val costs = withBroadcast(newCenters) { bcNewCenters =>
+    withBroadcast(newCenters) { bcNewCenters =>
       logInfo(s"constructing updated costs per point")
+
+      withNamed("costs", updatedCosts(bcNewCenters, data, oldCosts)) { costs =>
+        logInfo(s"summing costs per run")
+        val sumCosts = costs
+          .aggregate(Vectors.zeros(runs))(
+            (s, v) => axpy(1.0, v, s),
+            (s0, s1) => axpy(1.0, s1, s0)
+          )
+
+        assert(data.getStorageLevel.useMemory)
+        logInfo(s"collecting chosen")
+
+        val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
+          val rand = new XORShiftRandom(seed ^ index)
+          val range = 0 until runs
+          pointsWithCosts.flatMap { case (p, c) =>
+            val selectedRuns = range.filter { r =>
+              rand.nextDouble() < c(r) * k / sumCosts(r)
+            }
+            val nullCenter = null.asInstanceOf[BregmanCenter]
+            val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
+            selectedRuns.map((_, center))
+          }
+        }.collect()
+        (costs, chosen)
+      }
+    }
+
+    def updatedCosts(
+      bcNewCenters: Broadcast[Seq[IndexedSeq[BregmanCenter]]],
+      data: RDD[BregmanPoint],
+      oldCosts: RDD[Vector]): RDD[Vector] = {
+
       data.zip(oldCosts).map { case (point, cost) =>
         Vectors.dense(Array.tabulate(runs) { r =>
           math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
         })
       }
     }
-
-    logInfo(s"summing costs per run")
-    val sumCosts = costs
-      .aggregate(Vectors.zeros(runs))(
-        (s, v) => axpy(1.0, v, s),
-        (s0, s1) => axpy(1.0, s1, s0)
-      )
-
-    assert(data.getStorageLevel.useMemory)
-    logInfo(s"collecting chosen")
-
-    val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
-      val rand = new XORShiftRandom(seed ^ index)
-      val range = 0 until runs
-      pointsWithCosts.flatMap { case (p, c) =>
-        val selectedRuns = range.filter { r =>
-          rand.nextDouble() < c(r) * k / sumCosts(r)
-        }
-        val nullCenter = null.asInstanceOf[BregmanCenter]
-        val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
-        selectedRuns.map((_, center))
-      }
-    }.collect()
-    (costs, chosen)
   }
 
   def initialCenters(seed: Int, pointOps: BregmanPointOps, data: RDD[BregmanPoint], runs: Int): Array[ArrayBuffer[BregmanCenter]] = {
@@ -177,3 +187,5 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     Array.tabulate(runs)(r => ArrayBuffer(sample(r)))
   }
 }
+
+
