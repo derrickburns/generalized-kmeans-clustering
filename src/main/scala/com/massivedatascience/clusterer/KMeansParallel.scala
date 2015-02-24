@@ -120,6 +120,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     }
   }
 
+
   /**
    * Select approximately k points at random with probability proportional to distance from closest cluster
    * center, given an (optional) initial set of distances.
@@ -133,6 +134,19 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     runs: Int,
     priorCosts: Option[RDD[Vector]],
     newCenters: Seq[IndexedSeq[BregmanCenter]]): (RDD[Vector], Array[(Int, BregmanCenter)]) = {
+
+
+    def updatedCosts(
+      bcNewCenters: Broadcast[Seq[IndexedSeq[BregmanCenter]]],
+      data: RDD[BregmanPoint],
+      oldCosts: RDD[Vector]): RDD[Vector] = {
+
+      data.zip(oldCosts).map { case (point, cost) =>
+        Vectors.dense(Array.tabulate(runs) { r =>
+          math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
+        })
+      }
+    }
 
     implicit val sc = data.sparkContext
 
@@ -165,18 +179,6 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
           }
         }.collect()
         (costs, chosen)
-      }
-    }
-
-    def updatedCosts(
-      bcNewCenters: Broadcast[Seq[IndexedSeq[BregmanCenter]]],
-      data: RDD[BregmanPoint],
-      oldCosts: RDD[Vector]): RDD[Vector] = {
-
-      data.zip(oldCosts).map { case (point, cost) =>
-        Vectors.dense(Array.tabulate(runs) { r =>
-          math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
-        })
       }
     }
   }

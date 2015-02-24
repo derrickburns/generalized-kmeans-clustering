@@ -25,11 +25,11 @@ trait Embedding extends Serializable {
   def embed(v: WeightedVector): WeightedVector
 }
 
-object IdentityEmbedding extends Embedding {
+case object IdentityEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = v
 }
 
-object DenseEmbedding extends Embedding {
+case object DenseEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
    v match {
      case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
@@ -38,7 +38,7 @@ object DenseEmbedding extends Embedding {
   }
 }
 
-object HaarEmbedding extends Embedding {
+case object HaarEmbedding extends Embedding {
   def embed(raw: WeightedVector): WeightedVector =
     WeightedVector(HaarWavelet.average(raw.homogeneous.toArray), raw.weight)
 }
@@ -65,7 +65,7 @@ class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   }
 }
 
-object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
+case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
 
 /**
  *

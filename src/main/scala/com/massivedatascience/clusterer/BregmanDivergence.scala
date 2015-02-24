@@ -79,7 +79,7 @@ trait BregmanDivergence extends Serializable {
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
+case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
    * Squared L ** 2 norm
@@ -130,9 +130,9 @@ class KullbackLeiblerSimplexDivergence(logFunc: HasLog) extends BregmanDivergenc
   }
 }
 
-object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(GeneralLog)
+case object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(GeneralLog)
 
-object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(DiscreteLog)
+case object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(DiscreteLog)
 
 /**
  * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
@@ -160,9 +160,9 @@ class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
   }
 }
 
-object RealKLDivergence extends KullbackLeiblerDivergence(GeneralLog)
+case object RealKLDivergence extends KullbackLeiblerDivergence(GeneralLog)
 
-object NaturalKLDivergence extends KullbackLeiblerDivergence(DiscreteLog)
+case object NaturalKLDivergence extends KullbackLeiblerDivergence(DiscreteLog)
 
 
 /**
@@ -194,7 +194,7 @@ class GeneralizedIDivergence(logFunc: HasLog) extends BregmanDivergence {
  *
  *    x => (x, 1.0 - x)
  */
-object LogisticLossDivergence extends BregmanDivergence {
+case object LogisticLossDivergence extends BregmanDivergence {
 
   val log = GeneralLog.log _
 
