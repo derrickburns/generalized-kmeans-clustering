@@ -74,7 +74,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     }
 
     /**
-     * Use K-Means++ to whittle down from approximately (x * k) centers per run to only k per run
+     * Use K-Means++ to whittle down from approximately (x * k) centers per run to only k per run.
      *
      * @param numClusters  number of new clusters desired
      * @param seed random number seed

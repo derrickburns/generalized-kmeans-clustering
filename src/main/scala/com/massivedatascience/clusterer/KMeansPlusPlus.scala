@@ -42,9 +42,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @param seed a random number seed
    * @param candidateCenters  the candidate centers
    * @param weights  the weights on the candidate centers
-   * @param k  the total number of centers to select
+   * @param totalRequested  the total number of centers to select
    * @param perRound the number of centers to add per round
-   * @param keep the number of pre-selected centers
+   * @param numPreselected the number of pre-selected centers
    * @return   an array of at most k cluster centers
    */
 
@@ -52,48 +52,50 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     seed: Long,
     candidateCenters: Array[BregmanCenter],
     weights: Array[Double],
-    k: Int,
+    totalRequested: Int,
     perRound: Int,
-    keep: Int): Array[BregmanCenter] = {
+    numPreselected: Int): Array[BregmanCenter] = {
 
     require(candidateCenters.length > 0)
-    require(k > 0)
-    require(perRound > 0)
-    require(keep >= 0)
-    require(k <= candidateCenters.length)
-    require(perRound <= k)
+    require(totalRequested > 0)
+    require(numPreselected >= 0)
+    require(numPreselected <= totalRequested)
+    require(totalRequested <= candidateCenters.length)
+    require(numPreselected <= totalRequested)
+    require(perRound <= totalRequested)
 
-    if (candidateCenters.length < k)
-      logWarning(s"# of clusters requested $k exceeds number of points ${candidateCenters.length}")
+    if (candidateCenters.length < totalRequested)
+      logWarning(s"# of clusters requested $totalRequested exceeds number of points ${candidateCenters.length}")
 
     val points = candidateCenters.map(ops.toPoint)
-    val centers = new ArrayBuffer[BregmanCenter](k)
+    val centers = new ArrayBuffer[BregmanCenter](totalRequested)
     val rand = new XORShiftRandom(seed)
-    if (keep == 0) {
+    if (numPreselected == 0) {
       val newCenter = pickWeighted(rand, cumulativeWeights(weights)).map(candidateCenters(_))
       centers += newCenter.get
     } else {
-      centers ++= candidateCenters.take(keep)
+      centers ++= candidateCenters.take(numPreselected)
     }
     logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
     var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
     distances = updateDistances(points, distances, centers)
     var more = true
-    while (centers.length < k && more) {
+    while (centers.length < totalRequested && more) {
       val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
       val selected = (0 until perRound).par.flatMap { _ =>
         pickWeighted(rand, cumulative)
       }
       val newCenters = selected.toArray.map(candidateCenters(_))
       distances = updateDistances(points, distances, newCenters)
-      for (c <- newCenters) {
+      val needed = totalRequested - centers.length
+      for (c <- newCenters.view.take(needed)) {
         centers += c
       }
       more = selected.nonEmpty
     }
-    sideEffect(centers.take(k).toArray) { result =>
-      logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $k requested")
+    sideEffect(centers.take(totalRequested).toArray) { result =>
+      logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $totalRequested requested")
     }
   }
 
