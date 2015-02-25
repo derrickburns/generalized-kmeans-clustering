@@ -69,12 +69,6 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
     implicit val sc = data.sparkContext
 
-    def startingCenters(
-      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
-      seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
-      initialInfo.map(_._1).getOrElse(randomCenters(seed))
-    }
-
     /**
      * Use K-Means++ to whittle the candidate centers to the requested number of centers
      *
@@ -147,7 +141,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * @param seed seed for random numbers
      * @return random center per run stored in an array buffer
      */
-    def randomCenters(seed: Long): Array[IndexedSeq[BregmanCenter]] = {
+    def randomCenters(seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
       val ops = pointOps
       val numRuns = runs
       data
@@ -283,7 +277,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
     require(data.getStorageLevel.useMemory)
     val seed = new XORShiftRandom(seedx).nextLong()
-    val initialCenters = startingCenters(initialState, seed)
+    val initialCenters = initialState.map(_._1).getOrElse(randomCenters(seed))
     val requested = numbersRequested(targetNumberClusters, initialState, runs)
     val expandedCenters = moreCenters(numSteps, requested.map(_ * 2), seed, initialCenters)
     val numbersRetainedCenters = initialState.map(_._1).map(_.map(_.size))
