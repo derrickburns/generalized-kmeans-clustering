@@ -225,20 +225,6 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
     }
 
     /**
-     * Define the starting costs.  If no cost vectors are provided,
-     * initialize them from the provided cluster centers.
-     *
-     * @param initialInfo starting cost info
-     * @param centers starting centers
-     * @return initial value of costs
-     */
-    def startingCosts(
-      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
-      centers: Seq[ArrayBuffer[BregmanCenter]]): RDD[Vector] = {
-      initialInfo.map(_._2).map(asVectors).getOrElse(setCosts(centers))
-    }
-
-    /**
      * Identify the number of additional cluster centers needed per run.
      *
      * @param totalNumClusters total number of clusters desired (for each run)
@@ -273,7 +259,8 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
       val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
       var step = 0
-      var costs = sync("initial costs", startingCosts(initialState, addedCenters))
+      val startingCosts = initialState.map(_._2).map(asVectors).getOrElse(setCosts(centers))
+      var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
       while (step < numberSteps) {
         logInfo(s"starting step $step")
