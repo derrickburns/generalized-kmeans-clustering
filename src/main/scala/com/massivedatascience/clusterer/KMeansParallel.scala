@@ -243,7 +243,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
     /**
      * On each step, preRound(run) points on average for each run with probability proportional
-     * to their squared distance from that run's centers. Note that only distances between points
+     * to their squared distance from the centers. Note that only distances between points
      * and new centers are computed in each iteration.
      *
      * @param perRound number of points to select per round per run
