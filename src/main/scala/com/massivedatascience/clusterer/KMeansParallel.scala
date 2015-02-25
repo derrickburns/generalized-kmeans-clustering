@@ -46,7 +46,7 @@ import scala.collection.mutable.ArrayBuffer
  * and closest distance for each point to those cluster centers.  This allows us to
  * use this code to find additional cluster centers at any time.
  */
-class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with SparkHelper {
+class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
   /**
    *
@@ -291,9 +291,9 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
 
     require(data.getStorageLevel.useMemory)
     val seed = new XORShiftRandom(seedx).nextLong()
-    val centers = startingCenters(initialState, seed)
+    val initialCenters = startingCenters(initialState, seed)
     val requested = numberRequested(targetNumberClusters, initialState, runs)
-    val expandedCenters = moreCenters(initializationSteps, requested.map(_ * 2), seed, centers)
+    val expandedCenters = moreCenters(numSteps, requested.map(_ * 2), seed, initialCenters)
     val numberRetainedCenters = initialState.map(_._1).map(_.map(_.size))
     finalClusterCenters(targetNumberClusters, seed, expandedCenters, numberRetainedCenters)
   }
