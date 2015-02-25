@@ -27,6 +27,14 @@ package object clusterer {
   val Unknown = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())
 
+
+  trait SimpleAssignment {
+    val distance: Double
+    val cluster: Int
+  }
+
+  case class BasicAssignment(distance: Double, cluster: Int) extends SimpleAssignment
+
   def asInhomogeneous(homogeneous: Vector, weight: Double) = {
     val x = homogeneous.copy
     scal(1.0 / weight, x)

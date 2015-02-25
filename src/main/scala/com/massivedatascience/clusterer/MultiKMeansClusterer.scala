@@ -32,7 +32,7 @@ object MultiKMeansClusterer {
   private[clusterer] val noCluster = -1
   private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
-  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
+  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) extends SimpleAssignment {
     def isAssigned = cluster != noCluster
 
     def isUnassigned = cluster == noCluster
