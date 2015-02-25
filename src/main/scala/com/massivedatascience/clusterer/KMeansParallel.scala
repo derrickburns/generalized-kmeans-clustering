@@ -246,7 +246,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
      * @param runs number of runs
      * @return number of clusters needed to fulfill gap
      */
-    def requestedCenters(
+    def numberRequested(
       totalNumClusters: Int,
       initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
       runs: Int): Seq[Int] = {
@@ -291,7 +291,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     require(data.getStorageLevel.useMemory)
     val seed = new XORShiftRandom(seedx).nextLong()
     val centers = startingCenters(initialState, seed)
-    val requested = requestedCenters(targetNumberClusters, initialState, runs)
+    val requested = numberRequested(targetNumberClusters, initialState, runs)
     val expandedCenters = moreCenters(requested.map(_ * 2), seed, centers)
     val numberRetainedCenters = initialState.map(_._1).map(_.map(_.size))
     finalClusterCenters(targetNumberClusters, seed, expandedCenters, numberRetainedCenters)
