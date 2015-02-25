@@ -41,7 +41,7 @@ import scala.collection.mutable.ArrayBuffer
  * and closest distance for each point to those cluster centers.  This allows us to
  * use this code to find additional cluster centers at any time.
  */
-class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
+class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInitializer with SparkHelper {
 
   /**
    *
@@ -80,7 +80,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
       numberRetained: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
 
       val centerArrays = centers.map(_.toArray)
-      val weightMap = weights(centerArrays)
+      val weightMap = weights(centerArrays, sampleRate, seed)
       val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
 
       Array.tabulate(centerArrays.length) { r =>
@@ -151,12 +151,12 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * @param centerArrays sequence of arrays of centers
      * @return  A map from (run, cluster index) to the sum of the weights of its points
      */
-    def weights(centerArrays: Seq[Array[BregmanCenter]]): Map[(Int, Int), Double] = {
+    def weights(centerArrays: Seq[Array[BregmanCenter]], fraction: Double, seed: Long): Map[(Int, Int), Double] = {
       val ops = pointOps
 
       withBroadcast(centerArrays) { bcCenters =>
         // for each (run, cluster) compute the sum of the weights of the points in the cluster
-        data.flatMap { point =>
+        data.sample(withReplacement = false, fraction, seed).flatMap { point =>
           val centers = bcCenters.value
           Array.tabulate(centers.length)(r =>
             ((r, ops.findClosestCluster(centers(r), point)), point.weight))
@@ -273,13 +273,14 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
     }
 
     require(data.getStorageLevel.useMemory)
-    val seed = new XORShiftRandom(seedx).nextLong()
+    val rand = new XORShiftRandom(seedx)
+    val seed = rand.nextLong()
     val preselectedCenters = initialState.map(_._1)
     val initialCosts = initialState.map(_._2)
     val centers = preselectedCenters.getOrElse(randomCenters(seed))
     val requested = numbersRequested(targetNumberClusters, preselectedCenters, runs)
     val expandedCenters = moreCenters(initialCosts, numSteps, requested.map(_ * 2), seed, centers)
     val numbersRetainedCenters = preselectedCenters.map(_.map(_.size))
-    finalClusterCenters(targetNumberClusters, seed, expandedCenters, numbersRetainedCenters)
+    finalClusterCenters(targetNumberClusters, rand.nextLong(), expandedCenters, numbersRetainedCenters)
   }
 }

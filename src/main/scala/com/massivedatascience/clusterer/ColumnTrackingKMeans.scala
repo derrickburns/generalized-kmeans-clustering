@@ -220,7 +220,7 @@ class ColumnTrackingKMeans(
         val strongClusters = centers.filter(!weakClusters.contains(_))
         val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
         val seed = new DateTime().getMillis
-        val incrementer = new KMeansParallel(2)
+        val incrementer = new KMeansParallel(2, 0.10)
         val costs = currentAssignments.map(_.distance)
         val newCenters = incrementer.init(pointOps, points, centers.length,
           Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
