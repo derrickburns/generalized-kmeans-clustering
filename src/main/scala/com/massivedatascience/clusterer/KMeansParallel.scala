@@ -174,7 +174,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     }
 
     /**
-     * Convert an sequence of RDDs of Doubles into RDD of vectors
+     * Convert an sequence of RDDs of Doubles into RDD of vectors of Doubles
      *
      * @param rdds sequence of RDDs of Doubles
      * @return RDD of vectors
