@@ -109,7 +109,7 @@ class ColumnTrackingKMeans(
 
 
   val addOnly = true
-  val maxRoundsToBackfill = 8
+  val maxRoundsToBackfill = Int.MaxValue
 
   /**
    * count number of points assigned to each cluster
