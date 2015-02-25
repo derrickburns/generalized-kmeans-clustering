@@ -50,7 +50,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
    *
    * @param pointOps distance function
    * @param data data
-   * @param numClusters  number of new clusters desired
+   * @param totalNumClusters  number of new clusters desired
    * @param initialInfo  initial clusters and distance data
    * @param runs  number of runs to perform
    * @param seedx random number seed
@@ -60,7 +60,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
   def init(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    numClusters: Int,
+    totalNumClusters: Int,
     initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
     seedx: Long): Array[Array[BregmanCenter]] = {
@@ -74,19 +74,19 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     }
 
     /**
-     * Use K-Means++ to whittle down from approximately (x * k) centers per run to only k per run.
+     * Use K-Means++ to whittle the candidate centers to the requested number of centers
      *
      * @param numClusters  number of new clusters desired
      * @param seed random number seed
      * @param centers candidate centers
-     * @param keep number of pre-selected candidate centers to keep
+     * @param numPreselected number of pre-selected candidate centers to keep
      * @return arrays of selected centers
      */
     def finalClusterCenters(
       numClusters: Int,
       seed: Long,
       centers: Seq[ArrayBuffer[BregmanCenter]],
-      keep: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
+      numPreselected: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
 
       val centerArrays = centers.map(_.toArray)
       val weightMap = weights(centerArrays)
@@ -97,7 +97,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, keep.map(_(r)).getOrElse(0))
+        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, numPreselected.map(_(r)).getOrElse(0))
       }
     }
 
@@ -195,7 +195,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
      * @param costs costs
      * @return k * runs new points, in an array where each entry is the tuple (run, point)
      */
-    def select(k: Int, seed: Long, costs: RDD[Vector]): Array[(Int, BregmanCenter)] = {
+    def select(k: Seq[Int], seed: Long, costs: RDD[Vector]): Array[(Int, BregmanCenter)] = {
       logInfo(s"constructing updated costs per point")
       val numRuns = runs
       val sumCosts = costs
@@ -212,7 +212,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
         val ops = pointOps
         pointsWithCosts.flatMap { case (p, c) =>
           val selectedRuns = range.filter { r =>
-            rand.nextDouble() < c(r) * k / sumCosts(r)
+            rand.nextDouble() < c(r) * k(r) / sumCosts(r)
           }
           val nullCenter = null.asInstanceOf[BregmanCenter]
           val center = if (selectedRuns.nonEmpty) ops.toCenter(p) else nullCenter
@@ -240,6 +240,9 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
     var costs = sync("initial costs", startingCosts(initialInfo, centers))
 
+    val needed = initialInfo.map(_._1.map(totalNumClusters - _.length))
+    val perRound = needed.getOrElse(Array.fill(runs)(totalNumClusters).toSeq).map(_ * 2)
+
     // On each step, sample 2 * k points on average for each run with probability proportional
     // to their squared distance from that run's centers. Note that only distances between points
     // and new centers are computed in each iteration.
@@ -247,7 +250,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     while (step < initializationSteps) {
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
-      val additionalCenters = select(2 * numClusters, seed ^ (step << 16), costs)
+      val additionalCenters = select(perRound, seed ^ (step << 16), costs)
       additionalCenters.foreach { case (index, center) =>
         newCenters(index) += center
       }
@@ -262,6 +265,6 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     logInfo("creating final centers")
 
     val keep = initialInfo.map(_._1).map(_.map(_.size))
-    finalClusterCenters(numClusters, seed, centers, keep)
+    finalClusterCenters(totalNumClusters, seed, centers, keep)
   }
 }
