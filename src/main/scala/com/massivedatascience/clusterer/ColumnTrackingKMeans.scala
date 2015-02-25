@@ -504,16 +504,15 @@ class ColumnTrackingKMeans(
     logInfo(s"update rate = $updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
-    val candidates = withCached("empty assignments", points.map(x => unassigned)) { empty =>
+    withCached("empty assignments", points.map(x => unassigned)) { empty =>
       centerArrays.map { initialCenters =>
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c,
           initialized = false)
         }
-        val (assignments, newCenters) = lloyds(0, empty, centers)
-        val d = distortion(assignments)
-        (d, newCenters, assignments)
+        val (assignments, centersWithHistory) = lloyds(0, empty, centers)
+        (distortion(assignments), centersWithHistory.map(_.center),
+          Option(assignments.map(y => (y.cluster, y.distance))))
       }
     }
-    candidates.map(x => (x._1, x._2.map(_.center), Option(x._3.map(y => (y.cluster, y.distance)))))
   }
 }
