@@ -252,8 +252,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     while (step < initializationSteps) {
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
-      val additionalCenters = select(perRound, seed ^ (step << 16), costs)
-      additionalCenters.foreach { case (index, center) =>
+      for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
         newCenters(index) += center
       }
       costs = exchange(s"costs at step $step", costs) { oldCosts =>
