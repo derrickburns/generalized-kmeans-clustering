@@ -14,180 +14,254 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This code is a modified version of the original Spark 1.0.2 implementation.
+ * This code is a re-write version of the original Spark 1.0.2 implementation.
+ *
+ * In this implementation, we allow the client to provide an initial set of cluster centers
+ * and closest distance for each point to those cluster centers.  This allows us to
+ * use this code to find additional cluster centers at any time.
+ *
  */
 
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
-import org.apache.spark.broadcast.Broadcast
 
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
-
+/**
+ *
+ * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
+ * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
+ * to find  dissimilar cluster centers by starting with a random center and then doing
+ * passes where more centers are chosen with probability proportional to their squared distance
+ * to the current cluster set. It results in a provable approximation to an optimal clustering.
+ *
+ * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
+ */
 class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with SparkHelper {
+
+  /**
+   *
+   * @param pointOps distance function
+   * @param data data
+   * @param numClusters  number of new clusters desired
+   * @param initialInfo  initial clusters and distance data
+   * @param runs  number of runs to perform
+   * @param seedx random number seed
+   * @return  updated set of cluster centers
+   */
 
   def init(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     numClusters: Int,
-    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
-    r: Int,
+    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    runs: Int,
     seedx: Long): Array[Array[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 
+    def startingCenters(
+      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
+      seed: Long): Seq[ArrayBuffer[BregmanCenter]] = {
+      initialInfo.map(_._1).map(_.map(new ArrayBuffer[BregmanCenter]() ++ _)).getOrElse(randomCenters(seed))
+    }
+
     /**
-     * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
-     * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
-     * to find  dissimilar cluster centers by starting with a random center and then doing
-     * passes where more centers are chosen with probability proportional to their squared distance
-     * to the current cluster set. It results in a provable approximation to an optimal clustering.
+     * Use K-Means++ to whittle down from approximately (x * k) centers per run to only k per run
      *
-     * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
-     *
-     * @return
+     * @param numClusters  number of new clusters desired
+     * @param seed random number seed
+     * @param centers candidate centers
+     * @param keep number of pre-selected candidate centers to keep
+     * @return arrays of selected centers
      */
+    def finalClusterCenters(
+      numClusters: Int,
+      seed: Long,
+      centers: Seq[ArrayBuffer[BregmanCenter]],
+      keep: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
 
-    val runs = r
+      val centerArrays = centers.map(_.toArray)
+      val weightMap = weights(centerArrays)
+      val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
 
-    // Initialize empty centers and point costs.
-    val centers = Array.tabulate(runs)(r => ArrayBuffer.empty[BregmanCenter])
-    var costs = sync("pre-costs", data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
-
-    val seed = new XORShiftRandom(seedx).nextInt()
-    val newCenters: Seq[ArrayBuffer[BregmanCenter]] = initial.map(_.map(new ArrayBuffer[BregmanCenter] ++= _)).getOrElse(initialCenters(seed, pointOps, data, runs))
-
-    /** Merges new centers to centers. */
-    def mergeNewCenters(): Unit = {
-      var r = 0
-      while (r < runs) {
-        centers(r) ++= newCenters(r)
-        newCenters(r).clear()
-        r += 1
+      Array.tabulate(centerArrays.length) { r =>
+        val myCenters = centerArrays(r)
+        logInfo(s"run $r has ${myCenters.length} centers")
+        val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
+        val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
+        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, keep.map(_(r)).getOrElse(0))
       }
     }
+
+    /**
+     * Set the costs, given a set of centers.
+     *
+     * @param centers new centers to consider
+     * @return
+     */
+    def setCosts(centers: Seq[IndexedSeq[BregmanCenter]]): RDD[Vector] = {
+      val ops = pointOps
+      val numRuns = runs
+      withBroadcast(centers) { bcNewCenters =>
+        data.map { point =>
+          Vectors.dense(Array.tabulate(numRuns) { r =>
+            ops.pointCost(bcNewCenters.value(r), point)
+          })
+        }
+      }
+    }
+
+    /**
+     * Update the costs, given a previous set of costs and a new set of centers per run.
+     *
+     * @param centers new centers to consider
+     * @param oldCosts best distance to previously considered centers
+     * @return
+     */
+    def updatedCosts(centers: Seq[IndexedSeq[BregmanCenter]], oldCosts: RDD[Vector]): RDD[Vector] = {
+      val ops = pointOps
+      val numRuns = runs
+      withBroadcast(centers) { bcNewCenters =>
+        data.zip(oldCosts).map { case (point, cost) =>
+          Vectors.dense(Array.tabulate(numRuns) { r =>
+            math.min(ops.pointCost(bcNewCenters.value(r), point), cost(r))
+          })
+        }
+      }
+    }
+
+    /**
+     * Select one point per run
+     *
+     * @param seed seed for random numbers
+     * @return random center per run stored in an array buffer
+     */
+    def randomCenters(seed: Long): Seq[ArrayBuffer[BregmanCenter]] = {
+      val ops = pointOps
+      val numRuns = runs
+      data
+        .takeSample(withReplacement = true, numRuns, seed)
+        .map(ops.toCenter)
+        .map(new ArrayBuffer[BregmanCenter] += _)
+    }
+
+    /**
+     * Compute for each cluster the sum of the weights of the points in the cluster
+     *
+     * @param centerArrays sequence of arrays of centers
+     * @return  A map from (run, cluster index) to the sum of the weights of its points
+     */
+    def weights(centerArrays: Seq[Array[BregmanCenter]]): Map[(Int, Int), Double] = {
+      val ops = pointOps
+
+      withBroadcast(centerArrays) { bcCenters =>
+        // for each (run, cluster) compute the sum of the weights of the points in the cluster
+        data.flatMap { point =>
+          val centers = bcCenters.value
+          Array.tabulate(centers.length)(r =>
+            ((r, ops.findClosestCluster(centers(r), point)), point.weight))
+        }.reduceByKeyLocally(_ + _)
+      }
+    }
+
+    /**
+     * Convert an sequence of RDDs of Doubles into RDD of vectors
+     *
+     * @param rdds sequence of RDDs of Doubles
+     * @return RDD of vectors
+     */
+    def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
+      rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length)}) {
+        case (arrayRdd, (doubleRdd, i)) =>
+          arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array}
+
+      }.map(Vectors.dense)
+    }
+
+    /**
+     * Select approximately k points at random with probability proportional to the weight vectors
+     * given.
+     *
+     * @param k number of points desired
+     * @param seed random number seed
+     * @param costs costs
+     * @return k * runs new points, in an array where each entry is the tuple (run, point)
+     */
+    def select(k: Int, seed: Long, costs: RDD[Vector]): Array[(Int, BregmanCenter)] = {
+      logInfo(s"constructing updated costs per point")
+      val numRuns = runs
+      val sumCosts = costs
+        .aggregate(Vectors.zeros(numRuns))(
+          (s, v) => axpy(1.0, v, s),
+          (s0, s1) => axpy(1.0, s1, s0)
+        )
+
+      require(costs.getStorageLevel.useMemory)
+
+      data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
+        val rand = new XORShiftRandom(seed ^ index)
+        val range = 0 until numRuns
+        val ops = pointOps
+        pointsWithCosts.flatMap { case (p, c) =>
+          val selectedRuns = range.filter { r =>
+            rand.nextDouble() < c(r) * k / sumCosts(r)
+          }
+          val nullCenter = null.asInstanceOf[BregmanCenter]
+          val center = if (selectedRuns.nonEmpty) ops.toCenter(p) else nullCenter
+          selectedRuns.map((_, center))
+        }
+      }.collect()
+    }
+
+    /**
+     * Define the starting costs.  If no cost vectors are provided,
+     * initialize them from the provided cluster centers.
+     *
+     * @param initialInfo starting cost info
+     * @param centers starting centers
+     * @return initial value of costs
+     */
+    def startingCosts(
+      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
+      centers: Seq[ArrayBuffer[BregmanCenter]]): RDD[Vector] = {
+      initialInfo.map(_._2).map(asVectors).getOrElse(setCosts(centers))
+    }
+
+    val seed = new XORShiftRandom(seedx).nextLong()
+    val centers = startingCenters(initialInfo, seed)
+    val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
+    var costs = sync("initial costs", startingCosts(initialInfo, centers))
 
     // On each step, sample 2 * k points on average for each run with probability proportional
     // to their squared distance from that run's centers. Note that only distances between points
     // and new centers are computed in each iteration.
     var step = 0
-
     while (step < initializationSteps) {
       logInfo(s"starting step $step")
       assert(data.getStorageLevel.useMemory)
-
-      val (newCosts, additionalCenters) = select(pointOps, data, 2 * numClusters, seed ^ (step << 16), runs, Some(costs), newCenters)
-      costs.unpersist(blocking = false)
-      costs = newCosts
-      costs.persist()
-
-      logInfo(s"merging centers")
-      mergeNewCenters()
+      val additionalCenters = select(2 * numClusters, seed ^ (step << 16), costs)
       additionalCenters.foreach { case (index, center) =>
         newCenters(index) += center
       }
+      costs = exchange(s"costs at step $step", costs) { oldCosts =>
+        updatedCosts(newCenters, oldCosts)
+      }
+      centers.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
       step += 1
     }
 
-    mergeNewCenters()
     costs.unpersist(blocking = false)
     logInfo("creating final centers")
 
-    val centerArrays = centers.map(_.toArray)
-
-    val weightMap = withBroadcast(centerArrays) { bcCenters =>
-      // for each (run, cluster) compute the sum of the weights of the points in the cluster
-      data.flatMap { point =>
-        val centers = bcCenters.value
-        Array.tabulate(centers.length)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
-      }.reduceByKeyLocally(_ + _)
-    }
-
-    val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
-
-    Array.tabulate(centerArrays.length) { r =>
-      val myCenters = centerArrays(r)
-      logInfo(s"run $r has ${myCenters.length} centers")
-      val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
-      val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-      kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, initial.map(_(r).length).getOrElse(0))
-    }
-  }
-
-
-  /**
-   * Select approximately k points at random with probability proportional to distance from closest cluster
-   * center, given an (optional) initial set of distances.
-   *
-   */
-  def select(
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    k: Int,
-    seed: Int,
-    runs: Int,
-    priorCosts: Option[RDD[Vector]],
-    newCenters: Seq[IndexedSeq[BregmanCenter]]): (RDD[Vector], Array[(Int, BregmanCenter)]) = {
-
-
-    def updatedCosts(
-      bcNewCenters: Broadcast[Seq[IndexedSeq[BregmanCenter]]],
-      data: RDD[BregmanPoint],
-      oldCosts: RDD[Vector]): RDD[Vector] = {
-
-      data.zip(oldCosts).map { case (point, cost) =>
-        Vectors.dense(Array.tabulate(runs) { r =>
-          math.min(pointOps.pointCost(bcNewCenters.value(r), point), cost(r))
-        })
-      }
-    }
-
-    implicit val sc = data.sparkContext
-
-    val oldCosts = priorCosts.getOrElse(data.map(_ => Vectors.dense(Array.fill(runs)(Double.PositiveInfinity))))
-
-    withBroadcast(newCenters) { bcNewCenters =>
-      logInfo(s"constructing updated costs per point")
-
-      withNamed("costs", updatedCosts(bcNewCenters, data, oldCosts)) { costs =>
-        logInfo(s"summing costs per run")
-        val sumCosts = costs
-          .aggregate(Vectors.zeros(runs))(
-            (s, v) => axpy(1.0, v, s),
-            (s0, s1) => axpy(1.0, s1, s0)
-          )
-
-        assert(data.getStorageLevel.useMemory)
-        logInfo(s"collecting chosen")
-
-        val chosen = data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
-          val rand = new XORShiftRandom(seed ^ index)
-          val range = 0 until runs
-          pointsWithCosts.flatMap { case (p, c) =>
-            val selectedRuns = range.filter { r =>
-              rand.nextDouble() < c(r) * k / sumCosts(r)
-            }
-            val nullCenter = null.asInstanceOf[BregmanCenter]
-            val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
-            selectedRuns.map((_, center))
-          }
-        }.collect()
-        (costs, chosen)
-      }
-    }
-  }
-
-  def initialCenters(seed: Int, pointOps: BregmanPointOps, data: RDD[BregmanPoint], runs: Int): Array[ArrayBuffer[BregmanCenter]] = {
-    // Initialize each run's first center to a random point.
-    val sample = data.takeSample(withReplacement = true, runs, seed).map(pointOps.toCenter)
-    Array.tabulate(runs)(r => ArrayBuffer(sample(r)))
+    val keep = initialInfo.map(_._1).map(_.map(_.size))
+    finalClusterCenters(numClusters, seed, centers, keep)
   }
 }
-
-

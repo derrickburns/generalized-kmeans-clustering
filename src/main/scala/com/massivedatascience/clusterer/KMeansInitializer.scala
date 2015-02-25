@@ -20,8 +20,13 @@ package com.massivedatascience.clusterer
 import org.apache.spark.rdd.RDD
 
 trait KMeansInitializer extends Serializable {
-  def init(ops: BregmanPointOps, d: RDD[BregmanPoint], numClusters: Int,
-    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None, runs: Int, seed: Long): Array[Array[BregmanCenter]]
+  def init(
+    ops: BregmanPointOps,
+    d: RDD[BregmanPoint],
+    numClusters: Int,
+    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    runs: Int,
+    seed: Long): Array[Array[BregmanCenter]]
 }
 
 

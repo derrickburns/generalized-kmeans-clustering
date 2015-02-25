@@ -233,9 +233,9 @@ object KMeans extends SparkHelper {
     distanceFunction match {
       case EUCLIDEAN => SquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
-      case DISCRETE_KL => DiscreteDenseKLPointOps
-      case SIMPLEX_SMOOTHED_KL => DiscreteDenseSimplexSmoothedKLPointOps
-      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
+      case DISCRETE_KL => DiscreteKLPointOps
+      case SIMPLEX_SMOOTHED_KL => DiscreteSimplexSmoothedKLPointOps
+      case DISCRETE_SMOOTHED_KL => DiscreteSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps

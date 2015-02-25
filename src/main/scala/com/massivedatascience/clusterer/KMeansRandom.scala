@@ -31,7 +31,7 @@ class KMeansRandom extends KMeansInitializer with SparkHelper {
     ops: BregmanPointOps,
     data: RDD[BregmanPoint],
     k: Int,
-    initial: Option[Seq[IndexedSeq[BregmanCenter]]] = None,
+    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
     seed: Long): Array[Array[BregmanCenter]] = {
 

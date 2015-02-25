@@ -28,6 +28,7 @@ import scala.collection.mutable
 import scala.collection.generic.FilterMonadic
 import ColumnTrackingKMeans._
 
+import scala.util.Random
 
 
 object ColumnTrackingKMeans {
@@ -209,19 +210,23 @@ class ColumnTrackingKMeans(
         }
       }
 
-      val weightThreshold = pointOps.weightThreshold
+      val myRand = new Random()
+
       // adjust centers to fill in empty slots
-      val weakClusters = centers.filter(_.center.weight < weightThreshold)
+      val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
+      //val weakClusters = centers.filter(_ => myRand.nextDouble() < 0.10)
+
       if (weakClusters.length != 0) {
         logInfo(s"replacing ${weakClusters.length} empty clusters")
-        val strongClusters = centers.filter(_.center.weight >= weightThreshold)
-        val bregmanCenters = Seq(strongClusters.toIndexedSeq.map(_.center))
+        val strongClusters = centers.filter(!weakClusters.contains(_))
+        val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
         val seed = new DateTime().getMillis
         val incrementer = new KMeansParallel(2)
+        val costs = currentAssignments.map(_.distance)
         val newCenters = incrementer.init(pointOps, points, centers.length,
-          Some(bregmanCenters), 1, seed)(0)
-        logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters(0).length}")
-        val additional = newCenters.drop(bregmanCenters(0).length)
+          Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
+        logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
+        val additional = newCenters.drop(bregmanCenters.length)
         val replacements = weakClusters.zip(additional).map { case (x, y) => x.copy(round = round,
           center = y, initialized = false)
         }

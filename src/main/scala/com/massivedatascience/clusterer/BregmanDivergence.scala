@@ -170,7 +170,7 @@ case object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexD
 }
 
 private[clusterer]
-case object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence {
+case object NaturalKLSimplexDivergence extends KullbackLeiblerSimplexDivergence {
   val logFunc: MathLog = DiscreteLog
 }
 

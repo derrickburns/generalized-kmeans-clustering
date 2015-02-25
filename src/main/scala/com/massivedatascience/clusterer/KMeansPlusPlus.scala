@@ -49,7 +49,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    */
 
   def getCenters(
-    seed: Int,
+    seed: Long,
     candidateCenters: Array[BregmanCenter],
     weights: Array[Double],
     k: Int,

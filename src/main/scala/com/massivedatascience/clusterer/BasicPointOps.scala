@@ -20,7 +20,8 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 
 
-private[clusterer] trait BasicPointOps {
+private[clusterer]
+trait BasicPointOps {
 
   val divergence: BregmanDivergence
 
@@ -168,17 +169,12 @@ case object SparseRealKLPointOps extends BregmanPointOps with BasicPointOps with
   }
 }
 
-private[clusterer]
-case object DiscreteDenseSimplexSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
-  val divergence = NaturalKullbackLeiblerSimplexDivergence
-}
-
 /**
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
 private[clusterer]
-case object DiscreteDenseKLPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
+case object DiscreteKLPointOps extends BregmanPointOps with BasicPointOps with NonSmoothed {
   val divergence = NaturalKLDivergence
 }
 
@@ -191,6 +187,12 @@ case object DiscreteDenseKLPointOps extends BregmanPointOps with BasicPointOps w
  *
  */
 private[clusterer]
-case object DiscreteDenseSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
+case object DiscreteSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
   val divergence = NaturalKLDivergence
 }
+
+private[clusterer]
+case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
+  val divergence = NaturalKLSimplexDivergence
+}
+
