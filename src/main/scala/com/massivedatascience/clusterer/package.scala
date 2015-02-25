@@ -155,7 +155,6 @@ package object clusterer {
     weight: Double,
     dotGradMinusF: Double,
     gradient: Vector) extends WeightedVector {
-
     lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
   }
 

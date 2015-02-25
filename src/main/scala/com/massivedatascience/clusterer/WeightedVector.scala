@@ -34,25 +34,27 @@ trait WeightedVector extends Serializable {
 
 object WeightedVector {
 
-  private[this] class ImmutableInhomogeneousVector(v: Vector, val weight: Double) extends WeightedVector {
+  private[this] class ImmutableInhomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
+    override def toString = s"InhomogeneousVector($weight, $v)"
     override val inhomogeneous: Vector = v
     override lazy val homogeneous: Vector = asHomogeneous(v, weight)
   }
 
-  private[this] class ImmutableHomogeneousVector(v: Vector, val weight: Double) extends WeightedVector {
+  private[this] class ImmutableHomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
+    override def toString = s"HomogeneousVector($weight, $v)"
     override lazy val inhomogeneous: Vector = asInhomogeneous(v, weight)
     override val homogeneous: Vector = v
   }
 
-  def apply(v: Vector): WeightedVector = new ImmutableInhomogeneousVector(v, 1.0)
+  def apply(v: Vector): WeightedVector = new ImmutableInhomogeneousVector(1.0, v)
 
-  def apply(v: Array[Double]): WeightedVector = new ImmutableInhomogeneousVector(Vectors.dense(v), 1.0)
+  def apply(v: Array[Double]): WeightedVector = new ImmutableInhomogeneousVector(1.0, Vectors.dense(v))
 
-  def apply(v: Vector, weight: Double): WeightedVector = new ImmutableHomogeneousVector(v, weight)
+  def apply(v: Vector, weight: Double): WeightedVector = new ImmutableHomogeneousVector(weight, v)
 
-  def apply(v: Array[Double], weight: Double): WeightedVector = new ImmutableHomogeneousVector(Vectors.dense(v), weight)
+  def apply(v: Array[Double], weight: Double): WeightedVector = new ImmutableHomogeneousVector(weight, Vectors.dense(v))
 
-  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = new ImmutableInhomogeneousVector(Vectors.dense(v), weight)
+  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, Vectors.dense(v))
 
 }
 

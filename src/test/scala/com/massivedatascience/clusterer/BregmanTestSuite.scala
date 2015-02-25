@@ -31,7 +31,7 @@ class BregmanTestSuite extends FunSuite {
   }
 
   test("DenseSimplexKLPointOps") {
-    val ops = DiscreteDenseSimplexSmoothedKLPointOps
+    val ops = DiscreteSimplexSmoothedKLPointOps
 
     val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0), 7.0)
     val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0), 12.0)

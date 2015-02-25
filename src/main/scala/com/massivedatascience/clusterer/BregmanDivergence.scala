@@ -38,6 +38,7 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
+private[clusterer]
 trait BregmanDivergence extends Serializable {
 
   /**
@@ -75,11 +76,71 @@ trait BregmanDivergence extends Serializable {
 }
 
 /**
+ * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
+ *
+ * If we know that the points are on the simplex, then we may simplify the implementation of KL
+ * divergence. This trait implements that simplification.
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+private[clusterer]
+trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
+
+  val logFunc: MathLog
+
+  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
+
+  def F(v: Vector, w: Double) = {
+    F(v) / w - logFunc.log(w) - 1.0
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, logFunc.log)
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = logFunc.log(w)
+    trans(v, x => logFunc.log(x) - c)
+  }
+}
+
+/**
+ * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
+ *
+ * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *
+ */
+private[clusterer]
+trait KullbackLeiblerDivergence extends BregmanDivergence {
+
+  val logFunc: MathLog
+
+  def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
+
+  def F(v: Vector, w: Double) = {
+    val c = v.copy
+    scal(1.0 / w, c)
+    F(c)
+  }
+
+  def gradF(v: Vector): Vector = {
+    trans(v, logFunc.log)
+  }
+
+  def gradF(v: Vector, w: Double): Vector = {
+    val c = logFunc.log(w)
+    trans(v, x => logFunc.log(x) - c)
+  }
+}
+
+/**
  * The squared Euclidean distance function is defined on points in R**n
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
+private[clusterer]
+case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
    * Squared L ** 2 norm
@@ -103,72 +164,33 @@ object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
   }
 }
 
-/**
- * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
- *
- * If we know that the points are on the simplex, then we may simplify the implementation of KL
- * divergence. This trait implements that simplification.
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-class KullbackLeiblerSimplexDivergence(logFunc: HasLog) extends BregmanDivergence {
-
-  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
-
-  def F(v: Vector, w: Double) = {
-    F(v) / w - logFunc.log(w) - 1.0
-  }
-
-  def gradF(v: Vector): Vector = {
-    trans(v, logFunc.log)
-  }
-
-  def gradF(v: Vector, w: Double): Vector = {
-    val c = logFunc.log(w)
-    trans(v, x => logFunc.log(x) - c)
-  }
+private[clusterer]
+case object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence {
+  val logFunc: MathLog = GeneralLog
 }
 
-object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(GeneralLog)
-
-object NaturalKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence(DiscreteLog)
-
-/**
- * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-class KullbackLeiblerDivergence(logFunc: HasLog) extends BregmanDivergence {
-
-  def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
-
-  def F(v: Vector, w: Double) = {
-    val c = v.copy
-    scal(1.0 / w, c)
-    F(c)
-  }
-
-  def gradF(v: Vector): Vector = {
-    trans(v, logFunc.log)
-  }
-
-  def gradF(v: Vector, w: Double): Vector = {
-    val c = logFunc.log(w)
-    trans(v, x => logFunc.log(x) - c)
-  }
+private[clusterer]
+case object NaturalKLSimplexDivergence extends KullbackLeiblerSimplexDivergence {
+  val logFunc: MathLog = DiscreteLog
 }
 
-object RealKLDivergence extends KullbackLeiblerDivergence(GeneralLog)
+private[clusterer]
+case object RealKLDivergence extends KullbackLeiblerDivergence {
+  val logFunc: MathLog = GeneralLog
+}
 
-object NaturalKLDivergence extends KullbackLeiblerDivergence(DiscreteLog)
-
+private[clusterer]
+case object NaturalKLDivergence extends KullbackLeiblerDivergence {
+  val logFunc: MathLog = DiscreteLog
+}
 
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-class GeneralizedIDivergence(logFunc: HasLog) extends BregmanDivergence {
+private[clusterer]
+case object GeneralizedIDivergence extends BregmanDivergence {
+
+  val logFunc: MathLog = DiscreteLog
 
   def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
@@ -194,7 +216,8 @@ class GeneralizedIDivergence(logFunc: HasLog) extends BregmanDivergence {
  *
  *    x => (x, 1.0 - x)
  */
-object LogisticLossDivergence extends BregmanDivergence {
+private[clusterer]
+case object LogisticLossDivergence extends BregmanDivergence {
 
   val log = GeneralLog.log _
 
@@ -224,7 +247,10 @@ object LogisticLossDivergence extends BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-class ItakuraSaitoDivergence(logFunc: HasLog) extends BregmanDivergence {
+private[clusterer]
+case object ItakuraSaitoDivergence extends BregmanDivergence {
+
+  val logFunc: MathLog = GeneralLog
 
   /**
    * Burg entropy

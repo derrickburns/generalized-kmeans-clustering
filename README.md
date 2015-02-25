@@ -10,8 +10,8 @@ or dense data, in low or high dimension, using distances defined by
 This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
 using the squared Euclidean distance function.
 
-Be aware that work on this project is ongoing.  Parts of this project are being integrated into upcoming releases
-of the Spark MLLIB clusterer.
+Be aware that work on this project is ongoing.  Parts of this project are being integrated into
+upcoming releases of the Spark MLLIB clusterer.
 
 
 ### Usage
@@ -193,8 +193,8 @@ However, there are many interesting distance functions other than Euclidean dist
 It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
 modification to the Spark implementation have made it even more difficult.
 
-This project decouples the distance function from the clusterer implementation, allowing the end-user the opportunity
-to define an alternative distance function in just a few lines of code.
+This project decouples the distance function from the clusterer implementation, allowing the
+end-user the opportunity to define an alternative distance function in just a few lines of code.
 
 The most general class of distance functions that work with the K-Means algorithm are called Bregman divergences.
 This project implements several Bregman divergences, including the squared Euclidean distance,
@@ -258,9 +258,11 @@ are experimental for performance testing.
 
 | Name (```KMeans._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
-| ```SIMPLE```                  | recomputes closest clusters each iteration |
-| ```TRACKING```           |  clusterer tracks last cluster center in combined RDD |
-| ```COLUMN_TRACKING```           |  clusterer tracks last cluster center  in separate RDD |
+| ```SIMPLE```                  | recomputes closest assignments each iteration |
+| ```TRACKING```           |  clusterer tracks last assignments in combined point/assignmentRDD |
+| ```COLUMN_TRACKING```           |  clusterer tracks last assignments in separate RDDs |
+
+
 
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
@@ -268,26 +270,32 @@ There are several other differences with this clusterer and the Spark K-Means cl
 
 #### Variable number of clusters
 
-This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a problem, but your data may not cluster into `k` clusters!
-The Spark implementation duplicates cluster centers, resulting in useless computation.  This implementation
-tracks the number of cluster centers.
+This clusterer may produce fewer than `k` clusters when `k` are requested.  This may sound like a
+problem, but your data may not cluster into `k` clusters!
+The Spark implementation duplicates cluster centers, resulting in useless computation.
+The ```COLUMN_TRACKING``` implementation replenishes empty clusters with
+new clusters so that the desired number of clusters is almost always provided.
 
 #### Faster K-Means || implementation
 
-This clusterer uses the K-Means clustering step in the [K-Means || initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
+This clusterer uses the K-Means clustering step in the [K-Means ||
+initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) process.
 This is much faster, since all cores are utilized versus just one.
 
-Additionally, this implementation performs the implementation in time quadratic in the number of clusters, whereas the Spark implementation takes time cubic in the number of clusters.
+Additionally, this implementation performs the implementation in time quadratic in the number of
+clusters, whereas the Spark implementation takes time cubic in the number of clusters.
 
 #### Sparse Data
 
-This clusterer works on dense and sparce data.  However, for best performance, we recommend that you convert youd sparse data into dense data before clustering.
-In high dimensions (say > 1024), it is recommended that you embed your sparse data into a lower dimensional dense space using random indexing.
+This clusterer works on dense and sparce data.  However, for best performance, we recommend that
+you convert youd sparse data into dense data before clustering.
+In high dimensions (say > 1024), it is recommended that you embed your sparse data into a lower
+dimensional dense space using random indexing.
 
 ### Scalability and Testing
 
-This clusterer has been used to cluster millions of points in 700+ dimensional space using an information theoretic distance
-function (Kullback-Leibler).
+This clusterer has been used to cluster millions of points in 700+ dimensional space using an
+information theoretic distance function (Kullback-Leibler).
 
 ### Internals
 
@@ -410,8 +418,9 @@ object ItakuraSaitoDivergence extends BregmanDivergence
 
 This clusterer abstracts the distance function, as described above, making it extensible.
 
-The key is to create three new abstractions: point, cluster center, and centroid.  The base implementation constructs
-centroids incrementally, then converts them to cluster centers.  The initialization of the cluster centers converts
+The key is to create three new abstractions: point, cluster center, and centroid.  The base
+implementation constructs centroids incrementally, then converts them to cluster centers.
+The initialization of the cluster centers converts
 points to cluster centers.  These abstractions are easy to understand and easy to implement.
 
 ```PointOps``` implement fast method for computing distances, taking advantage of the

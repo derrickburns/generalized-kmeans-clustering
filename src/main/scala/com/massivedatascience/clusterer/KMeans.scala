@@ -49,6 +49,8 @@ object KMeans extends SparkHelper {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
+  case class RunConfig(numClusters: Int, runs: Int, seed: Int)
+
   /**
    *
    * Train a K-Means model using Lloyd's algorithm.  
@@ -79,11 +81,13 @@ object KMeans extends SparkHelper {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
+    val runConfig = RunConfig(k, runs, 0)
+
     withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
       val ops = distanceFunctionNames.map(getPointOps)
-      val initializer = getInitializer(mode, k, runs, initializationSteps)
+      val initializer = getInitializer(mode, initializationSteps)
       val embeddings = embeddingNames.map(getEmbedding)
-      val (model, results) = reSampleTrain(data, initializer, ops, embeddings)
+      val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
       results.assignments.unpersist(blocking = false)
       model
     }
@@ -120,10 +124,13 @@ object KMeans extends SparkHelper {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
+    val runConfig = RunConfig(k, runs, 0)
+
+
     val ops = distanceFunctionNames.map(getPointOps)
-    val initializer = getInitializer(mode, k, runs, initializationSteps)
+    val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(getEmbedding)
-    val (model, results) = reSampleTrain(data, initializer, ops, embeddings)
+    val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
     results.assignments.unpersist(blocking = false)
     model
   }
@@ -160,11 +167,12 @@ object KMeans extends SparkHelper {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
+    val runConfig = RunConfig(k, runs, 0)
     val ops = distanceFunctionNames.map(x => getPointOps(x))
-    val initializer = getInitializer(mode, k, runs, initializationSteps)
+    val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(getEmbedding)
 
-    reSampleTrain(data, initializer, ops, embeddings)
+    reSampleTrain(runConfig, data, initializer, ops, embeddings)
   }
 
   /**
@@ -198,8 +206,9 @@ object KMeans extends SparkHelper {
 
     implicit val clusterer = getClustererImpl(clustererName, maxIterations)
 
+    val runConfig = RunConfig(k, runs, 0)
     val distanceFunc = getPointOps(distanceFunctionName)
-    val initializer = getInitializer(initializerName, k, runs, initializationSteps)
+    val initializer = getInitializer(initializerName, initializationSteps)
     val embedding = getEmbedding(embeddingName)
 
     logInfo(s"k = $k")
@@ -216,17 +225,17 @@ object KMeans extends SparkHelper {
     val names = Array.tabulate(samples.length)(i => s"data embedded at depth $i")
     withCached(names, samples) { samples =>
       val ops = Array.fill(samples.length)(distanceFunc)
-      iterativelyTrain(ops, samples, initializer)
+      iterativelyTrain(runConfig, ops, samples, initializer)
     }
   }
 
-  def getPointOps(distanceFunction: String): BasicPointOps = {
+  def getPointOps(distanceFunction: String): BregmanPointOps = {
     distanceFunction match {
       case EUCLIDEAN => SquaredEuclideanPointOps
       case RELATIVE_ENTROPY => DenseKLPointOps
-      case DISCRETE_KL => DiscreteDenseKLPointOps
-      case SIMPLEX_SMOOTHED_KL => DiscreteDenseSimplexSmoothedKLPointOps
-      case DISCRETE_SMOOTHED_KL => DiscreteDenseSmoothedKLPointOps
+      case DISCRETE_KL => DiscreteKLPointOps
+      case SIMPLEX_SMOOTHED_KL => DiscreteSimplexSmoothedKLPointOps
+      case DISCRETE_SMOOTHED_KL => DiscreteSmoothedKLPointOps
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
@@ -263,19 +272,19 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def getInitializer(initializerName: String, k: Int, runs: Int, initializationSteps: Int)(
-    implicit clusterer: MultiKMeansClusterer): KMeansInitializer = {
-    initializerName match {
-      case RANDOM => new KMeansRandom(k, runs, 0)
-      case K_MEANS_PARALLEL => new KMeansParallel(k, runs, initializationSteps, 0, clusterer)
-      case _ => throw new RuntimeException(s"unknown initializer $initializerName")
+  def getInitializer(name: String, steps: Int): KMeansInitializer = {
+    name match {
+      case RANDOM => new KMeansRandom
+      case K_MEANS_PARALLEL => new KMeansParallel(steps)
+      case _ => throw new RuntimeException(s"unknown initializer $name")
     }
   }
 
-  def simpleTrain(distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
+  def simpleTrain(runConfig: RunConfig, distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    val initialCenters = initializer.init(distanceFunc, bregmanPoints)
+    val initialCenters = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
+
     require(bregmanPoints.getStorageLevel.useMemory)
     logInfo("completed initialization of cluster centers")
 
@@ -293,6 +302,7 @@ object KMeans extends SparkHelper {
   }
 
   def subSampleTrain(
+    runConfig: RunConfig,
     pointOps: BregmanPointOps,
     raw: RDD[WeightedVector],
     initializer: KMeansInitializer,
@@ -303,11 +313,12 @@ object KMeans extends SparkHelper {
     val samples = subsample(raw, pointOps, depth, embedding)
     val names = Array.tabulate(depth)(i => s"data embedded at depth $i")
     withCached(names, samples) { samples =>
-      iterativelyTrain(Array.fill(depth + 1)(pointOps), samples, initializer)
+      iterativelyTrain(runConfig, Array.fill(depth + 1)(pointOps), samples, initializer)
     }
   }
 
   def reSampleTrain(
+    runConfig: RunConfig,
     raw: RDD[WeightedVector],
     initializer: KMeansInitializer,
     ops: Seq[BregmanPointOps],
@@ -319,11 +330,12 @@ object KMeans extends SparkHelper {
     val samples = resample(raw, ops, embeddings)
     val names = embeddings.map(embedding => s"data embedded with $embedding")
     withCached(names, samples) { samples =>
-      iterativelyTrain(ops, samples, initializer)
+      iterativelyTrain(runConfig, ops, samples, initializer)
     }
   }
 
   private def iterativelyTrain(
+    runConfig: RunConfig,
     pointOps: Seq[BregmanPointOps],
     dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansInitializer)(
@@ -333,9 +345,9 @@ object KMeans extends SparkHelper {
 
     withCached("original", dataSets.head) { original =>
       val remaining = dataSets.zip(pointOps).tail
-      remaining.foldLeft(simpleTrain(pointOps.head, original, initializer)) {
+      remaining.foldLeft(simpleTrain(runConfig, pointOps.head, original, initializer)) {
         case ((_, KMeansResults(_, assignments)), (data, op)) =>
-          sideEffect(simpleTrain(op, data, new SampleInitializer(assignments.map(_._1)))) { result =>
+          sideEffect(simpleTrain(runConfig, op, data, new SampleInitializer(assignments.map(_._1)))) { result =>
             assignments.unpersist(blocking = false)
           }
       }

@@ -33,6 +33,8 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
   val nonemptyClusters = sc.accumulator[Int](0, s"Non-Empty Clusters")
   val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters")
   val largestCluster = sc.accumulator[Long](0, s"Largest Cluster")
+  val replenishedClusters = sc.accumulator[Int](0, s"Replenished Centers")
+
 
   def getMovement = movement.value
 
@@ -44,13 +46,14 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
 
   def report() = {
     logInfo(s"round ${currentRound.value}")
-    logInfo(s"round ${currentRound.value}, relocated centers, ${relocatedCenters.value}")
-    logInfo(s"round ${currentRound.value}, lowered distortion, ${improvement.value}")
-    logInfo(s"round ${currentRound.value}, center movement, ${movement.value}")
-    logInfo(s"round ${currentRound.value}, reassigned points, ${reassignedPoints.value}")
-    logInfo(s"round ${currentRound.value}, newly assigned points, ${newlyAssignedPoints.value}")
-    logInfo(s"round ${currentRound.value}, unassigned points,${unassignedPoints.value}")
-    logInfo(s"round ${currentRound.value}, non-empty clusters, ${nonemptyClusters.value}")
-    logInfo(s"round ${currentRound.value}, largest cluster size, ${largestCluster.value}")
+    logInfo(s"       relocated centers      ${relocatedCenters.value}")
+    logInfo(s"       lowered distortion     ${improvement.value}")
+    logInfo(s"       center movement        ${movement.value}")
+    logInfo(s"       reassigned points      ${reassignedPoints.value}")
+    logInfo(s"       newly assigned points  ${newlyAssignedPoints.value}")
+    logInfo(s"       unassigned points      ${unassignedPoints.value}")
+    logInfo(s"       non-empty clusters     ${nonemptyClusters.value}")
+    logInfo(s"       largest cluster size   ${largestCluster.value}")
+    logInfo(s"       replenished clusters   ${replenishedClusters.value}")
   }
 }
