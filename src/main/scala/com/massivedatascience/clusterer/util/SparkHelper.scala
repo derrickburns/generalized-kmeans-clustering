@@ -19,8 +19,7 @@ trait SparkHelper extends Logging {
   def sync[T](name: String, data: RDD[T], synchronous: Boolean = true): RDD[T] = {
     data.setName(name).cache()
     if (synchronous) {
-      val count = data.count()
-      logInfo(s"have $count items of RDD ${data.name}")
+      data.foreachPartition(p => None)
     }
     data
   }
