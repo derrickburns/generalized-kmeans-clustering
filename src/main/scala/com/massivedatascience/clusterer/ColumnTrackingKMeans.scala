@@ -109,6 +109,7 @@ class ColumnTrackingKMeans(
 
 
   val addOnly = true
+  val maxRoundsToBackfill = Int.MaxValue
 
   /**
    * count number of points assigned to each cluster
@@ -214,12 +215,12 @@ class ColumnTrackingKMeans(
       val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
       //val weakClusters = centers.filter(_ => myRand.nextDouble() < 0.10)
 
-      if (weakClusters.length != 0) {
+      if (weakClusters.length != 0 && round < maxRoundsToBackfill) {
         logInfo(s"replacing ${weakClusters.length} empty clusters")
         val strongClusters = centers.filter(!weakClusters.contains(_))
         val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
         val seed = new DateTime().getMillis
-        val incrementer = new KMeansParallel(2)
+        val incrementer = new KMeansParallel(2, 0.10)
         val costs = currentAssignments.map(_.distance)
         val newCenters = incrementer.init(pointOps, points, centers.length,
           Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
