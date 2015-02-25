@@ -222,16 +222,16 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * Identify the number of additional cluster centers needed per run.
      *
      * @param totalNumClusters total number of clusters desired (for each run)
-     * @param initialInfo initial clusters and distance per point to cluster
+     * @param initialCenters initial clusters and distance per point to cluster
      * @param runs number of runs
      * @return number of clusters needed to fulfill gap
      */
     def numbersRequested(
       totalNumClusters: Int,
-      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
+      initialCenters: Option[Seq[IndexedSeq[BregmanCenter]]],
       runs: Int): Seq[Int] = {
 
-      initialInfo.map(_._1.map(totalNumClusters - _.length))
+      initialCenters.map(_.map(totalNumClusters - _.length))
         .getOrElse(Array.fill(runs)(totalNumClusters).toSeq)
     }
 
@@ -240,19 +240,21 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * to their squared distance from the centers. Note that only distances between points
      * and new centers are computed in each iteration.
      *
+     * @param initialCosts initial costs
      * @param perRound number of points to select per round per run
      * @param seed random seed
      * @param centers initial centers
      * @return expanded set of centers, including initial centers
      */
     def moreCenters(
+      initialCosts: Option[Seq[RDD[Double]]],
       numberSteps: Int,
       perRound: Seq[Int],
       seed: Long,
       centers: Seq[IndexedSeq[BregmanCenter]]): Seq[IndexedSeq[BregmanCenter]] = {
 
       val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
-      val startingCosts = initialState.map(_._2).map(asVectors).getOrElse(setCosts(centers))
+      val startingCosts = initialCosts.map(asVectors).getOrElse(setCosts(centers))
       var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
 
@@ -277,10 +279,12 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
     require(data.getStorageLevel.useMemory)
     val seed = new XORShiftRandom(seedx).nextLong()
-    val initialCenters = initialState.map(_._1).getOrElse(randomCenters(seed))
-    val requested = numbersRequested(targetNumberClusters, initialState, runs)
-    val expandedCenters = moreCenters(numSteps, requested.map(_ * 2), seed, initialCenters)
-    val numbersRetainedCenters = initialState.map(_._1).map(_.map(_.size))
+    val preselectedCenters = initialState.map(_._1)
+    val initialCosts = initialState.map(_._2)
+    val centers = preselectedCenters.getOrElse(randomCenters(seed))
+    val requested = numbersRequested(targetNumberClusters, preselectedCenters, runs)
+    val expandedCenters = moreCenters(initialCosts, numSteps, requested.map(_ * 2), seed, centers)
+    val numbersRetainedCenters = preselectedCenters.map(_.map(_.size))
     finalClusterCenters(targetNumberClusters, seed, expandedCenters, numbersRetainedCenters)
   }
 }
