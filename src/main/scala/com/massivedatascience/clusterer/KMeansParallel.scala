@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This code is a re-write version of the original Spark 1.0.2 implementation.
+ * This code is a complete re-write version of the original Spark 1.0.2 implementation.
  *
  *
  */
