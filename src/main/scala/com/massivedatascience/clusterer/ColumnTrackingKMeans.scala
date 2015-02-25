@@ -266,7 +266,7 @@ class ColumnTrackingKMeans(
         if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold &&
           current.center.weight > pointOps.weightThreshold) {
           val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
-          println(s"$delta, ${previous.center}, ${current.center}")
+          logInfo(s"$delta, ${previous.center}, ${current.center}")
           stats.movement.add(delta)
           stats.relocatedCenters.add(1)
         }
