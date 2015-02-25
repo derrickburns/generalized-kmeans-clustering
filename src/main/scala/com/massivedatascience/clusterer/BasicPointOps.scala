@@ -74,7 +74,7 @@ trait NonSmoothed {
 private[clusterer]
 trait Smoothed {
   val divergence: BregmanDivergence
-  val smoothingFactor = 1.0
+  val smoothingFactor: Double
 
   def toPoint(v: WeightedVector): BregmanPoint = {
     BregmanPoint(v, divergence.F(v.homogeneous, v.weight))
@@ -189,10 +189,12 @@ case object DiscreteKLPointOps extends BregmanPointOps with BasicPointOps with N
 private[clusterer]
 case object DiscreteSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
   val divergence = NaturalKLDivergence
+  val smoothingFactor = 1.0
 }
 
 private[clusterer]
 case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps with BasicPointOps with Smoothed {
   val divergence = NaturalKLSimplexDivergence
+  val smoothingFactor = 1.0
 }
 
