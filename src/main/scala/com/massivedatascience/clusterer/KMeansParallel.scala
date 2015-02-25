@@ -122,9 +122,9 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
       val ops = pointOps
       val numRuns = runs
       withBroadcast(centers) { bcNewCenters =>
-        data.zip(oldCosts).map { case (point, cost) =>
+        data.zip(oldCosts).map { case (point, oldCost) =>
           Vectors.dense(Array.tabulate(numRuns) { r =>
-            math.min(ops.pointCost(bcNewCenters.value(r), point), cost(r))
+            math.min(ops.pointCost(bcNewCenters.value(r), point), oldCost(r))
           })
         }
       }
