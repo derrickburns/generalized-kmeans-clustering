@@ -81,14 +81,14 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
      * @param numClusters  number of new clusters desired
      * @param seed random number seed
      * @param centers candidate centers
-     * @param numPreselected number of pre-selected candidate centers to keep
+     * @param numberRetained number of pre-selected candidate centers to keep
      * @return arrays of selected centers
      */
     def finalClusterCenters(
       numClusters: Int,
       seed: Long,
       centers: Seq[ArrayBuffer[BregmanCenter]],
-      numPreselected: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
+      numberRetained: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
 
       val centerArrays = centers.map(_.toArray)
       val weightMap = weights(centerArrays)
@@ -99,7 +99,8 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1, numPreselected.map(_(r)).getOrElse(0))
+        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1,
+          numberRetained.map(_(r)).getOrElse(0))
       }
     }
 
@@ -292,7 +293,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     val centers = startingCenters(initialState, seed)
     val requested = requestedCenters(targetNumberClusters, initialState, runs)
     val expandedCenters = moreCenters(requested.map(_ * 2), seed, centers)
-    val keep = initialState.map(_._1).map(_.map(_.size))
-    finalClusterCenters(targetNumberClusters, seed, expandedCenters, keep)
+    val numberRetainedCenters = initialState.map(_._1).map(_.map(_.size))
+    finalClusterCenters(targetNumberClusters, seed, expandedCenters, numberRetainedCenters)
   }
 }
