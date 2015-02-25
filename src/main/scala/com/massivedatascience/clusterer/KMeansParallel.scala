@@ -266,6 +266,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
      * @return expanded set of centers, including initial centers
      */
     def moreCenters(
+      numberSteps: Int,
       perRound: Seq[Int],
       seed: Long,
       centers: Seq[ArrayBuffer[BregmanCenter]]): Seq[ArrayBuffer[BregmanCenter]] = {
@@ -273,7 +274,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
       var step = 0
       var costs = sync("initial costs", startingCosts(initialState, centers))
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
-      while (step < initializationSteps) {
+      while (step < numberSteps) {
         logInfo(s"starting step $step")
         for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
           newCenters(index) += center
@@ -292,7 +293,7 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
     val seed = new XORShiftRandom(seedx).nextLong()
     val centers = startingCenters(initialState, seed)
     val requested = numberRequested(targetNumberClusters, initialState, runs)
-    val expandedCenters = moreCenters(requested.map(_ * 2), seed, centers)
+    val expandedCenters = moreCenters(initializationSteps, requested.map(_ * 2), seed, centers)
     val numberRetainedCenters = initialState.map(_._1).map(_.map(_.size))
     finalClusterCenters(targetNumberClusters, seed, expandedCenters, numberRetainedCenters)
   }
