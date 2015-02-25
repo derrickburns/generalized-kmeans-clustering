@@ -109,7 +109,7 @@ class ColumnTrackingKMeans(
 
 
   val addOnly = true
-  val maxRoundsToBackfill = 5
+  val maxRoundsToBackfill = 8
 
   /**
    * count number of points assigned to each cluster
