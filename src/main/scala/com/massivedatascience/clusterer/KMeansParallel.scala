@@ -258,10 +258,11 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
       centers: Seq[IndexedSeq[BregmanCenter]]): Seq[IndexedSeq[BregmanCenter]] = {
 
       val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
-      var step = 0
       val startingCosts = initialState.map(_._2).map(asVectors).getOrElse(setCosts(centers))
       var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
+
+      var step = 0
       while (step < numberSteps) {
         logInfo(s"starting step $step")
         for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
@@ -270,7 +271,10 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
         costs = exchange(s"costs at step $step", costs) { oldCosts =>
           updatedCosts(newCenters, oldCosts)
         }
-        addedCenters.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
+        for ((c, n) <- addedCenters.zip(newCenters)) {
+          c ++= n
+          n.clear()
+        }
         step += 1
       }
       costs.unpersist(blocking = false)
