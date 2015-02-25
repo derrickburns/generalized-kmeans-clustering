@@ -16,9 +16,6 @@
  *
  * This code is a re-write version of the original Spark 1.0.2 implementation.
  *
- * In this implementation, we allow the client to provide an initial set of cluster centers
- * and closest distance for each point to those cluster centers.  This allows us to
- * use this code to find additional cluster centers at any time.
  *
  */
 
@@ -43,6 +40,10 @@ import scala.collection.mutable.ArrayBuffer
  * to the current cluster set. It results in a provable approximation to an optimal clustering.
  *
  * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
+ *
+ * In this implementation, we allow the client to provide an initial set of cluster centers
+ * and closest distance for each point to those cluster centers.  This allows us to
+ * use this code to find additional cluster centers at any time.
  */
 class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with SparkHelper {
 
