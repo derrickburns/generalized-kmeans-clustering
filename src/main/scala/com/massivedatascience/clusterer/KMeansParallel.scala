@@ -71,8 +71,8 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
 
     def startingCenters(
       initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
-      seed: Long): Seq[ArrayBuffer[BregmanCenter]] = {
-      initialInfo.map(_._1).map(_.map(new ArrayBuffer[BregmanCenter]() ++ _)).getOrElse(randomCenters(seed))
+      seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
+      initialInfo.map(_._1).getOrElse(randomCenters(seed))
     }
 
     /**
@@ -87,7 +87,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
     def finalClusterCenters(
       numClusters: Int,
       seed: Long,
-      centers: Seq[ArrayBuffer[BregmanCenter]],
+      centers: Seq[IndexedSeq[BregmanCenter]],
       numberRetained: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
 
       val centerArrays = centers.map(_.toArray)
@@ -147,13 +147,13 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * @param seed seed for random numbers
      * @return random center per run stored in an array buffer
      */
-    def randomCenters(seed: Long): Seq[ArrayBuffer[BregmanCenter]] = {
+    def randomCenters(seed: Long): Array[IndexedSeq[BregmanCenter]] = {
       val ops = pointOps
       val numRuns = runs
       data
         .takeSample(withReplacement = true, numRuns, seed)
         .map(ops.toCenter)
-        .map(new ArrayBuffer[BregmanCenter] += _)
+        .map(IndexedSeq(_))
     }
 
     /**
@@ -246,7 +246,7 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
      * @param runs number of runs
      * @return number of clusters needed to fulfill gap
      */
-    def numberRequested(
+    def numbersRequested(
       totalNumClusters: Int,
       initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
       runs: Int): Seq[Int] = {
@@ -269,10 +269,11 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
       numberSteps: Int,
       perRound: Seq[Int],
       seed: Long,
-      centers: Seq[ArrayBuffer[BregmanCenter]]): Seq[ArrayBuffer[BregmanCenter]] = {
+      centers: Seq[IndexedSeq[BregmanCenter]]): Seq[IndexedSeq[BregmanCenter]] = {
 
+      val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
       var step = 0
-      var costs = sync("initial costs", startingCosts(initialState, centers))
+      var costs = sync("initial costs", startingCosts(initialState, addedCenters))
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
       while (step < numberSteps) {
         logInfo(s"starting step $step")
@@ -282,19 +283,19 @@ class KMeansParallel(numSteps: Int) extends KMeansInitializer with SparkHelper {
         costs = exchange(s"costs at step $step", costs) { oldCosts =>
           updatedCosts(newCenters, oldCosts)
         }
-        centers.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
+        addedCenters.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
         step += 1
       }
       costs.unpersist(blocking = false)
-      centers
+      addedCenters.map(_.toIndexedSeq)
     }
 
     require(data.getStorageLevel.useMemory)
     val seed = new XORShiftRandom(seedx).nextLong()
     val initialCenters = startingCenters(initialState, seed)
-    val requested = numberRequested(targetNumberClusters, initialState, runs)
+    val requested = numbersRequested(targetNumberClusters, initialState, runs)
     val expandedCenters = moreCenters(numSteps, requested.map(_ * 2), seed, initialCenters)
-    val numberRetainedCenters = initialState.map(_._1).map(_.map(_.size))
-    finalClusterCenters(targetNumberClusters, seed, expandedCenters, numberRetainedCenters)
+    val numbersRetainedCenters = initialState.map(_._1).map(_.map(_.size))
+    finalClusterCenters(targetNumberClusters, seed, expandedCenters, numbersRetainedCenters)
   }
 }
