@@ -149,9 +149,13 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * Compute for each cluster the sum of the weights of the points in the cluster
      *
      * @param centerArrays sequence of arrays of centers
+     * @param fraction fraction of points to sample
      * @return  A map from (run, cluster index) to the sum of the weights of its points
      */
-    def weights(centerArrays: Seq[Array[BregmanCenter]], fraction: Double, seed: Long): Map[(Int, Int), Double] = {
+    def weights(
+      centerArrays: Seq[Array[BregmanCenter]],
+      fraction: Double,
+      seed: Long): Map[(Int, Int), Double] = {
       val ops = pointOps
 
       withBroadcast(centerArrays) { bcCenters =>
