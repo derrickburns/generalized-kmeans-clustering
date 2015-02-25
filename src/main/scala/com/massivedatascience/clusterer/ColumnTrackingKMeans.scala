@@ -191,14 +191,14 @@ class ColumnTrackingKMeans(
       if (addOnly) {
         val results = getCompleteCentroids(points, currentAssignments, previousAssignments,
           previousCenters.length)
-        results.foreach { case (index, location) =>
+        for ((index, location) <- results) {
           centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
             initialized = true)
         }
       } else {
         val changes = getCentroidChanges(points, currentAssignments, previousAssignments,
           previousCenters.length)
-        changes.foreach { case (index, delta) =>
+        for ((index, delta) <- changes) {
           val previous = previousCenters(index)
           val location = if (previous.initialized)
             delta.add(pointOps.toPoint(previous.center))
@@ -209,8 +209,6 @@ class ColumnTrackingKMeans(
             initialized = true)
         }
       }
-
-      val myRand = new Random()
 
       // adjust centers to fill in empty slots
       val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
@@ -264,7 +262,7 @@ class ColumnTrackingKMeans(
       stats.movement.setValue(0.0)
       stats.relocatedCenters.setValue(0)
       stats.replenishedClusters.setValue(0)
-      currentCenters.zip(previousCenters).foreach { case (current, previous) =>
+      for ((current, previous) <- currentCenters.zip(previousCenters)) {
         if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold &&
           current.center.weight > pointOps.weightThreshold) {
           val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
@@ -281,7 +279,7 @@ class ColumnTrackingKMeans(
       stats.unassignedPoints.setValue(0)
       stats.improvement.setValue(0)
       stats.newlyAssignedPoints.setValue(0)
-      currentAssignments.zip(previousAssignments).foreach { case (current, previous) =>
+      for ((current, previous) <- currentAssignments.zip(previousAssignments)) {
         if (current.isAssigned) {
           if (previous.isAssigned) {
             stats.improvement.add(previous.distance - current.distance)
