@@ -52,8 +52,8 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
    *
    * @param pointOps distance function
    * @param data data
-   * @param totalNumClusters  number of new clusters desired
-   * @param initialInfo  initial clusters and distance data
+   * @param targetNumberClusters  number of new clusters desired
+   * @param initialState  initial clusters and distance data
    * @param runs  number of runs to perform
    * @param seedx random number seed
    * @return  updated set of cluster centers
@@ -62,8 +62,8 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
   def init(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    totalNumClusters: Int,
-    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    targetNumberClusters: Int,
+    initialState: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
     seedx: Long): Array[Array[BregmanCenter]] = {
 
@@ -237,35 +237,62 @@ class KMeansParallel(initializationSteps: Int) extends KMeansInitializer with Sp
       initialInfo.map(_._2).map(asVectors).getOrElse(setCosts(centers))
     }
 
-    val seed = new XORShiftRandom(seedx).nextLong()
-    val centers = startingCenters(initialInfo, seed)
-    val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
-    var costs = sync("initial costs", startingCosts(initialInfo, centers))
+    /**
+     * Identify the number of additional cluster centers needed per run.
+     *
+     * @param totalNumClusters total number of clusters desired (for each run)
+     * @param initialInfo initial clusters and distance per point to cluster
+     * @param runs number of runs
+     * @return number of clusters needed to fulfill gap
+     */
+    def requestedCenters(
+      totalNumClusters: Int,
+      initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])],
+      runs: Int): Seq[Int] = {
 
-    val needed = initialInfo.map(_._1.map(totalNumClusters - _.length))
-    val perRound = needed.getOrElse(Array.fill(runs)(totalNumClusters).toSeq).map(_ * 2)
-
-    // On each step, sample 2 * k points on average for each run with probability proportional
-    // to their squared distance from that run's centers. Note that only distances between points
-    // and new centers are computed in each iteration.
-    var step = 0
-    while (step < initializationSteps) {
-      logInfo(s"starting step $step")
-      assert(data.getStorageLevel.useMemory)
-      for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
-        newCenters(index) += center
-      }
-      costs = exchange(s"costs at step $step", costs) { oldCosts =>
-        updatedCosts(newCenters, oldCosts)
-      }
-      centers.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
-      step += 1
+      initialInfo.map(_._1.map(totalNumClusters - _.length))
+        .getOrElse(Array.fill(runs)(totalNumClusters).toSeq)
     }
 
-    costs.unpersist(blocking = false)
-    logInfo("creating final centers")
+    /**
+     * On each step, preRound(run) points on average for each run with probability proportional
+     * to their squared distance from that run's centers. Note that only distances between points
+     * and new centers are computed in each iteration.
+     *
+     * @param perRound number of points to select per round per run
+     * @param seed random seed
+     * @param centers initial centers
+     * @return expanded set of centers, including initial centers
+     */
+    def moreCenters(
+      perRound: Seq[Int],
+      seed: Long,
+      centers: Seq[ArrayBuffer[BregmanCenter]]): Seq[ArrayBuffer[BregmanCenter]] = {
 
-    val keep = initialInfo.map(_._1).map(_.map(_.size))
-    finalClusterCenters(totalNumClusters, seed, centers, keep)
+      var step = 0
+      var costs = sync("initial costs", startingCosts(initialState, centers))
+      val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
+      while (step < initializationSteps) {
+        logInfo(s"starting step $step")
+        for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
+          newCenters(index) += center
+        }
+        costs = exchange(s"costs at step $step", costs) { oldCosts =>
+          updatedCosts(newCenters, oldCosts)
+        }
+        centers.zip(newCenters).foreach { case (c, n) => c ++= n; n.clear()}
+        step += 1
+      }
+      costs.unpersist(blocking = false)
+      centers
+    }
+
+    require(data.getStorageLevel.useMemory)
+    val seed = new XORShiftRandom(seedx).nextLong()
+    val centers = startingCenters(initialState, seed)
+    val requested = requestedCenters(targetNumberClusters, initialState, runs)
+    val expandedCenters = moreCenters(requested.map(_ * 2), seed, centers)
+    val keep = initialState.map(_._1).map(_.map(_.size))
+    finalClusterCenters(targetNumberClusters, seed, expandedCenters, keep)
   }
 }
