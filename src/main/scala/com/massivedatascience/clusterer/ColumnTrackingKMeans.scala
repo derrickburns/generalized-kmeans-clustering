@@ -94,22 +94,13 @@ object ColumnTrackingKMeans {
  *
  *
  *
- * @param updateRate for stochastic sampling, the percentage of points to update on each round
- * @param maxRoundsToBackfill maximum number of rounds to try to fill empty clusters
- * @param fractionOfPointsToWeigh the fraction of the points to use in the weighting in KMeans++
- * @param terminationCondition when to terminate the clustering
  */
 class ColumnTrackingKMeans(
-  updateRate: Double = 1.0,
-  maxRoundsToBackfill: Int = 0,
-  fractionOfPointsToWeigh: Double = 0.10,
+  config: KMeansConfig = DefaultKMeansConfig,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
   import MultiKMeansClusterer._
-
-
-  val addOnly = true
 
   /**
    * count number of points assigned to each cluster
@@ -163,7 +154,7 @@ class ColumnTrackingKMeans(
           val rand = new XORShiftRandom(round ^ (index << 16))
           val centers = bcCenters.value
           assignedPoints.map { case (point, current) =>
-            if (rand.nextDouble() > updateRate) current
+            if (rand.nextDouble() > config.updateRate) current
             else reassignment(point, current, round, centers)
           }
         }
@@ -189,7 +180,7 @@ class ColumnTrackingKMeans(
       require(previousAssignments.getStorageLevel.useMemory)
 
       val centers = previousCenters.clone()
-      if (addOnly) {
+      if (config.addOnly) {
         val results = getCompleteCentroids(points, currentAssignments, previousAssignments,
           previousCenters.length)
         for ((index, location) <- results) {
@@ -215,12 +206,12 @@ class ColumnTrackingKMeans(
       val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
       //val weakClusters = centers.filter(_ => myRand.nextDouble() < 0.10)
 
-      if (weakClusters.length != 0 && round < maxRoundsToBackfill) {
+      if (weakClusters.length != 0 && round < config.maxRoundsToBackfill) {
         logInfo(s"replacing ${weakClusters.length} empty clusters")
         val strongClusters = centers.filter(!weakClusters.contains(_))
         val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
         val seed = new DateTime().getMillis
-        val incrementer = new KMeansParallel(2, fractionOfPointsToWeigh)
+        val incrementer = new KMeansParallel(2, config.fractionOfPointsToWeigh)
         val costs = currentAssignments.map(_.distance)
         val newCenters = incrementer.init(pointOps, points, centers.length,
           Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
@@ -330,39 +321,39 @@ class ColumnTrackingKMeans(
 
       points.zipPartitions(assignments, previousAssignments) {
         (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = new Array[MutableWeightedVector](numCenters)
-        val changed = new Array[Boolean](numCenters)
+          val centroids = new Array[MutableWeightedVector](numCenters)
+          val changed = new Array[Boolean](numCenters)
 
-        val indexBuffer = new mutable.ArrayBuilder.ofInt
-        indexBuffer.sizeHint(numCenters)
+          val indexBuffer = new mutable.ArrayBuilder.ofInt
+          indexBuffer.sizeHint(numCenters)
 
-        @inline def update(index: Int, point: BregmanPoint) =
-          if (index != -1 && !changed(index)) {
-            changed(index) = true
-            indexBuffer += index
-          }
-
-        while (y.hasNext && x.hasNext && z.hasNext) {
-          val point = x.next()
-          val current = y.next()
-          val previous = z.next()
-          val index = current.cluster
-
-          if (index >= 0) {
-            if (centroids(index) == null) {
-              centroids(index) = pointOps.getCentroid
+          @inline def update(index: Int, point: BregmanPoint) =
+            if (index != -1 && !changed(index)) {
+              changed(index) = true
+              indexBuffer += index
             }
-            centroids(index).add(point)
+
+          while (y.hasNext && x.hasNext && z.hasNext) {
+            val point = x.next()
+            val current = y.next()
+            val previous = z.next()
+            val index = current.cluster
+
+            if (index >= 0) {
+              if (centroids(index) == null) {
+                centroids(index) = pointOps.getCentroid
+              }
+              centroids(index).add(point)
+            }
+
+            if (current.cluster != previous.cluster) {
+              update(previous.cluster, point)
+              update(current.cluster, point)
+            }
           }
 
-          if (current.cluster != previous.cluster) {
-            update(previous.cluster, point)
-            update(current.cluster, point)
-          }
-        }
-
-        val changedClusters = indexBuffer.result()
-        logInfo(s"number of clusters changed = ${changedClusters.length}")
+          val changedClusters = indexBuffer.result()
+          logInfo(s"number of clusters changed = ${changedClusters.length}")
           changedClusters.map(index => (index,
             if (centroids(index) == null)
               pointOps.getCentroid
@@ -499,8 +490,8 @@ class ColumnTrackingKMeans(
       if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newAssignments, newCenters)
     }
 
-    require(updateRate <= 1.0 && updateRate >= 0.0)
-    logInfo(s"update rate = $updateRate")
+    require(config.updateRate <= 1.0 && config.updateRate >= 0.0)
+    logInfo(s"update rate = $config.updateRate")
     logInfo(s"runs = ${centerArrays.size}")
 
     withCached("empty assignments", points.map(x => unassigned)) { empty =>
