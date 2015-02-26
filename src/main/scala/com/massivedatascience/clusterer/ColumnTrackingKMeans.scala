@@ -28,9 +28,6 @@ import scala.collection.mutable
 import scala.collection.generic.FilterMonadic
 import ColumnTrackingKMeans._
 
-import scala.util.Random
-
-
 object ColumnTrackingKMeans {
 
   /**
@@ -99,11 +96,13 @@ object ColumnTrackingKMeans {
  *
  * @param updateRate for stochastic sampling, the percentage of points to update on each round
  * @param maxRoundsToBackfill maximum number of rounds to try to fill empty clusters
+ * @param fractionOfPointsToWeigh the fraction of the points to use in the weighting in KMeans++
  * @param terminationCondition when to terminate the clustering
  */
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
   maxRoundsToBackfill: Int = 0,
+  fractionOfPointsToWeigh: Double = 0.10,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
@@ -221,7 +220,7 @@ class ColumnTrackingKMeans(
         val strongClusters = centers.filter(!weakClusters.contains(_))
         val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
         val seed = new DateTime().getMillis
-        val incrementer = new KMeansParallel(2, 0.10)
+        val incrementer = new KMeansParallel(2, fractionOfPointsToWeigh)
         val costs = currentAssignments.map(_.distance)
         val newCenters = incrementer.init(pointOps, points, centers.length,
           Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
