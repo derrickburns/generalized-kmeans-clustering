@@ -98,10 +98,12 @@ object ColumnTrackingKMeans {
  *
  *
  * @param updateRate for stochastic sampling, the percentage of points to update on each round
+ * @param maxRoundsToBackfill maximum number of rounds to try to fill empty clusters
  * @param terminationCondition when to terminate the clustering
  */
 class ColumnTrackingKMeans(
   updateRate: Double = 1.0,
+  maxRoundsToBackfill: Int = 0,
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
@@ -109,7 +111,6 @@ class ColumnTrackingKMeans(
 
 
   val addOnly = true
-  val maxRoundsToBackfill = Int.MaxValue
 
   /**
    * count number of points assigned to each cluster
