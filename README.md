@@ -1,8 +1,7 @@
 Generalized K-Means Clustering
 =============================
 
-This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer and the Spark
-MLLIB Streaming K-Means clusterer to support clustering of sparse
+This project generalizes the Spark MLLIB K-Means (v1.1.0) clusterer to support clustering of sparse
 or dense data, in low or high dimension, using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
