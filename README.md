@@ -116,6 +116,25 @@ trait KMeansModel {
 }
 ```
 
+### Provided Distance Functions and Divergences
+
+In addition to the squared Euclidean distance function, this implementation provides several
+other very useful distance functions. When selecting a distance function, consider the domain of
+the input data.  For example, frequency
+data is integral. Similarity of frequencies or distributions are best performed using the
+Kullback-Leibler divergence.
+
+| Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
+|----------------------------------|-------|-------------------------|---------|---------|
+| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  ```SquaredEuclideanPointOps```  |
+| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | ```DenseKLPointOps```    |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
+| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   ```GeneralizedIPointOps```   |
+
+
 ### Batch Clusterer Usage
 
 A ```KMeansModel``` can be constructed from any set of cluster centers and distance function.
@@ -231,7 +250,50 @@ while the latter applies the same embedding iteratively on the data.
 }
 ```
 
-### Batch Clusterer Examples
+
+#### Initialization/seeding algorithm
+
+This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
+This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
+including initialization methods that have different numbers of initial clusters.
+
+There are two pre-defined seeding algorithms.
+
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```RANDOM```                  | Random selection of initial k centers |
+| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
+
+You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
+
+#### Dimensionality Reduction via Embeddings
+
+One can embed points into a lower dimensional spaces before clustering in order to speed the
+computation.
+
+
+| Name (```Embeddings._```)         | Algorithm                                                   |
+|-------------------------------|-------------------------------------------------------------|
+| ```IDENTITY_EMBEDDING```      | Identity                                                    |
+| ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
+| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
+| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
+| ```SYMMETRIZING_KL_EMBEDDING```     | Symmetrizing KL Embedding       |
+
+
+#### K-Means Implementations
+
+There are three implementations of the Lloyd's algorithm. Use ```SIMPLE```.  The others
+are experimental for performance testing.
+
+| Name (```KMeans._```)            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```SIMPLE```                  | recomputes closest assignments each iteration |
+| ```TRACKING```           |  clusterer tracks last assignments in combined point/assignmentRDD |
+| ```COLUMN_TRACKING```           |  clusterer tracks last assignments in separate RDDs |
+
+#### Examples
 
 Here are examples of using K-Means recursively.
 
@@ -258,8 +320,48 @@ object RecursiveKMeans {
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
 desire. The method will return a ```KMeansModel``` of the clustering.
 
+### Customizing the Components
 
-### K-Means Model Constructors
+One may define new ```BregmanDivergence```s, new ```BregmanPointOps``` and new ways of building
+```KMeansModel```s using various constructors provided on companion objects.
+
+####  Custom Bregman Divergences
+
+In addition to the pre-defined Bregman divergences, one may construct new instances of
+```BregmanDivergence``` using the companion object by providing a
+
+```scala
+object BregmanDivergence {
+
+  /**
+   * Create a Bregman Divergence from
+   * @param f any continuously-differentiable real-valued and strictly
+   *          convex function defined on a closed convex set in R^^N
+   * @param gradientF the gradient of f
+   * @return a Bregman Divergence on that function
+   */
+  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
+}
+```
+
+#### Custom Bregman Point Ops
+
+One may access the pre-defined ```BregmanPointOps```  or one may
+construct new instances of ```BregmanPointOps``` using the companion object.
+
+```scala
+
+object BregmanPointOps {
+  def apply(distanceFunction: String): BregmanPointOps = ???
+
+  def apply(d: BregmanDivergence): BregmanPointOps = ???
+
+  def apply(d: BregmanDivergence, factor: Double): BregmanPointOps = ???
+}
+```
+
+
+#### Custom K-Means Models
 
 Training a K-Means model from a set of points is one way to create a ```KMeansModel```.  However,
 there are many others that are useful.  The ```KMeansModel``` companion object provides a number
@@ -390,68 +492,6 @@ object KMeansModel {
 
 ```
 
-### Distance Functions
-
-In addition to the squared Euclidean distance function, this implementation provides several
-other very useful distance functions. When selecting a distance function, consider the domain of
-the input data.  For example, frequency
-data is integral. Similarity of frequencies or distributions are best performed using the
-Kullback-Leibler divergence.
-
-| Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
-|----------------------------------|-------|-------------------------|---------|---------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  ```SquaredEuclideanPointOps```  |
-| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | ```DenseKLPointOps```    |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
-| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   ```GeneralizedIPointOps```   |
-
-
-### Initialization/seeding algorithm
-
-This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
-This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
-including initialization methods that have different numbers of initial clusters.
-
-There are two pre-defined seeding algorithms.
-
-| Name (```KMeans._```)            | Algorithm                         |
-|----------------------------------|-----------------------------------|
-| ```RANDOM```                  | Random selection of initial k centers |
-| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
-
-You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
-
-### Dimensionality Reduction via Embeddings
-
-One can embed points into a lower dimensional spaces before clustering in order to speed the
-computation.
-
-
-| Name (```Embeddings._```)         | Algorithm                                                   |
-|-------------------------------|-------------------------------------------------------------|
-| ```IDENTITY_EMBEDDING```      | Identity                                                    |
-| ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
-| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
-| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
-| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
-| ```SYMMETRIZING_KL_EMBEDDING```     | Symmetrizing KL Embedding       |
-
-
-### K-Means Implementations
-
-There are three implementations of the Lloyd's algorithm. Use ```SIMPLE```.  The others
-are experimental for performance testing.
-
-| Name (```KMeans._```)            | Algorithm                         |
-|----------------------------------|-----------------------------------|
-| ```SIMPLE```                  | recomputes closest assignments each iteration |
-| ```TRACKING```           |  clusterer tracks last assignments in combined point/assignmentRDD |
-| ```COLUMN_TRACKING```           |  clusterer tracks last assignments in separate RDDs |
-
-
 
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
@@ -485,11 +525,3 @@ dimensional dense space using random indexing.
 
 This clusterer has been used to cluster millions of points in 700+ dimensional space using an
 information theoretic distance function (Kullback-Leibler).
-
-
-
-
-
-
-
-

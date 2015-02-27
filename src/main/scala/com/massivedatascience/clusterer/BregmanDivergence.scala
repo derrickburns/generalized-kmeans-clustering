@@ -281,6 +281,7 @@ object BregmanDivergence {
    * Create a Bregman Divergence from
    * @param f any continuously-differentiable real-valued and strictly
    *          convex function defined on a closed convex set in R^^N
+   * @param gradientF the gradient of f
    * @return a Bregman Divergence on that function
    */
   def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
