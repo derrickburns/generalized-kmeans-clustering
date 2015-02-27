@@ -57,7 +57,7 @@ The full signature of the ```KMeans.train``` method is:
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionNames: Seq[String] = Seq(PointOps.EUCLIDEAN),
+    distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = { ???
@@ -111,7 +111,7 @@ while the latter applies the same embedding iteratively on the data.
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = PointOps.EUCLIDEAN,
+    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
@@ -201,14 +201,14 @@ the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93
 the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
 
 Computing distance for a given divergence and other distance-functions specific operations needed
-for the implementation of the clusterer are provided by the ```PointOps``` trait.  Several
+for the implementation of the clusterer are provided by the ```BregmanPointOps``` trait.  Several
 implementations of this trait are provided.
 
 When selecting a distance function, consider the domain of the input data.  For example, frequency
 data is integral. Similarity of frequencies or distributions are best performed using the
 Kullback-Leibler divergence.
 
-| Name (```PointOps._```)            | Space | Divergence              | Input   |
+| Name (```BregmanPointOps._```)            | Space | Divergence              | Input   |
 |----------------------------------|-------|-------------------------|---------|
 | ```EUCLIDEAN```                  | R^d   |Euclidean                |         |
 | ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   |
@@ -300,7 +300,7 @@ information theoretic distance function (Kullback-Leibler).
 
 #### Bregman Divergences
 
-Underlying ```PointOps``` are the supporting Bregman divergences. The ```BregmanDivergence``` trait
+Underlying ```BregmanPointOps``` are the supporting Bregman divergences. The ```BregmanDivergence``` trait
  encapsulates the Bregman Divergence definition.
 
 ```scala
@@ -422,7 +422,7 @@ implementation constructs centroids incrementally, then converts them to cluster
 The initialization of the cluster centers converts
 points to cluster centers.  These abstractions are easy to understand and easy to implement.
 
-```PointOps``` implement fast method for computing distances, taking advantage of the
+```BregmanPointOps``` implement fast method for computing distances, taking advantage of the
 characteristics of the data to define the fastest methods for evaluating Bregman divergences.
 
 ```scala
