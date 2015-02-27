@@ -27,7 +27,6 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.BregmanPointOps._
-import com.massivedatascience.clusterer.Embeddings._
 
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
@@ -222,18 +221,19 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     // it will make at least five passes, and it will give non-zero probability to each
     // unselected point as long as it hasn't yet selected all of them
 
-    var model = KMeans.train(rdd, k = 5, maxIterations = 1)
+    var model = KMeans.train(rdd, k = 5, maxIterations = 1, initializationSteps = 10
+    )
 
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Iterations of Lloyd's should not change the answer either
-    model = KMeans.train(rdd, k = 5, maxIterations = 10)
+    model = KMeans.train(rdd, k = 5, maxIterations = 10, initializationSteps = 10)
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Neither should more runs
-    model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5)
+    model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5, initializationSteps = 10)
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
   }

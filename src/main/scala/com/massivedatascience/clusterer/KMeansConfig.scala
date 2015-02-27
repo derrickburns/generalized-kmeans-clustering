@@ -1,7 +1,7 @@
 package com.massivedatascience.clusterer
 
 
-trait KMeansConfig {
+trait KMeansConfig extends Serializable {
   //for stochastic sampling, the percentage of points to update on each round
   val updateRate: Double
 

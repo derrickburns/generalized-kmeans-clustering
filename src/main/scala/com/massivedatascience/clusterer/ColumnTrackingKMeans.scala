@@ -36,7 +36,7 @@ object ColumnTrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   private[clusterer] case class CenterWithHistory(index: Int, round: Int, center: BregmanCenter,
-    initialized: Boolean) {
+    initialized: Boolean) extends Serializable {
     @inline def movedSince(r: Int): Boolean = round > r
   }
 
@@ -149,12 +149,14 @@ class ColumnTrackingKMeans(
 
       require(previousAssignments.getStorageLevel.useMemory)
 
+      val updateRate = config.updateRate
+
       withBroadcast(currentCenters) { bcCenters =>
         points.zip(previousAssignments).mapPartitionsWithIndex { (index, assignedPoints) =>
           val rand = new XORShiftRandom(round ^ (index << 16))
           val centers = bcCenters.value
           assignedPoints.map { case (point, current) =>
-            if (rand.nextDouble() > config.updateRate) current
+            if (rand.nextDouble() > updateRate) current
             else reassignment(point, current, round, centers)
           }
         }

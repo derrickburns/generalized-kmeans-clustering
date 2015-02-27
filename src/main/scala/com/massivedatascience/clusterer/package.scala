@@ -28,7 +28,7 @@ package object clusterer {
   val empty: DenseVector = new DenseVector(Array[Double]())
 
 
-  trait SimpleAssignment {
+  trait SimpleAssignment extends Serializable {
     val distance: Double
     val cluster: Int
   }
