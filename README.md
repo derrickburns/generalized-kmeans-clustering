@@ -15,8 +15,8 @@ upcoming releases of the Spark MLLIB clusterer.
 ### Introduction
 
 The goal K-Means clustering is to produce a model of the clusters of a set of points that satisfies
-certain optimality constraints. Fundamentally, a K-Means model is simply a set of points and a function
-that defines the distance from an arbitrary point to a cluster center.
+certain optimality constraints. That model is called a K-Means model", which is fundamentally a set
+of points and a function that defines the distance from an arbitrary point to a cluster center.
 
 The K-Means algorithm computes a K-Means model using an iterative algorithm known as Lloyd's algorithm.
 Each iteration of Lloyd's algorithm assigns a set of points to clusters, then updates the cluster
@@ -114,11 +114,20 @@ trait KMeansModel {
 
 ### Batch Clusterer Usage
 
-The simplest way to call the batch clusterer is to use the ```KMeans.train``` method, which
-will return an instance of the ```KMeansModel``` object.
+A ```KMeansModel``` can be constructed from any set of cluster centers and distance function.
+However, the more interesting models satisfy an optimality constraint.  If we sum the distances
+from the points in a given set to their closest cluster centers, we get a number called the
+"distortion" or "cost". A K-Means Model is locally optimal with respect to a set of points
+if each cluster center is determined by the mean of the points assigned to that cluster.
+Computing such a ```KMeansModel``` given a set of points is called "training" the model on those
+points.
+
+
+The simplest way to train a ```KMeansModel``` on a fixed set of points is to use the ```KMeans.train```
+method.
 
 For dense data in a low dimension space using the squared Euclidean distance function,
-one may simply call KMeans.train with the data and the desired number of clusters:
+one may simply call ```KMeans.train``` with the data and the desired number of clusters:
 
 ```scala
   import com.com.massivedatascience.clusterer.KMeans
@@ -247,38 +256,21 @@ desire. The method will return a ```KMeansModel``` of the clustering.
 
 ### Distance Functions
 
-The Spark MLLIB clusterer is good at one thing: clustering low-medium dimensional data using
-squared Euclidean distance as the metric into a fixed number of clusters.
-
-However, there are many interesting distance functions other than Euclidean distance.
-It is far from trivial to adapt the Spark MLLIB clusterer to these other distance functions. In fact, recent
-modification to the Spark implementation have made it even more difficult.
-
-This project decouples the distance function from the clusterer implementation, allowing the
-end-user the opportunity to define an alternative distance function in just a few lines of code.
-
-The most general class of distance functions that work with the K-Means algorithm are called Bregman divergences.
-This project implements several Bregman divergences, including the squared Euclidean distance,
-the [Kullback-Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence),
-the logistic loss divergence, the Itakura-Saito divergence, and the generalized I-divergence.
-
-Computing distance for a given divergence and other distance-functions specific operations needed
-for the implementation of the clusterer are provided by the ```BregmanPointOps``` trait.  Several
-implementations of this trait are provided.
-
-When selecting a distance function, consider the domain of the input data.  For example, frequency
+In addition to the squared Euclidean distance function, this implementation provides several
+other very useful distance functions. When selecting a distance function, consider the domain of
+the input data.  For example, frequency
 data is integral. Similarity of frequencies or distributions are best performed using the
 Kullback-Leibler divergence.
 
-| Name (```BregmanPointOps._```)            | Space | Divergence              | Input   |
-|----------------------------------|-------|-------------------------|---------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |
-| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
-| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |
+| Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
+|----------------------------------|-------|-------------------------|---------|---------|
+| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  SquaredEuclideanPointOps  |
+| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | DenseKLPointOps    |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  DiscreteKLPointOps     |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  DiscreteSmoothedKLPointOps   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  SparseRealKLPointOps    |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   LogisticLossPointOps   |
+| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   GeneralizedIPointOps   |
 
 
 ### Initialization/seeding algorithm
@@ -314,7 +306,7 @@ computation.
 
 ### K-Means Implementations
 
-There are three implementations of the K-Means algorithm. Use ```SIMPLE```.  The others
+There are three implementations of the Lloyd's algorithm. Use ```SIMPLE```.  The others
 are experimental for performance testing.
 
 | Name (```KMeans._```)            | Algorithm                         |
@@ -358,86 +350,6 @@ dimensional dense space using random indexing.
 This clusterer has been used to cluster millions of points in 700+ dimensional space using an
 information theoretic distance function (Kullback-Leibler).
 
-#### Bregman Divergences
-
-Several Bregman Divergences are provided:
-
-```scala
-/**
- * The squared Euclidean distance function is defined on points in R**n
- *
- * http://en.wikipedia.org/wiki/Euclidean_distance
- */
-object SquaredEuclideanDistanceDivergence extends BregmanDivergence
-
-/**
- * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
- *
- * If we know that the points are on the simplex, then we may simplify the implementation
- * of KL divergence.  This trait implements that simplification.
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-object RealKLSimplexDivergence extends BregmanDivergence
-
-/**
- * The Kullback-Leibler divergence is defined on points on a simplex in N+ ** n
- *
- * If we know that the points are on the simplex, then we may simplify the implementation
- * of KL divergence.  This trait implements that simplification.
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-object NaturalKLSimplexDivergence extends BregmanDivergence
-
-/**
- * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-object RealKLDivergence extends BregmanDivergence
-
-/**
- * The generalized Kullback-Leibler divergence is defined on points on N+ ** n
- *
- * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
- *
- */
-object NaturalKLDivergence extends BregmanDivergence
-
-/**
- * The generalized I-Divergence is defined on points in R**n
- */
-object GeneralizedIDivergence extends BregmanDivergence
-
-/**
- * The Logistic loss divergence is defined on points in (0.0,1.0)
- *
- * Logistic loss is the same as KL Divergence with the embedding into R**2
- *
- *    x => (x, 1.0 - x)
- */
-object LogisticLossDivergence extends BregmanDivergence
-
-/**
- * The Itakura-Saito Divergence is defined on points in R+ ** n
- *
- * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
- */
-
-object ItakuraSaitoDivergence extends BregmanDivergence
-
-```
-
-New ```BregmanDivergence```s may be created from any continuously-differentiable real-valued and strictly
-convex function (and its gradient) defined on a closed convex set in R^^N using the ```BregmanDivergence.apply```
-method.
-
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
-are welcome.
 
 
 
