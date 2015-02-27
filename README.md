@@ -268,13 +268,13 @@ Kullback-Leibler divergence.
 
 | Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
 |----------------------------------|-------|-------------------------|---------|---------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  SquaredEuclideanPointOps  |
-| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | DenseKLPointOps    |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  DiscreteKLPointOps     |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  DiscreteSmoothedKLPointOps   |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  SparseRealKLPointOps    |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   LogisticLossPointOps   |
-| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   GeneralizedIPointOps   |
+| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  ```SquaredEuclideanPointOps```  |
+| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | ```DenseKLPointOps```    |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
+| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   ```GeneralizedIPointOps```   |
 
 
 ### Initialization/seeding algorithm
