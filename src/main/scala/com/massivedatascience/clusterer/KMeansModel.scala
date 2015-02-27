@@ -201,7 +201,7 @@ object KMeansModel {
   }
 
   /**
-   * Create a K-Means Model using K-Means || algorithm from an RDD of Bregman points.
+   * Create a K-Means Model using K-Means || algorithm from an RDD of WeightedVectors
    *
    * @param ops distance function
    * @param data initial points
@@ -225,7 +225,7 @@ object KMeansModel {
   }
 
   /**
-   * Construct a K-Means model using the Lloyd's algorithm given a set of initial
+   * Construct a K-Means model of a set of points using Lloyd's algorithm given a set of initial
    * K-Means models.
    *
    * @param ops distance function
