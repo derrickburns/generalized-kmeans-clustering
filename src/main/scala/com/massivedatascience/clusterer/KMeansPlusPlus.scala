@@ -50,8 +50,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
 
   def getCenters(
     seed: Long,
-    candidateCenters: Array[BregmanCenter],
-    weights: Array[Double],
+    candidateCenters: IndexedSeq[BregmanCenter],
+    weights: IndexedSeq[Double],
     totalRequested: Int,
     perRound: Int,
     numPreselected: Int): Array[BregmanCenter] = {
@@ -109,8 +109,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    */
 
   def updateDistances(
-    points: Array[BregmanPoint],
-    distances: Array[Double],
+    points: IndexedSeq[BregmanPoint],
+    distances: IndexedSeq[Double],
     centers: IndexedSeq[BregmanCenter]): Array[Double] = {
 
     points.zip(distances).par.map { case (p, d) =>

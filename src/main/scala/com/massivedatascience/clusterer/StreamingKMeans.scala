@@ -65,7 +65,7 @@ import org.apache.spark.streaming.dstream.DStream
  *
  */
 
-class StreamingKMeansModel(model: KMeansPredictor) extends KMeansPredictor with Logging {
+class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logging {
   val pointOps = model.pointOps
   val centerArrays = model.centers.toArray
   val clusterWeights = centerArrays.map(_.weight)

@@ -310,8 +310,8 @@ class ColumnTrackingKMeans(
      * @param numCenters current number of non-empty clusters
      * @return
      */
-    def getCompleteCentroids(
-      points: RDD[BregmanPoint],
+    def getCompleteCentroids[T <: WeightedVector](
+      points: RDD[T],
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
       numCenters: Int): Array[(Int, MutableWeightedVector)] = {
@@ -320,14 +320,14 @@ class ColumnTrackingKMeans(
       require(assignments.getStorageLevel.useMemory)
 
       points.zipPartitions(assignments, previousAssignments) {
-        (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+        (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
           val centroids = new Array[MutableWeightedVector](numCenters)
           val changed = new Array[Boolean](numCenters)
 
           val indexBuffer = new mutable.ArrayBuilder.ofInt
           indexBuffer.sizeHint(numCenters)
 
-          @inline def update(index: Int, point: BregmanPoint) =
+          @inline def update(index: Int, point: T) =
             if (index != -1 && !changed(index)) {
               changed(index) = true
               indexBuffer += index
@@ -363,8 +363,8 @@ class ColumnTrackingKMeans(
       }.reduceByKey(_.add(_)).collect()
     }
 
-    def getCentroidChanges(
-      points: RDD[BregmanPoint],
+    def getCentroidChanges[T <: WeightedVector](
+      points: RDD[T],
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
       numCenters: Int): Array[(Int, MutableWeightedVector)] = {
@@ -374,7 +374,7 @@ class ColumnTrackingKMeans(
       require(previousAssignments.getStorageLevel.useMemory)
 
       points.zipPartitions(assignments, previousAssignments) {
-        (x: Iterator[BregmanPoint], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+        (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
           val centroids = new Array[MutableWeightedVector](numCenters)
           val indexBuffer = new mutable.ArrayBuilder.ofInt
           indexBuffer.sizeHint(numCenters)

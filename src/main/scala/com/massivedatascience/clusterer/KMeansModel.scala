@@ -25,6 +25,8 @@ import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.rdd.RDD
 
+import scala.reflect.ClassTag
+
 trait KMeansPredictor {
 
   val pointOps: BregmanPointOps
@@ -98,7 +100,10 @@ object KMeansModel {
    * @param weights initial cluster weights
    * @return  k-means model
    */
-  def fromVectorsAndWeights(ops: BregmanPointOps, centers: Array[Vector], weights: Array[Double]) = {
+  def fromVectorsAndWeights(
+    ops: BregmanPointOps,
+    centers: IndexedSeq[Vector],
+    weights: IndexedSeq[Double]) = {
     val bregmanCenters = centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w))}
     new KMeansModel(ops, bregmanCenters)
   }
@@ -110,7 +115,7 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors(ops: BregmanPointOps, centers: Array[WeightedVector]) = {
+  def fromWeightedVectors[T <: WeightedVector](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
@@ -140,7 +145,7 @@ object KMeansModel {
    * Create a K-Means model using the KMeans++ algorithm on an initial set of candidate centers
    *
    * @param ops distance function
-   * @param candidates initial candidate centers
+   * @param data initial candidate centers
    * @param weights initial weights
    * @param k number of clusters desired
    * @param perRound number of candidates to add per round
@@ -148,15 +153,16 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def fromCenters(
+  def fromCenters[T <: WeightedVector](
     ops: BregmanPointOps,
-    candidates: Array[BregmanCenter],
-    weights: Array[Double],
+    data: IndexedSeq[T],
+    weights: IndexedSeq[Double],
     k: Int,
     perRound: Int,
     numPreselected: Int,
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
+    val candidates = data.map(ops.toCenter)
     val bregmanCenters = new KMeansPlusPlus(ops).getCenters(seed, candidates, weights,
       k, perRound, numPreselected)
     new KMeansModel(ops, bregmanCenters)
@@ -180,9 +186,9 @@ object KMeansModel {
    * @param assignments assignments of points to clusters
    * @return
    */
-  def fromAssignments(
+  def fromAssignments[T <: WeightedVector : ClassTag](
     ops: BregmanPointOps,
-    points: RDD[BregmanPoint],
+    points: RDD[T],
     assignments: RDD[Int]): KMeansModel = {
 
     val centroids = assignments.zip(points).filter(_._1 >= 0).aggregateByKey(ops.getCentroid)(
@@ -198,21 +204,22 @@ object KMeansModel {
    * Create a K-Means Model using K-Means || algorithm from an RDD of Bregman points.
    *
    * @param ops distance function
-   * @param points initial bregman points
+   * @param data initial points
    * @param k  number of cluster centers desired
    * @param numSteps number of iterations of k-Means ||
    * @param sampleRate fractions of points to use in weighting clusters
    * @param seed random number seed
    * @return  k-means model
    */
-  def usingKMeansParallel(
+  def usingKMeansParallel[T <: WeightedVector](
     ops: BregmanPointOps,
-    points: RDD[BregmanPoint],
+    data: RDD[T],
     k: Int,
     numSteps: Int = 2,
     sampleRate: Double = 1.0,
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
+    val points = data.map(ops.toPoint)
     val centers = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed)(0)
     new KMeansModel(ops, centers)
   }
@@ -222,20 +229,26 @@ object KMeansModel {
    * K-Means models.
    *
    * @param ops distance function
-   * @param points points to fit
+   * @param data points to fit
    * @param initialModels  initial k-means models
    * @param clusterer k-means clusterer to use
    * @param seed random number seed
    * @return  the best K-means model found
    */
-  def usingLloyds(
+  def usingLloyds[T <: WeightedVector](
     ops: BregmanPointOps,
-    points: RDD[BregmanPoint],
+    data: RDD[T],
     initialModels: Seq[KMeansModel],
     clusterer: MultiKMeansClusterer = new ColumnTrackingKMeans(),
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
-    val initialCenters = initialModels.map(_.centers).toArray
+    val initialCenters = initialModels.map { model =>
+      if (model.pointOps == ops)
+        model.centers
+      else
+        fromAssignments(ops, data, data.map(model.predictWeighted)).centers
+    }
+    val points = data.map(ops.toPoint)
     val results = clusterer.cluster(ops, points, initialCenters)
     val (_, finalCenters, _) = MultiKMeansClusterer.bestOf(results)
     results.foreach(_._3.map(_.unpersist()))
