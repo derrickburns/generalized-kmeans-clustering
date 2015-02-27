@@ -162,9 +162,9 @@ one may simply call ```KMeans.train``` with the data and the desired number of c
 The full signature of the ```KMeans.train``` method is:
 
 ```scala
-  package com.massivedatascience.clusterer
+package com.massivedatascience.clusterer
 
-  object KMeans {
+object KMeans {
   /**
    *
    * Train a K-Means model using Lloyd's algorithm.
@@ -215,9 +215,9 @@ while the latter applies the same embedding iteratively on the data.
 
 
 ```scala
-  package com.massivedatascience.clusterer
+package com.massivedatascience.clusterer
 
-  object KMeans {
+object KMeans {
 
   /**
    *
@@ -350,7 +350,6 @@ One may access the pre-defined ```BregmanPointOps```  or one may
 construct new instances of ```BregmanPointOps``` using the companion object.
 
 ```scala
-
 object BregmanPointOps {
   def apply(distanceFunction: String): BregmanPointOps = ???
 
@@ -369,7 +368,6 @@ of these constructors:
 
 
 ```scala
-
 object KMeansModel {
 
   /**
