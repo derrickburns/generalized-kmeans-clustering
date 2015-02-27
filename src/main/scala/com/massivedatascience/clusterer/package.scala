@@ -70,40 +70,4 @@ package object clusterer {
     s.getMovement / s.getNonEmptyClusters < 1.0E-5
   }
 
-
-  /**
-   * A point with an additional single Double value that is used in distance computation.
-   *
-   */
-  case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends WeightedVector {
-    lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
-  }
-
-  /**
-   * A cluster center with an additional Double and an additional vector containing the gradient
-   * that are used in distance computation.
-   *
-   * @param homogeneous point
-   * @param dotGradMinusF  center dot gradient(center) - f(center)
-   * @param gradient gradient of center
-   */
-  case class BregmanCenter(
-    homogeneous: Vector,
-    weight: Double,
-    dotGradMinusF: Double,
-    gradient: Vector) extends WeightedVector {
-    lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
-  }
-
-  object BregmanPoint {
-    def apply(v: WeightedVector, f: Double): BregmanPoint =
-      new BregmanPoint(v.homogeneous, v.weight, f)
-  }
-
-  object BregmanCenter {
-    def apply(v: WeightedVector, dotGradMinusF: Double, gradient: Vector): BregmanCenter =
-      new BregmanCenter(v.homogeneous, v.weight, dotGradMinusF, gradient)
-  }
-
-  trait BregmanPointOps extends PointOps[BregmanPoint, BregmanCenter]
 }
