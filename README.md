@@ -390,7 +390,9 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors[T <: WeightedVector : ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]) = ???
+  def fromWeightedVectors[T <: WeightedVector : ClassTag](
+    ops: BregmanPointOps,
+    centers: IndexedSeq[T]) = ???
 
   /**
    * Create a K-means model by selecting a set of k points at random
