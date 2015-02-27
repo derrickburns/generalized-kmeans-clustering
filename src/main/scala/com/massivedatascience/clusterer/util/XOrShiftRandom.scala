@@ -20,8 +20,9 @@
 package com.massivedatascience.clusterer.util
 
 import java.nio.ByteBuffer
-import java.util.{Random => JavaRandom, Random}
+import java.util.{Random => JavaRandom}
 
+import scala.util.Random
 import scala.util.hashing.MurmurHash3
 
 
