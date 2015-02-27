@@ -15,7 +15,7 @@ upcoming releases of the Spark MLLIB clusterer.
 ### Introduction
 
 The goal K-Means clustering is to produce a model of the clusters of a set of points that satisfies
-certain optimality constraints. That model is called a K-Means model", which is fundamentally a set
+certain optimality constraints. That model is called a K-Means model. It is fundamentally a set
 of points and a function that defines the distance from an arbitrary point to a cluster center.
 
 The K-Means algorithm computes a K-Means model using an iterative algorithm known as Lloyd's algorithm.
@@ -51,10 +51,6 @@ The enriched trait is the ```BregmanPointOps```.
       type C = BregmanCenter
 
       val divergence: BregmanDivergence
-
-      @inline val weightThreshold = 1e-4
-
-      val distanceThreshold = 1e-8
 
       def toPoint(v: WeightedVector): P
 
