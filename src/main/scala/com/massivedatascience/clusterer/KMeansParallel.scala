@@ -241,7 +241,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * and new centers are computed in each iteration.
      *
      * @param initialCosts initial costs
-     * @param perRound number of points to select per round per run
+     * @param requested minimum number of points add
      * @param seed random seed
      * @param centers initial centers
      * @return expanded set of centers, including initial centers
@@ -249,7 +249,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
     def moreCenters(
       initialCosts: Option[Seq[RDD[Double]]],
       numberSteps: Int,
-      perRound: Seq[Int],
+      requested: Seq[Int],
       seed: Long,
       centers: Seq[IndexedSeq[BregmanCenter]]): Seq[IndexedSeq[BregmanCenter]] = {
 
@@ -257,12 +257,13 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       val startingCosts = initialCosts.map(asVectors).getOrElse(setCosts(centers))
       var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
-
+      val numAdded = Array.fill(runs)(0)
       var step = 0
-      while (step < numberSteps) {
+      while (step < numberSteps || numAdded.zip(requested).exists { case (a, r) => a < r}) {
         logInfo(s"starting step $step")
-        for ((index, center) <- select(perRound, seed ^ (step << 16), costs)) {
+        for ((index, center) <- select(requested.map(_ * 2), seed ^ (step << 16), costs)) {
           newCenters(index) += center
+          numAdded(index) = numAdded(index) + 1
         }
         costs = exchange(s"costs at step $step", costs) { oldCosts =>
           updatedCosts(newCenters, oldCosts)
@@ -271,6 +272,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
           c ++= n
           n.clear()
         }
+
         step += 1
       }
       costs.unpersist(blocking = false)
@@ -284,7 +286,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
     val initialCosts = initialState.map(_._2)
     val centers = preselectedCenters.getOrElse(randomCenters(seed))
     val requested = numbersRequested(targetNumberClusters, preselectedCenters, runs)
-    val expandedCenters = moreCenters(initialCosts, numSteps, requested.map(_ * 2), seed, centers)
+    val expandedCenters = moreCenters(initialCosts, numSteps, requested, seed, centers)
     val numbersRetainedCenters = preselectedCenters.map(_.map(_.size))
     finalClusterCenters(targetNumberClusters, rand.nextLong(), expandedCenters, numbersRetainedCenters)
   }
