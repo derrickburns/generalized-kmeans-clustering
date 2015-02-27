@@ -46,10 +46,10 @@ object Examples {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
+    distanceFunctionName: String = PointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI,
-      HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
+    embeddingNames: Seq[String] = Seq(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
+      Embeddings.HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
 
     val distances = Array.fill(embeddingNames.length)(distanceFunctionName)
     KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distances,
@@ -63,9 +63,9 @@ object Examples {
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
+    distanceFunctionName: String = PointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
-    embeddingName: String = HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
+    embeddingName: String = Embeddings.HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
 
     val dim = raw.first().homogeneous.toArray.length
     require(dim > 0)

@@ -67,8 +67,8 @@ import org.apache.spark.streaming.dstream.DStream
  */
 
 class StreamingKMeansModel(
-  val pointOps: BregmanPointOps,
-  override val clusterCenters: Array[BregmanCenter]
+  pointOps: BregmanPointOps,
+  clusterCenters: Array[BregmanCenter]
   ) extends KMeansModel(pointOps, clusterCenters) with Logging {
 
   /** Perform a k-means update on a batch of data. */
@@ -168,7 +168,7 @@ class StreamingKMeans(
 
   var pointOps: BregmanPointOps = PointOps(PointOps.EUCLIDEAN)
 
-  def this() = this(2, 1.0, StreamingKMeans.BATCHES)
+  def this() = this(2, 1.0, PointOps.EUCLIDEAN, StreamingKMeans.BATCHES)
 
   protected var model: StreamingKMeansModel = new StreamingKMeansModel(null, null)
 
@@ -275,7 +275,7 @@ class StreamingKMeans(
   }
 }
 
-private[clustering] object StreamingKMeans {
+object StreamingKMeans {
   final val BATCHES = "batches"
   final val POINTS = "points"
 }
