@@ -71,6 +71,9 @@ class StreamingKMeansModel(
   clusterCenters: Array[BregmanCenter]
   ) extends KMeansModel(pointOps, clusterCenters) with Logging {
 
+  val clusterWeights = clusterCenters.map(_.weight)
+
+
   /** Perform a k-means update on a batch of data. */
   def update(data: RDD[Vector], decayFactor: Double, timeUnit: String): StreamingKMeansModel = {
 
@@ -86,9 +89,6 @@ class StreamingKMeansModel(
     val pointStats: Array[(Int, (Vector, Long))] = closest
       .aggregateByKey((Vectors.zeros(dim), 0L))(mergeContribs, mergeContribs)
       .collect()
-
-
-    val clusterWeights = clusterCenters.map(_.weight)
 
     val discount = timeUnit match {
       case StreamingKMeans.BATCHES => decayFactor
@@ -107,10 +107,11 @@ class StreamingKMeansModel(
       val centroid = clusterCenters(label).inhomogeneous
       val updatedWeight = clusterWeights(label) + count
       val lambda = count / math.max(updatedWeight, 1e-16)
+      clusterWeights(label) = updatedWeight
 
       BLAS.scal(1.0 - lambda, centroid)
       BLAS.axpy(lambda / count, sum, centroid)
-      clusterCenters(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, updatedWeight))
+      clusterCenters(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
 
       // display the updated cluster centers
       val display = clusterCenters(label).size match {
@@ -133,8 +134,8 @@ class StreamingKMeansModel(
       val largestClusterCenter = clusterCenters(largest).inhomogeneous.toArray
       val l = largestClusterCenter.map(x => x + 1e-14 * math.max(math.abs(x), 1.0))
       val s = largestClusterCenter.map(x => x - 1e-14 * math.max(math.abs(x), 1.0))
-      clusterCenters(largest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(l, weight))
-      clusterCenters(smallest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(s, weight))
+      clusterCenters(largest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(l, 1.0))
+      clusterCenters(smallest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(s, 1.0))
     }
 
     this
