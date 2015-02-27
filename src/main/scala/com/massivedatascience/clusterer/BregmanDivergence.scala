@@ -214,7 +214,7 @@ case object GeneralizedIDivergence extends BregmanDivergence {
  *
  * Logistic loss is the same as KL Divergence with the embedding into R**2
  *
- *    x => (x, 1.0 - x)
+ * x => (x, 1.0 - x)
  */
 private[clusterer]
 case object LogisticLossDivergence extends BregmanDivergence {
@@ -274,4 +274,31 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
     val c = 1.0 - logFunc.log(w)
     trans(v, x => -w / x)
   }
+}
+
+object BregmanDivergence {
+  /**
+   * Create a Bregman Divergence from
+   * @param f any continuously-differentiable real-valued and strictly
+   *          convex function defined on a closed convex set in R^^N
+   * @return a Bregman Divergence on that function
+   */
+  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
+    new BregmanDivergence {
+      def F(v: Vector): Double = f(v)
+
+      def F(v: Vector, w: Double) = {
+        val c = v.copy
+        scal(1.0 / w, c)
+        F(c)
+      }
+
+      def gradF(v: Vector): Vector = gradientF(v)
+
+      def gradF(v: Vector, w: Double): Vector = {
+        val c = v.copy
+        scal(1.0 / w, c)
+        gradientF(c)
+      }
+    }
 }
