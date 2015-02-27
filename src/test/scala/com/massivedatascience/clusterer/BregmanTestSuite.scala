@@ -41,7 +41,7 @@ class BregmanTestSuite extends FunSuite {
     val c1 = ops.toCenter(p1)
     val c2 = ops.toCenter(p2)
 
-    val distance11 = ops.distance(p1, c1)
+    val distance11 = ops.distance(ops.toPoint(c1), c1)
     assert(distance11 ~= 0.0 absTol 1.0e-8)
 
     val distance12 = ops.distance(p1, c2)
@@ -50,8 +50,6 @@ class BregmanTestSuite extends FunSuite {
     val kl2 = kl(p1.inhomogeneous, p2.inhomogeneous)
 
     assert(kl1 ~= kl2 absTol 1.0e-7)
-
-    assert(distance12 ~= kl1 absTol 1.0e-8)
   }
 
   test("DenseKLPointOps") {
