@@ -20,7 +20,7 @@
 package com.massivedatascience.clusterer.util
 
 import java.nio.ByteBuffer
-import java.util.{Random => JavaRandom}
+import java.util.{Random => JavaRandom, Random}
 
 import scala.util.hashing.MurmurHash3
 
@@ -30,6 +30,7 @@ import scala.util.hashing.MurmurHash3
  * copied the code to a separate package.
  */
 class XORShiftRandom(init: Long) extends JavaRandom(init) {
+
 
   def this() = this(System.nanoTime)
 
@@ -52,6 +53,8 @@ class XORShiftRandom(init: Long) extends JavaRandom(init) {
 
 /** Contains benchmark method and main method to run benchmark of the RNG */
 object XORShiftRandom {
+
+  val random = new Random()
 
   /** Hash seeds to have 0/1 bits throughout. */
   private def hashSeed(seed: Long): Long = {

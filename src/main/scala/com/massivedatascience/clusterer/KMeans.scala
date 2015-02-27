@@ -27,27 +27,9 @@ object KMeans extends SparkHelper {
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
-  // point ops
-  val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
-  val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
-  val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
-  val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
-  val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
-  val EUCLIDEAN = "EUCLIDEAN"
-  val LOGISTIC_LOSS = "LOGISTIC_LOSS"
-  val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
-
   val TRACKING = "TRACKING"
   val SIMPLE = "SIMPLE"
   val COLUMN_TRACKING = "COLUMN_TRACKING"
-
-  val IDENTITY_EMBEDDING = "IDENTITY"
-  val HAAR_EMBEDDING = "HAAR"
-  val SYMMETRIZING_KL_EMBEDDING = "SYMMETRIZING_KL_EMBEDDING"
-
-  val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
-  val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
-  val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
   case class RunConfig(numClusters: Int, runs: Int, seed: Int)
 
@@ -74,9 +56,9 @@ object KMeans extends SparkHelper {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    distanceFunctionNames: Seq[String] = Seq(PointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
+    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
@@ -84,9 +66,9 @@ object KMeans extends SparkHelper {
     val runConfig = RunConfig(k, runs, 0)
 
     withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
-      val ops = distanceFunctionNames.map(getPointOps)
+      val ops = distanceFunctionNames.map(PointOps.apply)
       val initializer = getInitializer(mode, initializationSteps)
-      val embeddings = embeddingNames.map(getEmbedding)
+      val embeddings = embeddingNames.map(Embeddings.apply)
       val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
       results.assignments.unpersist(blocking = false)
       model
@@ -117,9 +99,9 @@ object KMeans extends SparkHelper {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    distanceFunctionNames: Seq[String] = Seq(PointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
+    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
@@ -127,9 +109,9 @@ object KMeans extends SparkHelper {
     val runConfig = RunConfig(k, runs, 0)
 
 
-    val ops = distanceFunctionNames.map(getPointOps)
+    val ops = distanceFunctionNames.map(PointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
-    val embeddings = embeddingNames.map(getEmbedding)
+    val embeddings = embeddingNames.map(Embeddings.apply)
     val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
     results.assignments.unpersist(blocking = false)
     model
@@ -158,9 +140,9 @@ object KMeans extends SparkHelper {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    distanceFunctionNames: Seq[String] = Seq(PointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(IDENTITY_EMBEDDING))
+    embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING))
   : (KMeansModel, KMeansResults) = {
 
     require(distanceFunctionNames.length == embeddingNames.length)
@@ -168,9 +150,9 @@ object KMeans extends SparkHelper {
     implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
-    val ops = distanceFunctionNames.map(x => getPointOps(x))
+    val ops = distanceFunctionNames.map(PointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
-    val embeddings = embeddingNames.map(getEmbedding)
+    val embeddings = embeddingNames.map(Embeddings.apply)
 
     reSampleTrain(runConfig, data, initializer, ops, embeddings)
   }
@@ -198,18 +180,18 @@ object KMeans extends SparkHelper {
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
+    distanceFunctionName: String = PointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
-    embeddingName: String = HAAR_EMBEDDING,
+    embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
   : (KMeansModel, KMeansResults) = {
 
     implicit val clusterer = getClustererImpl(clustererName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
-    val distanceFunc = getPointOps(distanceFunctionName)
+    val distanceFunc = PointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, initializationSteps)
-    val embedding = getEmbedding(embeddingName)
+    val embedding = Embeddings(embeddingName)
 
     logInfo(s"k = $k")
     logInfo(s"maxIterations = $maxIterations")
@@ -229,31 +211,7 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def getPointOps(distanceFunction: String): BregmanPointOps = {
-    distanceFunction match {
-      case EUCLIDEAN => SquaredEuclideanPointOps
-      case RELATIVE_ENTROPY => DenseKLPointOps
-      case DISCRETE_KL => DiscreteKLPointOps
-      case SIMPLEX_SMOOTHED_KL => DiscreteSimplexSmoothedKLPointOps
-      case DISCRETE_SMOOTHED_KL => DiscreteSmoothedKLPointOps
-      case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
-      case LOGISTIC_LOSS => LogisticLossPointOps
-      case GENERALIZED_I => GeneralizedIPointOps
-      case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
-    }
-  }
 
-  def getEmbedding(embeddingName: String): Embedding = {
-    embeddingName match {
-      case IDENTITY_EMBEDDING => IdentityEmbedding
-      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(64, 0.01)
-      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
-      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
-      case HAAR_EMBEDDING => HaarEmbedding
-      case SYMMETRIZING_KL_EMBEDDING => SymmetrizingKLEmbedding
-      case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
-    }
-  }
 
   def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {

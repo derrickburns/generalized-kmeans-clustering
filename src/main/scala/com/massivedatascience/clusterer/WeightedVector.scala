@@ -29,6 +29,8 @@ trait WeightedVector extends Serializable {
   def inhomogeneous: Vector
 
   def homogeneous: Vector
+
+  def size: Int = homogeneous.size
 }
 
 
@@ -55,6 +57,9 @@ object WeightedVector {
   def apply(v: Array[Double], weight: Double): WeightedVector = new ImmutableHomogeneousVector(weight, Vectors.dense(v))
 
   def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, Vectors.dense(v))
+
+  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, v)
+
 
 }
 
