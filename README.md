@@ -58,28 +58,28 @@ Internally, we enrich a Bregman divergence with a set of commonly used operation
 The enriched trait is the ```BregmanPointOps```.
 
 ```scala
-    trait BregmanPointOps  {
-      type P = BregmanPoint
-      type C = BregmanCenter
+trait BregmanPointOps  {
+  type P = BregmanPoint
+  type C = BregmanCenter
 
-      val divergence: BregmanDivergence
+  val divergence: BregmanDivergence
 
-      def toPoint(v: WeightedVector): P
+  def toPoint(v: WeightedVector): P
 
-      def toCenter(v: WeightedVector): C
+  def toCenter(v: WeightedVector): C
 
-      def centerMoved(v: P, w: C): Boolean
+  def centerMoved(v: P, w: C): Boolean
 
-      def findClosest(centers: IndexedSeq[C], point: P): (Int, Double)
+  def findClosest(centers: IndexedSeq[C], point: P): (Int, Double)
 
-      def findClosestCluster(centers: IndexedSeq[C], point: P): Int
+  def findClosestCluster(centers: IndexedSeq[C], point: P): Int
 
-      def distortion(data: RDD[P], centers: IndexedSeq[C])
+  def distortion(data: RDD[P], centers: IndexedSeq[C])
 
-      def pointCost(centers: IndexedSeq[C], point: P): Double
+  def pointCost(centers: IndexedSeq[C], point: P): Double
 
-      def distance(p: BregmanPoint, c: BregmanCenter): Double
-    }
+  def distance(p: BregmanPoint, c: BregmanCenter): Double
+}
 ```
 
 The instance of ```BregmanPointOps``` that supports the ```SquaredEuclideanDistanceDivergence``` is
