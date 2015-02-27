@@ -413,14 +413,20 @@ object ItakuraSaitoDivergence extends BregmanDivergence
 
 ```
 
+New ```BregmanDivergence```s may be created from any continuously-differentiable real-valued and strictly
+convex function (and its gradient) defined on a closed convex set in R^^N using the ```BregmanDivergence.apply```
+method.
+
+Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
+are welcome.
+
+
 #### Distance Functions
 
 This clusterer abstracts the distance function, as described above, making it extensible.
 
-The key is to create three new abstractions: point, cluster center, and centroid.  The base
-implementation constructs centroids incrementally, then converts them to cluster centers.
-The initialization of the cluster centers converts
-points to cluster centers.  These abstractions are easy to understand and easy to implement.
+The key is to create two new abstractions: Bregman point and Bregman center.
+These abstractions are easy to understand and easy to implement.
 
 ```BregmanPointOps``` implement fast method for computing distances, taking advantage of the
 characteristics of the data to define the fastest methods for evaluating Bregman divergences.
@@ -433,8 +439,10 @@ trait BregmanPointOps  {
   def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
 }
 ```
-Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
-are welcome.
+
+New ```BregmanPointOps``` may be created from a ```BregmanDivergence``` using the ```BregmanPointOps.apply```
+method.
+
 
 
 
