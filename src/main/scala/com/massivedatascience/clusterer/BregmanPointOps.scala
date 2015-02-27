@@ -282,7 +282,7 @@ case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps with Smoot
   val smoothingFactor = 1.0
 }
 
-object PointOps {
+object BregmanPointOps {
   val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
@@ -305,4 +305,15 @@ object PointOps {
       case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
+
+  def apply(d: BregmanDivergence): BregmanPointOps =
+    new BregmanPointOps with NonSmoothed {
+      val divergence = d
+    }
+
+  def apply(d: BregmanDivergence, factor: Double): BregmanPointOps =
+    new BregmanPointOps with Smoothed {
+      val divergence = d
+      val smoothingFactor = factor
+    }
 }

@@ -26,7 +26,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 import com.massivedatascience.clusterer.TestingUtils._
-import com.massivedatascience.clusterer.PointOps._
+import com.massivedatascience.clusterer.BregmanPointOps._
 import com.massivedatascience.clusterer.Embeddings._
 
 
@@ -180,7 +180,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionNames = Seq(PointOps.RELATIVE_ENTROPY))
+      distanceFunctionNames = Seq(BregmanPointOps.RELATIVE_ENTROPY))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,

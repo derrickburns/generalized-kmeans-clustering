@@ -46,7 +46,7 @@ object Examples {
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = PointOps.EUCLIDEAN,
+    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
     embeddingNames: Seq[String] = Seq(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
       Embeddings.HIGH_DIMENSIONAL_RI)): (KMeansModel, KMeansResults) = {
@@ -63,7 +63,7 @@ object Examples {
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = PointOps.EUCLIDEAN,
+    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING): (KMeansModel, KMeansResults) = {
 
