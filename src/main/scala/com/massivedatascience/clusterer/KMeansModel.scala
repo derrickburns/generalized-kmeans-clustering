@@ -19,7 +19,6 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.KMeansInitializer
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
@@ -92,7 +91,7 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
 object KMeansModel {
 
   /**
-   * Create an initial model from given cluster centers and weights
+   * Create a K-means model from given cluster centers and weights
    *
    * @param ops distance function
    * @param centers initial cluster centers in homogeneous coordinates
@@ -105,7 +104,7 @@ object KMeansModel {
   }
 
   /**
-   * Create an initial model from given cluster centers and weights
+   * Create a K-means model from given weighted vectors
    *
    * @param ops distance function
    * @param centers initial cluster centers as weighted vectors
@@ -196,7 +195,6 @@ object KMeansModel {
     new KMeansModel(ops, bregmanCenters.collect().toIndexedSeq)
   }
 
-
   /**
    * Create a K-Means Model using K-Means || algorithm from an RDD of Bregman points.
    *
@@ -221,7 +219,7 @@ object KMeansModel {
   }
 
   /**
-   * Construct a K-Means model using the K-Means algorithm given a set of initial
+   * Construct a K-Means model using the Lloyd's algorithm given a set of initial
    * K-Means models.
    *
    * @param ops distance function
@@ -229,7 +227,7 @@ object KMeansModel {
    * @param initialModels  initial k-means models
    * @param clusterer k-means clusterer to use
    * @param seed random number seed
-   * @return  k-means model
+   * @return  the best K-means model found
    */
   def usingLloyds(
     ops: BregmanPointOps,
