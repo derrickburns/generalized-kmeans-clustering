@@ -19,6 +19,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.KMeansInitializer
 import com.massivedatascience.clusterer.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
@@ -79,6 +80,7 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
   extends KMeansPredictor with Serializable {
 
   lazy val k: Int = centers.length
+
 
   /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
     * takes place, which may be different from the space of the input vectors!
@@ -173,6 +175,29 @@ object KMeansModel {
   }
 
   /**
+   * Create a K-Means Model from a set of assignments of points to clusters
+   *
+   * @param ops distance function
+   * @param points initial bregman points
+   * @param assignments assignments of points to clusters
+   * @return
+   */
+  def fromAssignments(
+    ops: BregmanPointOps,
+    points: RDD[BregmanPoint],
+    assignments: RDD[Int]): KMeansModel = {
+
+    val centroids = assignments.zip(points).filter(_._1 >= 0).aggregateByKey(ops.getCentroid)(
+      (centroid, pt) => centroid.add(pt),
+      (c1, c2) => c1.add(c2)
+    )
+
+    val bregmanCenters = centroids.map(p => ops.toCenter(p._2.asImmutable))
+    new KMeansModel(ops, bregmanCenters.collect().toIndexedSeq)
+  }
+
+
+  /**
    * Create a K-Means Model using K-Means || algorithm from an RDD of Bregman points.
    *
    * @param ops distance function
@@ -214,7 +239,7 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val initialCenters = initialModels.map(_.centers).toArray
-    val results: Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])] = clusterer.cluster(ops, points, initialCenters)
+    val results = clusterer.cluster(ops, points, initialCenters)
     val (_, finalCenters, _) = MultiKMeansClusterer.bestOf(results)
     results.foreach(_._3.map(_.unpersist()))
     new KMeansModel(ops, finalCenters)

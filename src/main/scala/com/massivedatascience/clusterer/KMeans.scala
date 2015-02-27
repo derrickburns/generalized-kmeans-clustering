@@ -302,8 +302,9 @@ object KMeans extends SparkHelper {
     withCached("original", dataSets.head) { original =>
       val remaining = dataSets.zip(pointOps).tail
       remaining.foldLeft(simpleTrain(runConfig, pointOps.head, original, initializer)) {
-        case ((_, KMeansResults(_, assignments)), (data, op)) =>
-          sideEffect(simpleTrain(runConfig, op, data, new SampleInitializer(assignments.map(_._1)))) { result =>
+        case ((model, KMeansResults(_, a)), (data, op)) =>
+          val assignments = a.map(_._1)
+          sideEffect(simpleTrain(runConfig, op, data, new SampleInitializer(assignments))) { result =>
             assignments.unpersist(blocking = false)
           }
       }
