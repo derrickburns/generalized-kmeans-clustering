@@ -115,7 +115,7 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors[T <: WeightedVector](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
+  def fromWeightedVectors[T <: WeightedVector : ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
@@ -153,7 +153,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def fromCenters[T <: WeightedVector](
+  def fromCenters[T <: WeightedVector : ClassTag](
     ops: BregmanPointOps,
     data: IndexedSeq[T],
     weights: IndexedSeq[Double],
@@ -211,7 +211,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def usingKMeansParallel[T <: WeightedVector](
+  def usingKMeansParallel[T <: WeightedVector : ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     k: Int,
@@ -235,7 +235,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  the best K-means model found
    */
-  def usingLloyds[T <: WeightedVector](
+  def usingLloyds[T <: WeightedVector : ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     initialModels: Seq[KMeansModel],
