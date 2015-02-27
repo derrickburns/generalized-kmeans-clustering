@@ -328,8 +328,7 @@ One may define new ```BregmanDivergence```s, new ```BregmanPointOps``` and new w
 ####  Custom Bregman Divergences
 
 In addition to the pre-defined Bregman divergences, one may construct new instances of
-```BregmanDivergence``` using the companion object by providing a
-
+```BregmanDivergence``` using the companion object.
 ```scala
 object BregmanDivergence {
 
@@ -365,7 +364,7 @@ object BregmanPointOps {
 Training a K-Means model from a set of points using ```KMeans.train``` is one way to create a
 ```KMeansModel```.  However,
 there are many others that are useful.  The ```KMeansModel``` companion object provides a number
-of these constructors:
+of these constructors.
 
 
 ```scala
