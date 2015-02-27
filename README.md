@@ -42,6 +42,18 @@ For example, by defining ```F``` to be the vector norm (i.e. the sum of the squa
 coordinates), one gets a distance function that equals the square of the well known Euclidean
 distance. We name it the ```SquaredEuclideanDistanceDivergence```.
 
+For efficient repeated computation of distance between a fixed set of points and varying cluster
+centers, is it convenient to pre-compute certain information and associate that information with
+the point or the cluster center.  We call the classes that represent those enriched points ```BregmanPoint```s.
+We call the classes that represent those enriched cluster centers ```BregmanCenter```s.  Users
+of this package do not construct instances of these objects directly.
+
+```scala
+trait BregmanPoint
+
+trait BregmanCenter
+```
+
 Internally, we enrich a Bregman divergence with a set of commonly used operations.
 The enriched trait is the ```BregmanPointOps```.
 
@@ -73,10 +85,6 @@ The enriched trait is the ```BregmanPointOps```.
 The instance of ```BregmanPointOps``` that supports the ```SquaredEuclideanDistanceDivergence``` is
 the ```SquaredEuclideanPointOps```.
 
-For efficient repeated computation of distance between a fixed set of points and varying cluster
-centers, is it convenient to pre-compute certain information and associate that information with
-the point or the cluster center.  We call the classes that represent those enriched points ```BregmanPoint```s.
-We call the classes that represent those enriched cluster centers ```BregmanCenter```s.
 
 With these definitions, we define our realization of a k-means model, ```KMeansModel``` which
 we enrich with operations to find closest clusters to a point:
