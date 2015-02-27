@@ -131,8 +131,8 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()) = {
 
     val random = new XORShiftRandom(seed)
-    val centers = Array.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))
-    val bregmanCenters = centers.map { c => ops.toCenter(WeightedVector(c, weight))}
+    val centers = IndexedSeq.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))
+    val bregmanCenters = centers.map(c => ops.toCenter(WeightedVector(c, weight)))
     new KMeansModel(ops, bregmanCenters)
   }
 
@@ -169,8 +169,7 @@ object KMeansModel {
    * @return immutable k-means model
    */
   def fromStreamingModel(streamingKMeansModel: StreamingKMeansModel): KMeansModel = {
-    val currentCenters = streamingKMeansModel.centers
-    new KMeansModel(streamingKMeansModel.pointOps, currentCenters)
+    new KMeansModel(streamingKMeansModel.pointOps, streamingKMeansModel.centers)
   }
 
   /**
