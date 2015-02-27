@@ -12,6 +12,105 @@ using the squared Euclidean distance function.
 Be aware that work on this project is ongoing.  Parts of this project are being integrated into
 upcoming releases of the Spark MLLIB clusterer.
 
+### Introduction
+
+The goal K-Means clustering is to produce a model of the clusters of a set of points that satisfies
+certain optimality constraints. Fundamentally, a K-Means model is simply a set of points and a function
+that defines the distance from an arbitrary point to a cluster center.
+
+The K-Means algorithm computes a K-Means model using an iterative algorithm known as Lloyd's algorithm.
+Each iteration of Lloyd's algorithm assigns a set of points to clusters, then updates the cluster
+centers to acknowledge the assignment of the points to the cluster.
+
+The update of clusters is a form of averaging.  Newly added points are averaged into the cluster
+while (optionally) reassigned points are removed from their prior clusters.
+
+While one can assign a point to a cluster using any distance function, Lloyd's algorithm only
+converges for a certain set of distance functions called Bregman divergences. Bregman divergences
+must define two methods, ```F```  to evaluate a function on a point and ```gradF``` to evaluate the
+gradient of the function on a points.
+
+```scala
+trait BregmanDivergence {
+  def F(v: Vector): Double
+
+  def gradF(v: Vector): Vector
+}
+```
+
+For example, by defining ```F``` to be the vector norm (i.e. the sum of the squares of the
+coordinates), one gets a distance function that equals the square of the well known Euclidean
+distance. We name it the ```SquaredEuclideanDistanceDivergence```.
+
+Internally, we enrich a Bregman divergence with a set of commonly used operations.
+The enriched trait is the ```BregmanPointOps```.
+
+```scala
+    trait BregmanPointOps  {
+      type P = BregmanPoint
+      type C = BregmanCenter
+
+      val divergence: BregmanDivergence
+
+      @inline val weightThreshold = 1e-4
+
+      val distanceThreshold = 1e-8
+
+      def toPoint(v: WeightedVector): P
+
+      def toCenter(v: WeightedVector): C
+
+      def centerMoved(v: P, w: C): Boolean
+
+      def findClosest(centers: IndexedSeq[C], point: P): (Int, Double)
+
+      def findClosestCluster(centers: IndexedSeq[C], point: P): Int
+
+      def distortion(data: RDD[P], centers: IndexedSeq[C])
+
+      def pointCost(centers: IndexedSeq[C], point: P): Double
+
+      def distance(p: BregmanPoint, c: BregmanCenter): Double
+    }
+```
+
+The instance of ```BregmanPointOps``` that supports the ```SquaredEuclideanDistanceDivergence``` is
+the ```SquaredEuclideanPointOps```.
+
+For efficient repeated computation of distance between a fixed set of points and varying cluster
+centers, is it convenient to pre-compute certain information and associate that information with
+the point or the cluster center.  We call the classes that represent those enriched points ```BregmanPoint```s.
+We call the classes that represent those enriched cluster centers ```BregmanCenter```s.
+
+With these definitions, we define our realization of a k-means model, ```KMeansModel``` which
+we enrich with operations to find closest clusters to a point:
+
+```scala
+trait KMeansModel {
+
+  val pointOps: BregmanPointOps
+
+  def centers: IndexedSeq[BregmanCenter]
+
+  def predictWeighted(point: WeightedVector): Int
+
+  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double)
+
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int]
+
+  def computeCostWeighted(data: RDD[WeightedVector]): Double
+
+  def predict(point: Vector): Int
+
+  def predictClusterAndDistance(point: Vector): (Int, Double)
+
+  def predict(points: RDD[Vector]): RDD[Int]
+
+  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer]
+
+  def computeCost(data: RDD[Vector]): Double
+}
+```
 
 ### Batch Clusterer Usage
 
@@ -146,43 +245,6 @@ object RecursiveKMeans {
 At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
 desire. The method will return a ```KMeansModel``` of the clustering.
 
-### K-Means Model
-
-The value returned from a K-Means clustering is the ```KMeansModel```.
-
-```scala
-class KMeansModel(pointOps: BregmanPointOps, centers: Array[BregmanCenter])
-  extends Serializable {
-
-  /** The number of clusters. **/
-  lazy val k: Int = ???
-
-  /**
-   Returns the cluster centers.  N.B. These are in the embedded space where the clustering
-   takes place, which may be different from the space of the input vectors!
-   */
-  lazy val clusterCenters: Array[Vector] = ???
-
-  /** Returns the cluster index that a given point belongs to. */
-  def predict(point: Vector): Int = ???
-
-  /** Returns the closest cluster index and distance to that cluster. */
-  def predictClusterAndDistance(point: Vector): (Int, Double) = ???
-
-  /** Maps given points to their cluster indices. */
-  def predict(points: RDD[Vector]): RDD[Int] = ???
-
-  /** Maps given points to their cluster indices. */
-  def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] = ???
-
-  /**
-   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
-   * model on the given data.
-   */
-  def computeCost(data: RDD[Vector]): Double = ???
-}
-```
-
 ### Distance Functions
 
 The Spark MLLIB clusterer is good at one thing: clustering low-medium dimensional data using
@@ -296,50 +358,7 @@ dimensional dense space using random indexing.
 This clusterer has been used to cluster millions of points in 700+ dimensional space using an
 information theoretic distance function (Kullback-Leibler).
 
-### Internals
-
 #### Bregman Divergences
-
-Underlying ```BregmanPointOps``` are the supporting Bregman divergences. The ```BregmanDivergence``` trait
- encapsulates the Bregman Divergence definition.
-
-```scala
-trait BregmanDivergence {
-
-  /**
-   * F is any convex function.
-   *
-   * @param v input
-   * @return F(v)
-   */
-  def F(v: Vector): Double
-
-  /**
-   * Gradient of F
-   *
-   * @param v input
-   * @return  gradient of F when at v
-   */
-  def gradF(v: Vector): Vector
-
-  /**
-   * F applied to homogeneous coordinates.
-   *
-   * @param v input
-   * @param w weight
-   * @return  F(v/w)
-   */
-  def F(v: Vector, w: Double): Double
-
-  /**
-   * Gradient of F, applied to homogeneous coordinates
-   * @param v input
-   * @param w weight
-   * @return  gradient(v/w)
-   */
-  def gradF(v: Vector, w: Double): Vector
-}
-```
 
 Several Bregman Divergences are provided:
 
@@ -419,31 +438,6 @@ method.
 
 Pull requests offering additional distance functions (http://en.wikipedia.org/wiki/Bregman_divergence)
 are welcome.
-
-
-#### Distance Functions
-
-This clusterer abstracts the distance function, as described above, making it extensible.
-
-The key is to create two new abstractions: Bregman point and Bregman center.
-These abstractions are easy to understand and easy to implement.
-
-```BregmanPointOps``` implement fast method for computing distances, taking advantage of the
-characteristics of the data to define the fastest methods for evaluating Bregman divergences.
-
-```scala
-trait BregmanPointOps  {
-  def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
-  def toCenter(v: WeightedVector): BregmanCenter = ???
-  def toPoint(v: WeightedVector): BregmanPoint =  ???
-  def centerMoved(v: BregmanPoint, w: BregmanCenter): Boolean = ???
-}
-```
-
-New ```BregmanPointOps``` may be created from a ```BregmanDivergence``` using the ```BregmanPointOps.apply```
-method.
-
-
 
 
 
