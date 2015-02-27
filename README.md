@@ -13,9 +13,9 @@ Be aware that work on this project is ongoing.  Parts of this project are being 
 upcoming releases of the Spark MLLIB clusterer.
 
 
-### Usage
+### Batch Clusterer Usage
 
-The simplest way to call the clusterer is to use the ```KMeans.train``` method, which
+The simplest way to call the batch clusterer is to use the ```KMeans.train``` method, which
 will return an instance of the ```KMeansModel``` object.
 
 For dense data in a low dimension space using the squared Euclidean distance function,
@@ -57,9 +57,9 @@ The full signature of the ```KMeans.train``` method is:
     runs: Int = 1,
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionNames: Seq[String] = Seq(EUCLIDEAN),
+    distanceFunctionNames: Seq[String] = Seq(PointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
-    embeddingNames: List[String] = List(IDENTITY_EMBEDDING))
+    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = { ???
 }
 ```
@@ -111,15 +111,15 @@ while the latter applies the same embedding iteratively on the data.
     runs: Int = 1,
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
-    distanceFunctionName: String = EUCLIDEAN,
+    distanceFunctionName: String = PointOps.EUCLIDEAN,
     clustererName: String = COLUMN_TRACKING,
-    embeddingName: String = HAAR_EMBEDDING,
+    embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
   : (KMeansModel, KMeansResults) = ???
 }
 ```
 
-### Examples
+### Batch Clusterer Examples
 
 Here are examples of using K-Means recursively.
 
@@ -130,7 +130,7 @@ object RecursiveKMeans {
 
   def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
     KMeans.train(raw, k,
-      embeddingNames = List(LOW_DIMENSIONAL_RI, MEDIUM_DIMENSIONAL_RI, HIGH_DIMENSIONAL_RI))
+      embeddingNames = List(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI, Embeddings.HIGH_DIMENSIONAL_RI))
   }
 
   def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
@@ -208,7 +208,7 @@ When selecting a distance function, consider the domain of the input data.  For 
 data is integral. Similarity of frequencies or distributions are best performed using the
 Kullback-Leibler divergence.
 
-| Name (```KMeans._```)            | Space | Divergence              | Input   |
+| Name (```PointOps._```)            | Space | Divergence              | Input   |
 |----------------------------------|-------|-------------------------|---------|
 | ```EUCLIDEAN```                  | R^d   |Euclidean                |         |
 | ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   |
@@ -240,7 +240,7 @@ One can embed points into a lower dimensional spaces before clustering in order 
 computation.
 
 
-| Name (```KMeans._```)         | Algorithm                                                   |
+| Name (```Embeddings._```)         | Algorithm                                                   |
 |-------------------------------|-------------------------------------------------------------|
 | ```IDENTITY_EMBEDDING```      | Identity                                                    |
 | ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
@@ -427,8 +427,6 @@ characteristics of the data to define the fastest methods for evaluating Bregman
 
 ```scala
 trait BregmanPointOps  {
-  val weightThreshold = 1e-4
-  val distanceThreshold = 1e-8
   def distance(p: BregmanPoint, c: BregmanCenter): Double = ???
   def toCenter(v: WeightedVector): BregmanCenter = ???
   def toPoint(v: WeightedVector): BregmanPoint =  ???
