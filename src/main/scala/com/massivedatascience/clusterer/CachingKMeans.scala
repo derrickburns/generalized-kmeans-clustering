@@ -112,11 +112,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
       numIterations = numIterations + 1
     }
 
-    val totalDistortion = distortion(fatPoints)
-
-    (totalDistortion, new KMeansModel(ops, fatCenters.map {
-      _.center
-    }))
+    (distortion(fatPoints), new KMeansModel(ops, fatCenters.map(_.center)))
   }
 
   /**

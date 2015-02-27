@@ -36,9 +36,11 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
   override def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
+    c: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])] = {
 
-    def cluster(): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
+    val centers = c.map(_.toArray).toArray
+
+    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])] = {
       val runs = centers.length
       val active = Array.fill(runs)(true)
       val costs = Array.fill(runs)(0.0)
@@ -57,7 +59,7 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
 
         if (log.isInfoEnabled) {
           for (r <- 0 until activeCenters.length)
-            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
+            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).size} centers")
         }
 
         // Find the sum and count of points mapping to each center
@@ -92,7 +94,7 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
         activeRuns = activeRuns.filter(active(_))
         iteration += 1
       }
-      costs.zip(centers).map { case (x, y) => (x, y, Option[RDD[(Int, Double)]](null))}
+      costs.zip(centers).map { case (x, y) => (x, y.toIndexedSeq, Option[RDD[(Int, Double)]](null))}
     }
 
     def getCentroids(

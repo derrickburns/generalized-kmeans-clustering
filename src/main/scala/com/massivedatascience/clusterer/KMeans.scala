@@ -211,8 +211,6 @@ object KMeans extends SparkHelper {
     }
   }
 
-
-
   def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
@@ -241,7 +239,7 @@ object KMeans extends SparkHelper {
   def simpleTrain(runConfig: RunConfig, distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
 
-    val initialCenters = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
+    val initialCenters: Seq[IndexedSeq[BregmanCenter]] = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
 
     require(bregmanPoints.getStorageLevel.useMemory)
     logInfo("completed initialization of cluster centers")

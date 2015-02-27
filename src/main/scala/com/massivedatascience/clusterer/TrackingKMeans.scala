@@ -81,11 +81,6 @@ class TrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer {
 
-  class NotSerializable {
-
-  }
-
-  val x = new NotSerializable
 
   /**
    *
@@ -143,11 +138,11 @@ class TrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]) = {
+    centerArrays: Seq[IndexedSeq[BregmanCenter]]) = {
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
-    def cluster(): Array[(Double, Array[BregmanCenter], Option[RDD[(Int, Double)]])] = {
+    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])] = {
 
       assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -155,7 +150,7 @@ class TrackingKMeans(
       logInfo(s"runs = ${centerArrays.size}")
 
       val results = for (centers <- centerArrays) yield {
-        var fatCenters = centers.map(FatCenter(_))
+        var fatCenters = centers.map(FatCenter(_)).toArray
         var fatPoints = initialFatPoints(data, fatCenters)
         fatPoints.setName("fatPoints 0")
         var terminate = false
@@ -173,7 +168,7 @@ class TrackingKMeans(
 
         (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
       }
-      results.map(x => (x._1, x._2, Option(x._3.map(y => (y.cluster, y.distance)))))
+      results.map(x => (x._1, x._2.toIndexedSeq, Option(x._3.map(y => (y.cluster, y.distance)))))
     }
 
     /**

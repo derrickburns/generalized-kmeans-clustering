@@ -1,5 +1,3 @@
-package com.massivedatascience.clusterer
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,14 +17,15 @@ package com.massivedatascience.clusterer
  * This code is a modified version of the original Spark 1.2 Streaming K-Means implementation.
  */
 
+package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.{XORShiftRandom, BLAS}
+
+import com.massivedatascience.clusterer.util.BLAS
 
 import scala.reflect.ClassTag
 
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
-import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
@@ -66,26 +65,25 @@ import org.apache.spark.streaming.dstream.DStream
  *
  */
 
-class StreamingKMeansModel(
-  pointOps: BregmanPointOps,
-  clusterCenters: Array[BregmanCenter]
-  ) extends KMeansModel(pointOps, clusterCenters) with Logging {
+class StreamingKMeansModel(model: KMeansPredictor) extends KMeansPredictor with Logging {
+  val pointOps = model.pointOps
+  val centerArrays = model.centers.toArray
+  val clusterWeights = centerArrays.map(_.weight)
 
-  val clusterWeights = clusterCenters.map(_.weight)
-
+  def centers = centerArrays.toIndexedSeq
 
   /** Perform a k-means update on a batch of data. */
   def update(data: RDD[Vector], decayFactor: Double, timeUnit: String): StreamingKMeansModel = {
 
     // find nearest cluster to each point
-    val closest = data.map(point => (this.predict(point), (point, 1L)))
+    val closest = data.map(point => (model.predict(point), (point, 1L)))
 
     // get sums and counts for updating each cluster
     val mergeContribs: ((Vector, Long), (Vector, Long)) => (Vector, Long) = (p1, p2) => {
       BLAS.axpy(1.0, p2._1, p1._1)
       (p1._1, p1._2 + p2._2)
     }
-    val dim = clusterCenters(0).size
+    val dim = centerArrays(0).size
     val pointStats: Array[(Int, (Vector, Long))] = closest
       .aggregateByKey((Vectors.zeros(dim), 0L))(mergeContribs, mergeContribs)
       .collect()
@@ -104,17 +102,17 @@ class StreamingKMeansModel(
 
     // implement update rule
     pointStats.foreach { case (label, (sum, count)) =>
-      val centroid = clusterCenters(label).inhomogeneous
+      val centroid = centerArrays(label).inhomogeneous
       val updatedWeight = clusterWeights(label) + count
       val lambda = count / math.max(updatedWeight, 1e-16)
       clusterWeights(label) = updatedWeight
 
       BLAS.scal(1.0 - lambda, centroid)
       BLAS.axpy(lambda / count, sum, centroid)
-      clusterCenters(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
+      centerArrays(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
 
       // display the updated cluster centers
-      val display = clusterCenters(label).size match {
+      val display = centerArrays(label).size match {
         case x if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
         case _ => centroid.toArray.mkString("[", ",", "]")
       }
@@ -131,103 +129,22 @@ class StreamingKMeansModel(
       val weight = (maxWeight + minWeight) / 2.0
       clusterWeights(largest) = weight
       clusterWeights(smallest) = weight
-      val largestClusterCenter = clusterCenters(largest).inhomogeneous.toArray
+      val largestClusterCenter = centerArrays(largest).inhomogeneous.toArray
       val l = largestClusterCenter.map(x => x + 1e-14 * math.max(math.abs(x), 1.0))
       val s = largestClusterCenter.map(x => x - 1e-14 * math.max(math.abs(x), 1.0))
-      clusterCenters(largest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(l, 1.0))
-      clusterCenters(smallest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(s, 1.0))
+      centerArrays(largest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(l, 1.0))
+      centerArrays(smallest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(s, 1.0))
     }
 
     this
   }
-
-
 }
 
-/**
- * :: DeveloperApi ::
- * StreamingKMeans provides methods for configuring a
- * streaming k-means analysis, training the model on streaming,
- * and using the model to make predictions on streaming data.
- * See KMeansModel for details on algorithm and update rules.
- *
- * Use a builder pattern to construct a streaming k-means analysis
- * in an application, like:
- *
- * val model = new StreamingKMeans()
- * .setDecayFactor(0.5)
- * .setK(3)
- * .setRandomCenters(5, 100.0)
- * .trainOn(DStream)
- */
-@DeveloperApi
 class StreamingKMeans(
-  var k: Int,
-  var decayFactor: Double,
-  var distanceFunction: String,
-  var timeUnit: String) extends Logging {
-
-  var pointOps: BregmanPointOps = PointOps(PointOps.EUCLIDEAN)
-
-  def this() = this(2, 1.0, PointOps.EUCLIDEAN, StreamingKMeans.BATCHES)
-
-  protected var model: StreamingKMeansModel = new StreamingKMeansModel(null, null)
-
-  /** Set the number of clusters. */
-  def setK(k: Int): this.type = {
-    this.k = k
-    this
-  }
-
-  /** Set the decay factor directly (for forgetful algorithms). */
-  def setDecayFactor(a: Double): this.type = {
-    this.decayFactor = decayFactor
-    this
-  }
-
-  def setDistanceFunction(distanceFunction: String) = {
-    pointOps = PointOps(distanceFunction)
-  }
-
-  /** Set the half life and time unit ("batches" or "points") for forgetful algorithms. */
-  def setHalfLife(halfLife: Double, timeUnit: String): this.type = {
-    if (timeUnit != StreamingKMeans.BATCHES && timeUnit != StreamingKMeans.POINTS) {
-      throw new IllegalArgumentException("Invalid time unit for decay: " + timeUnit)
-    }
-    this.decayFactor = math.exp(math.log(0.5) / halfLife)
-    logInfo("Setting decay factor to: %g ".format(this.decayFactor))
-    this.timeUnit = timeUnit
-    this
-  }
-
-  /** Specify initial centers directly. */
-  def setInitialCenters(centers: Array[Vector], weights: Array[Double]): this.type = {
-    val bregmanCenters = centers.zip(weights).map { case (c, w) => pointOps.toCenter(WeightedVector(c, w))}
-    model = new StreamingKMeansModel(pointOps, bregmanCenters)
-    this
-  }
-
-  /**
-   * Initialize random centers, requiring only the number of dimensions.
-   *
-   * @param dim Number of dimensions
-   * @param weight Weight for each center
-   * @param seed Random seed
-   */
-  def setRandomCenters(dim: Int, weight: Double, seed: Long = XORShiftRandom.random.nextLong): this.type = {
-    val random = new XORShiftRandom(seed)
-    val centers = Array.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))
-    val weights = Array.fill(k)(weight)
-    val bregmanCenters = centers.zip(weights).map { case (c, w) => pointOps.toCenter(WeightedVector(c, w))}
-
-    model = new StreamingKMeansModel(pointOps, bregmanCenters)
-    this
-  }
-
-  /** Return the latest model. */
-  def latestModel(): StreamingKMeansModel = {
-    model
-  }
+  k: Int = 2,
+  decayFactor: Double = 1.0,
+  timeUnit: String = StreamingKMeans.BATCHES,
+  var model: StreamingKMeansModel) extends Logging {
 
   /**
    * Update the clustering model by training on batches of data from a DStream.
@@ -269,7 +186,7 @@ class StreamingKMeans(
 
   /** Check whether cluster centers have been initialized. */
   private[this] def assertInitialized(): Unit = {
-    if (model.clusterCenters == null) {
+    if (model.centers == null) {
       throw new IllegalStateException(
         "Initial cluster centers must be set before starting predictions")
     }
@@ -280,4 +197,3 @@ object StreamingKMeans {
   final val BATCHES = "batches"
   final val POINTS = "points"
 }
-

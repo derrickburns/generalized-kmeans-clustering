@@ -33,7 +33,7 @@ class KMeansRandom extends KMeansInitializer with SparkHelper {
     k: Int,
     initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
-    seed: Long): Array[Array[BregmanCenter]] = {
+    seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 
@@ -46,12 +46,12 @@ class KMeansRandom extends KMeansInitializer with SparkHelper {
       val count = filtered.count()
       if (runs * k <= count) {
         val centers = select(filtered, runs * k)
-        Array.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k))
+        Seq.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k))
       } else if (k < count) {
-        Array.fill(runs)(select(filtered, k))
+        Seq.fill(runs)(select(filtered, k))
       } else {
         val all = filtered.collect().map(ops.toCenter)
-        Array.fill(runs)(all)
+        Seq.fill(runs)(all)
       }
     }
   }

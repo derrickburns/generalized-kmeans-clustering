@@ -60,7 +60,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
     targetNumberClusters: Int,
     initialState: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
-    seedx: Long): Array[Array[BregmanCenter]] = {
+    seedx: Long): Seq[IndexedSeq[BregmanCenter]] = {
 
     implicit val sc = data.sparkContext
 
@@ -77,13 +77,13 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       numClusters: Int,
       seed: Long,
       centers: Seq[IndexedSeq[BregmanCenter]],
-      numberRetained: Option[Seq[Int]]): Array[Array[BregmanCenter]] = {
+      numberRetained: Option[Seq[Int]]): Seq[IndexedSeq[BregmanCenter]] = {
 
       val centerArrays = centers.map(_.toArray)
       val weightMap = weights(centerArrays, sampleRate, seed)
       val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
 
-      Array.tabulate(centerArrays.length) { r =>
+      Seq.tabulate(centerArrays.length) { r =>
         val myCenters = centerArrays(r)
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))

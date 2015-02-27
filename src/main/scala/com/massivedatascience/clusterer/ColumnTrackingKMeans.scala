@@ -124,7 +124,7 @@ class ColumnTrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Array[Array[BregmanCenter]]): Array[(Double, Array[BregmanCenter],
+    centerArrays: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter],
     Option[RDD[(Int, Double)]])] = {
 
     implicit val sc = points.sparkContext
@@ -172,14 +172,14 @@ class ColumnTrackingKMeans(
      */
     def updatedCenters(
       round: Int,
-      previousCenters: Array[CenterWithHistory],
+      previousCenters: IndexedSeq[CenterWithHistory],
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
 
       require(currentAssignments.getStorageLevel.useMemory)
       require(previousAssignments.getStorageLevel.useMemory)
 
-      val centers = previousCenters.clone()
+      val centers = previousCenters.toArray
       if (config.addOnly) {
         val results = getCompleteCentroids(points, currentAssignments, previousAssignments,
           previousCenters.length)
@@ -499,8 +499,8 @@ class ColumnTrackingKMeans(
         val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c,
           initialized = false)
         }
-        val (assignments, centersWithHistory) = lloyds(0, empty, centers)
-        (distortion(assignments), centersWithHistory.map(_.center),
+        val (assignments, centersWithHistory) = lloyds(0, empty, centers.toArray)
+        (distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq,
           Option(assignments.map(y => (y.cluster, y.distance))))
       }
     }

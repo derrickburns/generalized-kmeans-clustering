@@ -26,7 +26,7 @@ trait KMeansInitializer extends Serializable {
     numClusters: Int,
     initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
-    seed: Long): Array[Array[BregmanCenter]]
+    seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
 
 

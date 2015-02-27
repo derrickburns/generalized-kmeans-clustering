@@ -28,7 +28,7 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
     numClusters: Int,
     initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
     runs: Int,
-    seed: Long): Array[Array[BregmanCenter]] = {
+    seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
 
     val centroids = assignments.zip(data).aggregateByKey(pointOps.getCentroid)(
       (centroid, pt) => centroid.add(pt),
@@ -36,6 +36,6 @@ class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
     )
 
     val bregmanCenters = centroids.map { p => pointOps.toCenter(p._2.asImmutable)}
-    Array(bregmanCenters.collect())
+    Seq(bregmanCenters.collect().toIndexedSeq)
   }
 }
