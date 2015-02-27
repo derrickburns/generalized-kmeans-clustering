@@ -50,6 +50,14 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
   def sub(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
+  def scale(alpha: Double): this.type = {
+    if (raw != empty) {
+      scal(alpha, raw)
+      weight = weight * alpha
+    }
+    this
+  }
+
   /**
    * Add in a vector, preserving the sparsity of the original/first vector.
    * @param r   vector to add
