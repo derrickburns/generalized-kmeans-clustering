@@ -362,7 +362,8 @@ object BregmanPointOps {
 
 #### Custom K-Means Models
 
-Training a K-Means model from a set of points is one way to create a ```KMeansModel```.  However,
+Training a K-Means model from a set of points using ```KMeans.train``` is one way to create a
+```KMeansModel```.  However,
 there are many others that are useful.  The ```KMeansModel``` companion object provides a number
 of these constructors:
 
