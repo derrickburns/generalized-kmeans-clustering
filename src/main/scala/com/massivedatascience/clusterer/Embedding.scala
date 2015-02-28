@@ -92,13 +92,13 @@ case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLe
 case class RandomIndexEmbedding(
   outputDim: Int,
   epsilon: Double,
-  inputDim: Int = 63,
+  logInputDim: Int = 63,
   seed: Long = new DateTime().getMillis) extends Embedding {
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 
   private val on = Math.ceil(epsilon * outputDim).toInt & -2
-  private val logDim = Math.log(outputDim).toInt
+  private val logOutputDim = Math.log(outputDim).toInt
   private val hashes = computeHashes(seed)
   private val positive = hashes.take(on / 2)
   private val negative = hashes.drop(on / 2)
@@ -106,7 +106,7 @@ case class RandomIndexEmbedding(
   private def computeHashes(seed: Long): Array[MultiplicativeHash] = {
     val rand = new XORShiftRandom(seed)
     Array.fill(on) {
-      new MultiplicativeHash(rand.nextLong(), inputDim, logDim)
+      new MultiplicativeHash(rand.nextLong(), logInputDim, logOutputDim)
     }
   }
   
@@ -124,10 +124,10 @@ case class RandomIndexEmbedding(
   }
 }
 
-class MultiplicativeHash(seed: Long, inputDim: Int, outputDim: Int) {
-  require(outputDim <= inputDim)
-  val mask = if (inputDim >= 63) Long.MaxValue else (1 << inputDim) - 1
-  val shift = inputDim - outputDim
+class MultiplicativeHash(seed: Long, l: Int, m: Int) {
+  require(m <= l)
+  val mask = if (l >= 63) Long.MaxValue else (1 << l) - 1
+  val shift = l - m
 
   def hash(index: Int): Int = (((seed * index) & mask) >> shift).toInt
 }
