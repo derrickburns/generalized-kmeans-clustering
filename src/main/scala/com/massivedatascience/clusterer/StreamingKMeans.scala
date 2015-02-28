@@ -65,9 +65,10 @@ import org.apache.spark.streaming.dstream.DStream
  *
  */
 
-/* TODO - performance can be improved by performing updates on centers in homogeneous coordinates
-* and lazily discounting clusters.
-*/
+/* TODO - perform updates on centers in homogeneous coordinates
+ * TODO - lazily discount clusters
+ * TODO - maintain weighted distortion per center.
+ */
 
 class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logging {
   val pointOps = model.pointOps
