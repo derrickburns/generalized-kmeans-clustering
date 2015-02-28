@@ -19,7 +19,6 @@ package com.massivedatascience.transforms
 
 object HaarWavelet {
 
-
   def average(input: Array[Double]) : Array[Double] = {
     val len = input.length >> 1
     val result = new Array[Double](len)
