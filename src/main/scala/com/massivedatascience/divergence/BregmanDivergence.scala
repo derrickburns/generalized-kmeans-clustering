@@ -16,9 +16,11 @@
  */
 
 
-package com.massivedatascience.clusterer
+package com.massivedatascience.divergence
 
-import com.massivedatascience.clusterer.util.BLAS._
+import com.massivedatascience.linalg.BLAS
+import com.massivedatascience.linalg.BLAS._
+import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 /**
@@ -38,7 +40,6 @@ import org.apache.spark.mllib.linalg.{Vector, Vectors}
  * http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
  */
 
-private[clusterer]
 trait BregmanDivergence extends Serializable {
 
   /**
@@ -84,7 +85,6 @@ trait BregmanDivergence extends Serializable {
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-private[clusterer]
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 
   val logFunc: MathLog
@@ -111,7 +111,6 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
  * http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
  *
  */
-private[clusterer]
 trait KullbackLeiblerDivergence extends BregmanDivergence {
 
   val logFunc: MathLog
@@ -139,7 +138,6 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Euclidean_distance
  */
-private[clusterer]
 case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
   /**
@@ -164,22 +162,18 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
   }
 }
 
-private[clusterer]
 case object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence {
   val logFunc: MathLog = GeneralLog
 }
 
-private[clusterer]
 case object NaturalKLSimplexDivergence extends KullbackLeiblerSimplexDivergence {
   val logFunc: MathLog = DiscreteLog
 }
 
-private[clusterer]
 case object RealKLDivergence extends KullbackLeiblerDivergence {
   val logFunc: MathLog = GeneralLog
 }
 
-private[clusterer]
 case object NaturalKLDivergence extends KullbackLeiblerDivergence {
   val logFunc: MathLog = DiscreteLog
 }
@@ -187,7 +181,6 @@ case object NaturalKLDivergence extends KullbackLeiblerDivergence {
 /**
  * The generalized I-Divergence is defined on points in R**n
  */
-private[clusterer]
 case object GeneralizedIDivergence extends BregmanDivergence {
 
   val logFunc: MathLog = DiscreteLog
@@ -216,7 +209,6 @@ case object GeneralizedIDivergence extends BregmanDivergence {
  *
  * x => (x, 1.0 - x)
  */
-private[clusterer]
 case object LogisticLossDivergence extends BregmanDivergence {
 
   val log = GeneralLog.log _
@@ -247,7 +239,6 @@ case object LogisticLossDivergence extends BregmanDivergence {
  *
  * http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance
  */
-private[clusterer]
 case object ItakuraSaitoDivergence extends BregmanDivergence {
 
   val logFunc: MathLog = GeneralLog

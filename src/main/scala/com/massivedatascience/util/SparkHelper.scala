@@ -1,4 +1,4 @@
-package com.massivedatascience.clusterer.util
+package com.massivedatascience.util
 
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
@@ -34,7 +34,7 @@ trait SparkHelper extends Logging {
     names: Seq[String],
     rdds: Seq[RDD[T]])(f: Seq[RDD[T]] => Q): Q = {
 
-    rdds.zip(names).foreach { case (r, n) => sync(n, r, true)}
+    rdds.zip(names).foreach { case (r, n) => sync(n, r)}
     val result = f(rdds)
     rdds.foreach(_.unpersist())
     result

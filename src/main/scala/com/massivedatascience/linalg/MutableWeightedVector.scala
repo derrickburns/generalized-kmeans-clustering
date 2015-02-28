@@ -1,4 +1,4 @@
-package com.massivedatascience.clusterer
+package com.massivedatascience.linalg
 
 import org.apache.spark.mllib.linalg.Vector
 

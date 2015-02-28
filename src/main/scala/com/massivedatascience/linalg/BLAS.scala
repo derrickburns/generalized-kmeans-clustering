@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer.util
+package com.massivedatascience.linalg
 
 import com.github.fommil.netlib.{BLAS => NetlibBLAS, F2jBLAS}
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}

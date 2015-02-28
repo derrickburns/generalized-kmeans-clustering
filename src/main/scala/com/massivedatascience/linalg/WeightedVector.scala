@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer
+package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 /**
  * An IMMUTABLE weighted vector.
@@ -59,8 +59,6 @@ object WeightedVector {
   def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, Vectors.dense(v))
 
   def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, v)
-
-
 }
 
 

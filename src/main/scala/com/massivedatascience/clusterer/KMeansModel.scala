@@ -19,10 +19,11 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag

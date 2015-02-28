@@ -17,12 +17,14 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.transforms.Embeddings
 import org.apache.spark.rdd.RDD
 
 
 object Examples {
 
-  import KMeans._
+  import com.massivedatascience.clusterer.KMeans._
 
   /**
    * Iteratively train using low dimensional embedding of the high dimensional sparse input data

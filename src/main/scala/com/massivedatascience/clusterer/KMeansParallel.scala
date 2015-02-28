@@ -17,11 +17,11 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.BLAS._
-import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
-
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import com.massivedatascience.linalg.BLAS
+import com.massivedatascience.linalg.BLAS._
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
 import scala.collection.Map

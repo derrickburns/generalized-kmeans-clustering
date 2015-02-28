@@ -18,7 +18,8 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.linalg.MutableWeightedVector
+import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD

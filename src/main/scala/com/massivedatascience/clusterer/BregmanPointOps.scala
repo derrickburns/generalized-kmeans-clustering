@@ -1,16 +1,16 @@
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer
+import com.massivedatascience.divergence._
+import com.massivedatascience.linalg._
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
-import com.massivedatascience.clusterer.util.BLAS._
 
 /**
  * A point with an additional single Double value that is used in distance computation.
  *
  */
 case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends WeightedVector {
-  lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
+  lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
 /**
@@ -26,7 +26,7 @@ case class BregmanCenter(
   weight: Double,
   dotGradMinusF: Double,
   gradient: Vector) extends WeightedVector {
-  lazy val inhomogeneous = clusterer.asInhomogeneous(homogeneous, weight)
+  lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
 object BregmanPoint {
@@ -133,7 +133,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous)
+      val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
       if (d < 0.0) 0.0 else d
     }
   }
@@ -151,7 +151,7 @@ trait NonSmoothed {
     val h = v.homogeneous
     val w = v.weight
     val df = divergence.gradF(h, w)
-    BregmanCenter(v, dot(h, df) / w - divergence.F(h, w), df)
+    BregmanCenter(v, BLAS.dot(h, df) / w - divergence.F(h, w), df)
   }
 }
 
@@ -165,10 +165,10 @@ trait Smoothed {
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
-    val h = add(v.homogeneous, smoothingFactor)
+    val h = BLAS.add(v.homogeneous, smoothingFactor)
     val w = v.weight + v.homogeneous.size * smoothingFactor
     val df = divergence.gradF(h, w)
-    BregmanCenter(h, w, dot(h, df) / w - divergence.F(h, w), df)
+    BregmanCenter(h, w, BLAS.dot(h, df) / w - divergence.F(h, w), df)
   }
 }
 
@@ -246,8 +246,8 @@ case object SparseRealKLPointOps extends BregmanPointOps with NonSmoothed {
     } else if (p.weight <= weightThreshold) {
       0.0
     } else {
-      val smoothed = sumMissing(c.homogeneous, p.inhomogeneous)
-      val d = p.f + c.dotGradMinusF - dot(c.gradient, p.inhomogeneous) + smoothed
+      val smoothed = BLAS.sumMissing(c.homogeneous, p.inhomogeneous)
+      val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous) + smoothed
       if (d < 0.0) 0.0 else d
     }
   }

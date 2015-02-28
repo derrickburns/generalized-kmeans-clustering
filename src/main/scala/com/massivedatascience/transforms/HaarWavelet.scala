@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer.util
+package com.massivedatascience.transforms
 
 object HaarWavelet {
 

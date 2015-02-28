@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.linalg.MutableWeightedVector
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD

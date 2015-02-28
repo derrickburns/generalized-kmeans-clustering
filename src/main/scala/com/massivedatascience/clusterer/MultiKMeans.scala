@@ -20,6 +20,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 

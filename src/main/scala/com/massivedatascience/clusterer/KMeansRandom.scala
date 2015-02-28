@@ -19,10 +19,8 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
-import org.apache.spark.mllib.linalg.Vector
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 class KMeansRandom extends KMeansInitializer with SparkHelper {
 

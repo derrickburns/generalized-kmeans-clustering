@@ -17,16 +17,12 @@
 
 package com.massivedatascience
 
-import com.massivedatascience.clusterer.util.BLAS._
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
-import org.apache.spark.rdd.RDD
+import org.apache.spark.mllib.linalg.DenseVector
 
 package object clusterer {
-
   val Infinity = Double.MaxValue
   val Unknown = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())
-
 
   trait SimpleAssignment extends Serializable {
     val distance: Double
@@ -34,34 +30,6 @@ package object clusterer {
   }
 
   case class BasicAssignment(distance: Double, cluster: Int) extends SimpleAssignment
-
-  def asInhomogeneous(homogeneous: Vector, weight: Double) = {
-    val x = homogeneous.copy
-    scal(1.0 / weight, x)
-    x
-  }
-
-  def asHomogeneous(inhomogeneous: Vector, weight: Double) = {
-    val x = inhomogeneous.copy
-    scal(weight, x)
-    x
-  }
-
-  implicit class RichVector(val v: Vector) extends AnyVal {
-    def iterator: VectorIterator = {
-      v match {
-        case s: SparseVector => new SparseVectorIterator(s)
-        case d: DenseVector => new DenseVectorIterator(d)
-      }
-    }
-
-    def negativeIterator: VectorIterator = {
-      v match {
-        case s: SparseVector => new NegativeSparseVectorIterator(s)
-        case d: DenseVector => new NegativeDenseVectorIterator(d)
-      }
-    }
-  }
 
   type TerminationCondition = BasicStats => Boolean
 

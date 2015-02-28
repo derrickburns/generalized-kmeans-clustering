@@ -17,9 +17,11 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.SparkHelper
-import org.apache.spark.rdd.RDD
+import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.transforms.{Embedding, Embeddings, HaarEmbedding, IdentityEmbedding}
+import com.massivedatascience.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.rdd.RDD
 
 
 object KMeans extends SparkHelper {

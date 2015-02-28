@@ -17,13 +17,15 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.XORShiftRandom
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.util.XORShiftRandom
+import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.{Logging, SparkContext}
+
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
-import org.apache.spark.SparkContext._
-import org.apache.spark.{Logging, SparkContext}
 
 class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Serializable with Logging {
   val newlyAssignedPoints = sc.accumulator[Int](0, s"Newly Assigned Points $round")

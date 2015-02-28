@@ -1,6 +1,7 @@
 package com.massivedatascience.clusterer
 
 
+import com.massivedatascience.linalg.WeightedVector
 import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors

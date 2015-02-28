@@ -19,17 +19,15 @@
 
 package com.massivedatascience.clusterer
 
-
-import com.massivedatascience.clusterer.util.BLAS
-
-import scala.reflect.ClassTag
-
+import com.massivedatascience.linalg.{BLAS, WeightedVector}
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream
+
+import scala.reflect.ClassTag
 
 /**
  * :: DeveloperApi ::

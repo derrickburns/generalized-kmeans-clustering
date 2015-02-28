@@ -1,4 +1,4 @@
-package com.massivedatascience.clusterer
+package com.massivedatascience.transforms
 
 object Embeddings {
   val IDENTITY_EMBEDDING = "IDENTITY"

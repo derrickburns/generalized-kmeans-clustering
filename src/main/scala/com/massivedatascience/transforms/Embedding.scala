@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer
+package com.massivedatascience.transforms
 
-import com.massivedatascience.clusterer.util.BLAS._
-import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
-import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
+import com.massivedatascience.divergence.{BregmanDivergence, RealKullbackLeiblerSimplexDivergence}
+import com.massivedatascience.linalg.{WeightedVector, _}
+import com.massivedatascience.util.XORShiftRandom
+import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
 import org.joda.time.DateTime
 
 trait Embedding extends Serializable {
@@ -62,7 +63,7 @@ case object HaarEmbedding extends Embedding {
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
     val embedded = v.homogeneous.copy
-    WeightedVector(axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
+    WeightedVector(BLAS.axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
   }
 }
 
@@ -106,10 +107,11 @@ case class RandomIndexEmbedding(
   private def computeHashes(seed: Long): Array[MultiplicativeHash] = {
     val rand = new XORShiftRandom(seed)
     Array.fill(on) {
-      new MultiplicativeHash(rand.nextLong(), logInputDim, logOutputDim)
+      new MultiplicativeHash(rand.nextLong().abs, rand.nextLong().abs, logInputDim, logOutputDim)
     }
   }
-  
+
+
   def embed(v: WeightedVector): WeightedVector = {
     val iterator = v.homogeneous.iterator
     val rep = new Array[Double](outputDim)
@@ -124,11 +126,11 @@ case class RandomIndexEmbedding(
   }
 }
 
-class MultiplicativeHash(seed: Long, l: Int, m: Int) {
+class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
   require(m <= l)
   val mask = if (l >= 63) Long.MaxValue else (1 << l) - 1
   val shift = l - m
 
-  def hash(index: Int): Int = (((seed * index) & mask) >> shift).toInt
+  def hash(index: Int): Int = (((seed * index.toLong + offset) & mask) >> shift).toInt
 }
 

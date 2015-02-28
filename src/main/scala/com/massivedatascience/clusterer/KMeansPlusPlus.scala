@@ -20,7 +20,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 
 import scala.collection.mutable.ArrayBuffer
 

@@ -18,15 +18,16 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.clusterer.ColumnTrackingKMeans._
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.collection.generic.FilterMonadic
-import ColumnTrackingKMeans._
+import scala.collection.mutable
 
 object ColumnTrackingKMeans {
 
@@ -100,7 +101,7 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
-  import MultiKMeansClusterer._
+  import com.massivedatascience.clusterer.MultiKMeansClusterer._
 
   /**
    * count number of points assigned to each cluster

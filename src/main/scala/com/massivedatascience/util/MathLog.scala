@@ -15,20 +15,17 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer
+package com.massivedatascience.util
 
-private[clusterer]
 sealed trait MathLog extends Serializable {
   def log(x: Double) : Double
 }
 
-private[clusterer]
 case object GeneralLog extends MathLog {
   @inline
   override def log(x: Double) : Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
-private[clusterer]
 case object DiscreteLog extends MathLog {
   private val logTable = new Array[Double](1000)
 
