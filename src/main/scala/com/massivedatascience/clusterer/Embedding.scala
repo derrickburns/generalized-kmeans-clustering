@@ -20,6 +20,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.util.BLAS._
 import com.massivedatascience.clusterer.util.{HaarWavelet, XORShiftRandom}
 import org.apache.spark.mllib.linalg.{Vectors, Vector, SparseVector, DenseVector}
+import org.joda.time.DateTime
 
 trait Embedding extends Serializable {
   def embed(v: WeightedVector): WeightedVector
@@ -80,66 +81,54 @@ case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLe
  *
  * https://www.sics.se/~mange/papers/RI_intro.pdf
  *
- * @param dim number of dimensions to use for the dense vector
+ * We use a family of universal hash functions to avoid pre-computing the
+ * random projection:
+ *
+ * http://www.velldal.net/erik/pubs/Velldal11a.ps
+ *
+ * @param outputDim number of dimensions to use for the dense vector
  * @param epsilon portion of dimensions with non-zero values
  */
-case class RandomIndexEmbedding(dim: Int, epsilon: Double) extends Embedding {
-
+case class RandomIndexEmbedding(
+  outputDim: Int,
+  epsilon: Double,
+  inputDim: Int = 63,
+  seed: Long = new DateTime().getMillis) extends Embedding {
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 
-  val on = Math.ceil(epsilon * dim).toInt & -2
+  private val on = Math.ceil(epsilon * outputDim).toInt & -2
+  private val logDim = Math.log(outputDim).toInt
+  private val hashes = computeHashes(seed)
+  private val positive = hashes.take(on / 2)
+  private val negative = hashes.drop(on / 2)
 
-  val tinySet = new TinyIntSet(on)
-
+  private def computeHashes(seed: Long): Array[MultiplicativeHash] = {
+    val rand = new XORShiftRandom(seed)
+    Array.fill(on) {
+      new MultiplicativeHash(rand.nextLong(), inputDim, logDim)
+    }
+  }
+  
   def embed(v: WeightedVector): WeightedVector = {
     val iterator = v.homogeneous.iterator
-    val rep = new Array[Double](dim)
-
+    val rep = new Array[Double](outputDim)
     while (iterator.hasNext) {
       val count = iterator.value
-      val random = new XORShiftRandom(iterator.index)
+      val index = iterator.index
+      for (p <- positive) rep(p.hash(index)) += count
+      for (n <- negative) rep(n.hash(index)) -= count
       iterator.advance()
-
-      var remaining = on
-      while (remaining > 0) {
-        val ri = random.nextInt() % dim
-        if (!tinySet.contains(ri)) {
-          rep(ri) = if(random.nextBoolean()) rep(ri) + count else rep(ri) - count
-          remaining = remaining - 1
-          tinySet.add(ri)
-        }
-      }
-      tinySet.clear()
     }
     WeightedVector(rep, v.weight)
   }
 }
 
-/**
- * A tiny set of integer values
- *
- * @param maxSize the maximum number of elements in the set
- */
+class MultiplicativeHash(seed: Long, inputDim: Int, outputDim: Int) {
+  require(outputDim <= inputDim)
+  val mask = if (inputDim >= 63) Long.MaxValue else (1 << inputDim) - 1
+  val shift = inputDim - outputDim
 
-private[clusterer] class TinyIntSet(maxSize: Int) {
-  val taken = new Array[Int](maxSize)
-  var size = 0
-
-  def contains(ri: Int): Boolean = {
-    var i = size
-    while (i > 0) {
-      i = i - 1
-      if (taken(i) == ri) return true
-    }
-    false
-  }
-
-  def add(ri: Int): Unit = {
-    require(size < maxSize)
-    taken(size) = ri
-    size = size + 1
-  }
-
-  def clear(): Unit = size = 0
+  def hash(index: Int): Int = (((seed * index) & mask) >> shift).toInt
 }
+
