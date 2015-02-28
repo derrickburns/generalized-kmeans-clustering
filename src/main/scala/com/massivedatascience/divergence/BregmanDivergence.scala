@@ -18,7 +18,6 @@
 
 package com.massivedatascience.divergence
 
-import com.massivedatascience.linalg.BLAS
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
