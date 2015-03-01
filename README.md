@@ -5,10 +5,10 @@ Release of this code is imminent.
 
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
 and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
-* sparse or dense data,
-* low or high dimension,
-* using distances defined by
-[Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
+* sparse or dense data
+* parallel runs on non-equal target number of cluster
+* low or high dimensional data
+* using distances defined by [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
 * using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches).
 
