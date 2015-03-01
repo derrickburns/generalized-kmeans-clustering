@@ -8,9 +8,9 @@ and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
 * sparse or dense data
 * parallel runs on non-equal target number of clusters
 * low or high dimensional data
-* using distances defined by [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
-[generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
-* using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches).
+* using distances defined by [Bregman divergences](http://mark.reid.name/blog/meet-the-bregman-divergences.html)
+* using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches)
+* backfilling empty clusters.
 
 This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
 using the squared Euclidean distance function.
@@ -31,7 +31,7 @@ The update of clusters is a form of averaging.  Newly added points are averaged 
 while (optionally) reassigned points are removed from their prior clusters.
 
 While one can assign a point to a cluster using any distance function, Lloyd's algorithm only
-converges for a certain set of distance functions called Bregman divergences. Bregman divergences
+converges for a certain set of distance functions called [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf). Bregman divergences
 must define two methods, ```F```  to evaluate a function on a point and ```gradF``` to evaluate the
 gradient of the function on a points.
 
@@ -143,7 +143,7 @@ Kullback-Leibler divergence.
 | Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
 |----------------------------------|-------|-------------------------|---------|---------|
 | ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  ```SquaredEuclideanPointOps```  |
-| ```RELATIVE_ENTROPY```           | R+^d  |Kullback-Leibler         | Dense   | ```DenseKLPointOps```    |
+| ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
 | ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
 | ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
 | ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
@@ -295,7 +295,7 @@ computation.
 | ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
 | ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
 | ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
-| ```SYMMETRIZING_KL_EMBEDDING```     | Symmetrizing KL Embedding       |
+| ```SYMMETRIZING_KL_EMBEDDING```     | [Symmetrizing KL Embedding](http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf)       |
 
 
 #### K-Means Clusterer Implementations
