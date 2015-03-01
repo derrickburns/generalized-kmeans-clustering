@@ -201,7 +201,7 @@ object KMeans {
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
-    mode: String = K_MEANS_PARALLEL,
+    mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     kMeansImplName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -255,7 +255,7 @@ object KMeans {
     k: Int,
     maxIterations: Int = 20,
     runs: Int = 1,
-    initializerName: String = K_MEANS_PARALLEL,
+    initializerName: String =  KMeansInitializer.K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -274,10 +274,10 @@ including initialization methods that have different numbers of initial clusters
 
 There are two pre-defined seeding algorithms.
 
-| Name (```KMeans._```)            | Algorithm                         |
+| Name (``` KMeansInitializer._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```RANDOM```                  | Random selection of initial k centers |
-| ```K_MEANS_PARALLEL```           | [K-Means Parallel](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
+| ```K_MEANS_PARALLEL```           | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
 
 You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
 
@@ -297,17 +297,15 @@ computation.
 | ```SYMMETRIZING_KL_EMBEDDING```     | Symmetrizing KL Embedding       |
 
 
-#### K-Means Implementations
+#### K-Means Clusterer Implementations
 
-There are three implementations of the Lloyd's algorithm. Use ```SIMPLE```.  The others
-are experimental for performance testing.
+There are standard varieties of K-Means Clusterer.
 
 | Name (```MultiKMeansClusterer._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
-| ```SIMPLE```                  | recomputes closest assignments each iteration |
-| ```TRACKING```           |  clusterer tracks last assignments in combined point/assignmentRDD |
-| ```COLUMN_TRACKING```           |  clusterer tracks last assignments in separate RDDs |
-| ```MINI_BATCH_10```           |  a mini-batch clustering implementation that samples 10% of the data on each Lloyd's iteration |
+| ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
+| ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
+| ```MINI_BATCH_10```      | mini-batch clusterer that samples 10% of the data on round to update centroids |
 
 
 #### Examples
@@ -374,7 +372,6 @@ object BregmanPointOps {
   def apply(d: BregmanDivergence, factor: Double): BregmanPointOps = ???
 }
 ```
-
 
 #### Custom K-Means Models
 

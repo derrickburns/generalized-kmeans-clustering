@@ -29,4 +29,18 @@ trait KMeansInitializer extends Serializable {
     seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
 
+object KMeansInitializer {
+
+  val RANDOM = "random"
+  val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer
+
+  def apply(name: String): KMeansInitializer = {
+    name match {
+      case RANDOM => new KMeansRandom
+      case K_MEANS_PARALLEL => new KMeansParallel(5)
+      case _ => throw new RuntimeException(s"unknown initializer $name")
+    }
+  }
+}
+
 
