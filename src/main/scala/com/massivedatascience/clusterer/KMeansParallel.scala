@@ -42,6 +42,8 @@ import scala.collection.mutable.ArrayBuffer
  */
 class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInitializer with SparkHelper {
 
+  type Centers = IndexedSeq[BregmanCenter]
+
   /**
    *
    * @param pointOps distance function
@@ -57,9 +59,9 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     targetNumberClusters: Int,
-    initialState: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    initialState: Option[(Seq[Centers], Seq[RDD[Double]])] = None,
     runs: Int,
-    seedx: Long): Seq[IndexedSeq[BregmanCenter]] = {
+    seedx: Long): Seq[Centers] = {
 
     implicit val sc = data.sparkContext
 
@@ -75,8 +77,8 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
     def finalClusterCenters(
       numClusters: Int,
       seed: Long,
-      centers: Seq[IndexedSeq[BregmanCenter]],
-      numberRetained: Option[Seq[Int]]): Seq[IndexedSeq[BregmanCenter]] = {
+      centers: Seq[Centers],
+      numberRetained: Option[Seq[Int]]): Seq[Centers] = {
 
       val centerArrays = centers.map(_.toIndexedSeq)
       val weightMap = weights(centerArrays, sampleRate, seed)
@@ -98,7 +100,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @param centers new centers to consider
      * @return
      */
-    def setCosts(centers: Seq[IndexedSeq[BregmanCenter]]): RDD[Vector] = {
+    def setCosts(centers: Seq[Centers]): RDD[Vector] = {
       val ops = pointOps
       val numRuns = runs
       withBroadcast(centers) { bcNewCenters =>
@@ -117,7 +119,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @param oldCosts best distance to previously considered centers
      * @return
      */
-    def updatedCosts(centers: Seq[IndexedSeq[BregmanCenter]], oldCosts: RDD[Vector]): RDD[Vector] = {
+    def updatedCosts(centers: Seq[Centers], oldCosts: RDD[Vector]): RDD[Vector] = {
       val ops = pointOps
       val numRuns = runs
       withBroadcast(centers) { bcNewCenters =>
@@ -135,7 +137,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @param seed seed for random numbers
      * @return random center per run stored in an array buffer
      */
-    def randomCenters(seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
+    def randomCenters(seed: Long): Seq[Centers] = {
       val ops = pointOps
       val numRuns = runs
       data
@@ -152,7 +154,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @return  A map from (run, cluster index) to the sum of the weights of its points
      */
     def weights(
-      centerArrays: Seq[IndexedSeq[BregmanCenter]],
+      centerArrays: Seq[Centers],
       fraction: Double,
       seed: Long): Map[(Int, Int), Double] = {
       val ops = pointOps
@@ -227,7 +229,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      */
     def numbersRequested(
       totalNumClusters: Int,
-      initialCenters: Option[Seq[IndexedSeq[BregmanCenter]]],
+      initialCenters: Option[Seq[Centers]],
       runs: Int): Seq[Int] = {
 
       initialCenters.map(_.map(totalNumClusters - _.length))
@@ -250,7 +252,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       numberSteps: Int,
       requested: Seq[Int],
       seed: Long,
-      centers: Seq[IndexedSeq[BregmanCenter]]): Seq[IndexedSeq[BregmanCenter]] = {
+      centers: Seq[Centers]): Seq[Centers] = {
 
       val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
       val startingCosts = initialCosts.map(asVectors).getOrElse(setCosts(centers))
