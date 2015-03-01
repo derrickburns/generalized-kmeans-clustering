@@ -23,13 +23,13 @@ import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
 
 
 package object linalg {
-  def asInhomogeneous(homogeneous: Vector, weight: Double) = {
+  def asInhomogeneous(homogeneous: Vector, weight: Double): Vector = {
     val x = homogeneous.copy
     scal(1.0 / weight, x)
     x
   }
 
-  def asHomogeneous(inhomogeneous: Vector, weight: Double) = {
+  def asHomogeneous(inhomogeneous: Vector, weight: Double): Vector = {
     val x = inhomogeneous.copy
     scal(weight, x)
     x

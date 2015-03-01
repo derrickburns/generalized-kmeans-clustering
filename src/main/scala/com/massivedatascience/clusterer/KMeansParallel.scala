@@ -89,7 +89,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = IndexedSeq.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-        kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1,
+        kMeansPlusPlus.centers(seed, myCenters, weights, kx, 1,
           numberRetained.map(_(r)).getOrElse(0))
       }
     }
@@ -100,7 +100,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @param centers new centers to consider
      * @return
      */
-    def setCosts(centers: Seq[Centers]): RDD[Vector] = {
+    def costsFromCenters(centers: Seq[Centers]): RDD[Vector] = {
       val ops = pointOps
       val numRuns = runs
       withBroadcast(centers) { bcNewCenters =>
@@ -255,7 +255,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       centers: Seq[Centers]): Seq[Centers] = {
 
       val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
-      val startingCosts = initialCosts.map(asVectors).getOrElse(setCosts(centers))
+      val startingCosts = initialCosts.map(asVectors).getOrElse(costsFromCenters(centers))
       var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
       val numAdded = Array.fill(runs)(0)

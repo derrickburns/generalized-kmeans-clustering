@@ -43,11 +43,11 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
   val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters $round")
   val largestCluster = sc.accumulator[Long](0, s"Largest Cluster $round")
 
-  def getMovement = movement.value
+  def centerMovement = movement.value
 
-  def getNonEmptyClusters = nonemptyClusters.value
+  def numNonEmptyClusters = nonemptyClusters.value
 
-  def getEmptyClusters = emptyClusters.value
+  def numEmptyClusters = emptyClusters.value
 
   def getRound = round
 
@@ -102,23 +102,23 @@ class TrackingKMeans(
    * @param previous the previous cluster (and distance to that cluster) that this point belongs to
    */
   case class FatPoint(location: BregmanPoint, current: Assignment, previous: Assignment) {
-    def cluster = current.index
+    def cluster: Int = current.index
 
-    def previousCluster = previous.index
+    def previousCluster: Int = previous.index
 
-    def isAssigned = current.isAssigned
+    def isAssigned: Boolean = current.isAssigned
 
-    def wasPreviouslyAssigned = previous.isAssigned
+    def wasPreviouslyAssigned: Boolean = previous.isAssigned
 
-    def wasReassigned = current.index != previous.index
+    def wasReassigned: Boolean = current.index != previous.index
 
     def assign(closest: Assignment): FatPoint = FatPoint(location, closest, current)
 
-    def distance = current.dist
+    def distance: Double = current.dist
 
-    def improvement = previous.dist - current.dist
+    def improvement: Double = previous.dist - current.dist
 
-    def round = current.round
+    def round: Int = current.round
   }
 
   type FatCenters = Array[FatCenter]
@@ -312,7 +312,7 @@ class TrackingKMeans(
             buffer.append((p.previousCluster, (p.location, false)))
         }
         buffer.iterator
-      }.aggregateByKey(pointOps.getCentroid)(
+      }.aggregateByKey(pointOps.make)(
         (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
         (x, y) => x.add(y)
       ).collect()
@@ -321,7 +321,7 @@ class TrackingKMeans(
     def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
       points.filter(_.isAssigned).map { p =>
         (p.cluster, p.location)
-      }.aggregateByKey(pointOps.getCentroid)(_.add(_), _.add(_)).collect()
+      }.aggregateByKey(pointOps.make)(_.add(_), _.add(_)).collect()
 
     /**
      * count number of points assigned to each cluster

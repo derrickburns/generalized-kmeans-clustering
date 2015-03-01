@@ -164,7 +164,7 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val candidates = data.map(ops.toCenter)
-    val bregmanCenters = new KMeansPlusPlus(ops).getCenters(seed, candidates, weights,
+    val bregmanCenters = new KMeansPlusPlus(ops).centers(seed, candidates, weights,
       k, perRound, numPreselected)
     new KMeansModel(ops, bregmanCenters)
   }
@@ -192,7 +192,7 @@ object KMeansModel {
     points: RDD[T],
     assignments: RDD[Int]): KMeansModel = {
 
-    val centroids = assignments.zip(points).filter(_._1 >= 0).aggregateByKey(ops.getCentroid)(
+    val centroids = assignments.zip(points).filter(_._1 >= 0).aggregateByKey(ops.make)(
       (centroid, pt) => centroid.add(pt),
       (c1, c2) => c1.add(c2)
     )

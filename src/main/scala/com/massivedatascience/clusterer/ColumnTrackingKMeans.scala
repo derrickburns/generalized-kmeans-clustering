@@ -184,14 +184,14 @@ class ColumnTrackingKMeans(
 
       val centers = previousCenters.toArray
       if (config.addOnly) {
-        val results = getCompleteCentroids(points, currentAssignments, previousAssignments,
+        val results = completeCentroids(points, currentAssignments, previousAssignments,
           previousCenters.length)
         for ((index, location) <- results) {
           centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
             initialized = true)
         }
       } else {
-        val changes = getCentroidChanges(points, currentAssignments, previousAssignments,
+        val changes = centroidChanges(points, currentAssignments, previousAssignments,
           previousCenters.length)
         for ((index, delta) <- changes) {
           val previous = previousCenters(index)
@@ -313,7 +313,7 @@ class ColumnTrackingKMeans(
      * @param numCenters current number of non-empty clusters
      * @return
      */
-    def getCompleteCentroids[T <: WeightedVector](
+    def completeCentroids[T <: WeightedVector](
       points: RDD[T],
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
@@ -344,7 +344,7 @@ class ColumnTrackingKMeans(
 
             if (index >= 0) {
               if (centroids(index) == null) {
-                centroids(index) = pointOps.getCentroid
+                centroids(index) = pointOps.make
               }
               centroids(index).add(point)
             }
@@ -359,14 +359,14 @@ class ColumnTrackingKMeans(
           logInfo(s"number of clusters changed = ${changedClusters.length}")
           changedClusters.map(index => (index,
             if (centroids(index) == null)
-              pointOps.getCentroid
+              pointOps.make
             else
               centroids(index)
             )).iterator
       }.reduceByKey(_.add(_)).collect()
     }
 
-    def getCentroidChanges[T <: WeightedVector](
+    def centroidChanges[T <: WeightedVector](
       points: RDD[T],
       assignments: RDD[Assignment],
       previousAssignments: RDD[Assignment],
@@ -384,7 +384,7 @@ class ColumnTrackingKMeans(
 
           @inline def centroidAt(index: Int) = {
             if (centroids(index) == null) {
-              centroids(index) = pointOps.getCentroid
+              centroids(index) = pointOps.make
               indexBuffer += index
             }
             centroids(index)

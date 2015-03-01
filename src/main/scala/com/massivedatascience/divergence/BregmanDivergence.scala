@@ -146,7 +146,7 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
    */
   def F(v: Vector): Double = dot(v, v)
 
-  def F(v: Vector, w: Double) = dot(v, v) / (w * w)
+  def F(v: Vector, w: Double): Double = dot(v, v) / (w * w)
 
   def gradF(v: Vector): Vector = {
     val c = v.copy

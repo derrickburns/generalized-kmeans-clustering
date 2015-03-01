@@ -48,7 +48,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @return   an array of at most k cluster centers
    */
 
-  def getCenters(
+  def centers(
     seed: Long,
     candidateCenters: IndexedSeq[BregmanCenter],
     weights: IndexedSeq[Double],

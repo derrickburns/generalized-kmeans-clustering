@@ -25,11 +25,11 @@ import com.massivedatascience.linalg.{EagerCentroid, MutableWeightedVector}
  * This trait abstracts the type of the object used to create the centroid.
  */
 trait ClusterFactory extends  Serializable {
-  def getCentroid: MutableWeightedVector
+  def make: MutableWeightedVector
 }
 
 
 
 object DenseClusterFactory extends ClusterFactory {
-  def getCentroid: MutableWeightedVector = new EagerCentroid
+  def make: MutableWeightedVector = new EagerCentroid
 }

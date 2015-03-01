@@ -63,7 +63,7 @@ object KMeans extends SparkHelper {
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
-    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
 
@@ -106,7 +106,7 @@ object KMeans extends SparkHelper {
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
-    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
 
@@ -149,7 +149,7 @@ object KMeans extends SparkHelper {
 
     require(distanceFunctionNames.length == embeddingNames.length)
 
-    implicit val kMeansImpl = getClustererImpl(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
@@ -188,7 +188,7 @@ object KMeans extends SparkHelper {
     depth: Int = 2)
   : (KMeansModel, KMeansResults) = {
 
-    implicit val clusterer = getClustererImpl(clustererName, maxIterations)
+    implicit val clusterer = lloydsImplementation(clustererName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
     val distanceFunc = BregmanPointOps(distanceFunctionName)
@@ -213,18 +213,18 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def getClustererImpl(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
+  def lloydsImplementation(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
     clustererName match {
       case SIMPLE => new MultiKMeans(maxIterations)
       case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats =>
         s.getRound > maxIterations ||
-          s.getNonEmptyClusters == 0 ||
-          s.getMovement / s.getNonEmptyClusters < 1.0E-5
+          s.numNonEmptyClusters == 0 ||
+          s.centerMovement / s.numNonEmptyClusters < 1.0E-5
       })
       case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats =>
         s.getRound > maxIterations * 2 ||
-          s.getNonEmptyClusters == 0 ||
-          s.getMovement / s.getNonEmptyClusters < 1.0E-5
+          s.numNonEmptyClusters == 0 ||
+          s.centerMovement / s.numNonEmptyClusters < 1.0E-5
       })
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }

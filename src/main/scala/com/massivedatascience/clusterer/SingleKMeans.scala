@@ -67,7 +67,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
     val result = data.mapPartitions { points =>
       val bcCenters = bcActiveCenters.value
-      val centers = IndexedSeq.fill(bcCenters.length)(pointOps.getCentroid)
+      val centers = IndexedSeq.fill(bcCenters.length)(pointOps.make)
       for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
       centers.zipWithIndex.map(_.swap).iterator
     }.reduceByKeyLocally { case (x, y) => x.add(y)}

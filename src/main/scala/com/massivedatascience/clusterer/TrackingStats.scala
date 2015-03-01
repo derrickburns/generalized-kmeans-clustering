@@ -36,11 +36,11 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
   val replenishedClusters = sc.accumulator[Int](0, s"Replenished Centers")
 
 
-  def getMovement = movement.value
+  def centerMovement = movement.value
 
-  def getNonEmptyClusters = nonemptyClusters.value
+  def numNonEmptyClusters = nonemptyClusters.value
 
-  def getEmptyClusters = emptyClusters.value
+  def numEmptyClusters = emptyClusters.value
 
   def getRound = currentRound.value
 

@@ -97,10 +97,10 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
       val movedPoints = sc.accumulator[Int](0)
       val improvedPoints = sc.accumulator[Int](0)
 
-      val changes = getNewAssignments(freshPoints, improvedPoints, movedPoints, costDiff, bcCenters,
+      val changes = newAssignments(freshPoints, improvedPoints, movedPoints, costDiff, bcCenters,
         fatPoints, sampleRate, numIterations)
-      fatPoints = getUpdatedFatPoints(fatPoints, changes)
-      fatCenters = getUpdatedFatCenters(getCentroidChanges(bcCenters, fatPoints), fatCenters)
+      fatPoints = updatedFatPoints(fatPoints, changes)
+      fatCenters = updatedFatCenters(getCentroidChanges(bcCenters, fatPoints), fatCenters)
       numMoved = fatCenters.count(c => c.moved)
       logInfo(s"lowered distortion by ${costDiff.value}")
       logInfo(s"relocated = $numMoved centers")
@@ -146,7 +146,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @param updatedPoints  the new points
    * @return  the new fat points
    */
-  def getUpdatedFatPoints(fatPoints: RDD[FatPoint], updatedPoints: RDD[FatPoint]): RDD[FatPoint] = {
+  def updatedFatPoints(fatPoints: RDD[FatPoint], updatedPoints: RDD[FatPoint]): RDD[FatPoint] = {
     val oldFatPoints = fatPoints
     updatedPoints.persist(StorageLevel.MEMORY_ONLY_SER).count()
     oldFatPoints.unpersist()
@@ -162,7 +162,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @param seed  the seed value to use for the random number generator
    * @return points and their new assignments
    */
-  def getNewAssignments(
+  def newAssignments(
     freshPoints: Accumulator[Int],
     improvedPoints: Accumulator[Int],
     movedPoints: Accumulator[Int],
@@ -205,7 +205,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @param fatCenters  the current clusters
    * @return
    */
-  def getUpdatedFatCenters(
+  def updatedFatCenters(
     centroidChanges: Map[Int, MutableWeightedVector],
     fatCenters: Array[FatCenter]): Array[FatCenter] = {
 
@@ -241,7 +241,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     points: RDD[FatPoint]): Map[Int, MutableWeightedVector] =
 
     points.mapPartitions { changes =>
-      val centers = bcCenters.value.map { _ => ops.getCentroid}
+      val centers = bcCenters.value.map { _ => ops.make}
 
       for (p <- changes if p.assignment(0).index != p.assignment(1).index) {
         if (p.assignment(p.current).index != -1) {

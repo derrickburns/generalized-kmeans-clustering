@@ -157,7 +157,7 @@ class StreamingKMeans(
    *
    * @param data DStream containing vector data
    */
-  def trainOn(data: DStream[Vector]) {
+  def trainOn(data: DStream[Vector]): Unit = {
     assertInitialized()
     data.foreachRDD { (rdd, time) =>
       model = model.update(rdd, decayFactor, timeUnit)

@@ -18,11 +18,11 @@
 package com.massivedatascience.clusterer
 
 trait BasicStats {
-  def getMovement: Double
+  def centerMovement: Double
 
-  def getNonEmptyClusters: Int
+  def numNonEmptyClusters: Int
 
-  def getEmptyClusters: Int
+  def numEmptyClusters: Int
 
   def getRound: Int
 }

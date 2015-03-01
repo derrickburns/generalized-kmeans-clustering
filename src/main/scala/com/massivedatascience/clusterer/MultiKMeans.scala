@@ -108,7 +108,7 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
       val bcActiveCenters = sc.broadcast(activeCenters)
       val result: Array[((Int, Int), WeightedVector)] = data.mapPartitions { points =>
         val bcCenters = bcActiveCenters.value
-        val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.getCentroid))
+        val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.make))
         for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
           val (cluster, cost) = pointOps.findClosest(clusters, point)
           runDistortion(run) += cost
@@ -123,7 +123,7 @@ class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
         }
 
         contribution.iterator
-      }.aggregateByKey(pointOps.getCentroid)(
+      }.aggregateByKey(pointOps.make)(
           (x, y) => x.add(y),
           (x, y) => x.add(y)
         ).map(x => (x._1, x._2.asImmutable)).collect()
