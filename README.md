@@ -12,8 +12,9 @@ and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
 * using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches)
 * backfilling empty clusters.
 
-This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
-using the squared Euclidean distance function.
+
+This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
+using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
 
 ### Introduction
@@ -531,7 +532,3 @@ The standard implementation of Lloyd's algorithm suffers from the problem that c
 can vanish and not be replaced.  Our ```COLUMN_TRACKING``` implementation allows one to backfill
 empty clusters using the K Means || algorithm.
 
-### Scalability and Testing
-
-This clusterer has been used to cluster millions of points in 700+ dimensional space using an
-information theoretic distance function (Kullback-Leibler).
