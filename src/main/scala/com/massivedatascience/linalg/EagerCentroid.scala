@@ -58,7 +58,7 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
    * @param direction whether to add or subtract
    * @return
    */
-  private def add(r: Vector, w: Double, direction: Double): this.type = {
+  private[this] def add(r: Vector, w: Double, direction: Double): this.type = {
     if (w > 0.0) {
       if (raw == empty) {
         assert(r != empty)

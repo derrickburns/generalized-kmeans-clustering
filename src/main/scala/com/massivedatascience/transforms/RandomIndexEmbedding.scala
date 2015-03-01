@@ -50,13 +50,13 @@ case class RandomIndexEmbedding(
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 
-  private val on = Math.ceil(epsilon * outputDim).toInt & -2
-  private val logOutputDim = Math.log(outputDim).toInt
-  private val hashes = computeHashes(seed)
-  private val positive = hashes.take(on / 2)
-  private val negative = hashes.drop(on / 2)
+  private[this] val on = Math.ceil(epsilon * outputDim).toInt & -2
+  private[this] val logOutputDim = Math.log(outputDim).toInt
+  private[this] val hashes = computeHashes(seed)
+  private[this] val positive = hashes.take(on / 2)
+  private[this] val negative = hashes.drop(on / 2)
 
-  private def computeHashes(seed: Long): Array[MultiplicativeHash] = {
+  private[this] def computeHashes(seed: Long): Array[MultiplicativeHash] = {
     val rand = new XORShiftRandom(seed)
     Array.fill(on) {
       new MultiplicativeHash(rand.nextLong().abs, rand.nextLong().abs, logInputDim, logOutputDim)

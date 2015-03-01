@@ -21,6 +21,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.clusterer.MultiKMeansClusterer._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
@@ -101,7 +102,6 @@ class ColumnTrackingKMeans(
   terminationCondition: TerminationCondition = DefaultTerminationCondition)
   extends MultiKMeansClusterer with SparkHelper {
 
-  import com.massivedatascience.clusterer.MultiKMeansClusterer._
 
   /**
    * count number of points assigned to each cluster
