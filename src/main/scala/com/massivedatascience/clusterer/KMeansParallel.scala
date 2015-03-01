@@ -17,7 +17,6 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.linalg.BLAS
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
@@ -79,14 +78,14 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       centers: Seq[IndexedSeq[BregmanCenter]],
       numberRetained: Option[Seq[Int]]): Seq[IndexedSeq[BregmanCenter]] = {
 
-      val centerArrays = centers.map(_.toArray)
+      val centerArrays = centers.map(_.toIndexedSeq)
       val weightMap = weights(centerArrays, sampleRate, seed)
       val kMeansPlusPlus = new KMeansPlusPlus(pointOps)
 
       Seq.tabulate(centerArrays.length) { r =>
         val myCenters = centerArrays(r)
         logInfo(s"run $r has ${myCenters.length} centers")
-        val weights = Array.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
+        val weights = IndexedSeq.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
         kMeansPlusPlus.getCenters(seed, myCenters, weights, kx, 1,
           numberRetained.map(_(r)).getOrElse(0))
@@ -153,7 +152,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @return  A map from (run, cluster index) to the sum of the weights of its points
      */
     def weights(
-      centerArrays: Seq[Array[BregmanCenter]],
+      centerArrays: Seq[IndexedSeq[BregmanCenter]],
       fraction: Double,
       seed: Long): Map[(Int, Int), Double] = {
       val ops = pointOps
@@ -232,7 +231,7 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       runs: Int): Seq[Int] = {
 
       initialCenters.map(_.map(totalNumClusters - _.length))
-        .getOrElse(Array.fill(runs)(totalNumClusters).toSeq)
+        .getOrElse(Seq.fill(runs)(totalNumClusters))
     }
 
     /**
