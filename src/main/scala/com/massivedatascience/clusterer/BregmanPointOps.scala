@@ -156,7 +156,6 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   }
 }
 
-private[clusterer]
 trait NonSmoothed {
   val divergence: BregmanDivergence
 
@@ -172,7 +171,6 @@ trait NonSmoothed {
   }
 }
 
-private[clusterer]
 trait Smoothed {
   val divergence: BregmanDivergence
   val smoothingFactor: Double
