@@ -232,18 +232,17 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def simpleTrain(runConfig: RunConfig, distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
+  def simpleTrain(
+    runConfig: RunConfig,
+    distanceFunc: BregmanPointOps,
+    bregmanPoints: RDD[BregmanPoint],
+    initializer: KMeansInitializer)(
     implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
-    val initialCenters: Seq[IndexedSeq[BregmanCenter]] = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
-
     require(bregmanPoints.getStorageLevel.useMemory)
-    logInfo("completed initialization of cluster centers")
-
-    val clusterings = clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
-    val (_, finalCenters) = MultiKMeansClusterer.bestOf(clusterings)
-    logInfo("completed clustering")
-
+    val initialCenters = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None,
+      runConfig.runs, runConfig.seed)
+    val (_, finalCenters) = clusterer.best(distanceFunc, bregmanPoints, initialCenters)
     new KMeansModel(distanceFunc, finalCenters)
   }
 

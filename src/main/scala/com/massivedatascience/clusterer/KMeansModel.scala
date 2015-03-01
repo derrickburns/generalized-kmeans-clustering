@@ -267,8 +267,7 @@ object KMeansModel {
         fromAssignments(ops, data, data.map(model.predictWeighted)).centers
     }
     val points = data.map(ops.toPoint)
-    val results = clusterer.cluster(ops, points, initialCenters)
-    val (_, finalCenters) = MultiKMeansClusterer.bestOf(results)
-    new KMeansModel(ops, finalCenters)
+    val results = clusterer.best(ops, points, initialCenters)
+    new KMeansModel(ops, results._2)
   }
 }
