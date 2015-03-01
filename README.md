@@ -22,7 +22,8 @@ The goal K-Means clustering is to produce a model of the clusters of a set of po
 certain optimality constraints. That model is called a K-Means model. It is fundamentally a set
 of points and a function that defines the distance from an arbitrary point to a cluster center.
 
-The K-Means algorithm computes a K-Means model using an iterative algorithm known as Lloyd's algorithm.
+The K-Means algorithm computes a K-Means model using an iterative algorithm known as
+[Lloyd's algorithm](http://en.wikipedia.org/wiki/Lloyd%27s_algorithm).
 Each iteration of Lloyd's algorithm assigns a set of points to clusters, then updates the cluster
 centers to acknowledge the assignment of the points to the cluster.
 
