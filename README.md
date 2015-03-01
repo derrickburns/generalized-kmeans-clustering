@@ -100,13 +100,6 @@ trait KMeansModel {
 
   def centers: IndexedSeq[BregmanCenter]
 
-  def predictWeighted(point: WeightedVector): Int
-
-  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double)
-
-  def predictWeighted(points: RDD[WeightedVector]): RDD[Int]
-
-  def computeCostWeighted(data: RDD[WeightedVector]): Double
 
   def predict(point: Vector): Int
 
@@ -117,6 +110,24 @@ trait KMeansModel {
   def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer]
 
   def computeCost(data: RDD[Vector]): Double
+
+
+  def predictWeighted(point: WeightedVector): Int
+
+  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double)
+
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int]
+
+  def computeCostWeighted(data: RDD[WeightedVector]): Double
+
+
+  def predictBregman(point: BregmanPoint): Int
+
+  def predictClusterAndDistanceBregman(point: BregmanPoint): (Int, Double)
+
+  def predictBregman(points: RDD[BregmanPoint]): RDD[Int]
+
+  def computeCostBregman(data: RDD[BregmanPoint): Double
 }
 ```
 
@@ -250,7 +261,7 @@ object KMeans {
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
-  : (KMeansModel, KMeansResults) = ???
+  : KMeansModel= ???
 }
 ```
 
