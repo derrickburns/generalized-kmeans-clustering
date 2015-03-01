@@ -1,16 +1,20 @@
 Generalized K-Means Clustering
 =============================
 
+Release of this code is imminent.
+
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
-and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support clustering of sparse
-or dense data, in low or high dimension, using distances defined by
+and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
+* sparse or dense data,
+* low or high dimension,
+* using distances defined by
 [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf) and
 [generalized symmetrized Bregman Divergences] (http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf).
+* using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches).
+
 This is in contrast to the standard Spark implementation that only supports dense, low-dimensional data
 using the squared Euclidean distance function.
 
-Be aware that work on this project is ongoing.  Parts of this project are being integrated into
-upcoming releases of the Spark MLLIB clusterer.
 
 ### Introduction
 
