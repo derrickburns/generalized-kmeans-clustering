@@ -25,7 +25,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  *
- * The KMeans++ initialization algorithm
+ * The <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
  *
  * @param ops distance function
  */

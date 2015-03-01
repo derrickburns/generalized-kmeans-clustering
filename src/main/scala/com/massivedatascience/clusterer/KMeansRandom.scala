@@ -22,6 +22,9 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.rdd.RDD
 
+/**
+ * Initial a KMeansModel with randomly chosen centers from a given set of points.
+ */
 class KMeansRandom extends KMeansInitializer with SparkHelper {
 
   // TODO use seed?

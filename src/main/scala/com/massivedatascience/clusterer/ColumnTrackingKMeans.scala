@@ -66,41 +66,81 @@ object ColumnTrackingKMeans {
  *
  * The invariants are:
  *
- * 1) each cluster is assigned a generation number
- * 2) generation numbers are monotonically increasing
- * 3) all clusters whose centroids change in one Lloyd's round are assigned the same generation #
- * 4) when the membership of a cluster changes, the generation number of the cluster is increased
- * 5) each point is assigned the index of the cluster that is a member of
+ * <ol>
+ * <li>
+ *   each cluster is assigned a generation number
+ * </li>
+ * <li>
+ *   generation numbers are monotonically increasing
+ * </li>
+ * <li>
+ *   all clusters whose centroids change in one Lloyd's round are assigned the same generation #
+ * </li>
+ * <li>
+ *   when the membership of a cluster changes, the generation number of the cluster is increased
+ * </li>
+ * <li>
+ *   each point is assigned the index of the cluster that is a member of
+ * </li>
+ * </ol>
  *
  * Initial condition:
- *
- * 1) Initial cluster centroids are provided. All clusters are assigned generation -1 with the
- * provided cluster centroids.
- * 2) All points are assigned to the sentinel cluster (index == -1) with generation
- * -2.
- * 3) (Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
- * generation number of those points to -1.
- * 4) The current round is set to 0.
+ * <ol>
+ * <li>
+ *   Initial cluster centroids are provided. All clusters are assigned generation -1 with the
+ * provided cluster centroids
+ * </li>
+ * <li>
+ *   All points are assigned to the sentinel cluster (index == -1) with generation -2
+ * </li>
+ * <li>
+ *   (Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
+ * generation number of those points to -1
+ * </li>
+ * <li>
+ *   The current round is set to 0
+ * </li>
+ * </ol>
  *
  *
  * Lloyd's algorithm can be stated as:
  *
- * 0) Increase the round
+ * <ol>
+ * <li>
+ *   Increase the round
+ * </li>
  *
- * 1) If any points were re-assigned (change in generation number), then update the clusters
+ * <li>
+ *   If any points were re-assigned (change in generation number), then update the clusters
  * impacted by the re-assignment:
- * a) Compute the new cluster centroids for the out-dated clusters.
- * b) Set the generation of the clusters affect to be the value of the round
+ * <ul>
+ * <li>
+ *   Compute the new cluster centroids for the out-dated clusters
+ * </li>
+ * <li>
+ *   Set the generation of the clusters affect to be the value of the round
+ * </li>
+ * </ul>
+ * </li>
  *
- * 2) Increase the round
+ * <li>
+ *   Increase the round
+ * </li>
  *
- * 3) If any centers were updated, then update the assignments of the points:
- * a) For each point (or a random sub-set of the points), identify the closest cluster.
- * b) If the closest cluster has a different index or generation number, then update the
+ * <li>
+ *   If any centers were updated, then update the assignments of the points:
+ * <ul>
+ * <li>
+ *   For each point (or a random sub-set of the points), identify the closest cluster
+ * </li>
+ * <li>
+ *   If the closest cluster has a different index or generation number, then update the
  * assignments of the point so that its index is the index of the cluster to which it is assigned
- * and the generation is the round the new assignment is made.
- *
- *
+ * and the generation is the round the new assignment is made
+ * </li>
+ * </ul>
+ * </li>
+ * </ol>
  *
  */
 class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)

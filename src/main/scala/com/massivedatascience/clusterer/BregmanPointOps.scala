@@ -56,6 +56,16 @@ object BregmanCenter {
     new BregmanCenter(v.homogeneous, v.weight, dotGradMinusF, gradient)
 }
 
+/**
+ * An enrichment to the Bregman divergence that supports expedient distance calculations.
+ *
+ * This is done by pre-computing and caching certain values.
+ *
+ * For points, these values are stored in BregmanPoint objects.
+ *
+ * For cluster centers, these values are stored in BregmanCenter objects.
+ *
+ */
 trait BregmanPointOps extends Serializable with ClusterFactory {
   type P = BregmanPoint
   type C = BregmanCenter

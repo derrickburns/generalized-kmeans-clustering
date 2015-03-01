@@ -21,18 +21,17 @@ import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeible
 import com.massivedatascience.linalg.{ WeightedVector, _ }
 
 /**
- * One can create a symmetric version of any Kullback Leibler Divergence that can be clustered
- * by embedding the input points (which are a simplex in R+ ** n) into a new Euclidean space R ** N.
- *
- * See http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf
+ * One can create a symmetric version of any Bregman Divergence</a>
  *
  * This one is
  *
- * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+ *   distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
  *
  * The embedding is simply
  *
  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+ *
+ * @see <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a>
  *
  */
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
@@ -42,5 +41,12 @@ class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   }
 }
 
+/**
+ * A symmetric version of the standard Kullback-Leibler Divergence
+ *
+ *
+ * @see <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a>
+ *
+ */
 case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
 

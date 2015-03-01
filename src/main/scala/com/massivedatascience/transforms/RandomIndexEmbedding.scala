@@ -24,25 +24,20 @@ import org.joda.time.DateTime
 /**
  *
  * Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
- * in a way that preserves similarity as per the Johnson-Lindenstrauss lemma.
+ * in a way that preserves similarity as per the
+ * <a href= "http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss">Johnson-Lindenstrauss lemma</a>.
  *
- * http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss lemma
+ * This technique is called <a href="http://en.wikipedia.org/wiki/Random_indexing">random indexing</a>.
  *
- * This technique is called random indexing
+ * We use a family of <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.394.2077&rep=rep1&type=pdf">universal hash functions</a>
+ * to avoid pre-computing the random projection.
  *
- * http://en.wikipedia.org/wiki/Random_indexing
- *
- * https://www.sics.se/~mange/papers/RI_intro.pdf
- *
- * We use a family of universal hash functions to avoid pre-computing the
- * random projection:
- *
- * http://www.velldal.net/erik/pubs/Velldal11a.ps
+ * @see <a href="https://www.sics.se/~mange/papers/RI_intro.pdf">introduction to random indexing</a>
  *
  * @param outputDim number of dimensions to use for the dense vector
  * @param epsilon portion of dimensions with non-zero values
  */
-case class RandomIndexEmbedding(
+class RandomIndexEmbedding(
     outputDim: Int,
     epsilon: Double,
     logInputDim: Int = 63,

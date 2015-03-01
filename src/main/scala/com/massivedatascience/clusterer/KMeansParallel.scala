@@ -28,13 +28,11 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  *
- * Initialize `runs` sets of cluster centers using the k-means|| algorithm by Bahmani et al.
- * (Bahmani et al., Scalable K-Means++, VLDB 2012). This is a variant of k-means++ that tries
- * to find  dissimilar cluster centers by starting with a random center and then doing
+ * Initialize `runs` sets of cluster centers using the
+ * <a href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>.
+ * This is a variant of k-means++ that tries to find  dissimilar cluster centers by starting with a random center and then doing
  * passes where more centers are chosen with probability proportional to their squared distance
  * to the current cluster set. It results in a provable approximation to an optimal clustering.
- *
- * The original paper can be found at http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf.
  *
  * In this implementation, we allow the client to provide an initial set of cluster centers
  * and closest distance for each point to those cluster centers.  This allows us to
