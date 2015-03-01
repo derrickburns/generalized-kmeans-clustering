@@ -125,8 +125,7 @@ class ColumnTrackingKMeans(
   def cluster(
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter],
-    Option[RDD[(Int, Double)]])] = {
+    centerArrays: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])] = {
 
     implicit val sc = points.sparkContext
 
@@ -503,8 +502,8 @@ class ColumnTrackingKMeans(
           initialized = false)
         }
         val (assignments, centersWithHistory) = lloyds(0, empty, centers.toArray)
-        (distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq,
-          Option(assignments.map(y => (y.cluster, y.distance))))
+        assignments.unpersist(blocking = false)
+        (distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq)
       }
     }
   }

@@ -144,14 +144,14 @@ class TrackingKMeans(
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
-    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])] = {
+    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter])] = {
 
       assert(updateRate <= 1.0 && updateRate >= 0.0)
 
       logInfo(s"update rate = $updateRate")
       logInfo(s"runs = ${centerArrays.size}")
 
-      val results = for (centers <- centerArrays) yield {
+      val results: Seq[(Double, Array[BregmanCenter], RDD[FatPoint])] = for (centers <- centerArrays) yield {
         var fatCenters = centers.map(FatCenter(_)).toArray
         var fatPoints = initialFatPoints(data, fatCenters)
         fatPoints.setName("fatPoints 0")
@@ -170,7 +170,8 @@ class TrackingKMeans(
 
         (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
       }
-      results.map(x => (x._1, x._2.toIndexedSeq, Option(x._3.map(y => (y.cluster, y.distance)))))
+      results.map(_._3).map(_.unpersist(blocking = false))
+      results.map(x => (x._1, x._2.toIndexedSeq))
     }
 
     /**

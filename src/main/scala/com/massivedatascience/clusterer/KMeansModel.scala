@@ -36,18 +36,15 @@ trait KMeansPredictor {
 
   lazy val clusterCenters: IndexedSeq[Vector] = centers.map(pointOps.toPoint).map(_.inhomogeneous)
 
-  def predictWeighted(point: WeightedVector): Int = pointOps.findClosestCluster(centers, pointOps.toPoint(point))
 
-  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) =
-    pointOps.findClosest(centers, pointOps.toPoint(point))
+  // operations on Vectors
 
-  /** Maps given points to their cluster indices. */
-  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] = {
-    points.map(p => pointOps.findClosestCluster(centers, pointOps.toPoint(p)))
-  }
-
-  def computeCostWeighted(data: RDD[WeightedVector]): Double =
-    data.map(p => pointOps.findClosest(centers, pointOps.toPoint(p))._2).sum()
+  /**
+   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
+   * model on the given data.
+   */
+  def computeCost(data: RDD[Vector]): Double =
+    computeCostWeighted(data.map(WeightedVector.apply))
 
   /** Returns the cluster index that a given point belongs to. */
   def predict(point: Vector): Int = predictWeighted(WeightedVector(point))
@@ -64,12 +61,33 @@ trait KMeansPredictor {
   def predict(points: JavaRDD[Vector]): JavaRDD[java.lang.Integer] =
     predict(points.rdd).toJavaRDD().asInstanceOf[JavaRDD[java.lang.Integer]]
 
-  /**
-   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
-   * model on the given data.
-   */
-  def computeCost(data: RDD[Vector]): Double =
-    computeCostWeighted(data.map(point => WeightedVector(point)))
+  // operations on WeightedVectors
+
+  def predictWeighted(point: WeightedVector): Int = predictWeighted(pointOps.toPoint(point))
+
+  /** Maps given points to their cluster indices. */
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
+    predictBregman(points.map(p => pointOps.toPoint(p)))
+
+  def computeCostWeighted(data: RDD[WeightedVector]): Double =
+    computeCostBregman(data.map(p => pointOps.toPoint(p)))
+
+  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) =
+    predictClusterAndDistanceBregman(pointOps.toPoint(point))
+
+  // operations on BregmanPoints
+
+  def predictBregman(point: BregmanPoint): Int = pointOps.findClosestCluster(centers, point)
+
+  def predictBregman(points: RDD[BregmanPoint]): RDD[Int] =
+    points.map(p => pointOps.findClosestCluster(centers, p))
+
+  def predictClusterAndDistanceBregman(point: BregmanPoint): (Int, Double) =
+    pointOps.findClosest(centers, point)
+
+  def computeCostBregman(data: RDD[BregmanPoint]): Double =
+    data.map(p => pointOps.findClosestDistance(centers, pointOps.toPoint(p))).sum()
+
 }
 
 /**
@@ -251,8 +269,7 @@ object KMeansModel {
     }
     val points = data.map(ops.toPoint)
     val results = clusterer.cluster(ops, points, initialCenters)
-    val (_, finalCenters, _) = MultiKMeansClusterer.bestOf(results)
-    results.foreach(_._3.map(_.unpersist()))
+    val (_, finalCenters) = MultiKMeansClusterer.bestOf(results)
     new KMeansModel(ops, finalCenters)
   }
 }

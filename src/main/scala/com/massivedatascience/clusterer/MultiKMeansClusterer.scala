@@ -25,7 +25,7 @@ trait MultiKMeansClusterer extends Serializable with Logging {
   def cluster(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])]
+    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])]
 }
 
 object MultiKMeansClusterer {
@@ -42,7 +42,7 @@ object MultiKMeansClusterer {
   private[clusterer] val noAssignments: Option[RDD[Assignment]] = None
   private[clusterer] val unsolved = (Double.MaxValue, noCenters, noAssignments)
 
-  def bestOf(candidates: Seq[(Double, IndexedSeq[BregmanCenter], Option[RDD[(Int, Double)]])]) = {
+  def bestOf(candidates: Seq[(Double, IndexedSeq[BregmanCenter])]) = {
     candidates.minBy(x => x._1)
   }
 }

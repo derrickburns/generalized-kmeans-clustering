@@ -71,9 +71,7 @@ object KMeans extends SparkHelper {
       val ops = distanceFunctionNames.map(BregmanPointOps.apply)
       val initializer = getInitializer(mode, initializationSteps)
       val embeddings = embeddingNames.map(Embeddings.apply)
-      val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
-      results.assignments.unpersist(blocking = false)
-      model
+      reSampleTrain(runConfig, data, initializer, ops, embeddings)
     }
   }
 
@@ -114,9 +112,7 @@ object KMeans extends SparkHelper {
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(Embeddings.apply)
-    val (model, results) = reSampleTrain(runConfig, data, initializer, ops, embeddings)
-    results.assignments.unpersist(blocking = false)
-    model
+    reSampleTrain(runConfig, data, initializer, ops, embeddings)
   }
 
   /**
@@ -145,7 +141,7 @@ object KMeans extends SparkHelper {
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     kMeansImplName: String = COLUMN_TRACKING,
     embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING))
-  : (KMeansModel, KMeansResults) = {
+  : KMeansModel = {
 
     require(distanceFunctionNames.length == embeddingNames.length)
 
@@ -186,7 +182,7 @@ object KMeans extends SparkHelper {
     clustererName: String = COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
-  : (KMeansModel, KMeansResults) = {
+  : KMeansModel = {
 
     implicit val clusterer = lloydsImplementation(clustererName, maxIterations)
 
@@ -239,7 +235,7 @@ object KMeans extends SparkHelper {
   }
 
   def simpleTrain(runConfig: RunConfig, distanceFunc: BregmanPointOps, bregmanPoints: RDD[BregmanPoint], initializer: KMeansInitializer)(
-    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
+    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     val initialCenters: Seq[IndexedSeq[BregmanCenter]] = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
 
@@ -247,16 +243,10 @@ object KMeans extends SparkHelper {
     logInfo("completed initialization of cluster centers")
 
     val clusterings = clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
-    val best@(cost, finalCenters, assignmentOpt) = MultiKMeansClusterer.bestOf(clusterings)
-    clusterings.filter(_ != best).foreach(_._3.map(_.unpersist()))
+    val best@(_, finalCenters) = MultiKMeansClusterer.bestOf(clusterings)
     logInfo("completed clustering")
 
-    val assignments = assignmentOpt.getOrElse(
-      sync("cluster assignments", bregmanPoints.map(p => distanceFunc.findClosest(finalCenters, p)))
-    )
-    logInfo("completed assignments")
-
-    (new KMeansModel(distanceFunc, finalCenters), new KMeansResults(cost, assignments))
+    new KMeansModel(distanceFunc, finalCenters)
   }
 
   def subSampleTrain(
@@ -266,7 +256,7 @@ object KMeans extends SparkHelper {
     initializer: KMeansInitializer,
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding)(
-    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
+    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     val samples = subsample(raw, pointOps, depth, embedding)
     val names = Array.tabulate(depth)(i => s"data embedded at depth $i")
@@ -281,7 +271,7 @@ object KMeans extends SparkHelper {
     initializer: KMeansInitializer,
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding]
-    )(implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
+    )(implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(ops.length == embeddings.length)
 
@@ -297,17 +287,16 @@ object KMeans extends SparkHelper {
     pointOps: Seq[BregmanPointOps],
     dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansInitializer)(
-    implicit clusterer: MultiKMeansClusterer): (KMeansModel, KMeansResults) = {
+    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(dataSets.nonEmpty)
 
     withCached("original", dataSets.head) { original =>
       val remaining = dataSets.zip(pointOps).tail
       remaining.foldLeft(simpleTrain(runConfig, pointOps.head, original, initializer)) {
-        case ((model, KMeansResults(_, a)), (data, op)) =>
-          val assignments = a.map(_._1)
-          sideEffect(simpleTrain(runConfig, op, data, new SampleInitializer(assignments))) { result =>
-            assignments.unpersist(blocking = false)
+        case (model, (data, op)) =>
+          withNamed("assignments", model.predictBregman(data)) { assignments =>
+            simpleTrain(runConfig, op, data, new SampleInitializer(assignments))
           }
       }
     }
