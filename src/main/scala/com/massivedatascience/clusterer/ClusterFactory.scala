@@ -17,18 +17,15 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.linalg.{EagerCentroid, MutableWeightedVector}
-
+import com.massivedatascience.linalg.{ EagerCentroid, MutableWeightedVector }
 
 /**
  * K-Means algorithms need a method to construct a median or centroid value.
  * This trait abstracts the type of the object used to create the centroid.
  */
-trait ClusterFactory extends  Serializable {
+trait ClusterFactory extends Serializable {
   def make: MutableWeightedVector
 }
-
-
 
 object DenseClusterFactory extends ClusterFactory {
   def make: MutableWeightedVector = new EagerCentroid

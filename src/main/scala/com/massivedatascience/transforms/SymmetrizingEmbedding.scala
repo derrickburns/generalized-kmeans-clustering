@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience.transforms
 
-import com.massivedatascience.divergence.{BregmanDivergence, RealKullbackLeiblerSimplexDivergence}
-import com.massivedatascience.linalg.{WeightedVector, _}
+import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
+import com.massivedatascience.linalg.{ WeightedVector, _ }
 
 /**
  * One can create a symmetric version of any Kullback Leibler Divergence that can be clustered

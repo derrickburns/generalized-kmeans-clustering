@@ -17,8 +17,8 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.linalg.{WeightedVector, _}
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
+import com.massivedatascience.linalg.{ WeightedVector, _ }
+import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector }
 
 trait Embedding extends Serializable {
   def embed(v: WeightedVector): WeightedVector
@@ -30,10 +30,10 @@ case object IdentityEmbedding extends Embedding {
 
 case object DenseEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
-   v match {
-     case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
-     case dv: DenseVector => dv
-   }
+    v match {
+      case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
+      case dv: DenseVector => dv
+    }
   }
 }
 

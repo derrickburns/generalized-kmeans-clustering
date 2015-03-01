@@ -17,8 +17,8 @@
 
 package com.massivedatascience.linalg
 
-import com.github.fommil.netlib.{BLAS => NetlibBLAS, F2jBLAS}
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
+import com.github.fommil.netlib.{ BLAS => NetlibBLAS, F2jBLAS }
+import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -88,7 +88,6 @@ object BLAS extends Serializable {
     }
     transformed
   }
-
 
   /**
    * Computes the sum of the values in y whose values are
@@ -249,7 +248,6 @@ object BLAS extends Serializable {
         }
     }
   }
-
 
   private def axpy(a: Double, x: SparseVector, y: SparseVector): Vector = {
     merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
@@ -471,7 +469,6 @@ object BLAS extends Serializable {
         throw new IllegalArgumentException(s"scal doesn't support vector type ${x.getClass}.")
     }
   }
-
 
   private def doSum(v: Array[Double]): Double = {
     var i = 0

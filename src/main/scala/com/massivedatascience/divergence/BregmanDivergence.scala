@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience.divergence
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog}
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog }
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 /**
- * Bregman Divergence defines a convex function F and its gradient.  
+ * Bregman Divergence defines a convex function F and its gradient.
  *
- * For convenience, we also provide methods for evaluating F and its 
+ * For convenience, we also provide methods for evaluating F and its
  * gradient when points are provided using homogeneous coordinates.  Evaluating F and
  * gradient of F on homogeneous coordinates is often more efficient that mapping
  * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
@@ -86,7 +85,7 @@ trait BregmanDivergence extends Serializable {
  */
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 
-  val logFunc: MathLog
+  protected val logFunc: MathLog
 
   def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
@@ -112,7 +111,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
 
-  val logFunc: MathLog
+  protected val logFunc: MathLog
 
   def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
@@ -162,19 +161,19 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 }
 
 case object RealKullbackLeiblerSimplexDivergence extends KullbackLeiblerSimplexDivergence {
-  val logFunc: MathLog = GeneralLog
+  protected val logFunc: MathLog = GeneralLog
 }
 
 case object NaturalKLSimplexDivergence extends KullbackLeiblerSimplexDivergence {
-  val logFunc: MathLog = DiscreteLog
+  protected val logFunc: MathLog = DiscreteLog
 }
 
 case object RealKLDivergence extends KullbackLeiblerDivergence {
-  val logFunc: MathLog = GeneralLog
+  protected val logFunc: MathLog = GeneralLog
 }
 
 case object NaturalKLDivergence extends KullbackLeiblerDivergence {
-  val logFunc: MathLog = DiscreteLog
+  protected val logFunc: MathLog = DiscreteLog
 }
 
 /**
@@ -182,7 +181,7 @@ case object NaturalKLDivergence extends KullbackLeiblerDivergence {
  */
 case object GeneralizedIDivergence extends BregmanDivergence {
 
-  val logFunc: MathLog = DiscreteLog
+  protected val logFunc: MathLog = DiscreteLog
 
   def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
@@ -210,7 +209,7 @@ case object GeneralizedIDivergence extends BregmanDivergence {
  */
 case object LogisticLossDivergence extends BregmanDivergence {
 
-  val log = GeneralLog.log _
+  protected val log = GeneralLog.log _
 
   def F(v: Vector): Double = {
     val x = v(0)
@@ -240,7 +239,7 @@ case object LogisticLossDivergence extends BregmanDivergence {
  */
 case object ItakuraSaitoDivergence extends BregmanDivergence {
 
-  val logFunc: MathLog = GeneralLog
+  protected val logFunc: MathLog = GeneralLog
 
   /**
    * Burg entropy

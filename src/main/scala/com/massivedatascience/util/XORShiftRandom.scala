@@ -20,18 +20,16 @@
 package com.massivedatascience.util
 
 import java.nio.ByteBuffer
-import java.util.{Random => JavaRandom}
+import java.util.{ Random => JavaRandom }
 
 import scala.util.Random
 import scala.util.hashing.MurmurHash3
-
 
 /**
  * This code comes from Spark.  Unfortunately, the Spark version is private to the mllib package,
  * so we copied the code to a separate package.
  */
 class XORShiftRandom(init: Long) extends JavaRandom(init) {
-
 
   def this() = this(System.nanoTime)
 

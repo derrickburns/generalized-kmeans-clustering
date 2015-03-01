@@ -18,11 +18,10 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
-import com.massivedatascience.transforms.{Embedding, Embeddings, HaarEmbedding, IdentityEmbedding}
+import com.massivedatascience.transforms.{ Embedding, Embeddings, HaarEmbedding, IdentityEmbedding }
 import com.massivedatascience.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
-
 
 object KMeans extends SparkHelper {
 
@@ -30,7 +29,7 @@ object KMeans extends SparkHelper {
 
   /**
    *
-   * Train a K-Means model using Lloyd's algorithm.  
+   * Train a K-Means model using Lloyd's algorithm.
    *
    *
    * @param data input data
@@ -51,8 +50,7 @@ object KMeans extends SparkHelper {
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
-  : KMeansModel = {
+    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
@@ -65,7 +63,6 @@ object KMeans extends SparkHelper {
       reSampleTrain(runConfig, data, initializer, ops, embeddings)
     }
   }
-
 
   /**
    *
@@ -92,8 +89,7 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
-  : KMeansModel = {
+    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
@@ -129,8 +125,7 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING))
-  : KMeansModel = {
+    embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
 
     require(distanceFunctionNames.length == embeddingNames.length)
 
@@ -157,7 +152,7 @@ object KMeans extends SparkHelper {
    * @param distanceFunctionName the distance functions to use
    * @param clustererName which k-means implementation to use
    * @param embeddingName embedding to use recursively
-   * @param depth number of times to recurse                     
+   * @param depth number of times to recurse
    * @return K-Means model
    */
   def trainViaSubsampling(
@@ -170,8 +165,7 @@ object KMeans extends SparkHelper {
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
-    depth: Int = 2)
-  : KMeansModel = {
+    depth: Int = 2): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
@@ -198,14 +192,12 @@ object KMeans extends SparkHelper {
     }
   }
 
-
-
   def simpleTrain(
     runConfig: RunConfig,
     distanceFunc: BregmanPointOps,
     bregmanPoints: RDD[BregmanPoint],
     initializer: KMeansInitializer)(
-    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
+      implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(bregmanPoints.getStorageLevel.useMemory)
     val initialCenters = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None,
@@ -221,7 +213,7 @@ object KMeans extends SparkHelper {
     initializer: KMeansInitializer,
     depth: Int = 4,
     embedding: Embedding = HaarEmbedding)(
-    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
+      implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     val samples = subsample(raw, pointOps, depth, embedding)
     val names = Array.tabulate(depth)(i => s"data embedded at depth $i")
@@ -235,8 +227,7 @@ object KMeans extends SparkHelper {
     raw: RDD[WeightedVector],
     initializer: KMeansInitializer,
     ops: Seq[BregmanPointOps],
-    embeddings: Seq[Embedding]
-    )(implicit clusterer: MultiKMeansClusterer): KMeansModel = {
+    embeddings: Seq[Embedding])(implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(ops.length == embeddings.length)
 
@@ -303,7 +294,7 @@ object KMeans extends SparkHelper {
     pointOps: Seq[BregmanPointOps],
     dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansInitializer)(
-    implicit clusterer: MultiKMeansClusterer): KMeansModel = {
+      implicit clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(dataSets.nonEmpty)
 
@@ -351,6 +342,6 @@ object KMeans extends SparkHelper {
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
 
-    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint)}
+    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint) }
   }
 }

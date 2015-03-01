@@ -70,7 +70,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
       val centers = IndexedSeq.fill(bcCenters.length)(pointOps.make)
       for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
       centers.zipWithIndex.map(_.swap).iterator
-    }.reduceByKeyLocally { case (x, y) => x.add(y)}
+    }.reduceByKeyLocally { case (x, y) => x.add(y) }
     bcActiveCenters.unpersist()
     result
   }

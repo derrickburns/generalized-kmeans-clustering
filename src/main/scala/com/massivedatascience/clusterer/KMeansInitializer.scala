@@ -43,4 +43,3 @@ object KMeansInitializer {
   }
 }
 
-

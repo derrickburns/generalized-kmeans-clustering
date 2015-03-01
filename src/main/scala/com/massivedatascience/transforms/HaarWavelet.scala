@@ -19,12 +19,12 @@ package com.massivedatascience.transforms
 
 object HaarWavelet {
 
-  def average(input: Array[Double]) : Array[Double] = {
+  def average(input: Array[Double]): Array[Double] = {
     val len = input.length >> 1
     val result = new Array[Double](len)
     var i = 0
-    while(i < len) {
-      result(i) = (input(2*i) + input(2*i+1))/2.0
+    while (i < len) {
+      result(i) = (input(2 * i) + input(2 * i + 1)) / 2.0
       i = i + 1
     }
     result
@@ -40,7 +40,7 @@ object HaarWavelet {
      * @param result  input to transform
      * @param halfLength half the length of array
      */
-    def haar(input: Array[Double], result: Array[Double], halfLength: Int) : Array[Double] = {
+    def haar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
       var i = 0
       while (i != halfLength) {
         val j = i << 1
@@ -67,7 +67,7 @@ object HaarWavelet {
      * @param result input to transform
      * @param halfLength half the length of the coordinates
      */
-    def inverseHaar(input: Array[Double], result: Array[Double], halfLength: Int) : Array[Double]= {
+    def inverseHaar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
       var i = 0
       while (i != halfLength) {
         val j = halfLength + i
@@ -108,16 +108,15 @@ object HaarWavelet {
     }
   }
 
+  def main(args: Array[String]): Unit = {
 
-  def main(args : Array[ String ] ) : Unit = {
-
-    val y = Array( 3.0, 1.0, 0.0, 4.0, 8.0, 6.0, 9.0, 9.0 )
+    val y = Array(3.0, 1.0, 0.0, 4.0, 8.0, 6.0, 9.0, 9.0)
     val x = new HaarWavelet(y.length)
 
     val h1 = x.haar(y, y.clone(), y.length >> 1)
     val h2 = x.inverseHaar(h1, h1.clone(), y.length >> 1)
 
-    println( h2.mkString("[", ",", "]"))
+    println(h2.mkString("[", ",", "]"))
 
   }
 

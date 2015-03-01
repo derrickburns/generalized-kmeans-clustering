@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience
 
 import com.massivedatascience.linalg.BLAS._
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
-
+import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
 
 package object linalg {
   def asInhomogeneous(homogeneous: Vector, weight: Double): Vector = {

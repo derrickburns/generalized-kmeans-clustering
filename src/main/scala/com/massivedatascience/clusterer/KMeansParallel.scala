@@ -18,9 +18,9 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.collection.Map
@@ -123,10 +123,11 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       val ops = pointOps
       val numRuns = runs
       withBroadcast(centers) { bcNewCenters =>
-        data.zip(oldCosts).map { case (point, oldCost) =>
-          Vectors.dense(Array.tabulate(numRuns) { r =>
-            math.min(ops.pointCost(bcNewCenters.value(r), point), oldCost(r))
-          })
+        data.zip(oldCosts).map {
+          case (point, oldCost) =>
+            Vectors.dense(Array.tabulate(numRuns) { r =>
+              math.min(ops.pointCost(bcNewCenters.value(r), point), oldCost(r))
+            })
         }
       }
     }
@@ -176,9 +177,9 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
      * @return RDD of vectors
      */
     def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
-      rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length)}) {
+      rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length) }) {
         case (arrayRdd, (doubleRdd, i)) =>
-          arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array}
+          arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
 
       }.map(Vectors.dense)
     }
@@ -207,14 +208,15 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
         val rand = new XORShiftRandom(seed ^ index)
         val range = 0 until numRuns
         val ops = pointOps
-        pointsWithCosts.flatMap { case (p, c) =>
-          val selectedRuns = range.filter { r =>
-            val v = rand.nextDouble()
-            v < c(r) * k(r) / sumCosts(r)
-          }
-          val nullCenter = null.asInstanceOf[BregmanCenter]
-          val center = if (selectedRuns.nonEmpty) ops.toCenter(p) else nullCenter
-          selectedRuns.map((_, center))
+        pointsWithCosts.flatMap {
+          case (p, c) =>
+            val selectedRuns = range.filter { r =>
+              val v = rand.nextDouble()
+              v < c(r) * k(r) / sumCosts(r)
+            }
+            val nullCenter = null.asInstanceOf[BregmanCenter]
+            val center = if (selectedRuns.nonEmpty) ops.toCenter(p) else nullCenter
+            selectedRuns.map((_, center))
         }
       }.collect()
     }
@@ -258,13 +260,11 @@ class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInit
       val startingCosts = initialCosts.map(asVectors).getOrElse(costsFromCenters(centers))
       var costs = sync("initial costs", startingCosts)
       val newCenters = Array.fill(runs)(new ArrayBuffer[BregmanCenter]())
-      val numAdded = Array.fill(runs)(0)
       var step = 0
-      while (step < numberSteps || numAdded.zip(requested).exists { case (a, r) => a < r}) {
+      while (step < numberSteps) {
         logInfo(s"starting step $step")
         for ((index, center) <- select(requested.map(_ * 2), seed ^ (step << 16), costs)) {
           newCenters(index) += center
-          numAdded(index) = numAdded(index) + 1
         }
         costs = exchange(s"costs at step $step", costs) { oldCosts =>
           updatedCosts(newCenters, oldCosts)

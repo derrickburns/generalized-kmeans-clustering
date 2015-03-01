@@ -39,10 +39,10 @@ case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends 
  * @param gradient gradient of center
  */
 case class BregmanCenter(
-  homogeneous: Vector,
-  weight: Double,
-  dotGradMinusF: Double,
-  gradient: Vector) extends WeightedVector {
+    homogeneous: Vector,
+    weight: Double,
+    dotGradMinusF: Double,
+    gradient: Vector) extends WeightedVector {
   lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
@@ -89,7 +89,6 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   def centerMoved(v: P, w: C): Boolean =
     distance(v, w) > distanceThreshold
 
-
   /**
    * Return the index of the closest point in `centers` to `point`, as well as its distance.
    */
@@ -108,7 +107,6 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
     f(bestIndex, bestDistance)
   }
-
 
   def findClosest(centers: IndexedSeq[C], point: P): (Int, Double) =
     findClosestInfo(centers, point, (i: Int, d: Double) => (i, d))
@@ -186,24 +184,21 @@ trait Smoothed {
 /**
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
-private[clusterer]
-case object DenseKLPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object DenseKLPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = RealKLDivergence
 }
 
 /**
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
-private[clusterer]
-case object GeneralizedIPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object GeneralizedIPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = GeneralizedIDivergence
 }
 
 /**
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
-private[clusterer]
-case object SquaredEuclideanPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object SquaredEuclideanPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = SquaredEuclideanDistanceDivergence
 }
 
@@ -211,16 +206,14 @@ case object SquaredEuclideanPointOps extends BregmanPointOps with NonSmoothed {
  * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
  */
 
-private[clusterer]
-case object LogisticLossPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object LogisticLossPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = LogisticLossDivergence
 }
 
 /**
  * Implements Itakura-Saito divergence on dense vectors in R+ ** n
  */
-private[clusterer]
-case object ItakuraSaitoPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object ItakuraSaitoPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = ItakuraSaitoDivergence
 }
 
@@ -238,8 +231,7 @@ case object ItakuraSaitoPointOps extends BregmanPointOps with NonSmoothed {
  * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
-private[clusterer]
-case object SparseRealKLPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object SparseRealKLPointOps extends BregmanPointOps with NonSmoothed {
 
   val divergence = RealKLDivergence
 
@@ -267,8 +259,7 @@ case object SparseRealKLPointOps extends BregmanPointOps with NonSmoothed {
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
-private[clusterer]
-case object DiscreteKLPointOps extends BregmanPointOps with NonSmoothed {
+private[clusterer] case object DiscreteKLPointOps extends BregmanPointOps with NonSmoothed {
   val divergence = NaturalKLDivergence
 }
 
@@ -280,14 +271,12 @@ case object DiscreteKLPointOps extends BregmanPointOps with NonSmoothed {
  * zero values, we smooth the points by adding 1 to all entries.
  *
  */
-private[clusterer]
-case object DiscreteSmoothedKLPointOps extends BregmanPointOps with Smoothed {
+private[clusterer] case object DiscreteSmoothedKLPointOps extends BregmanPointOps with Smoothed {
   val divergence = NaturalKLDivergence
   val smoothingFactor = 1.0
 }
 
-private[clusterer]
-case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps with Smoothed {
+private[clusterer] case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps with Smoothed {
   val divergence = NaturalKLSimplexDivergence
   val smoothingFactor = 1.0
 }

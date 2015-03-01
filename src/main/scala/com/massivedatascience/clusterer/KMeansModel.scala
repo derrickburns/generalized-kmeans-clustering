@@ -23,7 +23,7 @@ import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
@@ -96,17 +96,16 @@ trait KMeansPredictor {
  * @param centers cluster centers
  */
 case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCenter])
-  extends KMeansPredictor with Serializable {
+    extends KMeansPredictor with Serializable {
 
   lazy val k: Int = centers.length
 
-
-  /** Returns the cluster centers.  N.B. These are in the embedded space where the clustering
-    * takes place, which may be different from the space of the input vectors!
-    */
+  /**
+   * Returns the cluster centers.  N.B. These are in the embedded space where the clustering
+   * takes place, which may be different from the space of the input vectors!
+   */
   lazy val weightedClusterCenters: IndexedSeq[WeightedVector] = centers.map(pointOps.toPoint)
 }
-
 
 object KMeansModel {
 
@@ -122,7 +121,7 @@ object KMeansModel {
     ops: BregmanPointOps,
     centers: IndexedSeq[Vector],
     weights: IndexedSeq[Double]) = {
-    val bregmanCenters = centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w))}
+    val bregmanCenters = centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w)) }
     new KMeansModel(ops, bregmanCenters)
   }
 
@@ -133,7 +132,7 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors[T <: WeightedVector : ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
+  def fromWeightedVectors[T <: WeightedVector: ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
@@ -171,7 +170,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def fromCenters[T <: WeightedVector : ClassTag](
+  def fromCenters[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     data: IndexedSeq[T],
     weights: IndexedSeq[Double],
@@ -204,7 +203,7 @@ object KMeansModel {
    * @param assignments assignments of points to clusters
    * @return
    */
-  def fromAssignments[T <: WeightedVector : ClassTag](
+  def fromAssignments[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     points: RDD[T],
     assignments: RDD[Int]): KMeansModel = {
@@ -229,7 +228,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def usingKMeansParallel[T <: WeightedVector : ClassTag](
+  def usingKMeansParallel[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     k: Int,
@@ -253,7 +252,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  the best K-means model found
    */
-  def usingClusterer[T <: WeightedVector : ClassTag](
+  def usingClusterer[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     initialModels: Seq[KMeansModel],

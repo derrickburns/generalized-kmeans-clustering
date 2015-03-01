@@ -23,17 +23,14 @@ import scala.util.Random
 
 import org.scalatest.FunSuite
 
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.BregmanPointOps._
 
-
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
   import com.massivedatascience.clusterer.KMeansInitializer._
-
-
 
   test("single cluster") {
     val data = sc.parallelize(Array(
@@ -47,9 +44,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     // No matter how many runs or iterations we use, we should get one cluster,
     // centered at the mean of the points
 
-    var
-
-    model = KMeans.train(data, k = 1, maxIterations = 1)
+    var model = KMeans.train(data, k = 1, maxIterations = 1)
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
     model = KMeans.train(data, k = 1, maxIterations = 2)
@@ -149,7 +144,6 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       )
     }, 4)
 
-
     data.persist()
 
     // No matter how many runs or iterations we use, we should get one cluster,
@@ -189,7 +183,6 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionNames = Seq(DISCRETE_KL))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
-
 
     model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
       distanceFunctionNames = Seq(SPARSE_SMOOTHED_KL))
@@ -263,24 +256,3 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
   }
 }
 
-class KMeansClusterSuite extends FunSuite with LocalClusterSparkContext {
-
-  import com.massivedatascience.clusterer.KMeansInitializer._
-
-
-  test("task size should be small in both training and prediction") {
-    val m = 4
-    val n = 200000
-    val points = sc.parallelize(0 until m, 2).mapPartitionsWithIndex { (idx, iter) =>
-      val random = new Random(idx)
-      iter.map(i => Vectors.dense(Array.fill(n)(random.nextDouble())))
-    }.cache()
-    for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
-      // If we serialize data directly in the task closure, the size of the serialized task would be
-      // greater than 1MB and hence Spark would throw an error.
-      val model = KMeans.train(points, 2, 2, 1, initMode)
-      val predictions = model.predict(points).collect()
-      val cost = model.computeCost(points)
-    }
-  }
-}

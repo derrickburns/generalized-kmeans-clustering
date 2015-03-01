@@ -17,12 +17,12 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.{Logging, SparkContext}
+import org.apache.spark.{ Logging, SparkContext }
 
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
@@ -77,9 +77,7 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
  * @param updateRate  percentage of points that are updated on each round
  */
 
-
 class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
-
 
   /**
    *
@@ -280,13 +278,14 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       else
         getExactCentroidChanges(fatPoints)
 
-      changes.map { case (index, delta) =>
-        val c = fatCenters(index)
-        val oldPosition = pointOps.toPoint(c.center)
-        val x = if (c.initialized) delta.add(oldPosition) else delta
-        val centroid = x.asImmutable
-        fatCenters(index) = FatCenter(pointOps.toCenter(centroid), round)
-        stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
+      changes.map {
+        case (index, delta) =>
+          val c = fatCenters(index)
+          val oldPosition = pointOps.toPoint(c.center)
+          val x = if (c.initialized) delta.add(oldPosition) else delta
+          val centroid = x.asImmutable
+          fatCenters(index) = FatCenter(pointOps.toCenter(centroid), round)
+          stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
       }
       fatCenters
     }
@@ -332,7 +331,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return a map from cluster index to number of points assigned to that cluster
      */
     def countByCluster(points: RDD[FatPoint]): Map[Int, Long] =
-      points.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
+      points.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
 
     /**
      * Find the closest point and distance to each cluster
@@ -346,11 +345,12 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       points.mapPartitions { pts =>
         val bc = bcCenters.value
         pts.flatMap { p =>
-          bc.zipWithIndex.map { case (c, i) =>
-            (i, (p, pointOps.distance(p.location, c.center)))
+          bc.zipWithIndex.map {
+            case (c, i) =>
+              (i, (p, pointOps.distance(p.location, c.center)))
           }
         }
-      }.reduceByKeyLocally { (x, y) => if (x._2 < y._2) x else y}
+      }.reduceByKeyLocally { (x, y) => if (x._2 < y._2) x else y }
     }
 
     /**

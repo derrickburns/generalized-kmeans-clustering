@@ -19,7 +19,7 @@ package com.massivedatascience.clusterer
 
 import org.apache.spark.rdd.RDD
 
-class SampleInitializer(val assignments: RDD[Int]) extends KMeansInitializer {
+class SampleInitializer(assignments: RDD[Int]) extends KMeansInitializer {
   def init(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],

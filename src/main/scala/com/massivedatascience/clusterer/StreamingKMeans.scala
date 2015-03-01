@@ -19,10 +19,10 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.linalg.{BLAS, WeightedVector}
+import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream
@@ -94,8 +94,9 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
     val discount = timeUnit match {
       case StreamingKMeans.BATCHES => decayFactor
       case StreamingKMeans.POINTS =>
-        val numNewPoints = pointStats.view.map { case (_, (_, n)) =>
-          n
+        val numNewPoints = pointStats.view.map {
+          case (_, (_, n)) =>
+            n
         }.sum
         math.pow(decayFactor, numNewPoints)
     }
@@ -104,23 +105,24 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
     BLAS.scal(discount, Vectors.dense(clusterWeights))
 
     // implement update rule
-    pointStats.foreach { case (label, (sum, count)) =>
-      val centroid = centerArrays(label).inhomogeneous
-      val updatedWeight = clusterWeights(label) + count
-      val lambda = count / math.max(updatedWeight, 1e-16)
-      clusterWeights(label) = updatedWeight
+    pointStats.foreach {
+      case (label, (sum, count)) =>
+        val centroid = centerArrays(label).inhomogeneous
+        val updatedWeight = clusterWeights(label) + count
+        val lambda = count / math.max(updatedWeight, 1e-16)
+        clusterWeights(label) = updatedWeight
 
-      BLAS.scal(1.0 - lambda, centroid)
-      BLAS.axpy(lambda / count, sum, centroid)
-      centerArrays(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
+        BLAS.scal(1.0 - lambda, centroid)
+        BLAS.axpy(lambda / count, sum, centroid)
+        centerArrays(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
 
-      // display the updated cluster centers
-      val display = centerArrays(label).size match {
-        case x if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
-        case _ => centroid.toArray.mkString("[", ",", "]")
-      }
+        // display the updated cluster centers
+        val display = centerArrays(label).size match {
+          case x if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
+          case _ => centroid.toArray.mkString("[", ",", "]")
+        }
 
-      logInfo(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
+        logInfo(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
     }
 
     // Check whether the smallest cluster is dying. If so, split the largest cluster.
@@ -144,10 +146,10 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
 }
 
 class StreamingKMeans(
-  k: Int = 2,
-  decayFactor: Double = 1.0,
-  timeUnit: String = StreamingKMeans.BATCHES,
-  var model: StreamingKMeansModel) extends Logging {
+    k: Int = 2,
+    decayFactor: Double = 1.0,
+    timeUnit: String = StreamingKMeans.BATCHES,
+    var model: StreamingKMeansModel) extends Logging {
 
   /**
    * Update the clustering model by training on batches of data from a DStream.

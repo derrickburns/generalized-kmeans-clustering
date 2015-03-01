@@ -19,7 +19,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.rdd.RDD
 
 class KMeansRandom extends KMeansInitializer with SparkHelper {
@@ -54,6 +54,4 @@ class KMeansRandom extends KMeansInitializer with SparkHelper {
     }
   }
 }
-
-
 

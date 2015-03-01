@@ -17,7 +17,7 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.linalg.{WeightedVector, _}
+import com.massivedatascience.linalg.{ WeightedVector, _ }
 import com.massivedatascience.util.XORShiftRandom
 import org.joda.time.DateTime
 
@@ -43,10 +43,10 @@ import org.joda.time.DateTime
  * @param epsilon portion of dimensions with non-zero values
  */
 case class RandomIndexEmbedding(
-  outputDim: Int,
-  epsilon: Double,
-  logInputDim: Int = 63,
-  seed: Long = new DateTime().getMillis) extends Embedding {
+    outputDim: Int,
+    epsilon: Double,
+    logInputDim: Int = 63,
+    seed: Long = new DateTime().getMillis) extends Embedding {
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 
@@ -63,7 +63,6 @@ case class RandomIndexEmbedding(
     }
   }
 
-
   def embed(v: WeightedVector): WeightedVector = {
     val iterator = v.homogeneous.iterator
     val rep = new Array[Double](outputDim)
@@ -77,7 +76,6 @@ case class RandomIndexEmbedding(
     WeightedVector(rep, v.weight)
   }
 }
-
 
 class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
   require(m <= l)

@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{DenseVector, Vector}
+import org.apache.spark.mllib.linalg.{ DenseVector, Vector }
 
 /**
  * This centroid eagerly adds new vectors to the centroid. Consequently,

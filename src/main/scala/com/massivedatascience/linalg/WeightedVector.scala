@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 /**
  * An IMMUTABLE weighted vector.
@@ -32,7 +32,6 @@ trait WeightedVector extends Serializable {
 
   def size: Int = homogeneous.size
 }
-
 
 object WeightedVector {
 
@@ -60,6 +59,4 @@ object WeightedVector {
 
   def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, v)
 }
-
-
 

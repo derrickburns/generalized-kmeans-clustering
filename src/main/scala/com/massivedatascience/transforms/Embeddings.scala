@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience.transforms
 
 object Embeddings {
@@ -25,7 +24,6 @@ object Embeddings {
   val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
-
 
   def apply(embeddingName: String): Embedding = {
     embeddingName match {

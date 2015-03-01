@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience.clusterer
 
 import org.apache.spark.SparkContext._
-import org.apache.spark.{Logging, SparkContext}
-
+import org.apache.spark.{ Logging, SparkContext }
 
 class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with Logging {
   val currentRound = sc.accumulator[Int](-1, s"Round")
@@ -34,7 +32,6 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
   val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters")
   val largestCluster = sc.accumulator[Long](0, s"Largest Cluster")
   val replenishedClusters = sc.accumulator[Int](0, s"Replenished Centers")
-
 
   def centerMovement = movement.value
 

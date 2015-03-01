@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
-import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
@@ -37,7 +36,7 @@ object ColumnTrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   private[clusterer] case class CenterWithHistory(index: Int, round: Int, center: BregmanCenter,
-    initialized: Boolean) extends Serializable {
+      initialized: Boolean) extends Serializable {
     @inline def movedSince(r: Int): Boolean = round > r
   }
 
@@ -105,8 +104,7 @@ object ColumnTrackingKMeans {
  *
  */
 class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
-  extends MultiKMeansClusterer with SparkHelper {
-
+    extends MultiKMeansClusterer with SparkHelper {
 
   /**
    * count number of points assigned to each cluster
@@ -115,7 +113,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @return a map from cluster index to number of points assigned to that cluster
    */
   private[this] def countByCluster(currentAssignments: RDD[Assignment]) =
-    currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
+    currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
 
   private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
@@ -161,9 +159,10 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
         points.zip(previousAssignments).mapPartitionsWithIndex { (index, assignedPoints) =>
           val rand = new XORShiftRandom(round ^ (index << 16))
           val centers = bcCenters.value
-          assignedPoints.map { case (point, current) =>
-            if (rand.nextDouble() > updateRate) current
-            else reassignment(point, current, round, centers)
+          assignedPoints.map {
+            case (point, current) =>
+              if (rand.nextDouble() > updateRate) current
+              else reassignment(point, current, round, centers)
           }
         }
       }
@@ -225,8 +224,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
         logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
         val additional = newCenters.drop(bregmanCenters.length)
-        val replacements = weakClusters.zip(additional).map { case (x, y) => x.copy(round = round,
-          center = y, initialized = false)
+        val replacements = weakClusters.zip(additional).map {
+          case (x, y) => x.copy(round = round,
+            center = y, initialized = false)
         }
         logInfo(s"replaced ${replacements.length} clusters")
 
@@ -235,7 +235,6 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
         centers
       }
     }
-
 
     /**
      * Collect and report the statistics about this round
@@ -279,17 +278,18 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       stats.unassignedPoints.setValue(0)
       stats.improvement.setValue(0)
       stats.newlyAssignedPoints.setValue(0)
-      for ((current, previous) <- currentAssignments.zip(previousAssignments)) {
-        if (current.isAssigned) {
-          if (previous.isAssigned) {
-            stats.improvement.add(previous.distance - current.distance)
-            if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
+      currentAssignments.zip(previousAssignments).foreach {
+        case (current, previous) =>
+          if (current.isAssigned) {
+            if (previous.isAssigned) {
+              stats.improvement.add(previous.distance - current.distance)
+              if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
+            } else {
+              stats.newlyAssignedPoints.add(1)
+            }
           } else {
-            stats.newlyAssignedPoints.add(1)
+            stats.unassignedPoints.add(1)
           }
-        } else {
-          stats.unassignedPoints.add(1)
-        }
       }
 
       val clusterCounts = countByCluster(currentAssignments)
@@ -316,7 +316,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
      * @param points points
      * @param assignments assignments of points
      * @param previousAssignments previous assignments of points
-
+     *
      * @param numCenters current number of non-empty clusters
      * @return
      */
@@ -369,7 +369,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
               pointOps.make
             else
               centroids(index)
-            )).iterator
+          )).iterator
       }.reduceByKey(_.add(_)).collect()
     }
 
@@ -413,7 +413,6 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           changedClusters.map(index => (index, centroids(index))).iterator
       }.reduceByKey(_.add(_)).collect()
     }
-
 
     /**
      * Find the closest cluster from a given set of clusters
@@ -468,8 +467,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       point: BregmanPoint,
       assignment: Assignment,
       round: Int,
-      centers: Seq[CenterWithHistory]
-      ): Assignment = {
+      centers: Seq[CenterWithHistory]): Assignment = {
 
       val nonStationaryCenters = centers.withFilter(c => c.movedSince(assignment.round) &&
         c.center.weight > pointOps.weightThreshold)
@@ -506,8 +504,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     withCached("empty assignments", points.map(x => unassigned)) { empty =>
       centerArrays.map { initialCenters =>
-        val centers = initialCenters.zipWithIndex.map { case (c, i) => CenterWithHistory(i, -1, c,
-          initialized = false)
+        val centers = initialCenters.zipWithIndex.map {
+          case (c, i) => CenterWithHistory(i, -1, c,
+            initialized = false)
         }
         val (assignments, centersWithHistory) = lloyds(0, empty, centers.toArray)
         assignments.unpersist(blocking = false)

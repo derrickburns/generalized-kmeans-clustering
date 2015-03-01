@@ -1,13 +1,11 @@
 package com.massivedatascience.clusterer
 
-
 import com.massivedatascience.linalg.WeightedVector
 import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors
 
 import scala.annotation.tailrec
-
 
 class BregmanTestSuite extends FunSuite {
 
@@ -116,8 +114,9 @@ class BregmanTestSuite extends FunSuite {
   def klf(x: Double) = x * Math.log(x) - x
 
   def kl(v: Vector, w: Vector): Double = {
-    v.toArray.zip(w.toArray).foldLeft(0.0) { case (agg, (x, y)) =>
-      agg + x * Math.log(x / y) - x + y
+    v.toArray.zip(w.toArray).foldLeft(0.0) {
+      case (agg, (x, y)) =>
+        agg + x * Math.log(x / y) - x + y
     }
   }
 
@@ -126,15 +125,15 @@ class BregmanTestSuite extends FunSuite {
   }
 
   def F(v: Array[Double])(implicit f: (Double => Double)): Double = {
-    v.foldLeft(0.0) { case (agg, y) => agg + f(y)}
+    v.foldLeft(0.0) { case (agg, y) => agg + f(y) }
   }
 
   def dot(v: Array[Double], w: Array[Double]): Double = {
-    v.zip(w).foldLeft(0.0) { case (agg, (x, y)) => agg + x * y}
+    v.zip(w).foldLeft(0.0) { case (agg, (x, y)) => agg + x * y }
   }
 
   def diff(v: Array[Double], w: Array[Double]): Array[Double] = {
-    v.zip(w).map { case (x, y) => x - y}
+    v.zip(w).map { case (x, y) => x - y }
   }
 
   def gradient(v: Array[Double])(f: (Double => Double)): Array[Double] = {

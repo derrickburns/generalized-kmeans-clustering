@@ -18,12 +18,12 @@
 package com.massivedatascience.util
 
 sealed trait MathLog extends Serializable {
-  def log(x: Double) : Double
+  def log(x: Double): Double
 }
 
 case object GeneralLog extends MathLog {
   @inline
-  override def log(x: Double) : Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
+  override def log(x: Double): Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
 case object DiscreteLog extends MathLog {
@@ -33,7 +33,7 @@ case object DiscreteLog extends MathLog {
     if (d == 0.0 || d == 1.0) {
       0.0
     } else {
-      if (d < logTable.length ) {
+      if (d < logTable.length) {
         val x = d.toInt
         if (x.toDouble == d) {
           if (logTable(x) == 0.0) logTable(x) = Math.log(x)
@@ -41,7 +41,7 @@ case object DiscreteLog extends MathLog {
         } else {
           Math.log(d)
         }
-      }  else {
+      } else {
         Math.log(d)
       }
     }

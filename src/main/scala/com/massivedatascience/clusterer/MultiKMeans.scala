@@ -20,7 +20,7 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
@@ -96,13 +96,12 @@ class MultiKMeans extends MultiKMeansClusterer {
         activeRuns = activeRuns.filter(active(_))
         iteration += 1
       }
-      costs.zip(centers).map { case (x, y) => (x, y.toIndexedSeq)}
+      costs.zip(centers).map { case (x, y) => (x, y.toIndexedSeq) }
     }
 
     def getCentroids(
       data: RDD[BregmanPoint],
-      activeCenters: Array[Array[BregmanCenter]])
-    : (Array[((Int, Int), WeightedVector)], Array[Double]) = {
+      activeCenters: Array[Array[BregmanCenter]]): (Array[((Int, Int), WeightedVector)], Array[Double]) = {
 
       val sc = data.sparkContext
       val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
@@ -125,9 +124,9 @@ class MultiKMeans extends MultiKMeansClusterer {
 
         contribution.iterator
       }.aggregateByKey(pointOps.make)(
-          (x, y) => x.add(y),
-          (x, y) => x.add(y)
-        ).map(x => (x._1, x._2.asImmutable)).collect()
+        (x, y) => x.add(y),
+        (x, y) => x.add(y)
+      ).map(x => (x._1, x._2.asImmutable)).collect()
       bcActiveCenters.unpersist()
       (result, runDistortion.map(x => x.localValue))
     }

@@ -22,7 +22,7 @@ package com.massivedatascience.clusterer
 import org.scalatest.Suite
 import org.scalatest.BeforeAndAfterAll
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{ SparkConf, SparkContext }
 
 trait LocalSparkContext extends BeforeAndAfterAll { self: Suite =>
   @transient var sc: SparkContext = _

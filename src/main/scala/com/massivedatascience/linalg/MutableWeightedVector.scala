@@ -19,7 +19,6 @@ package com.massivedatascience.linalg
 
 import org.apache.spark.mllib.linalg.Vector
 
-
 trait MutableWeightedVector {
 
   def weight: Double

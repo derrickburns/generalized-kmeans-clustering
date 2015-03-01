@@ -17,8 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector}
-
+import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
 
 trait VectorIterator extends Serializable {
   def hasNext: Boolean

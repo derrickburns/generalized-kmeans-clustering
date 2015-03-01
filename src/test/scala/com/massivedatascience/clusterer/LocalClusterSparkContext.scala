@@ -19,9 +19,9 @@
 
 package com.massivedatascience.clusterer
 
-import org.scalatest.{Suite, BeforeAndAfterAll}
+import org.scalatest.{ Suite, BeforeAndAfterAll }
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{ SparkConf, SparkContext }
 
 trait LocalClusterSparkContext extends BeforeAndAfterAll {
   self: Suite =>

@@ -17,10 +17,9 @@
  * This code is a modified version of the original Spark 1.0.2 K-Means implementation.
  */
 
-
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -82,7 +81,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     distances = updateDistances(points, distances, centers)
     var more = true
     while (centers.length < totalRequested && more) {
-      val cumulative: IndexedSeq[Double] = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
+      val cumulative: IndexedSeq[Double] = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d })
       val selected = (0 until perRound).par.flatMap { _ =>
         pickWeighted(rand, cumulative).iterator
       }
@@ -113,9 +112,10 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     distances: IndexedSeq[Double],
     centers: IndexedSeq[BregmanCenter]): IndexedSeq[Double] = {
 
-    points.zip(distances).par.map { case (p, d) =>
-      val dist = ops.pointCost(centers, p)
-      if(dist < d) dist else d
+    points.zip(distances).par.map {
+      case (p, d) =>
+        val dist = ops.pointCost(centers, p)
+        if (dist < d) dist else d
     }.toIndexedSeq
   }
 
@@ -137,6 +137,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
   def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Option[Int] = {
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)
-    if( index == -1 ) None else Some(index)
+    if (index == -1) None else Some(index)
   }
 }
