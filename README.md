@@ -193,7 +193,7 @@ object KMeans {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    kMeansImplName: String = COLUMN_TRACKING,
+    kMeansImplName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = { ???
 }
@@ -247,7 +247,7 @@ object KMeans {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
-    clustererName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
   : (KMeansModel, KMeansResults) = ???
@@ -291,11 +291,13 @@ computation.
 There are three implementations of the Lloyd's algorithm. Use ```SIMPLE```.  The others
 are experimental for performance testing.
 
-| Name (```KMeans._```)            | Algorithm                         |
+| Name (```MultiKMeansClusterer._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```SIMPLE```                  | recomputes closest assignments each iteration |
 | ```TRACKING```           |  clusterer tracks last assignments in combined point/assignmentRDD |
 | ```COLUMN_TRACKING```           |  clusterer tracks last assignments in separate RDDs |
+| ```MINI_BATCH_10```           |  a mini-batch clustering implementation that samples 10% of the data on each Lloyd's iteration |
+
 
 #### Examples
 
