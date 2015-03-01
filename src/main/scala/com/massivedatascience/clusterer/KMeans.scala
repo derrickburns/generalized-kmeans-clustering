@@ -107,8 +107,6 @@ object KMeans extends SparkHelper {
     implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
 
     val runConfig = RunConfig(k, runs, 0)
-
-
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(Embeddings.apply)
@@ -204,7 +202,7 @@ object KMeans extends SparkHelper {
     val samples = subsample(data, distanceFunc, depth, embedding)
     val names = Array.tabulate(samples.length)(i => s"data embedded at depth $i")
     withCached(names, samples) { samples =>
-      val ops = Array.fill(samples.length)(distanceFunc)
+      val ops = Seq.fill(samples.length)(distanceFunc)
       iterativelyTrain(runConfig, ops, samples, initializer)
     }
   }
@@ -243,7 +241,7 @@ object KMeans extends SparkHelper {
     logInfo("completed initialization of cluster centers")
 
     val clusterings = clusterer.cluster(distanceFunc, bregmanPoints, initialCenters)
-    val best@(_, finalCenters) = MultiKMeansClusterer.bestOf(clusterings)
+    val (_, finalCenters) = MultiKMeansClusterer.bestOf(clusterings)
     logInfo("completed clustering")
 
     new KMeansModel(distanceFunc, finalCenters)
@@ -261,7 +259,7 @@ object KMeans extends SparkHelper {
     val samples = subsample(raw, pointOps, depth, embedding)
     val names = Array.tabulate(depth)(i => s"data embedded at depth $i")
     withCached(names, samples) { samples =>
-      iterativelyTrain(runConfig, Array.fill(depth + 1)(pointOps), samples, initializer)
+      iterativelyTrain(runConfig, Seq.fill(depth + 1)(pointOps), samples, initializer)
     }
   }
 

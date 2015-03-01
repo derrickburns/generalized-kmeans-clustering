@@ -34,8 +34,7 @@ trait KMeansPredictor {
 
   def centers: IndexedSeq[BregmanCenter]
 
-  lazy val clusterCenters: IndexedSeq[Vector] = centers.map(pointOps.toPoint).map(_.inhomogeneous)
-
+  def clusterCenters: IndexedSeq[Vector] = centers.map(pointOps.toPoint).map(_.inhomogeneous)
 
   // operations on Vectors
 
@@ -254,7 +253,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  the best K-means model found
    */
-  def usingLloyds[T <: WeightedVector : ClassTag](
+  def usingClusterer[T <: WeightedVector : ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     initialModels: Seq[KMeansModel],
