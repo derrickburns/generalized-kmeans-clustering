@@ -89,10 +89,11 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   def centerMoved(v: P, w: C): Boolean =
     distance(v, w) > distanceThreshold
 
+
   /**
    * Return the index of the closest point in `centers` to `point`, as well as its distance.
    */
-  def findClosest(centers: IndexedSeq[C], point: P): (Int, Double) = {
+  def findClosestInfo[T](centers: IndexedSeq[C], point: P, f: (Int, Double) => T): T = {
     var bestDistance = Infinity
     var bestIndex = 0
     var i = 0
@@ -105,32 +106,26 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
       }
       i = i + 1
     }
-    (bestIndex, bestDistance)
+    f(bestIndex, bestDistance)
   }
 
-  def findClosestCluster(centers: IndexedSeq[C], point: P): Int = {
-    var bestDistance = Infinity
-    var bestIndex = 0
-    var i = 0
-    val end = centers.length
-    while (i < end && bestDistance > 0.0) {
-      val d = distance(point, centers(i))
-      if (d < bestDistance) {
-        bestIndex = i
-        bestDistance = d
-      }
-      i = i + 1
-    }
-    bestIndex
-  }
+
+  def findClosest(centers: IndexedSeq[C], point: P): (Int, Double) =
+    findClosestInfo(centers, point, (i: Int, d: Double) => (i, d))
+
+  def findClosestCluster(centers: IndexedSeq[C], point: P): Int =
+    findClosestInfo(centers, point, (i: Int, _: Double) => i)
+
+  def findClosestDistance(centers: IndexedSeq[C], point: P): Double =
+    findClosestInfo(centers, point, (_: Int, d: Double) => d)
 
   def distortion(data: RDD[P], centers: IndexedSeq[C]) =
-    data.aggregate(0.0)(_ + findClosest(centers, _)._2, _ + _)
+    data.aggregate(0.0)(_ + findClosestDistance(centers, _), _ + _)
 
   /**
    * Return the K-means cost of a given point against the given cluster centers.
    */
-  def pointCost(centers: IndexedSeq[C], point: P): Double = findClosest(centers, point)._2
+  def pointCost(centers: IndexedSeq[C], point: P): Double = findClosestDistance(centers, point)
 
   def getCentroid: MutableWeightedVector = DenseClusterFactory.getCentroid
 
@@ -145,6 +140,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    * @return
    */
   def distance(p: BregmanPoint, c: BregmanCenter): Double = {
+
     if (c.weight <= weightThreshold) {
       Infinity
     } else if (p.weight <= weightThreshold) {
@@ -256,14 +252,13 @@ case object SparseRealKLPointOps extends BregmanPointOps with NonSmoothed {
    * @return
    */
   override def distance(p: BregmanPoint, c: BregmanCenter): Double = {
-    if (c.weight <= weightThreshold) {
-      Infinity
-    } else if (p.weight <= weightThreshold) {
-      0.0
-    } else {
-      val smoothed = BLAS.sumMissing(c.homogeneous, p.inhomogeneous)
-      val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous) + smoothed
-      if (d < 0.0) 0.0 else d
+    weightThreshold match {
+      case t if c.weight <= t => Infinity
+      case t if p.weight <= t => 0.0
+      case _ =>
+        val smoothed = BLAS.sumMissing(c.homogeneous, p.inhomogeneous)
+        val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous) + smoothed
+        if (d < 0.0) 0.0 else d
     }
   }
 }
