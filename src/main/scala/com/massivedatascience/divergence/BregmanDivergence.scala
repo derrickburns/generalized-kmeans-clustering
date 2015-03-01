@@ -29,13 +29,9 @@ import org.apache.spark.mllib.linalg.{ Vector, Vectors }
  * gradient of F on homogeneous coordinates is often more efficient that mapping
  * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
  *
- * For a nice introducition, see <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html"</a>
- *
- * @see <a href="http://en.wikipedia.org/wiki/Bregman_divergence"</a>
- *
- * Bregman Divergences are used in K-Means clustering:
- *
- * @see <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf"</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Bregman_divergence">Definition</a>
+ * @see <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle introduction</a>
+ * @see <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with Bregman Divergences</a>
  */
 
 trait BregmanDivergence extends Serializable {
@@ -80,7 +76,7 @@ trait BregmanDivergence extends Serializable {
  * If we know that the points are on the simplex, then we may simplify the implementation of KL
  * divergence. This trait implements that simplification.
  *
- * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence"</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
  *
  */
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
@@ -106,7 +102,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 /**
  * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
  *
- * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence"</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
  *
  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
@@ -134,7 +130,7 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 /**
  * The squared Euclidean distance function is defined on points in R**n
  *
- * @see <a href="http://en.wikipedia.org/wiki/Euclidean_distance"</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Euclidean_distance">Definition</a>
  */
 case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
@@ -235,7 +231,7 @@ case object LogisticLossDivergence extends BregmanDivergence {
 /**
  * The Itakura-Saito Divergence is defined on points in R+ ** n
  *
- * @see <a href="http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance"</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance">Definition</a>
  */
 case object ItakuraSaitoDivergence extends BregmanDivergence {
 
