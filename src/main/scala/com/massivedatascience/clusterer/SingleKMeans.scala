@@ -44,7 +44,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     while (active && iteration < maxIterations) {
       logInfo(s"iteration $iteration number of centers ${activeCenters.length}")
       active = false
-      for ((clusterIndex: Int, cn: MutableWeightedVector) <- getCentroids(data, activeCenters)) {
+      for ((clusterIndex: Int, cn: MutableWeightedVector) <- centroids(data, activeCenters)) {
         val centroid = cn.asImmutable
         if (centroid.weight == 0.0) {
           active = true
@@ -60,7 +60,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     (pointOps.distortion(data, activeCenters), new KMeansModel(pointOps, activeCenters))
   }
 
-  def getCentroids(
+  private[this] def centroids(
     data: RDD[BregmanPoint],
     activeCenters: Array[BregmanCenter]): Map[Int, MutableWeightedVector] = {
 

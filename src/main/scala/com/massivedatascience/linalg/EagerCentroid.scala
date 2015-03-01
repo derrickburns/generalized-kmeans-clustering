@@ -20,8 +20,8 @@ package com.massivedatascience.linalg
 import org.apache.spark.mllib.linalg.{ DenseVector, Vector }
 
 /**
- * This centroid eagerly adds new vectors to the centroid. Consequently,
- * it is appropriate for use with dense vectors.
+ * A mutable weighted vector that eagerly adds new vectors or subtracts vectors
+ * to a form centroid. Consequently, it is appropriate for use with dense vectors.
  */
 class EagerCentroid extends MutableWeightedVector with Serializable {
 
@@ -35,14 +35,42 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
   var weight: Double = 0.0
 
+
+  /**
+   * Add a weighted vector to a centroid
+   * @param p weighted vector to add
+   * @return resulting centroid
+   */
   def add(p: WeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
+
+  /**
+   * Subtract a weighted vector from a centroid
+   * @param p  weighted vector to subtract
+   * @return resulting centroid
+   */
   def sub(p: WeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
+
+  /**
+   * Add a mutable weighted vector to a centroid
+   * @param p mutable weighted vector to add
+   * @return resulting centroid
+   */
   def add(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
+  /**
+   * Subtract a mutable weighted vector from a centroid
+   * @param p mutable weighted vector to subtract
+   * @return resulting centroid
+   */
   def sub(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
+  /**
+   * Scale the vector by a constant in all directions
+   * @param alpha scaling factor
+   * @return resulting centroid
+   */
   def scale(alpha: Double): this.type = {
     if (raw != empty) {
       BLAS.scal(alpha, raw)

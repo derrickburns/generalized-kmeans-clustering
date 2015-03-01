@@ -20,14 +20,32 @@ package com.massivedatascience.transforms
 import com.massivedatascience.linalg.{ WeightedVector, _ }
 import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector }
 
+/**
+ * An embedding of vectors into an alternative space.  Typically, embeddings are used
+ * to lower the dimension of the data in such a way that preserves distances using the
+ * given divergence so that clustering can proceed expeditiously.
+ */
 trait Embedding extends Serializable {
+  /**
+   * Tranform a weighted vector into another space
+   * @param v the weighted vector
+   * @return the transformed vector
+   */
   def embed(v: WeightedVector): WeightedVector
 }
 
+
+/**
+ * The identity embedding
+ */
 case object IdentityEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = v
 }
 
+
+/**
+ * The embedding that transforms all points to dense vectors.
+ */
 case object DenseEmbedding extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
     v match {
@@ -37,6 +55,10 @@ case object DenseEmbedding extends Embedding {
   }
 }
 
+/**
+ * The embeddding that averages adjacent values, thereby lowering the dimension of
+ * the data by two
+ */
 case object HaarEmbedding extends Embedding {
   def embed(raw: WeightedVector): WeightedVector =
     WeightedVector(HaarWavelet.average(raw.homogeneous.toArray), raw.weight)
