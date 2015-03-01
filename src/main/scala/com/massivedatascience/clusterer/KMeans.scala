@@ -23,14 +23,23 @@ import com.massivedatascience.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
+/**
+ * A helper object that creates K-Means Models using the underlying classes in this package.
+ */
 object KMeans extends SparkHelper {
 
+  /**
+   * The standard configuration for a clusterer that runs Lloyd's algorithm
+   * @param numClusters number of clusters desired
+   * @param runs number of parallel runs to attempt
+   * @param seed random number seed
+   * @param maxIterations maximum number of iterations of Lloyd'a algorithm to execute
+   */
   case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int)
 
   /**
    *
    * Train a K-Means model using Lloyd's algorithm.
-   *
    *
    * @param data input data
    * @param k  number of clusters desired
