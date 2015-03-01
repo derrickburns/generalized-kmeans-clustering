@@ -54,7 +54,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     weights: IndexedSeq[Double],
     totalRequested: Int,
     perRound: Int,
-    numPreselected: Int): Array[BregmanCenter] = {
+    numPreselected: Int): IndexedSeq[BregmanCenter] = {
 
     require(candidateCenters.length > 0)
     require(totalRequested > 0)
@@ -78,13 +78,13 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     }
     logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
-    var distances = Array.fill(candidateCenters.length)(Double.MaxValue)
+    var distances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
     distances = updateDistances(points, distances, centers)
     var more = true
     while (centers.length < totalRequested && more) {
-      val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
+      val cumulative: IndexedSeq[Double] = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
       val selected = (0 until perRound).par.flatMap { _ =>
-        pickWeighted(rand, cumulative)
+        pickWeighted(rand, cumulative).iterator
       }
       val newCenters = selected.toArray.map(candidateCenters(_))
       distances = updateDistances(points, distances, newCenters)
@@ -94,7 +94,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
       }
       more = selected.nonEmpty
     }
-    sideEffect(centers.take(totalRequested).toArray) { result =>
+    sideEffect(centers.take(totalRequested)) { result =>
       logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $totalRequested requested")
     }
   }
@@ -111,12 +111,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
   def updateDistances(
     points: IndexedSeq[BregmanPoint],
     distances: IndexedSeq[Double],
-    centers: IndexedSeq[BregmanCenter]): Array[Double] = {
+    centers: IndexedSeq[BregmanCenter]): IndexedSeq[Double] = {
 
     points.zip(distances).par.map { case (p, d) =>
       val dist = ops.pointCost(centers, p)
       if(dist < d) dist else d
-    }.toArray
+    }.toIndexedSeq
   }
 
   def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] = {
