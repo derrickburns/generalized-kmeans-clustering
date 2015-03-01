@@ -300,7 +300,7 @@ computation.
 
 #### K-Means Clusterer Implementations
 
-There are standard varieties of K-Means Clusterer.
+We provide three varieties of K-Means clusterer.
 
 | Name (```MultiKMeansClusterer._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
