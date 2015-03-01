@@ -21,7 +21,6 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
-import com.massivedatascience.clusterer.MultiKMeansClusterer._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
@@ -42,6 +41,14 @@ object ColumnTrackingKMeans {
     @inline def movedSince(r: Int): Boolean = round > r
   }
 
+  private[clusterer] val noCluster = -1
+  private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
+
+  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) extends SimpleAssignment {
+    def isAssigned = cluster != noCluster
+
+    def isUnassigned = cluster == noCluster
+  }
 }
 
 /**
@@ -97,9 +104,7 @@ object ColumnTrackingKMeans {
  *
  *
  */
-class ColumnTrackingKMeans(
-  config: KMeansConfig = DefaultKMeansConfig,
-  terminationCondition: TerminationCondition = DefaultTerminationCondition)
+class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
   extends MultiKMeansClusterer with SparkHelper {
 
 
@@ -123,6 +128,7 @@ class ColumnTrackingKMeans(
    * @return the distortion of the clustering on the points and the cluster centers (model)
    */
   def cluster(
+    maxIterations: Int,
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
     centerArrays: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])] = {
@@ -294,7 +300,9 @@ class ColumnTrackingKMeans(
       stats.report()
 
       logInfo("end of stats collection")
-      terminationCondition(stats)
+      (round / 2 >= maxIterations) ||
+        (stats.numNonEmptyClusters == 0) ||
+        (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
     }
 
     /**

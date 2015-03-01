@@ -257,6 +257,7 @@ object KMeansModel {
     ops: BregmanPointOps,
     data: RDD[T],
     initialModels: Seq[KMeansModel],
+    maxIterations: Int,
     clusterer: MultiKMeansClusterer = new ColumnTrackingKMeans(),
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
@@ -267,7 +268,7 @@ object KMeansModel {
         fromAssignments(ops, data, data.map(model.predictWeighted)).centers
     }
     val points = data.map(ops.toPoint)
-    val results = clusterer.best(ops, points, initialCenters)
+    val results = clusterer.best(maxIterations, ops, points, initialCenters)
     new KMeansModel(ops, results._2)
   }
 }

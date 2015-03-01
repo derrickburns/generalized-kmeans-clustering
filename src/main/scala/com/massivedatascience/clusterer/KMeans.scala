@@ -29,11 +29,7 @@ object KMeans extends SparkHelper {
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||"
 
-  val TRACKING = "TRACKING"
-  val SIMPLE = "SIMPLE"
-  val COLUMN_TRACKING = "COLUMN_TRACKING"
-
-  case class RunConfig(numClusters: Int, runs: Int, seed: Int)
+  case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int)
 
   /**
    *
@@ -47,7 +43,7 @@ object KMeans extends SparkHelper {
    * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionNames the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
    */
@@ -59,13 +55,13 @@ object KMeans extends SparkHelper {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    kMeansImplName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
-    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
-    val runConfig = RunConfig(k, runs, 0)
+    val runConfig = RunConfig(k, runs, 0, maxIterations)
 
     withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
       val ops = distanceFunctionNames.map(BregmanPointOps.apply)
@@ -88,7 +84,7 @@ object KMeans extends SparkHelper {
    * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionNames the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
    */
@@ -100,13 +96,13 @@ object KMeans extends SparkHelper {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    kMeansImplName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
-    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
-    val runConfig = RunConfig(k, runs, 0)
+    val runConfig = RunConfig(k, runs, 0, maxIterations)
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(Embeddings.apply)
@@ -125,7 +121,7 @@ object KMeans extends SparkHelper {
    * @param mode initialization algorithm to use
    * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionNames the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model and a clustering of the input data
    */
@@ -137,15 +133,15 @@ object KMeans extends SparkHelper {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    kMeansImplName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING))
   : KMeansModel = {
 
     require(distanceFunctionNames.length == embeddingNames.length)
 
-    implicit val kMeansImpl = lloydsImplementation(kMeansImplName, maxIterations)
+    implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
-    val runConfig = RunConfig(k, runs, 0)
+    val runConfig = RunConfig(k, runs, 0, maxIterations)
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = getInitializer(mode, initializationSteps)
     val embeddings = embeddingNames.map(Embeddings.apply)
@@ -177,14 +173,14 @@ object KMeans extends SparkHelper {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
-    clustererName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel = {
 
-    implicit val clusterer = lloydsImplementation(clustererName, maxIterations)
+    implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
-    val runConfig = RunConfig(k, runs, 0)
+    val runConfig = RunConfig(k, runs, 0, maxIterations)
     val distanceFunc = BregmanPointOps(distanceFunctionName)
     val initializer = getInitializer(initializerName, initializationSteps)
     val embedding = Embeddings(embeddingName)
@@ -207,22 +203,7 @@ object KMeans extends SparkHelper {
     }
   }
 
-  def lloydsImplementation(clustererName: String, maxIterations: Int): MultiKMeansClusterer = {
-    clustererName match {
-      case SIMPLE => new MultiKMeans(maxIterations)
-      case TRACKING => new TrackingKMeans(terminationCondition = { s: BasicStats =>
-        s.getRound > maxIterations ||
-          s.numNonEmptyClusters == 0 ||
-          s.centerMovement / s.numNonEmptyClusters < 1.0E-5
-      })
-      case COLUMN_TRACKING => new ColumnTrackingKMeans(terminationCondition = { s: BasicStats =>
-        s.getRound > maxIterations * 2 ||
-          s.numNonEmptyClusters == 0 ||
-          s.centerMovement / s.numNonEmptyClusters < 1.0E-5
-      })
-      case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
-    }
-  }
+
 
   def getInitializer(name: String, steps: Int): KMeansInitializer = {
     name match {
@@ -242,7 +223,7 @@ object KMeans extends SparkHelper {
     require(bregmanPoints.getStorageLevel.useMemory)
     val initialCenters = initializer.init(distanceFunc, bregmanPoints, runConfig.numClusters, None,
       runConfig.runs, runConfig.seed)
-    val (_, finalCenters) = clusterer.best(distanceFunc, bregmanPoints, initialCenters)
+    val (_, finalCenters) = clusterer.best(runConfig.maxIterations, distanceFunc, bregmanPoints, initialCenters)
     new KMeansModel(distanceFunc, finalCenters)
   }
 

@@ -49,7 +49,7 @@ object Examples {
     mode: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
-    clustererName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: Seq[String] = Seq(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
       Embeddings.HIGH_DIMENSIONAL_RI)): KMeansModel = {
 
@@ -66,7 +66,7 @@ object Examples {
     initializerName: String = K_MEANS_PARALLEL,
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
-    clustererName: String = COLUMN_TRACKING,
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embeddings.HAAR_EMBEDDING): KMeansModel = {
 
     val dim = raw.first().homogeneous.toArray.length

@@ -78,10 +78,7 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
  */
 
 
-class TrackingKMeans(
-  updateRate: Double = 1.0,
-  terminationCondition: TerminationCondition = DefaultTerminationCondition)
-  extends MultiKMeansClusterer {
+class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
 
   /**
@@ -138,6 +135,7 @@ class TrackingKMeans(
   }
 
   def cluster(
+    maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     centerArrays: Seq[IndexedSeq[BregmanCenter]]) = {
@@ -164,7 +162,10 @@ class TrackingKMeans(
           fatPoints.setName(s"fatPoint $round")
           updateRoundStats(round, stats, fatCenters, fatPoints)
           stats.report()
-          terminate = terminationCondition(stats)
+          terminate = (round >= maxIterations) ||
+            (stats.numNonEmptyClusters == 0) ||
+            (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
+
           round = round + 1
         } while (!terminate)
 

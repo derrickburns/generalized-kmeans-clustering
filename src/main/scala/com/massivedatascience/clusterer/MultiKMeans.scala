@@ -32,9 +32,10 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
-class MultiKMeans(maxIterations: Int) extends MultiKMeansClusterer {
+class MultiKMeans extends MultiKMeansClusterer {
 
-  override def cluster(
+  def cluster(
+    maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     c: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])] = {
