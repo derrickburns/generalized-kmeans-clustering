@@ -31,7 +31,7 @@ import com.massivedatascience.clusterer.BregmanPointOps._
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
-  import com.massivedatascience.clusterer.KMeans._
+  import com.massivedatascience.clusterer.KMeansInitializer._
 
 
 
@@ -221,19 +221,18 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     // it will make at least five passes, and it will give non-zero probability to each
     // unselected point as long as it hasn't yet selected all of them
 
-    var model = KMeans.train(rdd, k = 5, maxIterations = 1, initializationSteps = 5
-    )
+    var model = KMeans.train(rdd, k = 5, maxIterations = 1)
 
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Iterations of Lloyd's should not change the answer either
-    model = KMeans.train(rdd, k = 5, maxIterations = 10, initializationSteps = 5)
+    model = KMeans.train(rdd, k = 5, maxIterations = 10)
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
 
     // Neither should more runs
-    model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5, initializationSteps = 5)
+    model = KMeans.train(rdd, k = 5, maxIterations = 10, runs = 5)
     assert(model.clusterCenters.sortBy(VectorWithCompare)
       .zip(points.sortBy(VectorWithCompare)).forall(x => x._1 ~== x._2 absTol 1E-5))
   }
@@ -266,6 +265,9 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
 class KMeansClusterSuite extends FunSuite with LocalClusterSparkContext {
 
+  import com.massivedatascience.clusterer.KMeansInitializer._
+
+
   test("task size should be small in both training and prediction") {
     val m = 4
     val n = 200000
@@ -273,7 +275,7 @@ class KMeansClusterSuite extends FunSuite with LocalClusterSparkContext {
       val random = new Random(idx)
       iter.map(i => Vectors.dense(Array.fill(n)(random.nextDouble())))
     }.cache()
-    for (initMode <- Seq(KMeans.RANDOM, KMeans.K_MEANS_PARALLEL)) {
+    for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
       // If we serialize data directly in the task closure, the size of the serialized task would be
       // greater than 1MB and hence Spark would throw an error.
       val model = KMeans.train(points, 2, 2, 1, initMode)
