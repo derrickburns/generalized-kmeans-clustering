@@ -290,6 +290,7 @@ object BregmanPointOps {
   val EUCLIDEAN = "EUCLIDEAN"
   val LOGISTIC_LOSS = "LOGISTIC_LOSS"
   val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
+  val ITAKURA_SAITO = "ITAKURA_SAITO"
 
   def apply(distanceFunction: String): BregmanPointOps = {
     distanceFunction match {
@@ -301,6 +302,7 @@ object BregmanPointOps {
       case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
+      case ITAKURA_SAITO => ItakuraSaitoPointOps
       case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }

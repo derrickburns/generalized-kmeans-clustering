@@ -149,7 +149,8 @@ Kullback-Leibler divergence.
 | ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
 | ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
 | ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
-| ```GENERALIZED_I```              | R     |Generalized I-divergence |         |   ```GeneralizedIPointOps```   |
+| ```GENERALIZED_I```              | R     |Generalized I |         |   ```GeneralizedIPointOps```   |
+| ```ITAKURA_SAITO```              | R+^d  |[Itakura-Saito](http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance}) |         |   ```ItakuraSaitoPointOps```   |
 
 
 ### Batch Clusterer Usage
