@@ -72,6 +72,16 @@ class RandomIndexEmbedding(
   }
 }
 
+/**
+ * A simple <a href="http://en.wikipedia.org/wiki/Hash_function">multiplicative hash function</a>
+ * that supports mapping from spaces that have a number of dimensions that is a power of two
+ * to a space that has a dimension that is a (lower) power of two.
+ *
+ * @param seed multiplicative seed
+ * @param offset additive seed
+ * @param l log of the number of dimensions of the input
+ * @param m log of the numer of dimensions of the output
+ */
 class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
   require(m <= l)
   val mask = if (l >= 63) Long.MaxValue else (1 << l) - 1
