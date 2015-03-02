@@ -35,7 +35,6 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
 
   var weight: Double = 0.0
 
-
   /**
    * Add a weighted vector to a centroid
    * @param p weighted vector to add
@@ -43,14 +42,12 @@ class EagerCentroid extends MutableWeightedVector with Serializable {
    */
   def add(p: WeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
-
   /**
    * Subtract a weighted vector from a centroid
    * @param p  weighted vector to subtract
    * @return resulting centroid
    */
   def sub(p: WeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
-
 
   /**
    * Add a mutable weighted vector to a centroid

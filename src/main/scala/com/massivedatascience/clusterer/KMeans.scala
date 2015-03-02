@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
-import com.massivedatascience.transforms.{ Embedding, Embeddings, HaarEmbedding, IdentityEmbedding }
+import com.massivedatascience.transforms.{ Embedding, HaarEmbedding, IdentityEmbedding }
 import com.massivedatascience.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
@@ -59,7 +59,7 @@ object KMeans extends SparkHelper {
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
+    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
@@ -68,7 +68,7 @@ object KMeans extends SparkHelper {
     withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
       val ops = distanceFunctionNames.map(BregmanPointOps.apply)
       val initializer = KMeansInitializer(mode)
-      val embeddings = embeddingNames.map(Embeddings.apply)
+      val embeddings = embeddingNames.map(Embedding.apply)
       reSampleTrain(runConfig, data, initializer, ops, embeddings)
     }
   }
@@ -98,14 +98,14 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
+    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
 
     val runConfig = RunConfig(k, runs, 0, maxIterations)
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = KMeansInitializer(mode)
-    val embeddings = embeddingNames.map(Embeddings.apply)
+    val embeddings = embeddingNames.map(Embedding.apply)
     reSampleTrain(runConfig, data, initializer, ops, embeddings)
   }
 
@@ -134,7 +134,7 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(Embeddings.IDENTITY_EMBEDDING)): KMeansModel = {
+    embeddingNames: Seq[String] = Seq(Embedding.IDENTITY_EMBEDDING)): KMeansModel = {
 
     require(distanceFunctionNames.length == embeddingNames.length)
 
@@ -143,7 +143,7 @@ object KMeans extends SparkHelper {
     val runConfig = RunConfig(k, runs, 0, maxIterations)
     val ops = distanceFunctionNames.map(BregmanPointOps.apply)
     val initializer = KMeansInitializer(mode)
-    val embeddings = embeddingNames.map(Embeddings.apply)
+    val embeddings = embeddingNames.map(Embedding.apply)
 
     reSampleTrain(runConfig, data, initializer, ops, embeddings)
   }
@@ -173,7 +173,7 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingName: String = Embeddings.HAAR_EMBEDDING,
+    embeddingName: String = Embedding.HAAR_EMBEDDING,
     depth: Int = 2): KMeansModel = {
 
     implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
@@ -181,7 +181,7 @@ object KMeans extends SparkHelper {
     val runConfig = RunConfig(k, runs, 0, maxIterations)
     val distanceFunc = BregmanPointOps(distanceFunctionName)
     val initializer = KMeansInitializer(initializerName)
-    val embedding = Embeddings(embeddingName)
+    val embedding = Embedding(embeddingName)
 
     logInfo(s"k = $k")
     logInfo(s"maxIterations = $maxIterations")
@@ -271,8 +271,8 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
-      Embeddings.HIGH_DIMENSIONAL_RI)): KMeansModel = {
+    embeddingNames: Seq[String] = Seq(Embedding.LOW_DIMENSIONAL_RI, Embedding.MEDIUM_DIMENSIONAL_RI,
+      Embedding.HIGH_DIMENSIONAL_RI)): KMeansModel = {
 
     val distances = Array.fill(embeddingNames.length)(distanceFunctionName)
     KMeans.trainWithResults(raw, k, maxIterations, runs, mode, initializationSteps, distances,
@@ -288,7 +288,7 @@ object KMeans extends SparkHelper {
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingName: String = Embeddings.HAAR_EMBEDDING): KMeansModel = {
+    embeddingName: String = Embedding.HAAR_EMBEDDING): KMeansModel = {
 
     val dim = raw.first().homogeneous.toArray.length
     require(dim > 0)

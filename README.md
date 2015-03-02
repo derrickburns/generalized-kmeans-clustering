@@ -362,7 +362,7 @@ object KMeans {
     initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     kMeansImplName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embeddings.IDENTITY_EMBEDDING))
+    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING))
   : KMeansModel = { ???
 }
 ```
@@ -416,7 +416,7 @@ object KMeans {
     initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingName: String = Embeddings.HAAR_EMBEDDING,
+    embeddingName: String = Embedding.HAAR_EMBEDDING,
     depth: Int = 2)
   : KMeansModel= ???
 }
@@ -459,10 +459,10 @@ object KMeansInitializer {
 
 The ```K-Means.train``` helper methods allows on to name a sequence of embeddings.
 Several embeddings are provided that may be constructed using the ```apply``` method
-of the companion object ```Embeddings```.
+of the companion object ```Embedding```.
 
 
-| Name (```Embeddings._```)         | Algorithm                                                   |
+| Name         | Algorithm                                                   |
 |-------------------------------|-------------------------------------------------------------|
 | ```IDENTITY_EMBEDDING```      | Identity                                                    |
 | ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
@@ -516,8 +516,8 @@ object KMeans {
 
   def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
     train(raw, k,
-      embeddingNames = List(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
-        Embeddings.HIGH_DIMENSIONAL_RI))
+      embeddingNames = List(Embedding.LOW_DIMENSIONAL_RI, Embedding.MEDIUM_DIMENSIONAL_RI,
+        Embedding.HIGH_DIMENSIONAL_RI))
   }
 }
 ```

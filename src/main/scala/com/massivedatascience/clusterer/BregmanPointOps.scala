@@ -227,7 +227,7 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
  * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
  */
 private[clusterer] case object DenseKLPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = RealKLDivergence
 }
 
@@ -235,7 +235,7 @@ with NonSmoothedPointCenterFactory {
  * Implements Generalized I-divergence on dense vectors in R+ ** n
  */
 private[clusterer] case object GeneralizedIPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = GeneralizedIDivergence
 }
 
@@ -243,7 +243,7 @@ with NonSmoothedPointCenterFactory {
  * Implements Squared Euclidean distance on dense vectors in R ** n
  */
 private[clusterer] case object SquaredEuclideanPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = SquaredEuclideanDistanceDivergence
 }
 
@@ -252,7 +252,7 @@ with NonSmoothedPointCenterFactory {
  */
 
 private[clusterer] case object LogisticLossPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = LogisticLossDivergence
 }
 
@@ -260,7 +260,7 @@ with NonSmoothedPointCenterFactory {
  * Implements Itakura-Saito divergence on dense vectors in R+ ** n
  */
 private[clusterer] case object ItakuraSaitoPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = ItakuraSaitoDivergence
 }
 
@@ -279,7 +279,7 @@ with NonSmoothedPointCenterFactory {
  * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
  */
 private[clusterer] case object SparseRealKLPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
 
   val divergence = RealKLDivergence
 
@@ -308,7 +308,7 @@ with NonSmoothedPointCenterFactory {
  * i.e. the entries in each vector are positive integers.
  */
 private[clusterer] case object DiscreteKLPointOps extends BregmanPointOps
-with NonSmoothedPointCenterFactory {
+    with NonSmoothedPointCenterFactory {
   val divergence = NaturalKLDivergence
 }
 
@@ -321,13 +321,13 @@ with NonSmoothedPointCenterFactory {
  *
  */
 private[clusterer] case object DiscreteSmoothedKLPointOps extends BregmanPointOps
-with SmoothedPointCenterFactory {
+    with SmoothedPointCenterFactory {
   val divergence = NaturalKLDivergence
   val smoothingFactor = 1.0
 }
 
 private[clusterer] case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps
-with SmoothedPointCenterFactory {
+    with SmoothedPointCenterFactory {
   val divergence = NaturalKLSimplexDivergence
   val smoothingFactor = 1.0
 }
