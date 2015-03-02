@@ -192,9 +192,6 @@ object BregmanPointOps {
 
   def apply(distanceFunction: String): BregmanPointOps = ???
 
-  def apply(d: BregmanDivergence): BregmanPointOps = ???
-
-  def apply(d: BregmanDivergence, factor: Double): BregmanPointOps = ???
 }
 ```
 
