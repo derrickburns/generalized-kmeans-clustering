@@ -100,17 +100,6 @@ trait BregmanDivergence {
   def gradF(v: Vector): Vector
 }
 
-object BregmanDivergence {
-
-  /**
-   * Create a Bregman Divergence from
-   * @param f any continuously-differentiable real-valued and strictly
-   *          convex function defined on a closed convex set in R^^N
-   * @param gradientF the gradient of f
-   * @return a Bregman Divergence on that function
-   */
-  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
-}
 ```
 
 For example, by defining ```F``` to be the vector norm (i.e. the sum of the squares of the
@@ -318,7 +307,6 @@ if each cluster center is determined by the mean of the points assigned to that 
 Computing such a ```KMeansModel``` given a set of points is called "training" the model on those
 points.
 
-
 The simplest way to train a ```KMeansModel``` on a fixed set of points is to use the ```KMeans.train```
 method.
 
@@ -441,6 +429,8 @@ of the companion object```KMeansInitializer```".
 Under the covers, these initializers implement the ```KMeansInitializer``` trait
 
 ```scala
+package com.massivedatascience.clusterer
+
 trait KMeansInitializer extends Serializable {
   def init(
     ops: BregmanPointOps,
@@ -490,6 +480,8 @@ The ```com.massivedatascience.clusterer.KMeans``` helper method provides a metho
 that embeds the data iteratively.
 
 ```scala
+package com.massivedatascience.clusterer
+
 object KMeans {
 
   def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
@@ -528,14 +520,38 @@ object KMeans {
 There are many ways to create your our custom K-means clusterer from these components.
 
 
+#### Custom ```BregmanDivergence```
+
+You may create your own custom ```BregmanDivergence``` given a suitable continuously-differentiable
+real-valued and strictly convex function defined on a closed convex set in R^^N using the
+```apply``` method of the companion object. Send a pull request to have it added
+the the package.
+
+```scala
+package com.massivedatascience.divergence
+
+object BregmanDivergence {
+
+  /**
+   * Create a Bregman Divergence from
+   * @param f any continuously-differentiable real-valued and strictly
+   *          convex function defined on a closed convex set in R^^N
+   * @param gradientF the gradient of f
+   * @return a Bregman Divergence on that function
+   */
+  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
+}
+
 #### Custom ```BregmanPointOps```
 
 You may create your own custom ```BregmanPointsOps```
-from your own implementation of the ```BregmanDivergence``` trait.
+from your own implementation of the ```BregmanDivergence``` trait given a ```BregmanDivergence```
+using the ```apply``` method of the companion object. Send a pull request to have it added
+the the package.
 
 
 ```scala
-pacakge com.massivedatascience.clusterer
+package com.massivedatascience.clusterer
 
 object BregmanPointOps {
 
