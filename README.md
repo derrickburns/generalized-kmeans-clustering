@@ -1,8 +1,6 @@
 Generalized K-Means Clustering
 =============================
 
-Release of this code is imminent.
-
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
 and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
 * sparse or dense data
