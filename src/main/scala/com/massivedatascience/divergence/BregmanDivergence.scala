@@ -18,8 +18,8 @@
 package com.massivedatascience.divergence
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog }
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 
 /**
  * Bregman Divergence defines a convex function F and its gradient.
@@ -262,29 +262,42 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
 }
 
 object BregmanDivergence {
-  /**
-   * Create a Bregman Divergence from
-   * @param f any continuously-differentiable real-valued and strictly
-   *          convex function defined on a closed convex set in R^^N
-   * @param gradientF the gradient of f
-   * @return a Bregman Divergence on that function
-   */
-  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
-    new BregmanDivergence {
-      def F(v: Vector): Double = f(v)
 
-      def F(v: Vector, w: Double) = {
-        val c = v.copy
-        scal(1.0 / w, c)
-        F(c)
-      }
-
-      def gradF(v: Vector): Vector = gradientF(v)
-
-      def gradF(v: Vector, w: Double): Vector = {
-        val c = v.copy
-        scal(1.0 / w, c)
-        gradientF(c)
-      }
+  def apply(name: String): BregmanDivergence = {
+    name match {
+      case "SquaredEuclideanDistanceDivergence" => SquaredEuclideanDistanceDivergence
+      case "RealKullbackLeiblerSimplexDivergence" => RealKullbackLeiblerSimplexDivergence
+      case "NaturalKLSimplexDivergence" => NaturalKLSimplexDivergence
+      case "RealKLDivergence" => RealKLDivergence
+      case "NaturalKLDivergence" => NaturalKLDivergence
+      case "LogisticLossDivergence" => LogisticLossDivergence
+      case "ItakuraSaitoDivergence" => ItakuraSaitoDivergence
+      case "GeneralizedIDivergence" => GeneralizedIDivergence
     }
-}
+
+    /**
+     * Create a Bregman Divergence from
+     * @param f any continuously-differentiable real-valued and strictly
+     *          convex function defined on a closed convex set in R^^N
+     * @param gradientF the gradient of f
+     * @return a Bregman Divergence on that function
+     */
+    def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
+      new BregmanDivergence {
+        def F(v: Vector): Double = f(v)
+
+        def F(v: Vector, w: Double) = {
+          val c = v.copy
+          scal(1.0 / w, c)
+          F(c)
+        }
+
+        def gradF(v: Vector): Vector = gradientF(v)
+
+        def gradF(v: Vector, w: Double): Vector = {
+          val c = v.copy
+          scal(1.0 / w, c)
+          gradientF(c)
+        }
+      }
+  }

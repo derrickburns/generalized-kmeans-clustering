@@ -83,6 +83,9 @@ centers to acknowledge the assignment of the points to the cluster.
 The update of clusters is a form of averaging.  Newly added points are averaged into the cluster
 while (optionally) reassigned points are removed from their prior clusters.
 
+
+#### Bregman Divergences
+
 While one can assign a point to a cluster using any distance function, Lloyd's algorithm only
 converges for a certain set of distance functions called [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf). Bregman divergences
 must define two methods, ```F```  to evaluate a function on a point and ```gradF``` to evaluate the
@@ -96,11 +99,47 @@ trait BregmanDivergence {
 
   def gradF(v: Vector): Vector
 }
+
+object BregmanDivergence {
+
+  /**
+   * Create a Bregman Divergence from
+   * @param f any continuously-differentiable real-valued and strictly
+   *          convex function defined on a closed convex set in R^^N
+   * @param gradientF the gradient of f
+   * @return a Bregman Divergence on that function
+   */
+  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
+}
 ```
 
 For example, by defining ```F``` to be the vector norm (i.e. the sum of the squares of the
 coordinates), one gets a distance function that equals the square of the well known Euclidean
 distance. We name it the ```SquaredEuclideanDistanceDivergence```.
+
+In addition to the squared Euclidean distance function, this implementation provides several
+other very useful distance functions.   The provided ```BregmanDivergence```s may be accessed using
+supplying the name of the desired object to the apply method of the companion object.
+
+
+| Name   | Space | Divergence              | Input   |
+| ```SquaredEuclideanDistanceDivergence```                  | R^d   |Squared Euclidean        |         |
+| ```RealKullbackLeiblerSimplexDivergence```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   |
+| ```NaturalKLSimplexDivergence```                | N+^d  |Kullback-Leibler         | Dense   |
+| ```RealKLDivergence```       | R^d   |Kullback-Leibler         | Dense   |
+| ```NaturalKLDivergence```       | N^d   |Kullback-Leibler         | Dense   |
+
+| ```ItakuraSaitoDivergence```         | R+^d  |Kullback-Leibler         | Sparse  |
+| ```LogisticLossDivergence```              | R     |Logistic Loss            |         |
+| ```GeneralizedIDivergence```     | R     |Generalized I |         |
+
+When selecting a distance function, consider the domain of
+the input data.  For example, frequency
+data is integral. Similarity of frequencies or distributions are best performed using the
+Kullback-Leibler divergence.
+
+
+#### Compute Bregman Distances Efficiently using ```BregmanPoints```s  and ```BregmanCenter```s
 
 For efficient repeated computation of distance between a fixed set of points and varying cluster
 centers, is it convenient to pre-compute certain information and associate that information with
@@ -115,6 +154,7 @@ trait BregmanPoint
 
 trait BregmanCenter
 ```
+
 
 We enrich a Bregman divergence with a set of commonly used operations, including factory
 methods ```toPoint``` and ```toCenter``` to contruct instances of the aforementioned ```BregmanPoint```
@@ -147,10 +187,35 @@ trait BregmanPointOps  {
 
   def distance(p: BregmanPoint, c: BregmanCenter): Double
 }
+
+object BregmanPointOps {
+
+  def apply(distanceFunction: String): BregmanPointOps = ???
+
+  def apply(d: BregmanDivergence): BregmanPointOps = ???
+
+  def apply(d: BregmanDivergence, factor: Double): BregmanPointOps = ???
+}
 ```
 
 ```object com.massivedatascience.cluseter.SquaredEuclideanPointOps``` is an instance of ```BregmanPointOps``` that supports the
 the ```SquaredEuclideanDistanceDivergence```.
+
+
+One may construct instances of ```BregmanDivergence``` using the companion object.
+
+| Name   | Space | Divergence              | Input   |  Object (```com.massivedatascience.clusterer.```) |
+|----------------------------------|-------|-------------------------|---------|---------|
+| ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |  ```SquaredEuclideanPointOps```  |
+| ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
+| ```GENERALIZED_I```              | R     |Generalized I |         |   ```GeneralizedIPointOps```   |
+| ```ITAKURA_SAITO```              | R+^d  |[Itakura-Saito](http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance) |         |
+
+#### Representing K-Means Models
 
 With these definitions, we define our realization of a k-means model, ```KMeansModel```, which
 we enrich with operations to find closest clusters to a point and to compute distances:
@@ -195,30 +260,57 @@ trait KMeansModel {
 }
 ```
 
-### Provided Distance Functions and Divergences
+#### Constructing K-Means Models using Clusterers
 
-In addition to the squared Euclidean distance function, this implementation provides several
-other very useful distance functions. When selecting a distance function, consider the domain of
-the input data.  For example, frequency
-data is integral. Similarity of frequencies or distributions are best performed using the
-Kullback-Leibler divergence.
+One may construct K-Means models using one of the provided clusterers that implement Lloyd's algorithm.
 
-The provided ```BregmanPointsOps``` may be accessed using supplying the name of the desired object
-to the apply method of the companion object.
+```scala
+trait MultiKMeansClusterer extends Serializable with Logging {
+  def cluster(
+    maxIterations: Int,
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])]
 
-| Name   | Space | Divergence              | Input   |  Object (```com.massivedatascience.clusterer.```) |
-|----------------------------------|-------|-------------------------|---------|---------|
-| ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |  ```SquaredEuclideanPointOps```  |
-| ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
-| ```GENERALIZED_I```              | R     |Generalized I |         |   ```GeneralizedIPointOps```   |
-| ```ITAKURA_SAITO```              | R+^d  |[Itakura-Saito](http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance) |         |   ```ItakuraSaitoPointOps```   |
+  def best(
+    maxIterations: Int,
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    centers: Seq[IndexedSeq[BregmanCenter]]): (Double, IndexedSeq[BregmanCenter]) = {
+    cluster(maxIterations, pointOps, data, centers).minBy(_._1)
+  }
+}
+
+object MultiKMeansClusterer {
+  def apply(clustererName: String): MultiKMeansClusterer = ???
+}
+```
+
+The ```SIMPLE``` algorithm implements Lloyd's algorithm.
+directly on Spark. If you are learning Spark and understand Lloyd's algorithm, look at this simple
+implementation.
+
+The ```COLUMN_TRACKING``` algorithm tracks the assignments of points to clusters and the distance of
+points to their assigned cluster.  In later iterations of Lloyd's algorithm, this information can
+be used to reduce the number of distance calculations needed to accurately reassign points.  This
+is a novel implementation.
+
+The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf).
+This implementation should be used then the number of points is much larger than the dimension of the data and the
+number of clusters desired.
+
+Objects implementing these algorithms may be constructed using the ```apply``` method of the
+companion object ```MultiKMeansClusterer```.
 
 
-### Batch Clusterer Usage
+| Name            | Algorithm                         |
+|----------------------------------|-----------------------------------|
+| ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
+| ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
+| ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
+
+
+### Constructing K-Means Models using Helper Methods
 
 A ```KMeansModel``` can be constructed from any set of cluster centers and distance function.
 However, the more interesting models satisfy an optimality constraint.  If we sum the distances
@@ -333,27 +425,43 @@ object KMeans {
 }
 ```
 
+#### Initializing (a.k.a. seeding) the Set of Cluster Centers
 
-#### Initialization/seeding algorithm
+Any K-Means model may be used as seed value to Lloyd's algorithm. In fact, our clusterers accept
+multiple seed sets. The ```K-Means.train``` helper methods allows one to name an initialization
+method.
 
-This clusterer separates the initialization step (the seeding of the initial clusters) from the main clusterer.
-This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
-including initialization methods that have different numbers of initial clusters.
-
-There are two pre-defined seeding algorithms that may be constructed by using the ```apply``` method
-of the companion object ```KMeansInitializer```"
+Two algorithms are implemented that produce viable seed sets.
+They may be constructed by using the ```apply``` method
+of the companion object```KMeansInitializer```".
 
 | Name            | Algorithm                         |
 |----------------------------------|-----------------------------------|
-| ```RANDOM```                  | Random selection of initial k centers |
-| ```K_MEANS_PARALLEL```           | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
+| ```RANDOM```             | Random selection of initial k centers |
+| ```K_MEANS_PARALLEL```   | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
 
-You may provide alternative seeding algorithms using the lower level interface as shown in ```KMeans.train```.
+Under the covers, these initializers implement the ```KMeansInitializer``` trait
+
+```scala
+trait KMeansInitializer extends Serializable {
+  def init(
+    ops: BregmanPointOps,
+    d: RDD[BregmanPoint],
+    numClusters: Int,
+    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    runs: Int,
+    seed: Long): Seq[IndexedSeq[BregmanCenter]]
+}
+
+object KMeansInitializer {
+  def apply(name: String): KMeansInitializer = ???
+}
+```
 
 #### Dimensionality Reduction via Embeddings
 
-One can embed points into a lower dimensional spaces before clustering in order to speed the
-computation.  There are several embeddings that may be constructed using the ```apply``` method
+The ```K-Means.train``` helper methods allows on to name a sequence of embeddings.
+Several embeddings are provided that may be constructed using the ```apply``` method
 of the companion object ```Embeddings```.
 
 
@@ -367,35 +475,7 @@ of the companion object ```Embeddings```.
 | ```SYMMETRIZING_KL_EMBEDDING```     | [Symmetrizing KL Embedding](http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf)       |
 
 
-#### K-Means Clusterer Implementations
-
-We provide three K-Means clusterer implementations.
-
-The ```SIMPLE``` algorithm implements Lloyd's algorithm.
-directly on Spark. If you are learning Spark and understand Lloyd's algorithm, look at this simple
-implementation.
-
-The ```COLUMN_TRACKING``` algorithm tracks the assignments of points to clusters and the distance of
-points to their assigned cluster.  In later iterations of Lloyd's algorithm, this information can
-be used to reduce the number of distance calculations needed to accurately reassign points.  This
-is a novel implementation.
-
-The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf).
-This implementation should be used then the number of points is much larger than the dimension of the data and the
-number of clusters desired.
-
-Objects implementing these algorithms may be constructed using the ```apply``` method of the
-companion object ```MultiKMeansClusterer```.
-
-
-| Name            | Algorithm                         |
-|----------------------------------|-----------------------------------|
-| ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
-| ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
-| ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
-
-
-#### Iterative Clustering using Embeddings
+#### Iterative Clustering
 
 K-means clustering can be performed iteratively using different embeddings of the data.  For example,
 with high-dimensional time series data, it may be advantageous to:
@@ -445,49 +525,21 @@ object KMeans {
 }
 ```
 
-If the number of clusters desired is small, but the dimension is high, one may also use the method
-of [Random Projections](http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS2010_kmeans.pdf).
-At present, no embedding is provided for random projects, but, hey, I have to leave something for
-you to do!  Send a pull request!!!
+### Creating a Custom K-means Clusterer
 
-### Customizing the Components
+There are many ways to create your our custom K-means clusterer from these components.
 
-If your needs are not met with the provided Bregman divergences,
-the provided initializers, and the provided embeddings using one the the ```KMeans``` helper methods,
-then you may use the base Lloyd's clusterer implementations and your own divergence, initializer, and
-embeddings, to implement your K-means clustering algorithm.
 
-One may define new ```BregmanDivergence```s, new ```BregmanPointOps``` and new ways of building
-```KMeansModel```s using various constructors provided on companion objects.
+#### Custom ```BregmanPointOps```
 
-####  Custom Bregman Divergences
+You may create your own custom ```BregmanPointsOps```
+from your own implementation of the ```BregmanDivergence``` trait.
 
-In addition to the pre-defined Bregman divergences, one may construct new instances of
-```BregmanDivergence``` using the companion object.
-```scala
-object BregmanDivergence {
-
-  /**
-   * Create a Bregman Divergence from
-   * @param f any continuously-differentiable real-valued and strictly
-   *          convex function defined on a closed convex set in R^^N
-   * @param gradientF the gradient of f
-   * @return a Bregman Divergence on that function
-   */
-  def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
-}
-```
-
-#### Custom Bregman Point Ops
-
-One may access the pre-defined ```BregmanPointOps```  or one may
-construct new instances of ```BregmanPointOps``` using the companion object.
 
 ```scala
 pacakge com.massivedatascience.clusterer
 
 object BregmanPointOps {
-  def apply(distanceFunction: String): BregmanPointOps = ???
 
   def apply(d: BregmanDivergence): BregmanPointOps = ???
 
@@ -495,7 +547,18 @@ object BregmanPointOps {
 }
 ```
 
-#### Custom K-Means Models
+#### Custom Embeddings
+
+Perhaps you have a dimensionality reduction method that is not provided by one of the standard
+embeddings.  You may create your own embedding.
+
+For example, If the number of clusters desired is small, but the dimension is high, one may also use the method
+of [Random Projections](http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS2010_kmeans.pdf).
+At present, no embedding is provided for random projects, but, hey, I have to leave something for
+you to do!  Send a pull request!!!
+
+
+### Creating K-Means Models using the ```KMeansModel``` Helper Object
 
 Training a K-Means model from a set of points using ```KMeans.train``` is one way to create a
 ```KMeansModel```.  However,
