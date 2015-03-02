@@ -17,6 +17,37 @@ This code has been tested on data sets of tens of millions of points in a 700+ d
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
 
+# Getting started #
+
+To use the clusterer, just add the dependency to the project's build configuration,
+
+SBT
+
+```scala
+libraryDependencies ++= Seq(
+  "com.massivedatascience" %% "massivedatascience-clusterer" % "0.9.0-SNAPSHOT"
+)
+```
+
+Maven
+
+```xml
+<dependency>
+    <groupId>com.massivedatascience</groupId>
+    <artifactId>massivedatascience-clusterer_2.10</artifactId>
+    <version>0.9.0-SNAPSHOT</version>
+</dependency>
+
+or
+
+<dependency>
+    <groupId>com.massivedatascience</groupId>
+    <artifactId>massivedatascience-clusterer_2.11</artifactId>
+    <version>0.9.0-SNAPSHOT</version>
+</dependency>
+```
+
+
 ### Introduction
 
 The goal K-Means clustering is to produce a model of the clusters of a set of points that satisfies
