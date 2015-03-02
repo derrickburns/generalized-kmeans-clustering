@@ -89,6 +89,8 @@ must define two methods, ```F```  to evaluate a function on a point and ```gradF
 gradient of the function on a points.
 
 ```scala
+package com.massivedatascience.divergence
+
 trait BregmanDivergence {
   def F(v: Vector): Double
 
@@ -107,6 +109,8 @@ The class that represent the enriched cluster center is ```BregmanCenter```.  Us
 of this package do not construct instances of these objects directly.
 
 ```scala
+package com.massivedatascience.divergence
+
 trait BregmanPoint
 
 trait BregmanCenter
@@ -119,6 +123,8 @@ and ```BregmanCenter```.
 The enriched trait is the ```BregmanPointOps```.
 
 ```scala
+package com.massivedatascience.clusterer
+
 trait BregmanPointOps  {
   type P = BregmanPoint
   type C = BregmanCenter
@@ -143,14 +149,15 @@ trait BregmanPointOps  {
 }
 ```
 
-The instance of ```BregmanPointOps``` that supports the ```SquaredEuclideanDistanceDivergence``` is
-the ```SquaredEuclideanPointOps```.
-
+```object com.massivedatascience.cluseter.SquaredEuclideanPointOps``` is an instance of ```BregmanPointOps``` that supports the
+the ```SquaredEuclideanDistanceDivergence```.
 
 With these definitions, we define our realization of a k-means model, ```KMeansModel``` which
 we enrich with operations to find closest clusters to a point and to compute distances:
 
 ```scala
+package com.massivedatascience.clusterer
+
 trait KMeansModel {
 
   val pointOps: BregmanPointOps
@@ -196,7 +203,10 @@ the input data.  For example, frequency
 data is integral. Similarity of frequencies or distributions are best performed using the
 Kullback-Leibler divergence.
 
-| Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
+The provided ```BregmanPointsOps``` may be accessed using supplying the name of the desired object
+to the apply method of the companion object.
+
+| Name   | Space | Divergence              | Input   |  Object (```com.massivedatascience.clusterer.```) |
 |----------------------------------|-------|-------------------------|---------|---------|
 | ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |  ```SquaredEuclideanPointOps```  |
 | ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
@@ -226,10 +236,10 @@ For dense data in a low dimension space using the squared Euclidean distance fun
 one may simply call ```KMeans.train``` with the data and the desired number of clusters:
 
 ```scala
-  import com.com.massivedatascience.clusterer.KMeans
-  import org.apache.spark.mllib.linalg.Vector
+import com.com.massivedatascience.clusterer
+import org.apache.spark.mllib.linalg.Vector
 
-  val model : KMeansModel = KMeans.train(data: RDD[Vector], k: Int)
+val model : KMeansModel = KMeans.train(data: RDD[Vector], k: Int)
 ```
 
 The full signature of the ```KMeans.train``` method is:
@@ -330,9 +340,10 @@ This clusterer separates the initialization step (the seeding of the initial clu
 This allows for new initialization methods beyond the standard "random" and "K-Means ||" algorithms,
 including initialization methods that have different numbers of initial clusters.
 
-There are two pre-defined seeding algorithms.
+There are two pre-defined seeding algorithms that may be constructed by using the ```apply``` method
+of the companion object ```KMeansInitializer```"
 
-| Name (``` KMeansInitializer._```)            | Algorithm                         |
+| Name            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```RANDOM```                  | Random selection of initial k centers |
 | ```K_MEANS_PARALLEL```           | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
@@ -342,7 +353,8 @@ You may provide alternative seeding algorithms using the lower level interface a
 #### Dimensionality Reduction via Embeddings
 
 One can embed points into a lower dimensional spaces before clustering in order to speed the
-computation.
+computation.  There are several embeddings that may be constructed using the ```apply``` method
+of the companion object ```Embeddings```.
 
 
 | Name (```Embeddings._```)         | Algorithm                                                   |
@@ -372,8 +384,11 @@ The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://w
 This implementation should be used then the number of points is much larger than the dimension of the data and the
 number of clusters desired.
 
+Objects implementing these algorithms may be constructed using the ```apply``` method of the
+companion object ```MultiKMeansClusterer```.
 
-| Name (```MultiKMeansClusterer._```)            | Algorithm                         |
+
+| Name            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
 | ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
@@ -393,6 +408,9 @@ with high-dimensional time series data, it may be advantageous to:
 
 This technique has been named the ["Anytime" Algorithm](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf).
 
+The ```com.massivedatascience.clusterer.KMeans``` helper method provides a method, ```timeSeriesTrain```
+that embeds the data iteratively.
+
 ```scala
 object KMeans {
 
@@ -411,7 +429,12 @@ the divergence of interest is squared Euclidean distance, one can using
 [Random Indexing](http://en.wikipedia.org/wiki/Random_indexing) to
 down-sample the data while preserving distances between clusters, with high probability.
 
+The ```com.massivedatascience.clusterer.KMeans``` helper method provides a method, ```sparseTrain```
+that embeds into various dimensions using randoming indexing.
+
 ```scala
+package com.massivedatascience.clusterer
+
 object KMeans {
 
   def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
@@ -457,6 +480,8 @@ One may access the pre-defined ```BregmanPointOps```  or one may
 construct new instances of ```BregmanPointOps``` using the companion object.
 
 ```scala
+pacakge com.massivedatascience.clusterer
+
 object BregmanPointOps {
   def apply(distanceFunction: String): BregmanPointOps = ???
 
@@ -475,6 +500,8 @@ of these constructors.
 
 
 ```scala
+pacakge com.massivedatascience.clusterer
+
 object KMeansModel {
 
   /**
@@ -598,7 +625,6 @@ object KMeansModel {
 }
 
 ```
-
 
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
