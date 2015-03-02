@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>transforms - com.massivedatascience.transforms</title>
+          <meta name="description" content="transforms - com.massivedatascience.transforms" />
+          <meta name="keywords" content="transforms com.massivedatascience.transforms" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'com.massivedatascience.transforms.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a></p>
+        <h1>transforms</h1>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">transforms</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.massivedatascience.transforms.Embedding" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="EmbeddingextendsSerializable"></a>
+      <a id="Embedding:Embedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Embedding.html"><span class="name">Embedding</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">An embedding of vectors into an alternative space.</p>
+    </li><li name="com.massivedatascience.transforms.MultiplicativeHash" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MultiplicativeHashextendsAnyRef"></a>
+      <a id="MultiplicativeHash:MultiplicativeHash"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MultiplicativeHash.html"><span class="name">MultiplicativeHash</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A simple <a href="http://en.wikipedia.org/wiki/Hash_function">multiplicative hash function</a>
+that supports mapping from spaces that have a number of dimensions that is a power of two
+to a space that has a dimension that is a (lower) power of two.</a></p>
+    </li><li name="com.massivedatascience.transforms.RandomIndexEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RandomIndexEmbeddingextendsEmbedding"></a>
+      <a id="RandomIndexEmbedding:RandomIndexEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="RandomIndexEmbedding.html"><span class="name">RandomIndexEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
+in a way that preserves similarity as per the
+<a href= "http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss">Johnson-Lindenstrauss lemma</a>.</a></p>
+    </li><li name="com.massivedatascience.transforms.RandomProjectionEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RandomProjectionEmbeddingextendsAnyRef"></a>
+      <a id="RandomProjectionEmbedding:RandomProjectionEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="RandomProjectionEmbedding.html"><span class="name">RandomProjectionEmbedding</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt"></p>
+    </li><li name="com.massivedatascience.transforms.SymmetrizingEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SymmetrizingEmbeddingextendsEmbedding"></a>
+      <a id="SymmetrizingEmbedding:SymmetrizingEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SymmetrizingEmbedding.html"><span class="name">SymmetrizingEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">One can create a symmetric version of any Bregman Divergence</a>
+
+This one is
+
+  distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+
+The embedding is simply
+
+x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+</a></p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="com.massivedatascience.transforms.DenseEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DenseEmbedding"></a>
+      <a id="DenseEmbedding:DenseEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="DenseEmbedding$.html"><span class="name">DenseEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">The embedding that transforms all points to dense vectors.</p>
+    </li><li name="com.massivedatascience.transforms.Embeddings" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Embeddings"></a>
+      <a id="Embeddings:Embeddings"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Embeddings$.html"><span class="name">Embeddings</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="com.massivedatascience.transforms.HaarEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HaarEmbedding"></a>
+      <a id="HaarEmbedding:HaarEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HaarEmbedding$.html"><span class="name">HaarEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">The embeddding that averages adjacent values, thereby lowering the dimension of
+the data by two
+</p>
+    </li><li name="com.massivedatascience.transforms.HaarWavelet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HaarWavelet"></a>
+      <a id="HaarWavelet:HaarWavelet"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HaarWavelet$.html"><span class="name">HaarWavelet</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="com.massivedatascience.transforms.IdentityEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="IdentityEmbedding"></a>
+      <a id="IdentityEmbedding:IdentityEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="IdentityEmbedding$.html"><span class="name">IdentityEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">The identity embedding
+</p>
+    </li><li name="com.massivedatascience.transforms.SymmetrizingKLEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SymmetrizingKLEmbedding"></a>
+      <a id="SymmetrizingKLEmbedding:SymmetrizingKLEmbedding"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="SymmetrizingKLEmbedding$.html"><span class="name">SymmetrizingKLEmbedding</span></a><span class="result"> extends <a href="SymmetrizingEmbedding.html" class="extype" name="com.massivedatascience.transforms.SymmetrizingEmbedding">SymmetrizingEmbedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A symmetric version of the standard Kullback-Leibler Divergence</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+    </body>
+      </html>
