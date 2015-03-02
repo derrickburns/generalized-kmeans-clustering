@@ -7,7 +7,7 @@ K-means clustering are implemented or can be implemented with this package, incl
 
 * [clustering using general distance functions (Bregman divergences)](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
 * [clustering large numbers of points using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
-* [clustering high dimensional Euclidean data](http://en.wikipedia.org/wiki/Random_indexing)
+* [clustering high dimensional Euclidean data](http://www.ida.liu.se/~arnjo/papers/pakdd-ws-11.pdf)
 * [clustering high dimensional time series data](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
 * [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf)
 * [clustering via bisection](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
