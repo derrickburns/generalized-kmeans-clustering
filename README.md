@@ -2,27 +2,28 @@ Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
-and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer to support
-* sparse or dense data
-* parallel runs on non-equal target number of clusters
-* low or high dimensional data
-* using distances defined by [Bregman divergences](http://mark.reid.name/blog/meet-the-bregman-divergences.html)
-* using all data points or a randomly sampled sub-set of the data points (a.k.a. mini-batches)
-* backfilling empty clusters.
+and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer.   Most practical variants of
+K-means clustering are implemented or can be implemented with this package, including:
 
+* [clustering using Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
+* [clustering using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
+* [clustering via random indexing for dimensionality reduction](http://en.wikipedia.org/wiki/Random_indexing)
+* [clustering time series data via Haar Wavelets](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+* [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf)
+* [bisecting k-means](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
+* [clustering with parallel initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
 
-# Getting started #
+### Getting Started
 
 The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
 
 To use the **latest snapshot** version, also add the Sonatype snapshots repository resolver.
 
-
-SBT
+#### SBT
 
 ```scala
 libraryDependencies ++= Seq(
@@ -33,7 +34,7 @@ resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositor
 
 ```
 
-Maven
+#### Maven
 
 ```xml
 <dependency>
@@ -349,13 +350,27 @@ computation.
 
 #### K-Means Clusterer Implementations
 
-We provide three varieties of K-Means clusterer.
+We provide three K-Means clusterer implementations.
+
+The ```SIMPLE``` algorithm implements Lloyd's algorithm.
+directly on Spark. If you are learning Spark and understand Lloyd's algorithm, look at this simple
+implementation.
+
+The ```COLUMN_TRACKING``` algorithm tracks the assignments of points to clusters and the distance of
+points to their assigned cluster.  In later iterations of Lloyd's algorithm, this information can
+be used to reduce the number of distance calculations needed to accurately reassign points.  This
+is a novel implementation.
+
+The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf).
+This implementation should be used then the number of points is much larger than the dimension of the data and the
+number of clusters desired.
+
 
 | Name (```MultiKMeansClusterer._```)            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
 | ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
-| ```MINI_BATCH_10```      | mini-batch clusterer that samples 10% of the data each round to update centroids |
+| ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
 #### Iterative Clustering using Embeddings
