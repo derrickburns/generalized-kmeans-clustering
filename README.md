@@ -190,7 +190,7 @@ Kullback-Leibler divergence.
 
 | Name (```BregmanPointOps._```)   | Space | Divergence              | Input   |  Object |
 |----------------------------------|-------|-------------------------|---------|---------|
-| ```EUCLIDEAN```                  | R^d   |Euclidean                |         |  ```SquaredEuclideanPointOps```  |
+| ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |  ```SquaredEuclideanPointOps```  |
 | ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
 | ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
 | ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
