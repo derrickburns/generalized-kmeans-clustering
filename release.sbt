@@ -1,20 +1,22 @@
 import sbtrelease.ReleasePlugin._
 import ReleaseKeys._
+import SonatypeKeys._
 import sbtrelease.ReleaseStateTransformations._
 import sbtrelease.Utilities._
 import com.typesafe.sbt.pgp.PgpKeys._
 
+// Your project orgnization (package name)
+organization := "com.massivedatascience"
+
+// Your profile name of the sonatype account. The default is the same with the organization
+profileName := "derrickburns"
+
+// Import default settings. This changes `publishTo` settings to use the Sonatype repository
+// and add several commands for publishing.
+sonatypeSettings
 
 // publishing
 publishMavenStyle := true
-
-publishTo <<= version { v =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
 
 publishArtifact in Test := false
 

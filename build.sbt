@@ -38,4 +38,4 @@ site.includeScaladoc()
 
 ghpages.settings
 
-git.remoteRepo := "git@github.com:derrickrburns/generalized-kmeans-clustering.git"
+git.remoteRepo := "git@github.com:derrickburns/generalized-kmeans-clustering.git"
