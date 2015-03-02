@@ -540,6 +540,7 @@ object BregmanDivergence {
    */
   def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence = ???
 }
+```
 
 #### Custom ```BregmanPointOps```
 
