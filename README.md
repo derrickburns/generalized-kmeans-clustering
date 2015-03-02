@@ -12,6 +12,7 @@ K-means clustering are implemented or can be implemented with this package, incl
 * [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf)
 * [clustering via bisection](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
 * [clustering with near-optimality](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
+* [clustering streaming data](http://papers.nips.cc/paper/3812-streaming-k-means-approximation.pdf)
 
 If you find a novel variant of k-means clustering that is provably superior in some manner,
 implement it using the package and send a pull request along with the paper analyzing the variant!
