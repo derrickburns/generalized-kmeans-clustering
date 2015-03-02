@@ -118,7 +118,6 @@ supplying the name of the desired object to the apply method of the companion ob
 | ```NaturalKLSimplexDivergence```                | N+^d  |Kullback-Leibler         | Dense   |
 | ```RealKLDivergence```       | R^d   |Kullback-Leibler         | Dense   |
 | ```NaturalKLDivergence```       | N^d   |Kullback-Leibler         | Dense   |
-
 | ```ItakuraSaitoDivergence```         | R+^d  |Kullback-Leibler         | Sparse  |
 | ```LogisticLossDivergence```              | R     |Logistic Loss            |         |
 | ```GeneralizedIDivergence```     | R     |Generalized I |         |
