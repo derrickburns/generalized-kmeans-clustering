@@ -21,6 +21,29 @@ This code has been tested on data sets of tens of millions of points in a 700+ d
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
 
+- [Generalized K-Means Clustering](#)
+		- [Getting Started](#)
+			- [SBT](#)
+			- [Maven](#)
+		- [Introduction](#)
+			- [Bregman Divergences](#)
+			- [Compute Bregman Distances Efficiently using BregmanPoints  and BregmanCenters](#)
+			- [Representing K-Means Models](#)
+			- [Constructing K-Means Models using Clusterers](#)
+		- [Constructing K-Means Models using Helper Methods](#)
+			- [Initializing (a.k.a. seeding) the Set of Cluster Centers](#)
+			- [Dimensionality Reduction via Embeddings](#)
+			- [Iterative Clustering](#)
+		- [Creating a Custom K-means Clusterer](#)
+			- [Custom BregmanDivergence](#)
+			- [Custom BregmanPointOps](#)
+			- [Custom Embeddings](#)
+		- [Creating K-Means Models using the KMeansModel Helper Object](#)
+		- [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#)
+			- [Variable number of clusters in parallel runs](#)
+			- [Sparse Data](#)
+		    - [Cluster Backfilling](#)
+
 ### Getting Started
 
 The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
@@ -128,7 +151,7 @@ data is integral. Similarity of frequencies or distributions are best performed 
 Kullback-Leibler divergence.
 
 
-#### Compute Bregman Distances Efficiently using ```BregmanPoints```s  and ```BregmanCenter```s
+#### Compute Bregman Distances Efficiently using ```BregmanPoint```s  and ```BregmanCenter```s
 
 For efficient repeated computation of distance between a fixed set of points and varying cluster
 centers, is it convenient to pre-compute certain information and associate that information with
@@ -725,7 +748,7 @@ you convert your sparse data into dense data before clustering.
 In high dimensions (say > 1024), it is recommended that you embed your sparse data into a lower
 dimensional dense space using random indexing.
 
-### Cluster Backfilling
+#### Cluster Backfilling
 The standard implementation of Lloyd's algorithm suffers from the problem that cluster centers
 can vanish and not be replaced.  Our ```COLUMN_TRACKING``` implementation allows one to backfill
 empty clusters using the K Means || algorithm.
