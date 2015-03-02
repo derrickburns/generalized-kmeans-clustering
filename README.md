@@ -20,7 +20,9 @@ using a variety of distance functions. Thanks to the excellent core Spark implem
 # Getting started #
 
 massivedatascience-clusterer is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
-Just add the dependency to the project's build configuration,
+
+To use the **latest snapshot** version, add also Sonatype snapshots repository resolver.
+
 
 SBT
 
@@ -28,6 +30,9 @@ SBT
 libraryDependencies ++= Seq(
   "com.massivedatascience" %% "massivedatascience-clusterer" % "0.9.0-SNAPSHOT"
 )
+
+resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+
 ```
 
 Maven
@@ -46,6 +51,18 @@ or
     <artifactId>massivedatascience-clusterer_2.11</artifactId>
     <version>0.9.0-SNAPSHOT</version>
 </dependency>
+
+
+<repositories>
+    <repository>
+        <id>oss-sonatype</id>
+        <name>oss-sonatype</name>
+        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
 ```
 
 
