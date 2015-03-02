@@ -355,7 +355,7 @@ We provide three varieties of K-Means clusterer.
 |----------------------------------|-----------------------------------|
 | ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
 | ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
-| ```MINI_BATCH_10```      | mini-batch clusterer that samples 10% of the data on round to update centroids |
+| ```MINI_BATCH_10```      | mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
 #### Examples
