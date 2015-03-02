@@ -358,32 +358,53 @@ We provide three varieties of K-Means clusterer.
 | ```MINI_BATCH_10```      | mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
-#### Examples
+#### Iterative Clustering using Embeddings
 
-Here are examples of using K-Means recursively.
+K-means clustering can be performed iteratively using different embeddings of the data.  For example,
+with high-dimensional time series data, it may be advantageous to:
+
+* Down-sample the data via the Haar transform (aka averaging)
+* Solve the K-means clustering problem on the down-sampled data
+* Assign the downsampled points to clusters.
+* Create a new KMeansModel from the using the assignments on the original data
+* Solve the K-Means clustering on the KMeansModel so constructed
+
+This technique has been named the ["Anytime" Algorithm](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf).
 
 ```scala
-object RecursiveKMeans {
-
-  import KMeans._
-
-  def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
-    KMeans.train(raw, k,
-      embeddingNames = List(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI, Embeddings.HIGH_DIMENSIONAL_RI))
-  }
+object KMeans {
 
   def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
     val dim = raw.first().toArray.length
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)
-    KMeans.trainViaSubsampling(raw, k, depth = target)
+    trainViaSubsampling(raw, k, depth = target)
   }
 }
 ```
 
-At minimum, you must provide the RDD of ```Vector```s to cluster and the number of clusters you
-desire. The method will return a ```KMeansModel``` of the clustering.
+High dimensional data can be clustered directly, but the cost is proportional to the dimension.  If
+the divergence of interest is squared Euclidean distance, one can using
+[Random Indexing](http://en.wikipedia.org/wiki/Random_indexing) to
+down-sample the data while preserving distances between clusters, with high probability.
+
+```scala
+object KMeans {
+
+  def sparseTrain(raw: RDD[Vector], k: Int): KMeansModel = {
+    train(raw, k,
+      embeddingNames = List(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
+        Embeddings.HIGH_DIMENSIONAL_RI))
+  }
+}
+```
+
+If the number of clusters desired is small, but the dimension is high, one may also use the method
+of [Random Projections](http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS2010_kmeans.pdf).
+At present, no embedding is provided for random projects, but, heh, I have to leave something for
+you to do!  Send a pull request!!!
+
 
 ### Customizing the Components
 
