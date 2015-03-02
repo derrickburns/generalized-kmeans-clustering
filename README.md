@@ -21,28 +21,31 @@ This code has been tested on data sets of tens of millions of points in a 700+ d
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
 
-- [Generalized K-Means Clustering](#)
-		- [Getting Started](#)
-			- [SBT](#)
-			- [Maven](#)
-		- [Introduction](#)
-			- [Bregman Divergences](#)
-			- [Compute Bregman Distances Efficiently using BregmanPoints  and BregmanCenters](#)
-			- [Representing K-Means Models](#)
-			- [Constructing K-Means Models using Clusterers](#)
-		- [Constructing K-Means Models using Helper Methods](#)
-			- [Initializing (a.k.a. seeding) the Set of Cluster Centers](#)
-			- [Dimensionality Reduction via Embeddings](#)
-			- [Iterative Clustering](#)
-		- [Creating a Custom K-means Clusterer](#)
-			- [Custom BregmanDivergence](#)
-			- [Custom BregmanPointOps](#)
-			- [Custom Embeddings](#)
-		- [Creating K-Means Models using the KMeansModel Helper Object](#)
-		- [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#)
-			- [Variable number of clusters in parallel runs](#)
-			- [Sparse Data](#)
-		    - [Cluster Backfilling](#)
+Table of Contents
+=================
+
+  * [Generalized K-Means Clustering](#generalized-k-means-clustering)
+      * [Getting Started](#getting-started)
+        * [SBT](#sbt)
+        * [Maven](#maven)
+      * [Introduction](#introduction)
+        * [Bregman Divergences](#bregman-divergences)
+        * [Compute Bregman Distances Efficiently using <code>BregmanPoint</code>s  and <code>BregmanCenter</code>s](#compute-bregman-distances-efficiently-using-bregmanpoints--and-bregmancenters)
+        * [Representing K-Means Models](#representing-k-means-models)
+        * [Constructing K-Means Models using Clusterers](#constructing-k-means-models-using-clusterers)
+      * [Constructing K-Means Models using Helper Methods](#constructing-k-means-models-using-helper-methods)
+        * [Initializing (a.k.a. seeding) the Set of Cluster Centers](#initializing-aka-seeding-the-set-of-cluster-centers)
+        * [Dimensionality Reduction via Embeddings](#dimensionality-reduction-via-embeddings)
+        * [Iterative Clustering](#iterative-clustering)
+      * [Creating a Custom K-means Clusterer](#creating-a-custom-k-means-clusterer)
+ * [Custom <code>BregmanDivergence</code>](#custom-bregmandivergence)
+ * [Custom <code>BregmanPointOps</code>](#custom-bregmanpointops)
+        * [Custom Embeddings](#custom-embeddings)
+      * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
+      * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
+        * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
+        * [Sparse Data](#sparse-data)
+        * [Cluster Backfilling](#cluster-backfilling)
 
 ### Getting Started
 
