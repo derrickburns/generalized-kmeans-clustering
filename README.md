@@ -201,16 +201,16 @@ the ```SquaredEuclideanDistanceDivergence```.
 
 One may construct instances of ```BregmanDivergence``` using the companion object.
 
-| Name   | Space | Divergence              | Input   |  Object (```com.massivedatascience.clusterer.```) |
-|----------------------------------|-------|-------------------------|---------|---------|
-| ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |  ```SquaredEuclideanPointOps```  |
-| ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   | ```DenseKLPointOps```    |
-| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |  ```DiscreteKLPointOps```     |
-| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |  ```DiscreteSmoothedKLPointOps```   |
-| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |  ```SparseRealKLPointOps```    |
-| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |   ```LogisticLossPointOps```   |
-| ```GENERALIZED_I```              | R     |Generalized I |         |   ```GeneralizedIPointOps```   |
-| ```ITAKURA_SAITO```              | R+^d  |[Itakura-Saito](http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance) |         |
+| Name   | Space | Divergence              | Input   |
+|----------------------------------|-------|-------------------------|---------|
+| ```EUCLIDEAN```                  | R^d   |Squared Euclidean        |         |
+| ```RELATIVE_ENTROPY```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   |
+| ```DISCRETE_KL```                | N+^d  |Kullback-Leibler         | Dense   |
+| ```DISCRETE_SMOOTHED_KL```       | N^d   |Kullback-Leibler         | Dense   |
+| ```SPARSE_SMOOTHED_KL```         | R+^d  |Kullback-Leibler         | Sparse  |
+| ```LOGISTIC_LOSS```              | R     |Logistic Loss            |         |
+| ```GENERALIZED_I```              | R     |Generalized I |         |
+| ```ITAKURA_SAITO```              | R+^d  |[Itakura-Saito](http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance) |
 
 #### Representing K-Means Models
 
