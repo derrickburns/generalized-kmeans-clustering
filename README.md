@@ -19,9 +19,9 @@ using a variety of distance functions. Thanks to the excellent core Spark implem
 
 # Getting started #
 
-massivedatascience-clusterer is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
+The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
 
-To use the **latest snapshot** version, add also Sonatype snapshots repository resolver.
+To use the **latest snapshot** version, also add the Sonatype snapshots repository resolver.
 
 
 SBT
