@@ -102,8 +102,8 @@ distance. We name it the ```SquaredEuclideanDistanceDivergence```.
 
 For efficient repeated computation of distance between a fixed set of points and varying cluster
 centers, is it convenient to pre-compute certain information and associate that information with
-the point or the cluster center.  We call the classes that represent those enriched points ```BregmanPoint```s.
-We call the classes that represent those enriched cluster centers ```BregmanCenter```s.  Users
+the point or the cluster center.  The class that represent an enriched point is ```BregmanPoint```.
+The class that represent the enriched cluster center is ```BregmanCenter```.  Users
 of this package do not construct instances of these objects directly.
 
 ```scala
