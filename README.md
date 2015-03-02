@@ -19,7 +19,8 @@ using a variety of distance functions. Thanks to the excellent core Spark implem
 
 # Getting started #
 
-To use the clusterer, just add the dependency to the project's build configuration,
+massivedatascience-clusterer is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
+Just add the dependency to the project's build configuration,
 
 SBT
 
