@@ -5,13 +5,13 @@ This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
 and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer.   Most practical variants of
 K-means clustering are implemented or can be implemented with this package, including:
 
-* [clustering using Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
-* [clustering using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
-* [clustering via random indexing for dimensionality reduction](http://en.wikipedia.org/wiki/Random_indexing)
-* [clustering time series data via Haar Wavelets](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+* [clustering using general distance functions (Bregman divergences)](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
+* [clustering large numbers of points using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
+* [clustering high dimensional Euclidean data](http://en.wikipedia.org/wiki/Random_indexing)
+* [clustering high dimensional time series data](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
 * [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf)
 * [bisecting k-means](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
-* [clustering with parallel initialization](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
+* [clustering with near-optimality](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
