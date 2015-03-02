@@ -10,7 +10,7 @@ K-means clustering are implemented or can be implemented with this package, incl
 * [clustering high dimensional Euclidean data](http://en.wikipedia.org/wiki/Random_indexing)
 * [clustering high dimensional time series data](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
 * [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf)
-* [bisecting k-means](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
+* [clustering via bisection](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
 * [clustering with near-optimality](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
