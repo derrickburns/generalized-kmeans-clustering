@@ -152,7 +152,7 @@ trait BregmanPointOps  {
 ```object com.massivedatascience.cluseter.SquaredEuclideanPointOps``` is an instance of ```BregmanPointOps``` that supports the
 the ```SquaredEuclideanDistanceDivergence```.
 
-With these definitions, we define our realization of a k-means model, ```KMeansModel``` which
+With these definitions, we define our realization of a k-means model, ```KMeansModel```, which
 we enrich with operations to find closest clusters to a point and to compute distances:
 
 ```scala
