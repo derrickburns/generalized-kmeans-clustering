@@ -13,6 +13,9 @@ K-means clustering are implemented or can be implemented with this package, incl
 * [clustering via bisection](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
 * [clustering with near-optimality](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 
+If you find a novel variant of k-means clustering that is provably superior in some manner,
+implement it using the package and send a pull request along with the paper analyzing the variant!
+
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
