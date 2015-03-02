@@ -450,8 +450,12 @@ of [Random Projections](http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS
 At present, no embedding is provided for random projects, but, hey, I have to leave something for
 you to do!  Send a pull request!!!
 
-
 ### Customizing the Components
+
+If your needs are not met with the provided Bregman divergences,
+the provided initializers, and the provided embeddings using one the the ```KMeans``` helper methods,
+then you may use the base Lloyd's clusterer implementations and your own divergence, initializer, and
+embeddings, to implement your K-means clustering algorithm.
 
 One may define new ```BregmanDivergence```s, new ```BregmanPointOps``` and new ways of building
 ```KMeansModel```s using various constructors provided on companion objects.
