@@ -112,7 +112,10 @@ trait BregmanPoint
 trait BregmanCenter
 ```
 
-Internally, we enrich a Bregman divergence with a set of commonly used operations.
+We enrich a Bregman divergence with a set of commonly used operations, including factory
+methods ```toPoint``` and ```toCenter``` to contruct instances of the aforementioned ```BregmanPoint```
+and ```BregmanCenter```.
+
 The enriched trait is the ```BregmanPointOps```.
 
 ```scala
