@@ -447,7 +447,7 @@ object KMeans {
 
 If the number of clusters desired is small, but the dimension is high, one may also use the method
 of [Random Projections](http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS2010_kmeans.pdf).
-At present, no embedding is provided for random projects, but, heh, I have to leave something for
+At present, no embedding is provided for random projects, but, hey, I have to leave something for
 you to do!  Send a pull request!!!
 
 
