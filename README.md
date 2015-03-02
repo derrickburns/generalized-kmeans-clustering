@@ -191,7 +191,7 @@ the ```SquaredEuclideanDistanceDivergence```.
 One may construct instances of ```BregmanPointOps``` using the companion object.
 
 | Name   | Divergence     |
-|-------------------------|
+|--------|----------------|
 | ```EUCLIDEAN```                  |Squared Euclidean        |
 | ```RELATIVE_ENTROPY```           |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         |
 | ```DISCRETE_KL```                |Kullback-Leibler         |
