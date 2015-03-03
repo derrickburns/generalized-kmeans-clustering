@@ -51,6 +51,7 @@ object ColumnTrackingKMeans {
     def isUnassigned: Boolean = cluster == noCluster
   }
 
+  private[clusterer]
   class ConvergenceDetector(sc: SparkContext) extends Serializable with Logging {
 
     private[this] val stats = new TrackingStats(sc)
@@ -410,13 +411,12 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = new Array[MutableWeightedVector](numCenters)
+        val centroids = IndexedSeq.fill(numCenters)(pointOps.make)
         val changed = new Array[Boolean](numCenters)
-
         val indexBuffer = new mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
 
-        @inline def update(index: Int, point: T) =
+        @inline def update(index: Int, point: T) : Unit =
           if (index != -1 && !changed(index)) {
             changed(index) = true
             indexBuffer += index
@@ -427,14 +427,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           val current = y.next()
           val previous = z.next()
           val index = current.cluster
-
-          if (index >= 0) {
-            if (centroids(index) == null) {
-              centroids(index) = pointOps.make
-            }
-            centroids(index).add(point)
-          }
-
+          if (index >= 0) centroids(index).add(point)
           if (current.cluster != previous.cluster) {
             update(previous.cluster, point)
             update(current.cluster, point)
@@ -443,12 +436,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
         val changedClusters = indexBuffer.result()
         logInfo(s"number of clusters changed = ${changedClusters.length}")
-        changedClusters.map(index => (index,
-          if (centroids(index) == null)
-            pointOps.make
-          else
-            centroids(index)
-          )).iterator
+        changedClusters.map(index => (index, centroids(index))).iterator
     }.reduceByKey(_.add(_)).collect()
   }
 
@@ -465,13 +453,14 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = new Array[MutableWeightedVector](numCenters)
+        val centroids = IndexedSeq.fill(numCenters)(pointOps.make)
+        val changed = new Array[Boolean](numCenters)
         val indexBuffer = new mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
 
-        @inline def centroidAt(index: Int) = {
-          if (centroids(index) == null) {
-            centroids(index) = pointOps.make
+        @inline def centroidAt(index: Int) : MutableWeightedVector = {
+          if (! changed(index)) {
+            changed(index) = true
             indexBuffer += index
           }
           centroids(index)
@@ -481,9 +470,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           val point = x.next()
           val currentAssignment = y.next()
           val previousAssignment = z.next()
-          val current = currentAssignment.cluster
-          val previous = previousAssignment.cluster
           if (currentAssignment != previousAssignment) {
+            val current = currentAssignment.cluster
+            val previous = previousAssignment.cluster
             if (previous != -1) centroidAt(previous).sub(point)
             if (current != -1) centroidAt(current).add(point)
           }
