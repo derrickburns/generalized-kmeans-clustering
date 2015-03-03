@@ -106,7 +106,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     centers: IndexedSeq[C],
     point: P, f: (Int, Double) => T,
     initialDistance: Double = Infinity,
-    initialIndex : Int = -1): T = {
+    initialIndex: Int = -1): T = {
 
     var bestDistance = initialDistance
     var bestIndex = initialIndex
@@ -132,7 +132,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   def findClosestDistance(centers: IndexedSeq[C], point: P): Double =
     findClosestInfo(centers, point, (_: Int, d: Double) => d)
 
-  def distortion(data: RDD[P], centers: IndexedSeq[C]) : Double =
+  def distortion(data: RDD[P], centers: IndexedSeq[C]): Double =
     data.aggregate(0.0)(_ + findClosestDistance(centers, _), _ + _)
 
   /**

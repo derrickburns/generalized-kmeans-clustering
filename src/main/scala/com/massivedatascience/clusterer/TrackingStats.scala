@@ -18,9 +18,9 @@
 package com.massivedatascience.clusterer
 
 import org.apache.spark.SparkContext._
-import org.apache.spark.{ Logging, SparkContext }
+import org.apache.spark.SparkContext
 
-class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with Logging {
+class TrackingStats(sc: SparkContext) extends BasicStats with Serializable {
   val currentRound = sc.accumulator[Int](-1, s"Round")
   val newlyAssignedPoints = sc.accumulator[Int](0, s"Newly Assigned Points")
   val reassignedPoints = sc.accumulator[Int](0, s"Reassigned Points")
@@ -41,16 +41,4 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable with 
 
   def getRound = currentRound.value
 
-  def report() = {
-    logInfo(s"round ${currentRound.value}")
-    logInfo(s"       relocated centers      ${relocatedCenters.value}")
-    logInfo(s"       lowered distortion     ${improvement.value}")
-    logInfo(s"       center movement        ${movement.value}")
-    logInfo(s"       reassigned points      ${reassignedPoints.value}")
-    logInfo(s"       newly assigned points  ${newlyAssignedPoints.value}")
-    logInfo(s"       unassigned points      ${unassignedPoints.value}")
-    logInfo(s"       non-empty clusters     ${nonemptyClusters.value}")
-    logInfo(s"       largest cluster size   ${largestCluster.value}")
-    logInfo(s"       replenished clusters   ${replenishedClusters.value}")
-  }
 }

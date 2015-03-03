@@ -19,8 +19,9 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
-import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
-import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import org.apache.spark.{Logging, SparkContext}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
@@ -37,7 +38,7 @@ object ColumnTrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   private[clusterer] case class CenterWithHistory(index: Int, round: Int, center: BregmanCenter,
-      initialized: Boolean) extends Serializable {
+    initialized: Boolean) extends Serializable {
     @inline def movedSince(r: Int): Boolean = round > r
   }
 
@@ -45,10 +46,135 @@ object ColumnTrackingKMeans {
   private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
   private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
-    def isAssigned : Boolean = cluster != noCluster
+    def isAssigned: Boolean = cluster != noCluster
 
-    def isUnassigned : Boolean = cluster == noCluster
+    def isUnassigned: Boolean = cluster == noCluster
   }
+
+  class ConvergenceDetector(sc: SparkContext) extends Serializable with Logging {
+
+    private[this] val stats = new TrackingStats(sc)
+
+    def stable(): Boolean = (stats.numNonEmptyClusters == 0) ||
+      (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
+
+    /**
+     * Collect the statistics about this round
+     *
+     * @param round the round
+     * @param currentCenters the current cluster centers
+     * @param previousCenters the previous cluster centers
+     * @param currentAssignments the current assignments
+     * @param previousAssignments the previous assignments
+     */
+    def update(
+      pointOps: BregmanPointOps,
+      round: Int,
+      currentCenters: IndexedSeq[CenterWithHistory],
+      previousCenters: IndexedSeq[CenterWithHistory],
+      currentAssignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]): Boolean = {
+
+      require(currentAssignments.getStorageLevel.useMemory)
+      require(previousAssignments.getStorageLevel.useMemory)
+
+      logInfo("start of stats collection")
+      stats.currentRound.setValue(round)
+      updateCenterStats(pointOps, currentCenters, previousCenters)
+      updatePointStats(currentAssignments, previousAssignments)
+      updateClusterStats(currentCenters, currentAssignments)
+      logInfo("end of stats collection")
+      report()
+      stable()
+    }
+
+    /**
+     * Report on the changes during the latest round
+     */
+    def report(): Unit = {
+      logInfo(s"round ${stats.currentRound.value}")
+      logInfo(s"       relocated centers      ${stats.relocatedCenters.value}")
+      logInfo(s"       lowered distortion     ${stats.improvement.value}")
+      logInfo(s"       center movement        ${stats.movement.value}")
+      logInfo(s"       reassigned points      ${stats.reassignedPoints.value}")
+      logInfo(s"       newly assigned points  ${stats.newlyAssignedPoints.value}")
+      logInfo(s"       unassigned points      ${stats.unassignedPoints.value}")
+      logInfo(s"       non-empty clusters     ${stats.nonemptyClusters.value}")
+      logInfo(s"       largest cluster size   ${stats.largestCluster.value}")
+      logInfo(s"       replenished clusters   ${stats.replenishedClusters.value}")
+    }
+
+    private[this]
+    def updateClusterStats(
+      centers: IndexedSeq[CenterWithHistory],
+      assignments: RDD[Assignment]): Unit = {
+
+      val clusterCounts = countByCluster(assignments)
+      val biggest = clusterCounts.maxBy(_._2)
+      stats.largestCluster.setValue(biggest._2)
+      stats.nonemptyClusters.setValue(clusterCounts.size)
+      stats.emptyClusters.setValue(centers.size - clusterCounts.size)
+    }
+
+    private[this]
+    def updatePointStats(
+      currentAssignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]): Unit = {
+
+      stats.reassignedPoints.setValue(0)
+      stats.unassignedPoints.setValue(0)
+      stats.improvement.setValue(0)
+      stats.newlyAssignedPoints.setValue(0)
+      currentAssignments.zip(previousAssignments).foreach {
+        case (current, previous) =>
+          if (current.isAssigned) {
+            if (previous.isAssigned) {
+              stats.improvement.add(previous.distance - current.distance)
+              if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
+            } else {
+              stats.newlyAssignedPoints.add(1)
+            }
+          } else {
+            stats.unassignedPoints.add(1)
+          }
+      }
+    }
+
+    private[this]
+    def updateCenterStats(
+      pointOps: BregmanPointOps,
+      currentCenters: IndexedSeq[CenterWithHistory],
+      previousCenters: IndexedSeq[CenterWithHistory]): Unit = {
+
+      stats.movement.setValue(0.0)
+      stats.relocatedCenters.setValue(0)
+      stats.replenishedClusters.setValue(0)
+      for ((current, previous) <- currentCenters.zip(previousCenters)) {
+        if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold &&
+          current.center.weight > pointOps.weightThreshold) {
+          val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
+          logInfo(s"$delta, ${previous.center}, ${current.center}")
+          stats.movement.add(delta)
+          stats.relocatedCenters.add(1)
+        }
+        if (!current.initialized) {
+          stats.replenishedClusters.add(1)
+        }
+      }
+    }
+
+    /**
+     * count number of points assigned to each cluster
+     *
+     * @param currentAssignments the assignments
+     * @return a map from cluster index to number of points assigned to that cluster
+     */
+    private[this]
+    def countByCluster(currentAssignments: RDD[Assignment]) =
+      currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
+
+  }
+
 }
 
 /**
@@ -69,37 +195,37 @@ object ColumnTrackingKMeans {
  *
  * <ol>
  * <li>
- *   each cluster is assigned a generation number
+ * each cluster is assigned a generation number
  * </li>
  * <li>
- *   generation numbers are monotonically increasing
+ * generation numbers are monotonically increasing
  * </li>
  * <li>
- *   all clusters whose centroids change in one Lloyd's round are assigned the same generation #
+ * all clusters whose centroids change in one Lloyd's round are assigned the same generation #
  * </li>
  * <li>
- *   when the membership of a cluster changes, the generation number of the cluster is increased
+ * when the membership of a cluster changes, the generation number of the cluster is increased
  * </li>
  * <li>
- *   each point is assigned the index of the cluster that is a member of
+ * each point is assigned the index of the cluster that is a member of
  * </li>
  * </ol>
  *
  * Initial condition:
  * <ol>
  * <li>
- *   Initial cluster centroids are provided. All clusters are assigned generation -1 with the
+ * Initial cluster centroids are provided. All clusters are assigned generation -1 with the
  * provided cluster centroids
  * </li>
  * <li>
- *   All points are assigned to the sentinel cluster (index == -1) with generation -2
+ * All points are assigned to the sentinel cluster (index == -1) with generation -2
  * </li>
  * <li>
- *   (Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
+ * (Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
  * generation number of those points to -1
  * </li>
  * <li>
- *   The current round is set to 0
+ * The current round is set to 0
  * </li>
  * </ol>
  *
@@ -108,34 +234,34 @@ object ColumnTrackingKMeans {
  *
  * <ol>
  * <li>
- *   Increase the round
+ * Increase the round
  * </li>
  *
  * <li>
- *   If any points were re-assigned (change in generation number), then update the clusters
+ * If any points were re-assigned (change in generation number), then update the clusters
  * impacted by the re-assignment:
  * <ul>
  * <li>
- *   Compute the new cluster centroids for the out-dated clusters
+ * Compute the new cluster centroids for the out-dated clusters
  * </li>
  * <li>
- *   Set the generation of the clusters affect to be the value of the round
+ * Set the generation of the clusters affect to be the value of the round
  * </li>
  * </ul>
  * </li>
  *
  * <li>
- *   Increase the round
+ * Increase the round
  * </li>
  *
  * <li>
- *   If any centers were updated, then update the assignments of the points:
+ * If any centers were updated, then update the assignments of the points:
  * <ul>
  * <li>
- *   For each point (or a random sub-set of the points), identify the closest cluster
+ * For each point (or a random sub-set of the points), identify the closest cluster
  * </li>
  * <li>
- *   If the closest cluster has a different index or generation number, then update the
+ * If the closest cluster has a different index or generation number, then update the
  * assignments of the point so that its index is the index of the cluster to which it is assigned
  * and the generation is the round the new assignment is made
  * </li>
@@ -145,16 +271,8 @@ object ColumnTrackingKMeans {
  *
  */
 class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
-    extends MultiKMeansClusterer with SparkHelper {
+  extends MultiKMeansClusterer with SparkHelper {
 
-  /**
-   * count number of points assigned to each cluster
-   *
-   * @param currentAssignments the assignments
-   * @return a map from cluster index to number of points assigned to that cluster
-   */
-  private[this] def countByCluster(currentAssignments: RDD[Assignment]) =
-    currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
 
   private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
@@ -168,13 +286,12 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param previousAssignments current assignments
    * @return points and their new assignments
    */
-  private[this]
-  def updatedAssignments(
-    points:  RDD[BregmanPoint],
+  private[this] def updatedAssignments(
+    points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
     previousAssignments: RDD[Assignment],
-    currentCenters: Array[CenterWithHistory]): RDD[Assignment] = {
+    currentCenters: IndexedSeq[CenterWithHistory]): RDD[Assignment] = {
 
     require(previousAssignments.getStorageLevel.useMemory)
 
@@ -203,14 +320,13 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param previousCenters  the cluster centers
    * @return the new cluster centers
    */
-  private[this]
-  def updatedCenters(
-    points:  RDD[BregmanPoint],
+  private[this] def updatedCenters(
+    points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
     previousCenters: IndexedSeq[CenterWithHistory],
     currentAssignments: RDD[Assignment],
-    previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
+    previousAssignments: RDD[Assignment]): IndexedSeq[CenterWithHistory] = {
 
     require(currentAssignments.getStorageLevel.useMemory)
     require(previousAssignments.getStorageLevel.useMemory)
@@ -262,83 +378,10 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
       strongClusters ++ replacements ++ weakClusters.drop(replacements.length)
     } else {
-      centers
+      centers.toIndexedSeq
     }
   }
 
-  /**
-   * Collect and report the statistics about this round
-   *
-   * @param round the round
-   * @param currentCenters the current cluster centers
-   * @param previousCenters the previous cluster centers
-   * @param currentAssignments the current assignments
-   * @param previousAssignments the previous assignments
-   */
-  private[this]
-  def shouldTerminate(
-    stats: TrackingStats,
-    points:  RDD[BregmanPoint],
-    pointOps: BregmanPointOps,
-    maxIterations: Int,
-    round: Int,
-    currentCenters: Array[CenterWithHistory],
-    previousCenters: Array[CenterWithHistory],
-    currentAssignments: RDD[Assignment],
-    previousAssignments: RDD[Assignment]): Boolean = {
-
-    require(currentAssignments.getStorageLevel.useMemory)
-    require(previousAssignments.getStorageLevel.useMemory)
-
-    logInfo("start of stats collection")
-    stats.currentRound.setValue(round)
-
-    stats.movement.setValue(0.0)
-    stats.relocatedCenters.setValue(0)
-    stats.replenishedClusters.setValue(0)
-    for ((current, previous) <- currentCenters.zip(previousCenters)) {
-      if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold &&
-        current.center.weight > pointOps.weightThreshold) {
-        val delta = pointOps.distance(pointOps.toPoint(previous.center), current.center)
-        logInfo(s"$delta, ${previous.center}, ${current.center}")
-        stats.movement.add(delta)
-        stats.relocatedCenters.add(1)
-      }
-      if (!current.initialized) {
-        stats.replenishedClusters.add(1)
-      }
-    }
-
-    stats.reassignedPoints.setValue(0)
-    stats.unassignedPoints.setValue(0)
-    stats.improvement.setValue(0)
-    stats.newlyAssignedPoints.setValue(0)
-    currentAssignments.zip(previousAssignments).foreach {
-      case (current, previous) =>
-        if (current.isAssigned) {
-          if (previous.isAssigned) {
-            stats.improvement.add(previous.distance - current.distance)
-            if (current.cluster != previous.cluster) stats.reassignedPoints.add(1)
-          } else {
-            stats.newlyAssignedPoints.add(1)
-          }
-        } else {
-          stats.unassignedPoints.add(1)
-        }
-    }
-
-    val clusterCounts = countByCluster(currentAssignments)
-    val biggest = clusterCounts.maxBy(_._2)
-    stats.largestCluster.setValue(biggest._2)
-    stats.nonemptyClusters.setValue(clusterCounts.size)
-    stats.emptyClusters.setValue(currentCenters.size - clusterCounts.size)
-    stats.report()
-
-    logInfo("end of stats collection")
-    (round / 2 >= maxIterations) ||
-      (stats.numNonEmptyClusters == 0) ||
-      (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
-  }
 
   /**
    * Create the centroids of only the clusters that changed.
@@ -355,9 +398,8 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param numCenters current number of non-empty clusters
    * @return
    */
-  private[this]
-  def completeCentroids[T <: WeightedVector](
-    points:  RDD[T],
+  private[this] def completeCentroids[T <: WeightedVector](
+    points: RDD[T],
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
@@ -410,9 +452,8 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }.reduceByKey(_.add(_)).collect()
   }
 
-  private[this]
-  def centroidChanges[T <: WeightedVector](
-    points:  RDD[T],
+  private[this] def centroidChanges[T <: WeightedVector](
+    points: RDD[T],
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
@@ -460,8 +501,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param point the point
    * @return the assignment of that cluster to the point
    */
-  private[this]
-  def bestAssignment(
+  private[this] def bestAssignment(
     pointOps: BregmanPointOps,
     round: Int,
     point: BregmanPoint,
@@ -541,23 +581,26 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     require(points.getStorageLevel.useMemory)
 
     implicit val sc = points.sparkContext
-    val stats = new TrackingStats(points.sparkContext)
+    val detector = new ConvergenceDetector(sc)
 
     @tailrec
     def lloyds(
       round: Int,
       assignments: RDD[Assignment],
-      centers: Array[CenterWithHistory]): (RDD[Assignment], Array[CenterWithHistory]) = {
+      centers: IndexedSeq[CenterWithHistory]): (RDD[Assignment], IndexedSeq[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
       val newAssignments = sync(s"assignments round $round", updatedAssignments(points, pointOps,
         round, assignments, centers))
       val newCenters = updatedCenters(points, pointOps, round + 1, centers, newAssignments,
         assignments)
-      val terminate = shouldTerminate(stats, points, pointOps, maxIterations, round + 1,
-        newCenters, centers, newAssignments, assignments)
+      detector.update(pointOps, (round + 1) / 2, newCenters, centers, newAssignments, assignments)
+
       if (round != 0) assignments.unpersist()
-      if (terminate) (newAssignments, newCenters) else lloyds(round + 2, newAssignments, newCenters)
+      if ((round / 2 + 1) == maxIterations || detector.stable())
+        (newAssignments, newCenters)
+      else
+        lloyds(round + 2, newAssignments, newCenters)
     }
 
     require(config.updateRate <= 1.0 && config.updateRate >= 0.0)
@@ -566,11 +609,10 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     withCached("empty assignments", points.map(x => unassigned)) { empty =>
       centerArrays.map { initialCenters =>
-        val centers = initialCenters.zipWithIndex.map {
-          case (c, i) => CenterWithHistory(i, -1, c,
-            initialized = false)
+        val centers = initialCenters.zipWithIndex.map { case (c, i) =>
+          CenterWithHistory(i, -1, c, initialized = false)
         }
-        val (assignments, centersWithHistory) = lloyds(0, empty, centers.toArray)
+        val (assignments, centersWithHistory) = lloyds(0, empty, centers)
         assignments.unpersist(blocking = false)
         (distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq)
       }
