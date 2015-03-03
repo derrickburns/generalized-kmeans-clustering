@@ -23,8 +23,8 @@ using a variety of distance functions. Thanks to the excellent core Spark implem
 
 Table of Contents
 =================
+
 * [Generalized K-Means Clustering](#generalized-k-means-clustering)
-* [Table of Contents](#table-of-contents)
     * [Getting Started](#getting-started)
       * [SBT](#sbt)
       * [Maven](#maven)
@@ -33,11 +33,10 @@ Table of Contents
       * [Compute Bregman Distances Efficiently using <code>BregmanPoint</code>s  and <code>BregmanCenter</code>s](#compute-bregman-distances-efficiently-using-bregmanpoints--and-bregmancenters)
       * [Representing K-Means Models](#representing-k-means-models)
       * [Constructing K-Means Models using Clusterers](#constructing-k-means-models-using-clusterers)
-    * [Constructing K-Means Models using the <code>KMeans.train</code> Method](#constructing-k-means-models-using-the-kmeanstrain-method)
+    * [Constructing K-Means Models via Lloyd's Algorithm](#constructing-k-means-models-via-lloyds-algorithm)
       * [Constructing K-Means Models on <code>WeightedVector</code>s](#constructing-k-means-models-on-weightedvectors)
       * [Constructing K-Means Models Iteratively](#constructing-k-means-models-iteratively)
-      * [Initializing (a.k.a. seeding) the Set of Cluster Centers](#initializing-aka-seeding-the-set-of-cluster-centers)
-      * [Dimensionality Reduction via Embeddings](#dimensionality-reduction-via-embeddings)
+      * [Seeding the Set of Cluster Centers](#seeding-the-set-of-cluster-centers)
       * [Iterative Clustering](#iterative-clustering)
     * [Creating a Custom K-means Clusterer](#creating-a-custom-k-means-clusterer)
       * [Custom <code>BregmanDivergence</code>](#custom-bregmandivergence)
