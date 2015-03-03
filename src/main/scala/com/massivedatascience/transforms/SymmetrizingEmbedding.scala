@@ -37,7 +37,7 @@ import com.massivedatascience.linalg.{ WeightedVector, _ }
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   def embed(v: WeightedVector): WeightedVector = {
     val embedded = v.homogeneous.copy
-    WeightedVector(BLAS.axpy(1.0, divergence.gradF(embedded), embedded), v.weight)
+    WeightedVector(BLAS.axpy(1.0, divergence.gradientOfConvex(embedded), embedded), v.weight)
   }
 }
 

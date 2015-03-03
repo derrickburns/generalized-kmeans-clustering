@@ -42,7 +42,7 @@ trait BregmanDivergence extends Serializable {
    * @param v input
    * @return F(v)
    */
-  def F(v: Vector): Double
+  def convex(v: Vector): Double
 
   /**
    * Gradient of F
@@ -50,7 +50,7 @@ trait BregmanDivergence extends Serializable {
    * @param v input
    * @return  gradient of F when at v
    */
-  def gradF(v: Vector): Vector
+  def gradientOfConvex(v: Vector): Vector
 
   /**
    * F applied to homogeneous coordinates.
@@ -59,7 +59,7 @@ trait BregmanDivergence extends Serializable {
    * @param w weight
    * @return  F(v/w)
    */
-  def F(v: Vector, w: Double): Double
+  def convexHomogeneous(v: Vector, w: Double): Double
 
   /**
    * Gradient of F, applied to homogeneous coordinates
@@ -67,7 +67,7 @@ trait BregmanDivergence extends Serializable {
    * @param w weight
    * @return  gradient(v/w)
    */
-  def gradF(v: Vector, w: Double): Vector
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector
 }
 
 /**
@@ -83,17 +83,17 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog
 
-  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
+  def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
-  def F(v: Vector, w: Double): Double = {
-    F(v) / w - logFunc.log(w) - 1.0
+  def convexHomogeneous(v: Vector, w: Double): Double = {
+    convex(v) / w - logFunc.log(w) - 1.0
   }
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     trans(v, logFunc.log)
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val c = logFunc.log(w)
     trans(v, x => logFunc.log(x) - c)
   }
@@ -109,19 +109,19 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog
 
-  def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
+  def convex(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
-  def F(v: Vector, w: Double): Double = {
+  def convexHomogeneous(v: Vector, w: Double): Double = {
     val c = v.copy
     scal(1.0 / w, c)
-    F(c)
+    convex(c)
   }
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     trans(v, logFunc.log)
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val c = logFunc.log(w)
     trans(v, x => logFunc.log(x) - c)
   }
@@ -139,17 +139,17 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
    * @param v input
    * @return F(v)
    */
-  def F(v: Vector): Double = dot(v, v)
+  def convex(v: Vector): Double = dot(v, v)
 
-  def F(v: Vector, w: Double): Double = dot(v, v) / (w * w)
+  def convexHomogeneous(v: Vector, w: Double): Double = dot(v, v) / (w * w)
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     val c = v.copy
     scal(2.0, c)
     c
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val c = v.copy
     scal(2.0 / w, c)
     c
@@ -179,18 +179,18 @@ case object GeneralizedIDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog = DiscreteLog
 
-  def F(v: Vector): Double = dot(trans(v, logFunc.log), v)
+  def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
-  def F(v: Vector, w: Double): Double = {
+  def convexHomogeneous(v: Vector, w: Double): Double = {
     val logW = logFunc.log(w)
     dot(v, trans(v, logFunc.log(_) - logW)) / w
   }
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     trans(v, logFunc.log)
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val c = -logFunc.log(w)
     trans(v, c + logFunc.log(_))
   }
@@ -207,22 +207,22 @@ case object LogisticLossDivergence extends BregmanDivergence {
 
   protected val log = GeneralLog.log _
 
-  def F(v: Vector): Double = {
+  def convex(v: Vector): Double = {
     val x = v(0)
     x * log(x) + (1.0 - x) * log(1.0 - x)
   }
 
-  def F(v: Vector, w: Double): Double = {
+  def convexHomogeneous(v: Vector, w: Double): Double = {
     val x = v(0) / w
     x * log(x) + (1.0 - x) * log(1.0 - x)
   }
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     val x = v(0)
     Vectors.dense(log(x) - log(1.0 - x))
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val x = v(0) / w
     Vectors.dense(log(x) - log(1.0 - x))
   }
@@ -243,19 +243,19 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
    * @param v input
    * @return F(v)
    */
-  def F(v: Vector): Double = {
+  def convex(v: Vector): Double = {
     -sum(trans(v, logFunc.log))
   }
 
-  def F(v: Vector, w: Double): Double = {
+  def convexHomogeneous(v: Vector, w: Double): Double = {
     logFunc.log(w) - sum(trans(v, logFunc.log))
   }
 
-  def gradF(v: Vector): Vector = {
+  def gradientOfConvex(v: Vector): Vector = {
     trans(v, x => -1.0 / x)
   }
 
-  def gradF(v: Vector, w: Double): Vector = {
+  def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     val c = 1.0 - logFunc.log(w)
     trans(v, x => -w / x)
   }
@@ -285,17 +285,17 @@ object BregmanDivergence {
    */
   def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
     new BregmanDivergence {
-      def F(v: Vector): Double = f(v)
+      def convex(v: Vector): Double = f(v)
 
-      def F(v: Vector, w: Double) = {
+      def convexHomogeneous(v: Vector, w: Double) = {
         val c = v.copy
         scal(1.0 / w, c)
-        F(c)
+        convex(c)
       }
 
-      def gradF(v: Vector): Vector = gradientF(v)
+      def gradientOfConvex(v: Vector): Vector = gradientF(v)
 
-      def gradF(v: Vector, w: Double): Vector = {
+      def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
         val c = v.copy
         scal(1.0 / w, c)
         gradientF(c)

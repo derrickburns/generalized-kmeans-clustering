@@ -122,9 +122,9 @@ gradient of the function on a points.
 package com.massivedatascience.divergence
 
 trait BregmanDivergence {
-  def F(v: Vector): Double
+  def convex(v: Vector): Double
 
-  def gradF(v: Vector): Vector
+  def gradientOfConvex(v: Vector): Vector
 }
 
 ```

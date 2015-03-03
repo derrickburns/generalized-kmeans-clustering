@@ -191,14 +191,14 @@ trait PointCenterFactory {
 trait NonSmoothedPointCenterFactory extends PointCenterFactory {
 
   def toPoint(v: WeightedVector): BregmanPoint = {
-    BregmanPoint(v, divergence.F(v.homogeneous, v.weight))
+    BregmanPoint(v, divergence.convexHomogeneous(v.homogeneous, v.weight))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = v.homogeneous
     val w = v.weight
-    val df = divergence.gradF(h, w)
-    BregmanCenter(v, BLAS.dot(h, df) / w - divergence.F(h, w), df)
+    val df = divergence.gradientOfConvexHomogeneous(h, w)
+    BregmanCenter(v, BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w), df)
   }
 }
 
@@ -212,14 +212,14 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
   val smoothingFactor: Double
 
   def toPoint(v: WeightedVector): BregmanPoint = {
-    BregmanPoint(v, divergence.F(v.homogeneous, v.weight))
+    BregmanPoint(v, divergence.convexHomogeneous(v.homogeneous, v.weight))
   }
 
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = BLAS.add(v.homogeneous, smoothingFactor)
     val w = v.weight + v.homogeneous.size * smoothingFactor
-    val df = divergence.gradF(h, w)
-    BregmanCenter(h, w, BLAS.dot(h, df) / w - divergence.F(h, w), df)
+    val df = divergence.gradientOfConvexHomogeneous(h, w)
+    BregmanCenter(h, w, BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w), df)
   }
 }
 
