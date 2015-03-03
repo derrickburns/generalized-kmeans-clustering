@@ -19,6 +19,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
@@ -267,7 +268,7 @@ object KMeansModel {
         fromAssignments(ops, data, data.map(model.predictWeighted)).centers
     }
     val points = data.map(ops.toPoint)
-    val results = clusterer.best(maxIterations, ops, points, initialCenters)
-    new KMeansModel(ops, results._2)
+    val ClusteringWithDistortion(_, centers) = clusterer.best(maxIterations, ops, points, initialCenters)
+    new KMeansModel(ops, centers)
   }
 }

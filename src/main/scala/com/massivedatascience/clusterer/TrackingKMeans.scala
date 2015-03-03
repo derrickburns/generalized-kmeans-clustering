@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
@@ -140,7 +141,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
-    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter])] = {
+    def cluster(): Seq[ClusteringWithDistortion] = {
 
       assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -170,7 +171,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
         (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
       }
       results.map(_._3).map(_.unpersist(blocking = false))
-      results.map(x => (x._1, x._2.toIndexedSeq))
+      results.map(x => ClusteringWithDistortion(x._1, x._2.toIndexedSeq))
     }
 
     /**

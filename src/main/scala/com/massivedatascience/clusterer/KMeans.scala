@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.{ Embedding, HaarEmbedding, IdentityEmbedding }
 import com.massivedatascience.transforms.Embedding._
@@ -160,7 +161,7 @@ object KMeans extends SparkHelper {
     require(data.getStorageLevel.useMemory)
     val initialCenters = initializer.init(pointOps, data, runConfig.numClusters, None,
       runConfig.runs, runConfig.seed)
-    val (_, finalCenters) = clusterer.best(runConfig.maxIterations, pointOps, data, initialCenters)
+    val ClusteringWithDistortion(_, finalCenters) = clusterer.best(runConfig.maxIterations, pointOps, data, initialCenters)
     new KMeansModel(pointOps, finalCenters)
   }
 

@@ -19,6 +19,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.{Logging, SparkContext}
@@ -558,7 +559,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     maxIterations: Int,
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Seq[Centers]): Seq[(Double, Centers)] = {
+    centerArrays: Seq[Centers]): Seq[ClusteringWithDistortion] = {
 
     require(points.getStorageLevel.useMemory)
 
@@ -596,7 +597,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
         }
         val (assignments, centersWithHistory) = lloyds(0, empty, centers)
         assignments.unpersist(blocking = false)
-        (distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq)
+        ClusteringWithDistortion(distortion(assignments), centersWithHistory.map(_.center).toIndexedSeq)
       }
     }
   }

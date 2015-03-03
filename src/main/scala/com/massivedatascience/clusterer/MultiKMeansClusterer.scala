@@ -17,22 +17,24 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 
 trait MultiKMeansClusterer extends Serializable with Logging {
+
   def cluster(
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])]
+    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[ClusteringWithDistortion]
 
   def best(
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): (Double, IndexedSeq[BregmanCenter]) = {
-    cluster(maxIterations, pointOps, data, centers).minBy(_._1)
+    centers: Seq[IndexedSeq[BregmanCenter]]): ClusteringWithDistortion = {
+    cluster(maxIterations, pointOps, data, centers).minBy(_.distortion)
   }
 }
 
@@ -42,6 +44,8 @@ object MultiKMeansClusterer {
   val SIMPLE = "SIMPLE"
   val COLUMN_TRACKING = "COLUMN_TRACKING"
   val MINI_BATCH_10 = "MINI_BATCH_10"
+
+  case class ClusteringWithDistortion (distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
     clustererName match {

@@ -20,6 +20,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
@@ -38,11 +39,11 @@ class MultiKMeans extends MultiKMeansClusterer {
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    c: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])] = {
+    c: Seq[IndexedSeq[BregmanCenter]]): Seq[ClusteringWithDistortion] = {
 
     val centers = c.map(_.toArray).toArray
 
-    def cluster(): Seq[(Double, IndexedSeq[BregmanCenter])] = {
+    def cluster(): Seq[ClusteringWithDistortion] = {
       val runs = centers.length
       val active = Array.fill(runs)(true)
       val costs = Array.fill(runs)(0.0)
@@ -96,7 +97,7 @@ class MultiKMeans extends MultiKMeansClusterer {
         activeRuns = activeRuns.filter(active(_))
         iteration += 1
       }
-      costs.zip(centers).map { case (x, y) => (x, y.toIndexedSeq) }
+      costs.zip(centers).map { case (x, y) => ClusteringWithDistortion(x, y.toIndexedSeq) }
     }
 
     def getCentroids(
