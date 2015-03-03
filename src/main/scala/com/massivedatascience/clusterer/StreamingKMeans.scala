@@ -28,6 +28,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream
 
+import scala.collection.immutable.IndexedSeq
 import scala.reflect.ClassTag
 
 /**
@@ -74,7 +75,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
   val centerArrays = model.centers.toArray
   val clusterWeights = centerArrays.map(_.weight)
 
-  def centers = centerArrays.toIndexedSeq
+  def centers: IndexedSeq[BregmanCenter] = centerArrays.toIndexedSeq
 
   /** Perform a k-means update on a batch of data. */
   def update(data: RDD[Vector], decayFactor: Double, timeUnit: String): StreamingKMeansModel = {

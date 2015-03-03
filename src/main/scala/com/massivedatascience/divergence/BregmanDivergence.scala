@@ -287,7 +287,7 @@ object BregmanDivergence {
     new BregmanDivergence {
       def convex(v: Vector): Double = f(v)
 
-      def convexHomogeneous(v: Vector, w: Double) = {
+      def convexHomogeneous(v: Vector, w: Double): Double = {
         val c = v.copy
         scal(1.0 / w, c)
         convex(c)

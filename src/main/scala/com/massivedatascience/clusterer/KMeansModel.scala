@@ -121,7 +121,7 @@ object KMeansModel {
   def fromVectorsAndWeights(
     ops: BregmanPointOps,
     centers: IndexedSeq[Vector],
-    weights: IndexedSeq[Double]) = {
+    weights: IndexedSeq[Double]): KMeansModel = {
     val bregmanCenters = centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w)) }
     new KMeansModel(ops, bregmanCenters)
   }
@@ -133,7 +133,7 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors[T <: WeightedVector: ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]) = {
+  def fromWeightedVectors[T <: WeightedVector: ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]): KMeansModel = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
@@ -151,7 +151,7 @@ object KMeansModel {
     k: Int,
     dim: Int,
     weight: Double,
-    seed: Long = XORShiftRandom.random.nextLong()) = {
+    seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val random = new XORShiftRandom(seed)
     val centers = IndexedSeq.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))

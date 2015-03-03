@@ -23,6 +23,8 @@ import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.rdd.RDD
 
+import scala.util.Random
+
 /**
  * Initial a KMeansModel with randomly chosen centers from a given set of points.
  */
@@ -38,23 +40,24 @@ case object KMeansRandom extends KMeansSelector with SparkHelper {
 
     val rand = new XORShiftRandom(seed)
 
-    def select(data: RDD[BregmanPoint], count: Int) = {
-      val toCenter = ops.toCenter _
-      data.takeSample(withReplacement = false, count, rand.nextInt()).map(toCenter)
-    }
-
     withCached("random initial", data.filter(_.weight > ops.weightThreshold)) { filtered =>
       val count = filtered.count()
       if (runs * k <= count) {
-        val centers = select(filtered, runs * k)
+        val centers = select(ops, rand, filtered, runs * k)
         Seq.tabulate(runs)(r => centers.slice(r * k, (r + 1) * k))
       } else if (k < count) {
-        Seq.fill(runs)(select(filtered, k))
+        Seq.fill(runs)(select(ops, rand, filtered, k))
       } else {
         val all = filtered.collect().map(ops.toCenter)
         Seq.fill(runs)(all)
       }
     }
+  }
+
+  private[this]
+  def select(ops: BregmanPointOps, rand: Random, data: RDD[BregmanPoint], count: Int) = {
+    val toCenter = ops.toCenter _
+    data.takeSample(withReplacement = false, count, rand.nextInt()).map(toCenter)
   }
 }
 

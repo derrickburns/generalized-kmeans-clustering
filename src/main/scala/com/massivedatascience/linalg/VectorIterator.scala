@@ -28,7 +28,7 @@ trait VectorIterator extends Serializable {
 }
 
 class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
-  override def toString = s"$i, $underlying"
+  override def toString: String = s"$i, $underlying"
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
@@ -37,7 +37,7 @@ class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator 
 }
 
 class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
-  override def toString = s"$i, $underlying"
+  override def toString: String = s"$i, $underlying"
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
