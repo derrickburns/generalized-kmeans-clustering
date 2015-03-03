@@ -28,7 +28,7 @@ class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializ
 
 
 
-  def isEmpty : Boolean = raw == empty
+  def isEmpty : Boolean = raw eq empty
 
   def homogeneous = raw
 
@@ -88,7 +88,7 @@ class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializ
    */
   private[this] def add(r: Vector, w: Double, direction: Double): this.type = {
     if (w > 0.0) {
-      if (raw == empty) {
+      if (raw eq empty) {
         assert(r != empty)
         raw = r.copy
         weight = w
