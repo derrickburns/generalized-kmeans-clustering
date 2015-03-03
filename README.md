@@ -43,6 +43,7 @@ Table of Contents
         * [Custom <code>Embedding</code>](#custom-embeddings)
       * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
       * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
+        * [Weighted Vectors](#weighted-vectors)
         * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
         * [Sparse Data](#sparse-data)
         * [Cluster Backfilling](#cluster-backfilling)
@@ -736,6 +737,38 @@ object KMeansModel {
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
 There are several other differences with this clusterer and the Spark K-Means clusterer.
+
+#### Weighted Vectors
+
+The Spark MLLIB 1.2 clusterer operations on unweighted vectors.  This clusterer operates on weighted
+vectors.   Use these ```WeightedVector``` companion object to construct weighted vectors.
+
+```scala
+trait WeightedVector extends Serializable {
+  def weight: Double
+
+  def inhomogeneous: Vector
+
+  def homogeneous: Vector
+
+  def size: Int = homogeneous.size
+}
+
+object WeightedVector {
+
+  def apply(v: Vector): WeightedVector = ???
+
+  def apply(v: Array[Double]): WeightedVector = ???
+
+  def apply(v: Vector, weight: Double): WeightedVector = ???
+
+  def apply(v: Array[Double], weight: Double): WeightedVector = ???
+
+  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = ???
+
+  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = ???
+}
+```
 
 #### Variable number of clusters in parallel runs
 
