@@ -79,11 +79,21 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     def moreCenters(distances: IndexedSeq[Double]) : Unit = {
       val needed = totalRequested - centers.length
       if(needed > 0) {
-        val (newDistances, additionalCenters) = update(points, candidateCenters, perRound, rand, distances)
+        val (newDistances, additionalCenters) = update(distances)
         centers ++= additionalCenters.take(needed)
         if (additionalCenters.nonEmpty)
           moreCenters(newDistances)
       }
+    }
+
+    def update(distances: IndexedSeq[Double]) : (IndexedSeq[Double], IndexedSeq[BregmanCenter]) = {
+      val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
+      val selected = (0 until perRound).par.flatMap { _ =>
+        pickWeighted(rand, cumulative).iterator
+      }
+      val newCenters = selected.map(candidateCenters(_)).toIndexedSeq
+      val newDistances = updateDistances(points, distances, newCenters)
+      (newDistances, newCenters)
     }
     
     if (numPreselected == 0) {
@@ -101,23 +111,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
       logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $totalRequested requested")
     }
   }
-  
-  private[this] 
-  def update(
-    points: IndexedSeq[BregmanPoint], 
-    candidates: IndexedSeq[BregmanCenter], 
-    perRound: Int, 
-    rand: XORShiftRandom,
-    distances: IndexedSeq[Double]) : (IndexedSeq[Double], IndexedSeq[BregmanCenter]) = {
 
-    val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
-    val selected = (0 until perRound).par.flatMap { _ =>
-      pickWeighted(rand, cumulative).iterator
-    }
-    val newCenters = selected.map(candidates(_)).toIndexedSeq
-    val newDistances = updateDistances(points, distances, newCenters)
-    (newDistances, newCenters)
-  }
   
   /**
    * Update the distance of each point to its closest cluster center, given the cluster
