@@ -266,7 +266,7 @@ object KMeans extends SparkHelper {
       Embedding.HIGH_DIMENSIONAL_RI)): KMeansModel = {
 
     val distances = Array.fill(embeddingNames.length)(distanceFunctionName)
-    KMeans.trainWithResults(raw, k, maxIterations, runs, mode, distances,
+    trainWithResults(raw, k, maxIterations, runs, mode, distances,
       clustererName, embeddingNames)
   }
 
@@ -284,7 +284,7 @@ object KMeans extends SparkHelper {
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target = Math.max(maxDepth - 4, 0)
-    KMeans.trainViaSubsampling(raw, k, maxIterations, runs, initializerName,
+    trainViaSubsampling(raw, k, maxIterations, runs, initializerName,
       distanceFunctionName, clustererName, embeddingName, depth = target)
   }
 
