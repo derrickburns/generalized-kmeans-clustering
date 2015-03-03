@@ -30,7 +30,7 @@ import com.massivedatascience.clusterer.BregmanPointOps._
 
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
-  import com.massivedatascience.clusterer.KMeansInitializer._
+  import com.massivedatascience.clusterer.KMeansSelector._
 
   test("single cluster") {
     val data = sc.parallelize(Array(

@@ -25,7 +25,7 @@ import org.apache.spark.rdd.RDD
 /**
  * Initial a KMeansModel with randomly chosen centers from a given set of points.
  */
-class KMeansRandom extends KMeansInitializer with SparkHelper {
+case object KMeansRandom extends KMeansSelector with SparkHelper {
 
   // TODO use seed?
   def init(

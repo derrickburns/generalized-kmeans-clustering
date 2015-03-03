@@ -38,7 +38,7 @@ import scala.collection.mutable.ArrayBuffer
  * and closest distance for each point to those cluster centers.  This allows us to
  * use this code to find additional cluster centers at any time.
  */
-class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansInitializer with SparkHelper {
+case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector with SparkHelper {
 
   type Centers = IndexedSeq[BregmanCenter]
 

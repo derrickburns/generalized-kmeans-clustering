@@ -19,7 +19,7 @@ package com.massivedatascience.clusterer
 
 import org.apache.spark.rdd.RDD
 
-trait KMeansInitializer extends Serializable {
+trait KMeansSelector extends Serializable {
   def init(
     ops: BregmanPointOps,
     d: RDD[BregmanPoint],
@@ -29,14 +29,14 @@ trait KMeansInitializer extends Serializable {
     seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
 
-object KMeansInitializer {
+object KMeansSelector {
 
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer
 
-  def apply(name: String): KMeansInitializer = {
+  def apply(name: String): KMeansSelector = {
     name match {
-      case RANDOM => new KMeansRandom
+      case RANDOM => KMeansRandom
       case K_MEANS_PARALLEL => new KMeansParallel(5)
       case _ => throw new RuntimeException(s"unknown initializer $name")
     }

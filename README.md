@@ -323,7 +323,7 @@ companion object ```MultiKMeansClusterer```.
 | ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
-### Constructing K-Means Models using Helper Methods
+### Constructing K-Means Models using the ```KMeans.train``` Method
 
 A ```KMeansModel``` can be constructed from any set of cluster centers and distance function.
 However, the more interesting models satisfy an optimality constraint.  If we sum the distances
@@ -334,7 +334,7 @@ Computing such a ```KMeansModel``` given a set of points is called "training" th
 points.
 
 The simplest way to train a ```KMeansModel``` on a fixed set of points is to use the ```KMeans.train```
-method.
+method.  This method is most similar in style to the one provided by the Spark 1.2.0 K-Means clusterer.
 
 For dense data in a low dimension space using the squared Euclidean distance function,
 one may simply call ```KMeans.train``` with the data and the desired number of clusters:
@@ -356,31 +356,140 @@ object KMeans {
    *
    * Train a K-Means model using Lloyd's algorithm.
    *
-   *
    * @param data input data
    * @param k  number of clusters desired
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
    * @param mode initialization algorithm to use
    * @param distanceFunctionNames the distance functions to use
-   * @param kMeansImplName which k-means implementation to use
+   * @param clustererName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
    * @return K-Means model
    */
   def train(
     data: RDD[Vector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
-    mode: String = KMeansInitializer.K_MEANS_PARALLEL,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
+    mode: String = KMeansSelector.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    kMeansImplName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING))
-  : KMeansModel = { ???
+    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
+    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)): KMeansModel = ???
 }
 ```
 
-For high dimensional data, one way wish to embed the data into a lower dimension before clustering to
+Many of these paramaters will be familiar to anyone who is familiar with the Spark 1.1 clusterer.
+
+Similar to the Spark clusterer, we support data provided as ```Vectors```, a request for a number
+```k``` of clusters desired, a limit ```maxIterations``` on the number of iterations of Lloyd's
+algorithm, and the number of parallel ```runs``` of the clusterer.
+
+We also offer different initialization ```mode```s.  But
+unlike the Spark clusterer, we do not support setting the number of initialization steps for the
+mode at this level of the interface.
+
+We add to that interface a number of distance functions and embeddings of the data and the name
+of a specific clustering algorithm.  These are described below.
+
+#### Constructing K-Means Models on ```WeightedVector```s
+
+Often, data points that are clustered have varying significance, i.e. they are weighted.
+This clusterer operates on weighted vectors.   Use these ```WeightedVector``` companion object to construct weighted vectors.
+
+```scala
+package com.massivedatascience.linalg
+
+trait WeightedVector extends Serializable {
+  def weight: Double
+
+  def inhomogeneous: Vector
+
+  def homogeneous: Vector
+
+  def size: Int = homogeneous.size
+}
+
+object WeightedVector {
+
+  def apply(v: Vector): WeightedVector = ???
+
+  def apply(v: Array[Double]): WeightedVector = ???
+
+  def apply(v: Vector, weight: Double): WeightedVector = ???
+
+  def apply(v: Array[Double], weight: Double): WeightedVector = ???
+
+  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = ???
+
+  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = ???
+}
+```
+
+Indeed, the ```KMeans.train``` helper translates the parameters into a call to the underlying
+```KMeans.trainWeighted``` method.
+
+```scala
+package com.massivedatascience.clusterer
+
+object KMeans {
+  /**
+   *
+   * Train a K-Means model using Lloyd's algorithm on WeightedVectors
+   *
+   * @param data input data
+   * @param runConfig run configuration
+   * @param pointOps the distance functions to use
+   * @param initializer initialization algorithm to use
+   * @param embeddings sequence of embeddings to use, from lowest dimension to greatest
+   * @param clusterer which k-means implementation to use
+   * @return K-Means model
+   */
+
+  def trainWeighted(
+    runConfig: RunConfig,
+    data: RDD[WeightedVector],
+    initializer: KMeansSelector,
+    pointOps: Seq[BregmanPointOps],
+    embeddings: Seq[Embedding],
+    clusterer: MultiKMeansClusterer): KMeansModel = ???
+  }
+}
+```
+
+The ```KMeans.trainWeighted``` method ultimately makes various calls to the underlying
+```KMeans.simpleTrain``` method, which clusters the provided ```BregmanPoint```s using
+the provided ```BregmanPointOps``` and the provided ```KMeansSelector``` with the provided
+```MultiKMeansClusterer```.
+
+```scala
+package com.massivedatascience.clusterer
+
+object KMeans {
+  /**
+   *
+   * @param runConfig run configuration
+   * @param data input data
+   * @param pointOps the distance functions to use
+   * @param initializer initialization algorithm to use
+   * @param clusterer which k-means implementation to use
+   * @return K-Means model
+   */
+  def simpleTrain(
+    runConfig: RunConfig,
+    data: RDD[BregmanPoint],
+    pointOps: BregmanPointOps,
+    initializer: KMeansSelector,
+    clusterer: MultiKMeansClusterer): KMeansModel = ???
+    }
+}
+```
+
+#### Constructing K-Means Models Iteratively
+
+If multiple embeddings are provided, the ```KMeans.train``` method actually performs the embeddings
+are trains on the embedded data sets iteratively.
+
+For example, for high dimensional data, one way wish to embed the data into a lower dimension before clustering to
 reduce running time.
 
 For time series data,
@@ -394,43 +503,33 @@ can be used to map the data into a low dimensional dense space.
 One may also perform clustering recursively, using lower dimensional clustering to derive initial
 conditions for higher dimensional clustering.
 
-```KMeans.train``` and ```KMeans.trainViaSubsampling``` also support recursive clustering.
-The former applies a list of embeddings to the input data,
-while the latter applies the same embedding iteratively on the data.
+Should you wish to train a model iteratively on data sets derived maps of a shared original data
+set, you may use ```KMeans.iterativelyTrain```.
 
 
 ```scala
 package com.massivedatascience.clusterer
 
 object KMeans {
-
   /**
+   * Train on a series of data sets, where the data sets were derived from the same
+   * original data set via embeddings. Use the cluster assignments of one stage to
+   * initialize the clusters of the next stage.
    *
-   * Train a K-Means model by recursively sub-sampling the data via the provided embedding.
-   *
-   * @param data input data
-   * @param k  number of clusters desired
-   * @param maxIterations maximum number of iterations of Lloyd's algorithm
-   * @param runs number of parallel clusterings to run
-   * @param initializerName initialization algorithm to use
-   * @param distanceFunctionName the distance functions to use
-   * @param clustererName which k-means implementation to use
-   * @param embeddingName embedding to use recursively
-   * @param depth number of times to recurse
-   * @return K-Means model
+   * @param runConfig run configuration
+   * @param dataSets  input data sets to use
+   * @param initializer  initialization algorithm to use
+   * @param pointOps distance function
+   * @param clusterer  clustering implementation to use
+   * @return
    */
-  def trainViaSubsampling(
-    data: RDD[WeightedVector],
-    k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
-    initializerName: String =  KMeansInitializer.K_MEANS_PARALLEL,
-    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
-    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingName: String = Embedding.HAAR_EMBEDDING,
-    depth: Int = 2)
-  : KMeansModel= ???
-}
+  def iterativelyTrain(
+    runConfig: RunConfig,
+    pointOps: Seq[BregmanPointOps],
+    dataSets: Seq[RDD[BregmanPoint]],
+    initializer: KMeansSelector,
+    clusterer: MultiKMeansClusterer): KMeansModel = ???
+
 ```
 
 #### Initializing (a.k.a. seeding) the Set of Cluster Centers
@@ -441,19 +540,19 @@ method.
 
 Two algorithms are implemented that produce viable seed sets.
 They may be constructed by using the ```apply``` method
-of the companion object```KMeansInitializer```".
+of the companion object```KMeansSelector```".
 
 | Name            | Algorithm                         |
 |----------------------------------|-----------------------------------|
 | ```RANDOM```             | Random selection of initial k centers |
 | ```K_MEANS_PARALLEL```   | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf) |
 
-Under the covers, these initializers implement the ```KMeansInitializer``` trait
+Under the covers, these initializers implement the ```KMeansSelector``` trait
 
 ```scala
 package com.massivedatascience.clusterer
 
-trait KMeansInitializer extends Serializable {
+trait KMeansSelector extends Serializable {
   def init(
     ops: BregmanPointOps,
     d: RDD[BregmanPoint],
@@ -463,8 +562,8 @@ trait KMeansInitializer extends Serializable {
     seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
 
-object KMeansInitializer {
-  def apply(name: String): KMeansInitializer = ???
+object KMeansSelector {
+  def apply(name: String): KMeansSelector = ???
 }
 ```
 
@@ -733,40 +832,6 @@ object KMeansModel {
 ### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
 
 There are several other differences with this clusterer and the Spark K-Means clusterer.
-
-#### Weighted Vectors
-
-The Spark MLLIB 1.2 clusterer operates on unweighted vectors.  This clusterer operates on weighted
-vectors.   Use these ```WeightedVector``` companion object to construct weighted vectors.
-
-```scala
-package com.massivedatascience.linalg
-
-trait WeightedVector extends Serializable {
-  def weight: Double
-
-  def inhomogeneous: Vector
-
-  def homogeneous: Vector
-
-  def size: Int = homogeneous.size
-}
-
-object WeightedVector {
-
-  def apply(v: Vector): WeightedVector = ???
-
-  def apply(v: Array[Double]): WeightedVector = ???
-
-  def apply(v: Vector, weight: Double): WeightedVector = ???
-
-  def apply(v: Array[Double], weight: Double): WeightedVector = ???
-
-  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = ???
-
-  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = ???
-}
-```
 
 #### Variable number of clusters in parallel runs
 
