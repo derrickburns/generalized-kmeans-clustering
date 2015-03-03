@@ -26,9 +26,7 @@ import com.massivedatascience.linalg.EagerCentroid._
  */
 class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializable {
 
-
-
-  def isEmpty : Boolean = raw eq empty
+  @inline def isEmpty : Boolean = raw eq empty
 
   def homogeneous = raw
 
@@ -88,7 +86,7 @@ class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializ
    */
   private[this] def add(r: Vector, w: Double, direction: Double): this.type = {
     if (w > 0.0) {
-      if (raw eq empty) {
+      if (isEmpty) {
         assert(r != empty)
         raw = r.copy
         weight = w
