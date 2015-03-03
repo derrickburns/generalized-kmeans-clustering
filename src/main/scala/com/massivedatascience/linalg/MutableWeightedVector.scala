@@ -38,4 +38,7 @@ trait MutableWeightedVector {
 
   def isEmpty: Boolean
 
+  def nonEmpty: Boolean
+
+
 }

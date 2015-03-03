@@ -472,7 +472,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
             if (current != -1) centroids(current).add(point)
           }
         }
-        centroids.filter(!_.isEmpty).map(x => (x.index, x)).iterator
+        centroids.filter(_.nonEmpty).map(x => (x.index, x)).iterator
     }.reduceByKey(_.add(_)).collect()
   }
 
