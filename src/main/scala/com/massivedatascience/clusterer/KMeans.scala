@@ -292,7 +292,7 @@ object KMeans extends SparkHelper {
       distanceFunctionName, clustererName, embeddingName, depth = target)
   }
 
-  private def iterativelyTrain(
+  private[this] def iterativelyTrain(
     runConfig: RunConfig,
     pointOps: Seq[BregmanPointOps],
     dataSets: Seq[RDD[BregmanPoint]],
@@ -321,7 +321,7 @@ object KMeans extends SparkHelper {
    * @param embedding embedding to use iteratively
    * @return
    */
-  private def subsample(
+  private[this] def subsample(
     input: RDD[WeightedVector],
     ops: BregmanPointOps,
     depth: Int = 0,
@@ -340,7 +340,7 @@ object KMeans extends SparkHelper {
    * @return
    */
 
-  private def resample(
+  private[this] def resample(
     input: RDD[WeightedVector],
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
