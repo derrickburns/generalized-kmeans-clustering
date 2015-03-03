@@ -23,30 +23,32 @@ using a variety of distance functions. Thanks to the excellent core Spark implem
 
 Table of Contents
 =================
+* [Generalized K-Means Clustering](#generalized-k-means-clustering)
+* [Table of Contents](#table-of-contents)
+    * [Getting Started](#getting-started)
+      * [SBT](#sbt)
+      * [Maven](#maven)
+    * [Introduction](#introduction)
+      * [Bregman Divergences](#bregman-divergences)
+      * [Compute Bregman Distances Efficiently using <code>BregmanPoint</code>s  and <code>BregmanCenter</code>s](#compute-bregman-distances-efficiently-using-bregmanpoints--and-bregmancenters)
+      * [Representing K-Means Models](#representing-k-means-models)
+      * [Constructing K-Means Models using Clusterers](#constructing-k-means-models-using-clusterers)
+    * [Constructing K-Means Models using the <code>KMeans.train</code> Method](#constructing-k-means-models-using-the-kmeanstrain-method)
+      * [Constructing K-Means Models on <code>WeightedVector</code>s](#constructing-k-means-models-on-weightedvectors)
+      * [Constructing K-Means Models Iteratively](#constructing-k-means-models-iteratively)
+      * [Initializing (a.k.a. seeding) the Set of Cluster Centers](#initializing-aka-seeding-the-set-of-cluster-centers)
+      * [Dimensionality Reduction via Embeddings](#dimensionality-reduction-via-embeddings)
+      * [Iterative Clustering](#iterative-clustering)
+    * [Creating a Custom K-means Clusterer](#creating-a-custom-k-means-clusterer)
+      * [Custom <code>BregmanDivergence</code>](#custom-bregmandivergence)
+      * [Custom <code>BregmanPointOps</code>](#custom-bregmanpointops)
+      * [Custom <code>Embedding</code>](#custom-embeddings)
+    * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
+    * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
+      * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
+      * [Sparse Data](#sparse-data)
+      * [Cluster Backfilling](#cluster-backfilling)
 
-  * [Generalized K-Means Clustering](#generalized-k-means-clustering)
-      * [Getting Started](#getting-started)
-        * [SBT](#sbt)
-        * [Maven](#maven)
-      * [Introduction](#introduction)
-        * [Bregman Divergences](#bregman-divergences)
-        * [Compute Bregman Distances Efficiently using <code>BregmanPoint</code>s  and <code>BregmanCenter</code>s](#compute-bregman-distances-efficiently-using-bregmanpoints--and-bregmancenters)
-        * [Representing K-Means Models](#representing-k-means-models)
-        * [Constructing K-Means Models using Clusterers](#constructing-k-means-models-using-clusterers)
-      * [Constructing K-Means Models using Helper Methods](#constructing-k-means-models-using-helper-methods)
-        * [Initializing (a.k.a. seeding) the Set of Cluster Centers](#initializing-aka-seeding-the-set-of-cluster-centers)
-        * [Dimensionality Reduction via Embeddings](#dimensionality-reduction-via-embeddings)
-        * [Iterative Clustering](#iterative-clustering)
-      * [Creating a Custom K-means Clusterer](#creating-a-custom-k-means-clusterer)
-        * [Custom <code>BregmanDivergence</code>](#custom-bregmandivergence)
-        * [Custom <code>BregmanPointOps</code>](#custom-bregmanpointops)
-        * [Custom <code>Embedding</code>](#custom-embeddings)
-      * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
-      * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
-        * [Weighted Vectors](#weighted-vectors)
-        * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
-        * [Sparse Data](#sparse-data)
-        * [Cluster Backfilling](#cluster-backfilling)
 
 ### Getting Started
 
@@ -323,7 +325,7 @@ companion object ```MultiKMeansClusterer```.
 | ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
-### Constructing K-Means Models using the ```KMeans.train``` Method
+### Constructing K-Means Models via Lloyd's Algorithm
 
 A ```KMeansModel``` can be constructed from any set of cluster centers and distance function.
 However, the more interesting models satisfy an optimality constraint.  If we sum the distances
@@ -378,7 +380,7 @@ object KMeans {
 }
 ```
 
-Many of these paramaters will be familiar to anyone who is familiar with the Spark 1.1 clusterer.
+Many of these parameters will be familiar to anyone who is familiar with the Spark 1.1 clusterer.
 
 Similar to the Spark clusterer, we support data provided as ```Vectors```, a request for a number
 ```k``` of clusters desired, a limit ```maxIterations``` on the number of iterations of Lloyd's
@@ -388,8 +390,22 @@ We also offer different initialization ```mode```s.  But
 unlike the Spark clusterer, we do not support setting the number of initialization steps for the
 mode at this level of the interface.
 
-We add to that interface a number of distance functions and embeddings of the data and the name
-of a specific clustering algorithm.  These are described below.
+The ```K-Means.train``` helper methods allows on to name a sequence of embeddings.
+Several embeddings are provided that may be constructed using the ```apply``` method
+of the companion object ```Embedding```.
+
+
+| Name         | Algorithm                                                   |
+|-------------------------------|-------------------------------------------------------------|
+| ```IDENTITY_EMBEDDING```      | Identity                                                    |
+| ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
+| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
+| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
+| ```SYMMETRIZING_KL_EMBEDDING```     | [Symmetrizing KL Embedding](http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf)       |
+
+Different distance functions may be used for each embedding. There must be exactly one
+distance function per embedding provided.
 
 #### Constructing K-Means Models on ```WeightedVector```s
 
@@ -532,7 +548,7 @@ object KMeans {
 
 ```
 
-#### Initializing (a.k.a. seeding) the Set of Cluster Centers
+#### Seeding the Set of Cluster Centers
 
 Any K-Means model may be used as seed value to Lloyd's algorithm. In fact, our clusterers accept
 multiple seed sets. The ```K-Means.train``` helper methods allows one to name an initialization
@@ -566,23 +582,6 @@ object KMeansSelector {
   def apply(name: String): KMeansSelector = ???
 }
 ```
-
-#### Dimensionality Reduction via Embeddings
-
-The ```K-Means.train``` helper methods allows on to name a sequence of embeddings.
-Several embeddings are provided that may be constructed using the ```apply``` method
-of the companion object ```Embedding```.
-
-
-| Name         | Algorithm                                                   |
-|-------------------------------|-------------------------------------------------------------|
-| ```IDENTITY_EMBEDDING```      | Identity                                                    |
-| ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
-| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
-| ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
-| ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
-| ```SYMMETRIZING_KL_EMBEDDING```     | [Symmetrizing KL Embedding](http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf)       |
-
 
 #### Iterative Clustering
 

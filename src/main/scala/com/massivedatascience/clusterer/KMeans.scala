@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
-import com.massivedatascience.transforms.{Embedding, HaarEmbedding, IdentityEmbedding}
+import com.massivedatascience.transforms.{ Embedding, HaarEmbedding, IdentityEmbedding }
 import com.massivedatascience.transforms.Embedding._
 import com.massivedatascience.util.SparkHelper
 import org.apache.spark.mllib.linalg.Vector
@@ -282,6 +282,6 @@ object KMeans extends SparkHelper {
     ops: Seq[BregmanPointOps],
     embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
 
-    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint)}
+    embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint) }
   }
 }
