@@ -24,12 +24,14 @@ trait KMeansSelector extends Serializable {
     ops: BregmanPointOps,
     d: RDD[BregmanPoint],
     numClusters: Int,
-    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    initialInfo: Option[KMeansSelector.InitialCondition] = None,
     runs: Int,
     seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
 
 object KMeansSelector {
+
+  case class InitialCondition(centers: Seq[IndexedSeq[BregmanCenter]], distances: Seq[RDD[Double]])
 
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer

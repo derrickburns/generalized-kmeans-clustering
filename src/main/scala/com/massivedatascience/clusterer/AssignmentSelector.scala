@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import org.apache.spark.rdd.RDD
 
 class AssignmentSelector(assignments: RDD[Int]) extends KMeansSelector {
@@ -24,7 +25,7 @@ class AssignmentSelector(assignments: RDD[Int]) extends KMeansSelector {
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     numClusters: Int,
-    initialInfo: Option[(Seq[IndexedSeq[BregmanCenter]], Seq[RDD[Double]])] = None,
+    initialInfo: Option[InitialCondition] = None,
     runs: Int,
     seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
 

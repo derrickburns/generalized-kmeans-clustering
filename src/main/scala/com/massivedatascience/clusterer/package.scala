@@ -24,19 +24,5 @@ package object clusterer {
   val Unknown = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())
 
-  trait SimpleAssignment extends Serializable {
-    val distance: Double
-    val cluster: Int
-  }
-
-  case class BasicAssignment(distance: Double, cluster: Int) extends SimpleAssignment
-
-  type TerminationCondition = BasicStats => Boolean
-
-  val DefaultTerminationCondition = { s: BasicStats =>
-    s.getRound > 40 ||
-      s.numNonEmptyClusters == 0 ||
-      s.centerMovement / s.numNonEmptyClusters < 1.0E-5
-  }
-
+  type Centers = IndexedSeq[BregmanCenter]
 }

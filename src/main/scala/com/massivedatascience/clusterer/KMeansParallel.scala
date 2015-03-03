@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
@@ -40,7 +41,6 @@ import scala.collection.mutable.ArrayBuffer
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector with SparkHelper {
 
-  type Centers = IndexedSeq[BregmanCenter]
 
   /**
    *
@@ -57,7 +57,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     targetNumberClusters: Int,
-    initialState: Option[(Seq[Centers], Seq[RDD[Double]])] = None,
+    initialState: Option[InitialCondition] = None,
     runs: Int,
     seedx: Long): Seq[Centers] = {
 
@@ -281,8 +281,8 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     require(data.getStorageLevel.useMemory)
     val rand = new XORShiftRandom(seedx)
     val seed = rand.nextLong()
-    val preselectedCenters = initialState.map(_._1)
-    val initialCosts = initialState.map(_._2)
+    val preselectedCenters = initialState.map(_.centers)
+    val initialCosts = initialState.map(_.distances)
     val centers = preselectedCenters.getOrElse(randomCenters(seed))
     val requested = numbersRequested(targetNumberClusters, preselectedCenters, runs)
     val expandedCenters = moreCenters(initialCosts, numSteps, requested, seed, centers)

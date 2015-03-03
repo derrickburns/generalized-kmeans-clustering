@@ -112,7 +112,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     }
   }
 
-  
   /**
    * Update the distance of each point to its closest cluster center, given the cluster
    * centers that were added.

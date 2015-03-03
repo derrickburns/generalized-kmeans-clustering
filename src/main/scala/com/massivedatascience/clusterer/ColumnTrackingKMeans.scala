@@ -18,6 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
+import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
@@ -43,7 +44,7 @@ object ColumnTrackingKMeans {
   private[clusterer] val noCluster = -1
   private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
 
-  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) extends SimpleAssignment {
+  private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
     def isAssigned : Boolean = cluster != noCluster
 
     def isUnassigned : Boolean = cluster == noCluster
@@ -248,8 +249,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       val seed = new DateTime().getMillis
       val incrementer = new KMeansParallel(2, config.fractionOfPointsToWeigh)
       val costs = currentAssignments.map(_.distance)
+      val initialCondition = InitialCondition(Seq(bregmanCenters), Seq(costs))
       val newCenters = incrementer.init(pointOps, points, centers.length,
-        Some(Seq(bregmanCenters), Seq(costs)), 1, seed)(0)
+        Some(initialCondition), 1, seed)(0)
       logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
       val additional = newCenters.drop(bregmanCenters.length)
       val replacements = weakClusters.zip(additional).map {
@@ -534,7 +536,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     maxIterations: Int,
     pointOps: BregmanPointOps,
     points: RDD[BregmanPoint],
-    centerArrays: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])] = {
+    centerArrays: Seq[Centers]): Seq[(Double, Centers)] = {
 
     require(points.getStorageLevel.useMemory)
 
