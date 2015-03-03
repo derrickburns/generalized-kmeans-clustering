@@ -608,7 +608,7 @@ of these constructors.
 
 
 ```scala
-pacakge com.massivedatascience.clusterer
+package com.massivedatascience.clusterer
 
 object KMeansModel {
 
@@ -744,6 +744,8 @@ The Spark MLLIB 1.2 clusterer operates on unweighted vectors.  This clusterer op
 vectors.   Use these ```WeightedVector``` companion object to construct weighted vectors.
 
 ```scala
+package com.massivedatascience.linalg
+
 trait WeightedVector extends Serializable {
   def weight: Double
 
