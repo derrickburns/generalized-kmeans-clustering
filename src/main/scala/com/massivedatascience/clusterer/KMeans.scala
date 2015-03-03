@@ -242,7 +242,7 @@ object KMeans extends SparkHelper {
       remaining.foldLeft(simpleTrain(runConfig, original, pointOps.head, initializer, clusterer)) {
         case (model, (data, op)) =>
           withNamed("assignments", model.predictBregman(data)) { assignments =>
-            simpleTrain(runConfig, data, op, new SampleInitializer(assignments), clusterer)
+            simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
           }
       }
     }
