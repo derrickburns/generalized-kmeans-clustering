@@ -252,9 +252,12 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
             val v = rand.nextDouble()
             v < c(r) * k(r) / sumCosts(r)
           }
-          val nullCenter = null.asInstanceOf[BregmanCenter]
-          val center = if (selectedRuns.nonEmpty) pointOps.toCenter(p) else nullCenter
-          selectedRuns.map((_, center))
+          if( selectedRuns.nonEmpty) {
+            val cp = pointOps.toCenter(p)
+            selectedRuns.map((_, cp))
+          } else {
+            None
+          }
       }
     }.collect()
   }
