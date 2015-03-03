@@ -115,7 +115,7 @@ while (optionally) reassigned points are removed from their prior clusters.
 
 While one can assign a point to a cluster using any distance function, Lloyd's algorithm only
 converges for a certain set of distance functions called [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf). Bregman divergences
-must define two methods, ```F```  to evaluate a function on a point and ```gradF``` to evaluate the
+must define two methods, ```convex```  to evaluate a function on a point and ```gradientOfConvex``` to evaluate the
 gradient of the function on a points.
 
 ```scala
@@ -129,7 +129,7 @@ trait BregmanDivergence {
 
 ```
 
-For example, by defining ```F``` to be the vector norm (i.e. the sum of the squares of the
+For example, by defining ```convex``` to be the vector norm (i.e. the sum of the squares of the
 coordinates), one gets a distance function that equals the square of the well known Euclidean
 distance. We name it the ```SquaredEuclideanDistanceDivergence```.
 

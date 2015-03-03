@@ -27,10 +27,9 @@ import org.apache.spark.rdd.RDD
  * A helper object that creates K-Means Models using the underlying classes in this package.
  */
 object KMeans extends SparkHelper {
-  
+
   val defaultMaxIterations = 20
   val defaultNumRuns = 1
-
 
   /**
    * The standard configuration for a clusterer that runs Lloyd's algorithm
