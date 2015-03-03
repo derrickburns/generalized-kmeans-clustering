@@ -112,43 +112,6 @@ object KMeans extends SparkHelper {
 
   /**
    *
-   * Train a K-Means model using Lloyd's algorithm.
-   *
-   *
-   * @param data input data
-   * @param k  number of clusters desired
-   * @param maxIterations maximum number of iterations of Lloyd's algorithm
-   * @param runs number of parallel clusterings to run
-   * @param mode initialization algorithm to use
-   * @param distanceFunctionNames the distance functions to use
-   * @param clustererName which k-means implementation to use
-   * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
-   * @return K-Means model and a clustering of the input data
-   */
-  def trainWithResults(
-    data: RDD[WeightedVector],
-    k: Int,
-    maxIterations: Int = KMeans.defaultMaxIterations,
-    runs: Int = KMeans.defaultNumRuns,
-    mode: String = KMeansInitializer.K_MEANS_PARALLEL,
-    distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: Seq[String] = Seq(Embedding.IDENTITY_EMBEDDING)): KMeansModel = {
-
-    require(distanceFunctionNames.length == embeddingNames.length)
-
-    implicit val kMeansImpl = MultiKMeansClusterer(clustererName)
-
-    val runConfig = RunConfig(k, runs, 0, maxIterations)
-    val ops = distanceFunctionNames.map(BregmanPointOps.apply)
-    val initializer = KMeansInitializer(mode)
-    val embeddings = embeddingNames.map(Embedding.apply)
-
-    reSampleTrain(runConfig, data, initializer, ops, embeddings)
-  }
-
-  /**
-   *
    * Train a K-Means model by recursively sub-sampling the data via the provided embedding.
    *
    * @param data input data
