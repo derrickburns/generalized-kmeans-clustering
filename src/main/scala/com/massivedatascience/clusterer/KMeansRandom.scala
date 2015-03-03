@@ -36,8 +36,6 @@ case object KMeansRandom extends KMeansSelector with SparkHelper {
     runs: Int,
     seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
 
-    implicit val sc = data.sparkContext
-
     val rand = new XORShiftRandom(seed)
 
     def select(data: RDD[BregmanPoint], count: Int) = {
