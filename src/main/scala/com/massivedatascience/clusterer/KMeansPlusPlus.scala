@@ -68,7 +68,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     if (candidateCenters.length < totalRequested)
       logWarning(s"# of clusters requested $totalRequested exceeds number of points ${candidateCenters.length}")
 
-    val points = candidateCenters.zip(weights).map{case(c,w)=> WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous,w)}.map(ops.toPoint)
+    val points = candidateCenters.zip(weights).map{ case(c,w)=>
+      WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous,w)
+    }.map(ops.toPoint)
     val rand = new XORShiftRandom(seed)
 
     def update(
