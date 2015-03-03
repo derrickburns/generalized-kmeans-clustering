@@ -70,12 +70,17 @@ object Embedding {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
+  val lowDimension = 64
+  val mediumDimension = 256
+  val highDimension = 1024
+  val epsilon = 0.01
+
   def apply(embeddingName: String): Embedding = {
     embeddingName match {
       case IDENTITY_EMBEDDING => IdentityEmbedding
-      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(64, 0.01)
-      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(256, 0.01)
-      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(1024, 0.01)
+      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(lowDimension, epsilon)
+      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(mediumDimension, epsilon)
+      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(highDimension, epsilon)
       case HAAR_EMBEDDING => HaarEmbedding
       case SYMMETRIZING_KL_EMBEDDING => SymmetrizingKLEmbedding
       case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
