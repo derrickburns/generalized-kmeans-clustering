@@ -603,12 +603,13 @@ package com.massivedatascience.clusterer
 
 object KMeans {
 
-  def timeSeriesTrain(raw: RDD[Vector], k: Int): KMeansModel = {
-    val dim = raw.first().toArray.length
-    require(dim > 0)
-    val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
-    val target = Math.max(maxDepth - 4, 0)
-    trainViaSubsampling(raw, k, depth = target)
+  def timeSeriesTrain(
+    runConfig: RunConfig,
+    data: RDD[WeightedVector],
+    initializer: KMeansSelector,
+    pointOps: BregmanPointOps,
+    clusterer: MultiKMeansClusterer,
+    embedding: Embedding = Embedding(HAAR_EMBEDDING)): KMeansModel = ???
   }
 }
 ```
