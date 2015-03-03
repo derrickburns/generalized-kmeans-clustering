@@ -45,7 +45,9 @@ case object GeneralLog extends MathLog {
  * and the Math.log function when entries are non-integral or not found.
  */
 case object DiscreteLog extends MathLog {
-  private val logTable = new Array[Double](1000)
+  val cacheSize = 1000
+
+  private val logTable = new Array[Double](cacheSize)
 
   override def log(d: Double): Double = {
     if (d == 0.0 || d == 1.0) {
