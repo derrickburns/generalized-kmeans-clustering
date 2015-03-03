@@ -237,7 +237,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     points: RDD[FatPoint]): Map[Int, MutableWeightedVector] =
 
     points.mapPartitions { changes =>
-      val centers = bcCenters.value.map { _ => ops.make }
+      val centers = bcCenters.value.map { _ => ops.make() }
 
       for (p <- changes if p.assignment(0).index != p.assignment(1).index) {
         if (p.assignment(p.current).index != -1) {

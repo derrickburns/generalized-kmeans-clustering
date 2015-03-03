@@ -20,6 +20,7 @@ package com.massivedatascience.linalg
 import org.apache.spark.mllib.linalg.Vector
 
 trait MutableWeightedVector {
+  val index: Int
 
   def weight: Double
 
@@ -34,5 +35,7 @@ trait MutableWeightedVector {
   def sub(p: MutableWeightedVector): this.type
 
   def asImmutable: WeightedVector
+
+  def isEmpty: Boolean
 
 }

@@ -140,7 +140,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    */
   def pointCost(centers: IndexedSeq[C], point: P): Double = findClosestDistance(centers, point)
 
-  def make: MutableWeightedVector = DenseClusterFactory.make
+  def make(index: Int = -1): MutableWeightedVector = DenseClusterFactory.make(index)
 
   /**
    * Bregman distance function

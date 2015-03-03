@@ -313,7 +313,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
             buffer.append((p.previousCluster, (p.location, false)))
         }
         buffer.iterator
-      }.aggregateByKey(pointOps.make)(
+      }.aggregateByKey(pointOps.make())(
         (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
         (x, y) => x.add(y)
       ).collect()
@@ -322,7 +322,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
       points.filter(_.isAssigned).map { p =>
         (p.cluster, p.location)
-      }.aggregateByKey(pointOps.make)(_.add(_), _.add(_)).collect()
+      }.aggregateByKey(pointOps.make())(_.add(_), _.add(_)).collect()
 
     /**
      * count number of points assigned to each cluster

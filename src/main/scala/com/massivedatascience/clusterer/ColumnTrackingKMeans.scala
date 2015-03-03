@@ -28,7 +28,6 @@ import org.joda.time.DateTime
 
 import scala.annotation.tailrec
 import scala.collection.generic.FilterMonadic
-import scala.collection.mutable
 
 object ColumnTrackingKMeans {
 
@@ -334,15 +333,15 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     val centers = previousCenters.toArray
     if (config.addOnly) {
-      val results = completeCentroids(points, pointOps, currentAssignments, previousAssignments,
-        previousCenters.length)
+      val results = completeMovedCentroids(points, pointOps, currentAssignments,
+        previousAssignments, previousCenters.length)
       for ((index, location) <- results) {
         centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
           initialized = true)
       }
     } else {
-      val changes = centroidChanges(points, pointOps, currentAssignments, previousAssignments,
-        previousCenters.length)
+      val changes = deltasOfMovedCentroids(points, pointOps, currentAssignments,
+        previousAssignments, previousCenters.length)
       for ((index, delta) <- changes) {
         val previous = previousCenters(index)
         val location = if (previous.initialized)
@@ -385,21 +384,19 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
 
   /**
-   * Create the centroids of only the clusters that changed.
-   *
-   * This implementation avoids object allocation per BregmanPoint.
-   *
+   * Computes all centroids, but only returns centroids of changes clusters.
+   * *
    * A previous implementation that uses aggregateByKey on (index, point) tuples was observed
    * to cause to much garbage collection overhead.
    *
    * @param points points
+   * @param pointOps distance function
    * @param assignments assignments of points
    * @param previousAssignments previous assignments of points
-   *
    * @param numCenters current number of non-empty clusters
-   * @return
+   * @return complete centroids of clusters that have moved
    */
-  private[this] def completeCentroids[T <: WeightedVector](
+  private[this] def completeMovedCentroids[T <: WeightedVector](
     points: RDD[T],
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
@@ -411,9 +408,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = IndexedSeq.fill(numCenters)(pointOps.make)
+        val centroids = IndexedSeq.tabulate(numCenters)(i=>pointOps.make(i))
         val changed = new Array[Boolean](numCenters)
-        val indexBuffer = new mutable.ArrayBuilder.ofInt
+        val indexBuffer = new collection.mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
 
         @inline def update(index: Int, point: T) : Unit =
@@ -440,7 +437,16 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }.reduceByKey(_.add(_)).collect()
   }
 
-  private[this] def centroidChanges[T <: WeightedVector](
+  /**
+   *
+   * @param points points
+   * @param pointOps distance function
+   * @param assignments assignments of points
+   * @param previousAssignments previous assignments of points
+   * @param numCenters current number of non-empty clusters
+   * @return deltas to clusters that have moved
+   */
+  private[this] def deltasOfMovedCentroids[T <: WeightedVector](
     points: RDD[T],
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
@@ -453,18 +459,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = IndexedSeq.fill(numCenters)(pointOps.make)
-        val changed = new Array[Boolean](numCenters)
-        val indexBuffer = new mutable.ArrayBuilder.ofInt
-        indexBuffer.sizeHint(numCenters)
-
-        @inline def centroidAt(index: Int) : MutableWeightedVector = {
-          if (! changed(index)) {
-            changed(index) = true
-            indexBuffer += index
-          }
-          centroids(index)
-        }
+        val centroids = IndexedSeq.tabulate(numCenters)(i=>pointOps.make(i))
 
         while (z.hasNext && y.hasNext && x.hasNext) {
           val point = x.next()
@@ -473,13 +468,11 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           if (currentAssignment != previousAssignment) {
             val current = currentAssignment.cluster
             val previous = previousAssignment.cluster
-            if (previous != -1) centroidAt(previous).sub(point)
-            if (current != -1) centroidAt(current).add(point)
+            if (previous != -1) centroids(previous).sub(point)
+            if (current != -1) centroids(current).add(point)
           }
         }
-        val changedClusters = indexBuffer.result()
-        logInfo(s"number of clusters changed = ${changedClusters.length}")
-        changedClusters.map(index => (index, centroids(index))).iterator
+        centroids.filter(!_.isEmpty).map(x => (x.index, x)).iterator
     }.reduceByKey(_.add(_)).collect()
   }
 
