@@ -28,6 +28,7 @@ import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
+import scala.collection.Map
 import scala.collection.generic.FilterMonadic
 
 object ColumnTrackingKMeans {
@@ -171,7 +172,7 @@ object ColumnTrackingKMeans {
      * @return a map from cluster index to number of points assigned to that cluster
      */
     private[this]
-    def countByCluster(currentAssignments: RDD[Assignment]) =
+    def countByCluster(currentAssignments: RDD[Assignment]): Map[Int, Long] =
       currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
 
   }

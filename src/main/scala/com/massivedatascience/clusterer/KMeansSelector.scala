@@ -35,7 +35,7 @@ object KMeansSelector {
 
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer
-  private val standardSteps = 5
+  private[this] val standardSteps = 5
 
   def apply(name: String): KMeansSelector = {
     name match {

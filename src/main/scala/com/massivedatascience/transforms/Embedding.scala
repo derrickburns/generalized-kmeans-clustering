@@ -70,10 +70,10 @@ object Embedding {
   val MEDIUM_DIMENSIONAL_RI = "MEDIUM_DIMENSIONAL_RI"
   val HIGH_DIMENSIONAL_RI = "HIGH_DIMENSIONAL_RI"
 
-  private val lowDimension = 64
-  private val mediumDimension = 256
-  private val highDimension = 1024
-  private val epsilon = 0.01
+  private[this] val lowDimension = 64
+  private[this] val mediumDimension = 256
+  private[this] val highDimension = 1024
+  private[this] val epsilon = 0.01
 
   def apply(embeddingName: String): Embedding = {
     embeddingName match {

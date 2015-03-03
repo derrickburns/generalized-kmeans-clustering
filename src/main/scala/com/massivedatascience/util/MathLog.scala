@@ -45,7 +45,7 @@ case object GeneralLog extends MathLog {
  * and the Math.log function when entries are non-integral or not found.
  */
 case object DiscreteLog extends MathLog {
-  val cacheSize = 1000
+  private[this] val cacheSize = 1000
 
   private val logTable = new Array[Double](cacheSize)
 
