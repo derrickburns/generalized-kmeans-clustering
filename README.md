@@ -55,6 +55,7 @@ The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11
 
 To use the **latest snapshot** version, also add the Sonatype snapshots repository resolver.
 
+
 #### SBT
 
 ```scala

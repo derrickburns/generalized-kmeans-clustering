@@ -102,9 +102,14 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   /**
    * Return the index of the closest point in `centers` to `point`, as well as its distance.
    */
-  def findClosestInfo[T](centers: IndexedSeq[C], point: P, f: (Int, Double) => T): T = {
-    var bestDistance = Infinity
-    var bestIndex = 0
+  def findClosestInfo[T](
+    centers: IndexedSeq[C],
+    point: P, f: (Int, Double) => T,
+    initialDistance: Double = Infinity,
+    initialIndex : Int = -1): T = {
+
+    var bestDistance = initialDistance
+    var bestIndex = initialIndex
     var i = 0
     val end = centers.length
     while (i < end && bestDistance > 0.0) {
