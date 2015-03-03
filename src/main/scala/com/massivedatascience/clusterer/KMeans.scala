@@ -27,6 +27,10 @@ import org.apache.spark.rdd.RDD
  * A helper object that creates K-Means Models using the underlying classes in this package.
  */
 object KMeans extends SparkHelper {
+  
+  val defaultMaxIterations = 20
+  val defaultNumRuns = 1
+
 
   /**
    * The standard configuration for a clusterer that runs Lloyd's algorithm
@@ -54,8 +58,8 @@ object KMeans extends SparkHelper {
   def train(
     data: RDD[Vector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -91,8 +95,8 @@ object KMeans extends SparkHelper {
   def trainWeighted(
     data: RDD[WeightedVector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -125,8 +129,8 @@ object KMeans extends SparkHelper {
   def trainWithResults(
     data: RDD[WeightedVector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -162,8 +166,8 @@ object KMeans extends SparkHelper {
   def trainViaSubsampling(
     data: RDD[WeightedVector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     initializerName: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -257,8 +261,8 @@ object KMeans extends SparkHelper {
   def sparseTrain(
     raw: RDD[WeightedVector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
@@ -273,8 +277,8 @@ object KMeans extends SparkHelper {
   def timeSeriesTrain(
     raw: RDD[WeightedVector],
     k: Int,
-    maxIterations: Int = 20,
-    runs: Int = 1,
+    maxIterations: Int = KMeans.defaultMaxIterations,
+    runs: Int = KMeans.defaultNumRuns,
     initializerName: String = KMeansInitializer.K_MEANS_PARALLEL,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
