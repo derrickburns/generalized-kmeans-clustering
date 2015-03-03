@@ -33,7 +33,7 @@ class XORShiftRandom(init: Long) extends JavaRandom(init) {
 
   def this() = this(System.nanoTime)
 
-  private var seed = XORShiftRandom.hashSeed(init)
+  private[this] var seed = hashSeed(init)
 
   // we need to just override next - this will be called by nextInt, nextDouble,
   // nextGaussian, nextLong, etc.
@@ -46,18 +46,16 @@ class XORShiftRandom(init: Long) extends JavaRandom(init) {
   }
 
   override def setSeed(s: Long): Unit = {
-    seed = XORShiftRandom.hashSeed(s)
+    seed = hashSeed(s)
   }
-}
-
-/** Contains benchmark method and main method to run benchmark of the RNG */
-object XORShiftRandom {
-
-  val random = new Random()
 
   /** Hash seeds to have 0/1 bits throughout. */
-  private def hashSeed(seed: Long): Long = {
+  private[this] def hashSeed(seed: Long): Long = {
     val bytes = ByteBuffer.allocate(java.lang.Long.SIZE).putLong(seed).array()
     MurmurHash3.bytesHash(bytes)
   }
+}
+
+object XORShiftRandom {
+  val random = new Random()
 }
