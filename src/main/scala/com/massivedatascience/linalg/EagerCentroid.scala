@@ -24,17 +24,17 @@ import com.massivedatascience.linalg.EagerCentroid._
  * A mutable weighted vector that eagerly adds new vectors or subtracts vectors
  * to a form centroid. Consequently, it is appropriate for use with dense vectors.
  */
-class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializable {
+class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializable {
 
   @inline def isEmpty : Boolean = raw eq empty
 
   @inline def nonEmpty : Boolean = raw ne empty
 
-  def homogeneous = raw
+  def homogeneous: Vector = raw
 
-  def asImmutable = WeightedVector(raw, weight)
+  def asImmutable: WeightedVector = WeightedVector(raw, weight)
 
-  private var raw: Vector = empty
+  private[this] var raw: Vector = empty
 
   var weight: Double = 0.0
 
