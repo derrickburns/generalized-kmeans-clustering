@@ -362,7 +362,6 @@ object KMeans {
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
    * @param mode initialization algorithm to use
-   * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionNames the distance functions to use
    * @param kMeansImplName which k-means implementation to use
    * @param embeddingNames sequence of embeddings to use, from lowest dimension to greatest
@@ -374,7 +373,6 @@ object KMeans {
     maxIterations: Int = 20,
     runs: Int = 1,
     mode: String = KMeansInitializer.K_MEANS_PARALLEL,
-    initializationSteps: Int = 5,
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     kMeansImplName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING))
@@ -415,7 +413,6 @@ object KMeans {
    * @param maxIterations maximum number of iterations of Lloyd's algorithm
    * @param runs number of parallel clusterings to run
    * @param initializerName initialization algorithm to use
-   * @param initializationSteps number of steps of the initialization algorithm
    * @param distanceFunctionName the distance functions to use
    * @param clustererName which k-means implementation to use
    * @param embeddingName embedding to use recursively
@@ -428,7 +425,6 @@ object KMeans {
     maxIterations: Int = 20,
     runs: Int = 1,
     initializerName: String =  KMeansInitializer.K_MEANS_PARALLEL,
-    initializationSteps: Int = 5,
     distanceFunctionName: String = BregmanPointOps.EUCLIDEAN,
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingName: String = Embedding.HAAR_EMBEDDING,
