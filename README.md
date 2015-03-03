@@ -740,7 +740,7 @@ There are several other differences with this clusterer and the Spark K-Means cl
 
 #### Weighted Vectors
 
-The Spark MLLIB 1.2 clusterer operations on unweighted vectors.  This clusterer operates on weighted
+The Spark MLLIB 1.2 clusterer operates on unweighted vectors.  This clusterer operates on weighted
 vectors.   Use these ```WeightedVector``` companion object to construct weighted vectors.
 
 ```scala
