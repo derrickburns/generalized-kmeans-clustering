@@ -28,6 +28,8 @@ class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializ
 
   @inline def isEmpty : Boolean = raw eq empty
 
+  @inline def nonEmpty : Boolean = raw ne empty
+
   def homogeneous = raw
 
   def asImmutable = WeightedVector(raw, weight)
@@ -70,7 +72,7 @@ class EagerCentroid( val index: Int) extends MutableWeightedVector with Serializ
    * @return resulting centroid
    */
   def scale(alpha: Double): this.type = {
-    if (raw != empty) {
+    if (nonEmpty) {
       BLAS.scal(alpha, raw)
       weight = weight * alpha
     }
