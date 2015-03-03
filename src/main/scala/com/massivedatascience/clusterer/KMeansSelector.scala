@@ -35,11 +35,12 @@ object KMeansSelector {
 
   val RANDOM = "random"
   val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer
+  private val standardSteps = 5
 
   def apply(name: String): KMeansSelector = {
     name match {
       case RANDOM => KMeansRandom
-      case K_MEANS_PARALLEL => new KMeansParallel(5)
+      case K_MEANS_PARALLEL => new KMeansParallel(standardSteps)
       case _ => throw new RuntimeException(s"unknown initializer $name")
     }
   }
