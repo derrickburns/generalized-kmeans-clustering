@@ -180,7 +180,7 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val candidates = data.map(ops.toCenter)
-    val bregmanCenters = new KMeansPlusPlus(ops).centers(seed, candidates, weights,
+    val bregmanCenters = new KMeansPlusPlus(ops).goodCenters(seed, candidates, weights,
       k, perRound, numPreselected)
     new KMeansModel(ops, bregmanCenters)
   }

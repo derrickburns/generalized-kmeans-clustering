@@ -26,8 +26,8 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
 /**
- *
- * The <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
+ * This implements the
+ * <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
  *
  * @param ops distance function
  */
@@ -49,7 +49,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @return   an array of at most k cluster centers
    */
 
-  def centers(
+  def goodCenters(
     seed: Long,
     candidateCenters: IndexedSeq[BregmanCenter],
     weights: IndexedSeq[Double],
@@ -73,50 +73,52 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     }.map(ops.toPoint)
     val rand = new XORShiftRandom(seed)
 
-    def update(
-      distances: IndexedSeq[Double]) : (IndexedSeq[Double], IndexedSeq[BregmanCenter]) = {
-
-      val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
-      val selected = (0 until perRound).par.flatMap { _ =>
-        pickWeighted(rand, cumulative).iterator
-      }
-      val newCenters = selected.map(candidateCenters(_)).toIndexedSeq
-      val newDistances = updateDistances(points, distances, newCenters)
-      val additional = newCenters
-      (newDistances, additional)
-    }
-
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
     @tailrec
-    def moreCenters(distances: IndexedSeq[Double]) : ArrayBuffer[BregmanCenter] = {
+    def moreCenters(distances: IndexedSeq[Double]) : Unit = {
       val needed = totalRequested - centers.length
       if(needed > 0) {
-        val (newDistances, additionalCenters) = update(distances)
+        val (newDistances, additionalCenters) = update(points, candidateCenters, perRound, rand, distances)
         centers ++= additionalCenters.take(needed)
-        if (additionalCenters.nonEmpty) moreCenters(newDistances) else centers
-      } else {
-        centers
+        if (additionalCenters.nonEmpty)
+          moreCenters(newDistances)
       }
     }
-
+    
     if (numPreselected == 0) {
       val newCenter = pickWeighted(rand, cumulativeWeights(weights)).map(candidateCenters(_))
       centers += newCenter.get
     } else {
       centers ++= candidateCenters.take(numPreselected)
     }
-    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
 
-    val distances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
-    val initialDistances = updateDistances(points, distances, centers)
-    val finalCenters = moreCenters(initialDistances)
-    sideEffect(finalCenters.take(totalRequested)) { result =>
+    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
+    val maxDistances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
+    val initialDistances = updateDistances(points, maxDistances, centers)
+    moreCenters(initialDistances)
+    sideEffect(centers.take(totalRequested)) { result =>
       logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $totalRequested requested")
     }
   }
+  
+  private[this] 
+  def update(
+    points: IndexedSeq[BregmanPoint], 
+    candidates: IndexedSeq[BregmanCenter], 
+    perRound: Int, 
+    rand: XORShiftRandom,
+    distances: IndexedSeq[Double]) : (IndexedSeq[Double], IndexedSeq[BregmanCenter]) = {
 
-
+    val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d})
+    val selected = (0 until perRound).par.flatMap { _ =>
+      pickWeighted(rand, cumulative).iterator
+    }
+    val newCenters = selected.map(candidates(_)).toIndexedSeq
+    val newDistances = updateDistances(points, distances, newCenters)
+    (newDistances, newCenters)
+  }
+  
   /**
    * Update the distance of each point to its closest cluster center, given the cluster
    * centers that were added.
@@ -126,6 +128,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @return  points with their distance to closest to cluster center updated
    */
 
+  private[this]
   def updateDistances(
     points: IndexedSeq[BregmanPoint],
     distances: IndexedSeq[Double],
@@ -136,6 +139,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     newDistances.toIndexedSeq
   }
 
+  private[this]
   def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
     weights.scanLeft(0.0){ case (agg, w) =>  agg + w }
 
@@ -146,6 +150,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @param cumulative  the cumulative weights of the points
    * @return the index of the point chosen
    */
+  private[this]
   def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Option[Int] = {
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)

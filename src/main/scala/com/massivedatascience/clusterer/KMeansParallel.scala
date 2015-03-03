@@ -87,7 +87,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
         logInfo(s"run $r has ${myCenters.length} centers")
         val weights = IndexedSeq.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
         val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
-        kMeansPlusPlus.centers(seed, myCenters, weights, kx, 1,
+        kMeansPlusPlus.goodCenters(seed, myCenters, weights, kx, 1,
           numberRetained.map(_(r)).getOrElse(0))
       }
     }
