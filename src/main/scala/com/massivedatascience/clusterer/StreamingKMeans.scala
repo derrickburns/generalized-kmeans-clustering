@@ -19,10 +19,11 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.StreamingKMeans.SimpleWeightedVector
 import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream
@@ -79,23 +80,23 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
   def update(data: RDD[Vector], decayFactor: Double, timeUnit: String): StreamingKMeansModel = {
 
     // find nearest cluster to each point
-    val closest = data.map(point => (model.predict(point), (point, 1L)))
+    val closest = data.map(point => (model.predict(point), SimpleWeightedVector(point, 1L)))
 
     // get sums and counts for updating each cluster
-    val mergeContribs: ((Vector, Long), (Vector, Long)) => (Vector, Long) = (p1, p2) => {
-      BLAS.axpy(1.0, p2._1, p1._1)
-      (p1._1, p1._2 + p2._2)
+    val mergeContribs: (SimpleWeightedVector, SimpleWeightedVector) => SimpleWeightedVector = (p1, p2) => {
+      BLAS.axpy(1.0, p2.vector, p1.vector)
+      SimpleWeightedVector(p1.vector, p1.weight + p2.weight)
     }
     val dim = centerArrays(0).size
-    val pointStats: Array[(Int, (Vector, Long))] = closest
-      .aggregateByKey((Vectors.zeros(dim), 0L))(mergeContribs, mergeContribs)
+    val pointStats: Array[(Int, SimpleWeightedVector)] = closest
+      .aggregateByKey(SimpleWeightedVector(Vectors.zeros(dim), 0L))(mergeContribs, mergeContribs)
       .collect()
 
     val discount = timeUnit match {
       case StreamingKMeans.BATCHES => decayFactor
       case StreamingKMeans.POINTS =>
         val numNewPoints = pointStats.view.map {
-          case (_, (_, n)) =>
+          case (_, SimpleWeightedVector(_, n)) =>
             n
         }.sum
         math.pow(decayFactor, numNewPoints)
@@ -106,7 +107,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
 
     // implement update rule
     pointStats.foreach {
-      case (label, (sum, count)) =>
+      case (label, SimpleWeightedVector(sum, count)) =>
         val centroid = centerArrays(label).inhomogeneous
         val updatedWeight = clusterWeights(label) + count
         val lambda = count / math.max(updatedWeight, 1e-16)
@@ -201,4 +202,6 @@ class StreamingKMeans(
 object StreamingKMeans {
   final val BATCHES = "batches"
   final val POINTS = "points"
+
+  case class SimpleWeightedVector(vector: Vector, weight: Long)
 }
