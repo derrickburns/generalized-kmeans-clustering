@@ -111,7 +111,7 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
 
   def F(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
-  def F(v: Vector, w: Double) : Double = {
+  def F(v: Vector, w: Double): Double = {
     val c = v.copy
     scal(1.0 / w, c)
     F(c)
