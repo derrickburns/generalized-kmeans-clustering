@@ -28,8 +28,8 @@ import org.apache.spark.rdd.RDD
  */
 object KMeans extends SparkHelper {
 
-  val defaultMaxIterations = 20
-  val defaultNumRuns = 1
+  private val defaultMaxIterations = 20
+  private val defaultNumRuns = 1
 
   /**
    * The standard configuration for a clusterer that runs Lloyd's algorithm
