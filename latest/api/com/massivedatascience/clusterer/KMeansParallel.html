@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KMeansParallel - com.massivedatascience.clusterer.KMeansParallel</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,16 +30,22 @@
       <div id="definition">
         <img src="../../../lib/class_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a>.<a href="package.html" class="extype" name="com.massivedatascience.clusterer">clusterer</a></p>
-        <h1>KMeansParallel</h1>
+        <h1>KMeansParallel</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.massivedatascience.clusterer">package clusterer</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">class</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">KMeansParallel</span><span class="result"> extends <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
+        <span class="name">KMeansParallel</span><span class="params">(<span name="numSteps">numSteps: <span class="extype" name="scala.Int">Int</span></span>, <span name="sampleRate">sampleRate: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span><span class="result"> extends <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
       
@@ -48,7 +58,7 @@ and closest distance for each point to those cluster centers.  This allows us to
 use this code to find additional cluster centers at any time.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a>, <span class="extype" name="org.apache.spark.Logging">Logging</span>, <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a>, <span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a>, <span class="extype" name="org.apache.spark.Logging">Logging</span>, <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a>, <span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -66,7 +76,7 @@ use this code to find additional cluster centers at any time.
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="com.massivedatascience.clusterer.KMeansParallel"><span>KMeansParallel</span></li><li class="in" name="com.massivedatascience.util.SparkHelper"><span>SparkHelper</span></li><li class="in" name="org.apache.spark.Logging"><span>Logging</span></li><li class="in" name="com.massivedatascience.clusterer.KMeansInitializer"><span>KMeansInitializer</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="com.massivedatascience.clusterer.KMeansParallel"><span>KMeansParallel</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="com.massivedatascience.util.SparkHelper"><span>SparkHelper</span></li><li class="in" name="org.apache.spark.Logging"><span>Logging</span></li><li class="in" name="com.massivedatascience.clusterer.KMeansSelector"><span>KMeansSelector</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -97,47 +107,22 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">KMeansParallel</span><span class="params">(<span name="numSteps">numSteps: <span class="extype" name="scala.Int">Int</span></span>, <span name="sampleRate">sampleRate: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span>
       </span>
-      </h4>
-      
-    </li></ol>
-            </div>
-
-        <div id="types" class="types members">
-              <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.clusterer.KMeansParallel.Centers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]"></a>
-      <a id="Centers:Centers"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">type</span>
-      </span>
-      <span class="symbol">
-        <span class="name">Centers</span><span class="result"> = <span class="extype" name="scala.collection.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@&lt;init&gt;(numSteps:Int,sampleRate:Double):com.massivedatascience.clusterer.KMeansParallel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
 
         
 
+        
+
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -148,8 +133,12 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -161,22 +150,13 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -187,8 +167,12 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -200,7 +184,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -213,7 +201,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -232,21 +224,12 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#exchange" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
       <a id="exchange[T](String,RDD[T])((RDD[T])⇒RDD[T]):RDD[T]"></a>
@@ -258,7 +241,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">exchange</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="from">from: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]) ⇒ <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -271,7 +258,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -290,35 +281,30 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansParallel#init" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="init(pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],targetNumberClusters:Int,initialState:Option[(Seq[KMeansParallel.this.Centers],Seq[org.apache.spark.rdd.RDD[Double]])],runs:Int,seedx:Long):Seq[KMeansParallel.this.Centers]"></a>
-      <a id="init(BregmanPointOps,RDD[BregmanPoint],Int,Option[(Seq[Centers],Seq[RDD[Double]])],Int,Long):Seq[Centers]"></a>
+      <a id="init(pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],targetNumberClusters:Int,initialState:Option[com.massivedatascience.clusterer.KMeansSelector.InitialCondition],runs:Int,seedx:Long):Seq[com.massivedatascience.clusterer.Centers]"></a>
+      <a id="init(BregmanPointOps,RDD[BregmanPoint],Int,Option[InitialCondition],Int,Long):Seq[Centers]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">init</span><span class="params">(<span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="targetNumberClusters">targetNumberClusters: <span class="extype" name="scala.Int">Int</span></span>, <span name="initialState">initialState: <span class="extype" name="scala.Option">Option</span>[(<span class="extype" name="scala.Seq">Seq</span>[<a href="#Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" class="extmbr" name="com.massivedatascience.clusterer.KMeansParallel.Centers">Centers</a>], <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="scala.Double">Double</span>]])] = <span class="symbol">None</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span></span>, <span name="seedx">seedx: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="#Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" class="extmbr" name="com.massivedatascience.clusterer.KMeansParallel.Centers">Centers</a>]</span>
+        <span class="name">init</span><span class="params">(<span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="targetNumberClusters">targetNumberClusters: <span class="extype" name="scala.Int">Int</span></span>, <span name="initialState">initialState: <span class="extype" name="scala.Option">Option</span>[<a href="KMeansSelector$$InitialCondition.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector.InitialCondition">InitialCondition</a>] = <span class="symbol">None</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span></span>, <span name="seedx">seedx: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="package.html#Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" class="extmbr" name="com.massivedatascience.clusterer.Centers">Centers</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@init(pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],targetNumberClusters:Int,initialState:Option[com.massivedatascience.clusterer.KMeansSelector.InitialCondition],runs:Int,seedx:Long):Seq[com.massivedatascience.clusterer.Centers]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">pointOps</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">data</dt><dd class="cmt"><p>data</p></dd><dt class="param">targetNumberClusters</dt><dd class="cmt"><p>number of new clusters desired</p></dd><dt class="param">initialState</dt><dd class="cmt"><p>initial clusters and distance data</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of runs to perform</p></dd><dt class="param">seedx</dt><dd class="cmt"><p>random number seed</p></dd><dt>returns</dt><dd class="cmt"><p>updated set of cluster centers
-</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.massivedatascience.clusterer.KMeansParallel">KMeansParallel</a> → <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></dd></dl></div>
+</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.massivedatascience.clusterer.KMeansParallel">KMeansParallel</a> → <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -330,7 +316,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="org.apache.spark.Logging#isTraceEnabled" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isTraceEnabled():Boolean"></a>
@@ -343,7 +333,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">isTraceEnabled</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@isTraceEnabled():Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#log" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="log:org.slf4j.Logger"></a>
@@ -356,7 +350,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">log</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@log:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -369,7 +367,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logDebug(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String):Unit"></a>
@@ -382,7 +384,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logDebug(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -395,7 +401,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logError(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String):Unit"></a>
@@ -408,7 +418,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logError(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -421,7 +435,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logInfo(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String):Unit"></a>
@@ -434,7 +452,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logInfo(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logName" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logName:String"></a>
@@ -447,7 +469,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -460,7 +486,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logTrace(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String):Unit"></a>
@@ -473,7 +503,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logTrace(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -486,7 +520,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logWarning(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String):Unit"></a>
@@ -499,7 +537,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@logWarning(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -512,7 +554,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#noSync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
@@ -525,7 +571,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">noSync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -538,7 +588,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -551,8 +605,46 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.KMeansParallel#numSteps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="numSteps:Int"></a>
+      <a id="numSteps:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">numSteps</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@numSteps:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="com.massivedatascience.clusterer.KMeansParallel#sampleRate" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sampleRate:Double"></a>
+      <a id="sampleRate:Double"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sampleRate</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@sampleRate:Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="com.massivedatascience.util.SparkHelper#sideEffect" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sideEffect[T](v:T)(f:T=&gt;Unit):T"></a>
       <a id="sideEffect[T](T)((T)⇒Unit):T"></a>
@@ -564,7 +656,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">sideEffect</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@sideEffect[T](v:T)(f:T=&gt;Unit):T" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#sync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]"></a>
@@ -577,7 +673,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">sync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p><div class="fullcomment"><div class="comment cmt"><p>Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>type of data in RDD</p></dd><dt class="param">name</dt><dd class="cmt"><p>name to apply to RDD</p></dd><dt class="param">data</dt><dd class="cmt"><p>rdd</p></dd><dt>returns</dt><dd class="cmt"><p>the input RDD
 </p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -591,21 +691,12 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -617,7 +708,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -636,7 +731,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -655,7 +754,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -674,7 +777,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">withBroadcast</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.broadcast.Broadcast">Broadcast</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.reflect.ClassTag">ClassTag</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]</span>, <span name="sc">sc: <span class="extype" name="org.apache.spark.SparkContext">SparkContext</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@withBroadcast[T,Q](v:T)(f:org.apache.spark.broadcast.Broadcast[T]=&gt;Q)(implicitevidence$1:scala.reflect.ClassTag[T],implicitsc:org.apache.spark.SparkContext):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -687,7 +794,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]</span>, <span name="blocking">blocking: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q"></a>
@@ -700,7 +811,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="names">names: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="rdds">rdds: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withNamed" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -713,7 +828,11 @@ use this code to find additional cluster centers at any time.
       <span class="symbol">
         <span class="name">withNamed</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansParallel@withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li></ol>
             </div>
@@ -724,12 +843,16 @@ use this code to find additional cluster centers at any time.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="com.massivedatascience.util.SparkHelper">
+        <div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="com.massivedatascience.util.SparkHelper">
               <h3>Inherited from <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></h3>
             </div><div class="parent" name="org.apache.spark.Logging">
               <h3>Inherited from <span class="extype" name="org.apache.spark.Logging">Logging</span></h3>
-            </div><div class="parent" name="com.massivedatascience.clusterer.KMeansInitializer">
-              <h3>Inherited from <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></h3>
+            </div><div class="parent" name="com.massivedatascience.clusterer.KMeansSelector">
+              <h3>Inherited from <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></h3>
             </div><div class="parent" name="scala.Serializable">
               <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
             </div><div class="parent" name="java.io.Serializable">
@@ -754,6 +877,7 @@ use this code to find additional cluster centers at any time.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

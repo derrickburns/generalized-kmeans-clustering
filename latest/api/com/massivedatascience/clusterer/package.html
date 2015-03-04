@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>clusterer - com.massivedatascience.clusterer</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,11 @@
       <div id="definition">
         <img src="../../../lib/package_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a></p>
-        <h1>clusterer</h1>
+        <h1>clusterer</h1><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -81,18 +89,22 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.clusterer.BasicAssignment" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="BasicAssignmentextendspackage.SimpleAssignmentwithProductwithSerializable"></a>
-      <a id="BasicAssignment:BasicAssignment"></a>
+              <ol><li name="com.massivedatascience.clusterer.AssignmentSelector" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AssignmentSelectorextendsKMeansSelector"></a>
+      <a id="AssignmentSelector:AssignmentSelector"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">case class</span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="package$$BasicAssignment.html"><span class="name">BasicAssignment</span></a><span class="params">(<span name="distance">distance: <span class="extype" name="scala.Double">Double</span></span>, <span name="cluster">cluster: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result"> extends <a href="package$$SimpleAssignment.html" class="extype" name="com.massivedatascience.clusterer.SimpleAssignment">SimpleAssignment</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="AssignmentSelector.html"><span class="name">AssignmentSelector</span></a><span class="result"> extends <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@AssignmentSelectorextendsKMeansSelector" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.BasicStats" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="BasicStatsextendsAnyRef"></a>
@@ -105,9 +117,13 @@
       <span class="symbol">
         <a href="BasicStats.html"><span class="name">BasicStats</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BasicStatsextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.BregmanCenter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer.BregmanCenter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="BregmanCenterextendsWeightedVectorwithProductwithSerializable"></a>
       <a id="BregmanCenter:BregmanCenter"></a>
       <h4 class="signature">
@@ -118,9 +134,16 @@
       <span class="symbol">
         <a href="BregmanCenter.html"><span class="name">BregmanCenter</span></a><span class="params">(<span name="homogeneous">homogeneous: <span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span></span>, <span name="weight">weight: <span class="extype" name="scala.Double">Double</span></span>, <span name="dotGradMinusF">dotGradMinusF: <span class="extype" name="scala.Double">Double</span></span>, <span name="gradient">gradient: <span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span></span>)</span><span class="result"> extends <a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A cluster center with an additional Double and an additional vector containing the gradient
-that are used in distance computation.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanCenterextendsWeightedVectorwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A cluster center with an additional Double and an additional vector containing the gradient
+that are used in distance computation.</p><div class="fullcomment"><div class="comment cmt"><p>A cluster center with an additional Double and an additional vector containing the gradient
+that are used in distance computation.
+</p></div><dl class="paramcmts block"><dt class="param">homogeneous</dt><dd class="cmt"><p>point</p></dd><dt class="param">dotGradMinusF</dt><dd class="cmt"><p>center dot gradient(center) - f(center)</p></dd><dt class="param">gradient</dt><dd class="cmt"><p>gradient of center
+</p></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.BregmanPoint" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="BregmanPointextendsWeightedVectorwithProductwithSerializable"></a>
       <a id="BregmanPoint:BregmanPoint"></a>
@@ -132,9 +155,13 @@ that are used in distance computation.</p>
       <span class="symbol">
         <a href="BregmanPoint.html"><span class="name">BregmanPoint</span></a><span class="params">(<span name="homogeneous">homogeneous: <span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span></span>, <span name="weight">weight: <span class="extype" name="scala.Double">Double</span></span>, <span name="f">f: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result"> extends <a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A point with an additional single Double value that is used in distance computation.</p>
-    </li><li name="com.massivedatascience.clusterer.BregmanPointOps" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanPointextendsWeightedVectorwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A point with an additional single Double value that is used in distance computation.</p>
+    </li><li name="com.massivedatascience.clusterer.BregmanPointOps" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="BregmanPointOpsextendsSerializablewithClusterFactory"></a>
       <a id="BregmanPointOps:BregmanPointOps"></a>
       <h4 class="signature">
@@ -145,23 +172,30 @@ that are used in distance computation.</p>
       <span class="symbol">
         <a href="BregmanPointOps.html"><span class="name">BregmanPointOps</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <a href="ClusterFactory.html" class="extype" name="com.massivedatascience.clusterer.ClusterFactory">ClusterFactory</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">An enrichment to the Bregman divergence that supports expedient distance calculations.</p>
-    </li><li name="com.massivedatascience.clusterer.CachingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CachingKMeansextendsSerializablewithLogging"></a>
-      <a id="CachingKMeans:CachingKMeans"></a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanPointOpsextendsSerializablewithClusterFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An enrichment to the Bregman divergence that supports expedient distance calculations.</p><div class="fullcomment"><div class="comment cmt"><p>An enrichment to the Bregman divergence that supports expedient distance calculations.</p><p>This is done by pre-computing and caching certain values.</p><p>For points, these values are stored in BregmanPoint objects.</p><p>For cluster centers, these values are stored in BregmanCenter objects.</p></div></div>
+    </li><li name="com.massivedatascience.clusterer.Centers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]"></a>
+      <a id="Centers:Centers"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">class</span>
+        <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <a href="CachingKMeans.html"><span class="name">CachingKMeans</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
+        <span class="name">Centers</span><span class="result"> = <span class="extype" name="scala.collection.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
       </span>
-      </h4>
-      <p class="comment cmt">A K-means implementation that caches distances to clusters and that adjusts cluster centers by
-sampling the points on each iteration.</p>
-    </li><li name="com.massivedatascience.clusterer.ClusterFactory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@Centers=IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="com.massivedatascience.clusterer.ClusterFactory" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="ClusterFactoryextendsSerializable"></a>
       <a id="ClusterFactory:ClusterFactory"></a>
       <h4 class="signature">
@@ -172,9 +206,15 @@ sampling the points on each iteration.</p>
       <span class="symbol">
         <a href="ClusterFactory.html"><span class="name">ClusterFactory</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">K-Means algorithms need a method to construct a median or centroid value.</p>
-    </li><li name="com.massivedatascience.clusterer.ColumnTrackingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@ClusterFactoryextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">K-Means algorithms need a method to construct a median or centroid value.</p><div class="fullcomment"><div class="comment cmt"><p>K-Means algorithms need a method to construct a median or centroid value.
+This trait abstracts the type of the object used to create the centroid.
+</p></div></div>
+    </li><li name="com.massivedatascience.clusterer.ColumnTrackingKMeans" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ColumnTrackingKMeansextendsMultiKMeansClustererwithSparkHelper"></a>
       <a id="ColumnTrackingKMeans:ColumnTrackingKMeans"></a>
       <h4 class="signature">
@@ -185,9 +225,39 @@ sampling the points on each iteration.</p>
       <span class="symbol">
         <a href="ColumnTrackingKMeans.html"><span class="name">ColumnTrackingKMeans</span></a><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">A KMeans implementation that tracks which clusters moved and which points are assigned to which
-clusters and the distance to the closest cluster.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@ColumnTrackingKMeansextendsMultiKMeansClustererwithSparkHelper" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A KMeans implementation that tracks which clusters moved and which points are assigned to which
+clusters and the distance to the closest cluster.</p><div class="fullcomment"><div class="comment cmt"><p>A KMeans implementation that tracks which clusters moved and which points are assigned to which
+clusters and the distance to the closest cluster.</p><p>Notably, following each iterator of Lloyd's algorithm, empty clusters are provided new
+centers using the K-Means-|| algorithm.</p><p>We maintain for each point two assignments: 1) its current assignment and 2) its previous
+assignment. With this data, we can determine if a point moves between assignments by comparing
+the assignments.</p><p>We maintain for each cluster its index, generation number, centroid.</p><p>The invariants are:</p><p> -
+each cluster is assigned a generation number</p><p> -
+generation numbers are monotonically increasing</p><p> -
+all clusters whose centroids change in one Lloyd's round are assigned the same generation #</p><p> -
+when the membership of a cluster changes, the generation number of the cluster is increased</p><p> -
+each point is assigned the index of the cluster that is a member of</p><p>Initial condition:</p><p> -
+Initial cluster centroids are provided. All clusters are assigned generation -1 with the
+provided cluster centroids</p><p> -
+All points are assigned to the sentinel cluster (index == -1) with generation -2</p><p> -
+(Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
+generation number of those points to -1</p><p> -
+The current round is set to 0</p><p>Lloyd's algorithm can be stated as:</p><p> -
+Increase the round</p><p> -
+If any points were re-assigned (change in generation number), then update the clusters
+impacted by the re-assignment:</p><p> -
+Compute the new cluster centroids for the out-dated clusters</p><p> -
+Set the generation of the clusters affect to be the value of the round</p><p> -
+Increase the round</p><p> -
+If any centers were updated, then update the assignments of the points:</p><p> -
+For each point (or a random sub-set of the points), identify the closest cluster</p><p> -
+If the closest cluster has a different index or generation number, then update the
+assignments of the point so that its index is the index of the cluster to which it is assigned
+and the generation is the round the new assignment is made</p></div></div>
     </li><li name="com.massivedatascience.clusterer.DetailedTrackingStats" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DetailedTrackingStatsextendsBasicStatswithSerializablewithLogging"></a>
       <a id="DetailedTrackingStats:DetailedTrackingStats"></a>
@@ -199,7 +269,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="DetailedTrackingStats.html"><span class="name">DetailedTrackingStats</span></a><span class="result"> extends <a href="BasicStats.html" class="extype" name="com.massivedatascience.clusterer.BasicStats">BasicStats</a> with <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@DetailedTrackingStatsextendsBasicStatswithSerializablewithLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.KMeansConfig" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="KMeansConfigextendsSerializable"></a>
@@ -212,22 +286,13 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeansConfig.html"><span class="name">KMeansConfig</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansConfigextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.KMeansInitializer" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="KMeansInitializerextendsSerializable"></a>
-      <a id="KMeansInitializer:KMeansInitializer"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="KMeansInitializer.html"><span class="name">KMeansInitializer</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.massivedatascience.clusterer.KMeansModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer.KMeansModel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="KMeansModelextendsKMeansPredictorwithSerializablewithProduct"></a>
       <a id="KMeansModel:KMeansModel"></a>
       <h4 class="signature">
@@ -238,24 +303,41 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeansModel.html"><span class="name">KMeansModel</span></a><span class="params">(<span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="centers">centers: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>)</span><span class="result"> extends <a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a> with <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="scala.Product">Product</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">An immutable K-Means model
-</p>
-    </li><li name="com.massivedatascience.clusterer.KMeansParallel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KMeansParallelextendsKMeansInitializerwithSparkHelper"></a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansModelextendsKMeansPredictorwithSerializablewithProduct" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An immutable K-Means model
+</p><div class="fullcomment"><div class="comment cmt"><p>An immutable K-Means model
+</p></div><dl class="paramcmts block"><dt class="param">pointOps</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">centers</dt><dd class="cmt"><p>cluster centers
+</p></dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.KMeansParallel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="KMeansParallelextendsKMeansSelectorwithSparkHelperwithProductwithSerializable"></a>
       <a id="KMeansParallel:KMeansParallel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">class</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="KMeansParallel.html"><span class="name">KMeansParallel</span></a><span class="result"> extends <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
+        <a href="KMeansParallel.html"><span class="name">KMeansParallel</span></a><span class="params">(<span name="numSteps">numSteps: <span class="extype" name="scala.Int">Int</span></span>, <span name="sampleRate">sampleRate: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span><span class="result"> extends <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">Initialize <code>runs</code> sets of cluster centers using the
-<a href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>.</a></p>
-    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansParallelextendsKMeansSelectorwithSparkHelperwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Initialize <code>runs</code> sets of cluster centers using the
+<a href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>.</a></p><div class="fullcomment"><div class="comment cmt"><p>Initialize <code>runs</code> sets of cluster centers using the
+<a href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>.
+This is a variant of k-means++ that tries to find  dissimilar cluster centers by starting with a random center and then doing
+passes where more centers are chosen with probability proportional to their squared distance
+to the current cluster set. It results in a provable approximation to an optimal clustering.</p><p>In this implementation, we allow the client to provide an initial set of cluster centers
+and closest distance for each point to those cluster centers.  This allows us to
+use this code to find additional cluster centers at any time.
+</p></div></div>
+    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="KMeansPlusPlusextendsSerializablewithSparkHelper"></a>
       <a id="KMeansPlusPlus:KMeansPlusPlus"></a>
       <h4 class="signature">
@@ -266,9 +348,16 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeansPlusPlus.html"><span class="name">KMeansPlusPlus</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">The <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
-</a></p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansPlusPlusextendsSerializablewithSparkHelper" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This implements the
+<a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
+</a></p><div class="fullcomment"><div class="comment cmt"><p>This implements the
+<a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
+</p></div></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="KMeansPredictorextendsAnyRef"></a>
       <a id="KMeansPredictor:KMeansPredictor"></a>
@@ -280,33 +369,28 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeansPredictor.html"><span class="name">KMeansPredictor</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansPredictorextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.KMeansRandom" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KMeansRandomextendsKMeansInitializerwithSparkHelper"></a>
-      <a id="KMeansRandom:KMeansRandom"></a>
+    </li><li name="com.massivedatascience.clusterer.KMeansSelector" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="KMeansSelectorextendsSerializable"></a>
+      <a id="KMeansSelector:KMeansSelector"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">class</span>
+        <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="KMeansRandom.html"><span class="name">KMeansRandom</span></a><span class="result"> extends <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
+        <a href="KMeansSelector.html"><span class="name">KMeansSelector</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">Initial a KMeansModel with randomly chosen centers from a given set of points.</p>
-    </li><li name="com.massivedatascience.clusterer.KMeansResults" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KMeansResultsextendsSerializablewithProduct"></a>
-      <a id="KMeansResults:KMeansResults"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="KMeansResults.html"><span class="name">KMeansResults</span></a><span class="params">(<span name="distortion">distortion: <span class="extype" name="scala.Double">Double</span></span>, <span name="assignments">assignments: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[(<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Double">Double</span>)]</span>)</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="scala.Product">Product</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansSelectorextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.MultiKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MultiKMeansextendsMultiKMeansClusterer"></a>
@@ -319,8 +403,12 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="MultiKMeans.html"><span class="name">MultiKMeans</span></a><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@MultiKMeansextendsMultiKMeansClusterer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
 returning the one with the lowest cost.</p>
     </li><li name="com.massivedatascience.clusterer.MultiKMeansClusterer" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="MultiKMeansClustererextendsSerializablewithLogging"></a>
@@ -333,7 +421,11 @@ returning the one with the lowest cost.</p>
       <span class="symbol">
         <a href="MultiKMeansClusterer.html"><span class="name">MultiKMeansClusterer</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@MultiKMeansClustererextendsSerializablewithLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.NonSmoothedPointCenterFactory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="NonSmoothedPointCenterFactoryextendsPointCenterFactory"></a>
@@ -346,8 +438,12 @@ returning the one with the lowest cost.</p>
       <span class="symbol">
         <a href="NonSmoothedPointCenterFactory.html"><span class="name">NonSmoothedPointCenterFactory</span></a><span class="result"> extends <a href="PointCenterFactory.html" class="extype" name="com.massivedatascience.clusterer.PointCenterFactory">PointCenterFactory</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">Create BregmanCenters without smoothing.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@NonSmoothedPointCenterFactoryextendsPointCenterFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create BregmanCenters without smoothing.</p>
     </li><li name="com.massivedatascience.clusterer.PointCenterFactory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="PointCenterFactoryextendsAnyRef"></a>
       <a id="PointCenterFactory:PointCenterFactory"></a>
@@ -359,49 +455,13 @@ returning the one with the lowest cost.</p>
       <span class="symbol">
         <a href="PointCenterFactory.html"><span class="name">PointCenterFactory</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A factory for BregmanPoints and BregmanCenters given the Bregman divergence function.</p>
-    </li><li name="com.massivedatascience.clusterer.SampleInitializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="SampleInitializerextendsKMeansInitializer"></a>
-      <a id="SampleInitializer:SampleInitializer"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="SampleInitializer.html"><span class="name">SampleInitializer</span></a><span class="result"> extends <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.massivedatascience.clusterer.SimpleAssignment" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="SimpleAssignmentextendsSerializable"></a>
-      <a id="SimpleAssignment:SimpleAssignment"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="package$$SimpleAssignment.html"><span class="name">SimpleAssignment</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4>
-      
-    </li><li name="com.massivedatascience.clusterer.SingleKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="SingleKMeansextendsSerializablewithLogging"></a>
-      <a id="SingleKMeans:SingleKMeans"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="SingleKMeans.html"><span class="name">SingleKMeans</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
-      </span>
-      </h4>
-      <p class="comment cmt">A simple k-means implementation that re-computes the closest cluster centers on each iteration
-and that recomputes each cluster on each iteration.</p>
-    </li><li name="com.massivedatascience.clusterer.SmoothedPointCenterFactory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@PointCenterFactoryextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A factory for BregmanPoints and BregmanCenters given the Bregman divergence function.</p>
+    </li><li name="com.massivedatascience.clusterer.SmoothedPointCenterFactory" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="SmoothedPointCenterFactoryextendsPointCenterFactory"></a>
       <a id="SmoothedPointCenterFactory:SmoothedPointCenterFactory"></a>
       <h4 class="signature">
@@ -412,8 +472,12 @@ and that recomputes each cluster on each iteration.</p>
       <span class="symbol">
         <a href="SmoothedPointCenterFactory.html"><span class="name">SmoothedPointCenterFactory</span></a><span class="result"> extends <a href="PointCenterFactory.html" class="extype" name="com.massivedatascience.clusterer.PointCenterFactory">PointCenterFactory</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">Create BregmanPoints and BregmanCenters by smoothing the centers.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@SmoothedPointCenterFactoryextendsPointCenterFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create BregmanPoints and BregmanCenters by smoothing the centers.</p><div class="fullcomment"><div class="comment cmt"><p>Create BregmanPoints and BregmanCenters by smoothing the centers.</p><p>Smooth by adding one to each coordinate.</p></div></div>
     </li><li name="com.massivedatascience.clusterer.StreamingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="StreamingKMeansextendsLogging"></a>
       <a id="StreamingKMeans:StreamingKMeans"></a>
@@ -425,9 +489,13 @@ and that recomputes each cluster on each iteration.</p>
       <span class="symbol">
         <a href="StreamingKMeans.html"><span class="name">StreamingKMeans</span></a><span class="result"> extends <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@StreamingKMeansextendsLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="StreamingKMeansModelextendsKMeansPredictorwithLogging"></a>
       <a id="StreamingKMeansModel:StreamingKMeansModel"></a>
       <h4 class="signature">
@@ -438,22 +506,100 @@ and that recomputes each cluster on each iteration.</p>
       <span class="symbol">
         <a href="StreamingKMeansModel.html"><span class="name">StreamingKMeansModel</span></a><span class="result"> extends <a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
       </span>
-      </h4>
-      
-    </li><li name="com.massivedatascience.clusterer.TerminationCondition" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TerminationCondition=com.massivedatascience.clusterer.BasicStats=&gt;Boolean"></a>
-      <a id="TerminationCondition:(BasicStats)⇒Boolean"></a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@StreamingKMeansModelextendsKMeansPredictorwithLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">:: DeveloperApi ::
+StreamingKMeansModel extends MLlib's KMeansModel for streaming
+algorithms, so it can keep track of a continuously updated weight
+associated with each cluster, and also update the model by
+doing a single iteration of the standard k-means algorithm.</p><div class="fullcomment"><div class="comment cmt"><p>:: DeveloperApi ::
+StreamingKMeansModel extends MLlib's KMeansModel for streaming
+algorithms, so it can keep track of a continuously updated weight
+associated with each cluster, and also update the model by
+doing a single iteration of the standard k-means algorithm.</p><p>The update algorithm uses the &quot;mini-batch&quot; KMeans rule,
+generalized to incorporate forgetfullness (i.e. decay).
+The update rule (for each cluster) is:</p><p>c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t]
+n_t+t = n_t * a + m_t</p><p>Where c_t is the previously estimated centroid for that cluster,
+n_t is the number of points assigned to it thus far, x_t is the centroid
+estimated on the current batch, and m_t is the number of points assigned
+to that centroid in the current batch.</p><p>The decay factor 'a' scales the contribution of the clusters as estimated thus far,
+by applying a as a discount weighting on the current point when evaluating
+new incoming data. If a=1, all batches are weighted equally. If a=0, new centroids
+are determined entirely by recent data. Lower values correspond to
+more forgetting.</p><p>Decay can optionally be specified by a half life and associated
+time unit. The time unit can either be a batch of data or a single
+data point. Considering data arrived at time t, the half life h is defined
+such that at time t + h the discount applied to the data from t is 0.5.
+The definition remains the same whether the time unit is given
+as batches or points.</p></div></div>
+    </li><li name="com.massivedatascience.clusterer.TrackingStats" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TrackingStatsextendsBasicStatswithSerializable"></a>
+      <a id="TrackingStats:TrackingStats"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">type</span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">TerminationCondition</span><span class="result"> = (<a href="BasicStats.html" class="extype" name="com.massivedatascience.clusterer.BasicStats">BasicStats</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <a href="TrackingStats.html"><span class="name">TrackingStats</span></a><span class="result"> extends <a href="BasicStats.html" class="extype" name="com.massivedatascience.clusterer.BasicStats">BasicStats</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@TrackingStatsextendsBasicStatswithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.TrackingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer.CachingKMeans" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CachingKMeansextendsSerializablewithLogging"></a>
+      <a id="CachingKMeans:CachingKMeans"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="CachingKMeans.html"><span class="name deprecated" title="Deprecated: ">CachingKMeans</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@CachingKMeansextendsSerializablewithLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A K-means implementation that caches distances to clusters and that adjusts cluster centers by
+sampling the points on each iteration.</p><div class="fullcomment"><div class="comment cmt"><p>A K-means implementation that caches distances to clusters and that adjusts cluster centers by
+sampling the points on each iteration.</p><p>Maintain for each point the index of its closest cluster and the distance to that cluster.</p><p>Maintain for each cluster the weighted centroid of its points.  Each cluster is initialized with
+exactly one point from the input point set. Mark each cluster as &quot;moved.&quot;</p><p>1. Broadcast the moved cluster centers and their indices.</p><p>2. For each point, for each moved cluster center, mark the distance to that cluster as &quot;stale.&quot;
+If the cluster is empty, mark the cluster as &quot;empty&quot;.</p><p>3. Select a set of points to update.  Update the distance to each stale cluster centers.</p><p>4. For each selected point, identify the index of the closest cluster center and the distance.
+If the index has moved, emit two changes: one for the old cluster center and one for the new
+cluster center, keyed by cluster index:</p><p>(index, (point, add/subtract))</p><p>5. Sum by key the changes for the clusters. Identify the moved clusters and update their
+locations.</p><p>6. If any cluster moved, then go to 1.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"></dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.SingleKMeans" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="SingleKMeansextendsSerializablewithLogging"></a>
+      <a id="SingleKMeans:SingleKMeans"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SingleKMeans.html"><span class="name deprecated" title="Deprecated: ">SingleKMeans</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@SingleKMeansextendsSerializablewithLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A simple k-means implementation that re-computes the closest cluster centers on each iteration
+and that recomputes each cluster on each iteration.</p><div class="fullcomment"><div class="comment cmt"><p>A simple k-means implementation that re-computes the closest cluster centers on each iteration
+and that recomputes each cluster on each iteration.</p></div><dl class="attributes block"> <dt>Deprecated</dt><dd class="cmt"></dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.TrackingKMeans" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="TrackingKMeansextendsMultiKMeansClusterer"></a>
       <a id="TrackingKMeans:TrackingKMeans"></a>
       <h4 class="signature">
@@ -462,24 +608,20 @@ and that recomputes each cluster on each iteration.</p>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="TrackingKMeans.html"><span class="name">TrackingKMeans</span></a><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>
+        <a href="TrackingKMeans.html"><span class="name deprecated" title="Deprecated: ">TrackingKMeans</span></a><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">A KMeans implementation that tracks which clusters moved and which points are assigned to which
-clusters and the distance to the closest cluster.</p>
-    </li><li name="com.massivedatascience.clusterer.TrackingStats" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TrackingStatsextendsBasicStatswithSerializablewithLogging"></a>
-      <a id="TrackingStats:TrackingStats"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="TrackingStats.html"><span class="name">TrackingStats</span></a><span class="result"> extends <a href="BasicStats.html" class="extype" name="com.massivedatascience.clusterer.BasicStats">BasicStats</a> with <span class="extype" name="scala.Serializable">Serializable</span> with <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
-      </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@TrackingKMeansextendsMultiKMeansClusterer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A KMeans implementation that tracks which clusters moved and which points are assigned to which
+clusters and the distance to the closest cluster.</p><div class="fullcomment"><div class="comment cmt"><p>A KMeans implementation that tracks which clusters moved and which points are assigned to which
+clusters and the distance to the closest cluster.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"></dd></dl></div>
     </li></ol>
             </div>
 
@@ -498,7 +640,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="BregmanCenter$.html"><span class="name">BregmanCenter</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanCenter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.BregmanPoint" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="BregmanPoint"></a>
@@ -511,7 +657,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="BregmanPoint$.html"><span class="name">BregmanPoint</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanPoint" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.BregmanPointOps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="BregmanPointOps"></a>
@@ -524,7 +674,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="BregmanPointOps$.html"><span class="name">BregmanPointOps</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@BregmanPointOps" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.ColumnTrackingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ColumnTrackingKMeans"></a>
@@ -537,7 +691,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="ColumnTrackingKMeans$.html"><span class="name">ColumnTrackingKMeans</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@ColumnTrackingKMeans" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.DefaultKMeansConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DefaultKMeansConfig"></a>
@@ -550,20 +708,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="DefaultKMeansConfig$.html"><span class="name">DefaultKMeansConfig</span></a><span class="result"> extends <a href="KMeansConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeansConfig">KMeansConfig</a></span>
       </span>
-      </h4>
-      
-    </li><li name="com.massivedatascience.clusterer.package#DefaultTerminationCondition" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="DefaultTerminationCondition:com.massivedatascience.clusterer.BasicStats=&gt;Boolean"></a>
-      <a id="DefaultTerminationCondition:(BasicStats)⇒Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">DefaultTerminationCondition</span><span class="result">: (<a href="BasicStats.html" class="extype" name="com.massivedatascience.clusterer.BasicStats">BasicStats</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@DefaultKMeansConfig" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.DenseClusterFactory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="DenseClusterFactory"></a>
@@ -576,9 +725,13 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="DenseClusterFactory$.html"><span class="name">DenseClusterFactory</span></a><span class="result"> extends <a href="ClusterFactory.html" class="extype" name="com.massivedatascience.clusterer.ClusterFactory">ClusterFactory</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@DenseClusterFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.package#Infinity" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer#Infinity" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Infinity:Double"></a>
       <a id="Infinity:Double"></a>
       <h4 class="signature">
@@ -589,7 +742,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <span class="name">Infinity</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@Infinity:Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.KMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="KMeans"></a>
@@ -602,21 +759,12 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeans$.html"><span class="name">KMeans</span></a><span class="result"> extends <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">A helper object that creates K-Means Models using the underlying classes in this package.</p>
-    </li><li name="com.massivedatascience.clusterer.KMeansInitializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="KMeansInitializer"></a>
-      <a id="KMeansInitializer:KMeansInitializer"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="KMeansInitializer$.html"><span class="name">KMeansInitializer</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeans" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A helper object that creates K-Means Models using the underlying classes in this package.</p>
     </li><li name="com.massivedatascience.clusterer.KMeansModel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="KMeansModel"></a>
       <a id="KMeansModel:KMeansModel"></a>
@@ -628,7 +776,45 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="KMeansModel$.html"><span class="name">KMeansModel</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="com.massivedatascience.clusterer.KMeansRandom" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="KMeansRandom"></a>
+      <a id="KMeansRandom:KMeansRandom"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="KMeansRandom$.html"><span class="name">KMeansRandom</span></a><span class="result"> extends <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a> with <a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansRandom" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Initial a KMeansModel with randomly chosen centers from a given set of points.</p>
+    </li><li name="com.massivedatascience.clusterer.KMeansSelector" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="KMeansSelector"></a>
+      <a id="KMeansSelector:KMeansSelector"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="KMeansSelector$.html"><span class="name">KMeansSelector</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@KMeansSelector" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.MultiKMeansClusterer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MultiKMeansClusterer"></a>
@@ -641,7 +827,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="MultiKMeansClusterer$.html"><span class="name">MultiKMeansClusterer</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@MultiKMeansClusterer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.StreamingKMeans" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="StreamingKMeans"></a>
@@ -654,9 +844,13 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <a href="StreamingKMeans$.html"><span class="name">StreamingKMeans</span></a>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@StreamingKMeans" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.package#Unknown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer#Unknown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Unknown:Double"></a>
       <a id="Unknown:Double"></a>
       <h4 class="signature">
@@ -667,9 +861,13 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <span class="name">Unknown</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@Unknown:Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.package#empty" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer#empty" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="empty:org.apache.spark.mllib.linalg.DenseVector"></a>
       <a id="empty:DenseVector"></a>
       <h4 class="signature">
@@ -680,7 +878,11 @@ clusters and the distance to the closest cluster.</p>
       <span class="symbol">
         <span class="name">empty</span><span class="result">: <span class="extype" name="org.apache.spark.mllib.linalg.DenseVector">DenseVector</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.package@empty:org.apache.spark.mllib.linalg.DenseVector" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -711,6 +913,7 @@ clusters and the distance to the closest cluster.</p>
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

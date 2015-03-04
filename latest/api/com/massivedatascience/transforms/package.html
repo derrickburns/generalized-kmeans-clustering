@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>transforms - com.massivedatascience.transforms</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,11 @@
       <div id="definition">
         <img src="../../../lib/package_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a></p>
-        <h1>transforms</h1>
+        <h1>transforms</h1><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -58,7 +66,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.transforms.Embedding" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="com.massivedatascience.transforms.Embedding" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="EmbeddingextendsSerializable"></a>
       <a id="Embedding:Embedding"></a>
       <h4 class="signature">
@@ -69,9 +77,16 @@
       <span class="symbol">
         <a href="Embedding.html"><span class="name">Embedding</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">An embedding of vectors into an alternative space.</p>
-    </li><li name="com.massivedatascience.transforms.MultiplicativeHash" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@EmbeddingextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An embedding of vectors into an alternative space.</p><div class="fullcomment"><div class="comment cmt"><p>An embedding of vectors into an alternative space.  Typically, embeddings are used
+to lower the dimension of the data in such a way that preserves distances using the
+given divergence so that clustering can proceed expeditiously.
+</p></div></div>
+    </li><li name="com.massivedatascience.transforms.MultiplicativeHash" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="MultiplicativeHashextendsAnyRef"></a>
       <a id="MultiplicativeHash:MultiplicativeHash"></a>
       <h4 class="signature">
@@ -82,11 +97,18 @@
       <span class="symbol">
         <a href="MultiplicativeHash.html"><span class="name">MultiplicativeHash</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A simple <a href="http://en.wikipedia.org/wiki/Hash_function">multiplicative hash function</a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@MultiplicativeHashextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A simple <a href="http://en.wikipedia.org/wiki/Hash_function">multiplicative hash function</a>
 that supports mapping from spaces that have a number of dimensions that is a power of two
-to a space that has a dimension that is a (lower) power of two.</a></p>
-    </li><li name="com.massivedatascience.transforms.RandomIndexEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+to a space that has a dimension that is a (lower) power of two.</a></p><div class="fullcomment"><div class="comment cmt"><p>A simple <a href="http://en.wikipedia.org/wiki/Hash_function">multiplicative hash function</a>
+that supports mapping from spaces that have a number of dimensions that is a power of two
+to a space that has a dimension that is a (lower) power of two.
+</p></div></div>
+    </li><li name="com.massivedatascience.transforms.RandomIndexEmbedding" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RandomIndexEmbeddingextendsEmbedding"></a>
       <a id="RandomIndexEmbedding:RandomIndexEmbedding"></a>
       <h4 class="signature">
@@ -97,11 +119,20 @@ to a space that has a dimension that is a (lower) power of two.</a></p>
       <span class="symbol">
         <a href="RandomIndexEmbedding.html"><span class="name">RandomIndexEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@RandomIndexEmbeddingextendsEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
 in a way that preserves similarity as per the
-<a href= "http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss">Johnson-Lindenstrauss lemma</a>.</a></p>
-    </li><li name="com.massivedatascience.transforms.RandomProjectionEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+<a href= "http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss">Johnson-Lindenstrauss lemma</a>.</a></p><div class="fullcomment"><div class="comment cmt"><p>Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
+in a way that preserves similarity as per the
+<a href= "http://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss">Johnson-Lindenstrauss lemma</a>.</p><p>This technique is called <a href="http://en.wikipedia.org/wiki/Random_indexing">random indexing</a>.</p><p>We use a family of <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.394.2077&rep=rep1&type=pdf">universal hash functions</a>
+to avoid pre-computing the random projection.
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="https://www.sics.se/~mange/papers/RI_intro.pdf">introduction to random indexing</a>
+</p></span></dd></dl></div>
+    </li><li name="com.massivedatascience.transforms.RandomProjectionEmbedding" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RandomProjectionEmbeddingextendsAnyRef"></a>
       <a id="RandomProjectionEmbedding:RandomProjectionEmbedding"></a>
       <h4 class="signature">
@@ -112,9 +143,14 @@ in a way that preserves similarity as per the
       <span class="symbol">
         <a href="RandomProjectionEmbedding.html"><span class="name">RandomProjectionEmbedding</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
-      <p class="comment cmt"></p>
-    </li><li name="com.massivedatascience.transforms.SymmetrizingEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@RandomProjectionEmbeddingextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www.cs.toronto.edu/~zouzias/downloads/papers/NIPS2010_kmeans.pdf">random projection</a>
+</p></span></dd></dl></div>
+    </li><li name="com.massivedatascience.transforms.SymmetrizingEmbedding" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="SymmetrizingEmbeddingextendsEmbedding"></a>
       <a id="SymmetrizingEmbedding:SymmetrizingEmbedding"></a>
       <h4 class="signature">
@@ -125,8 +161,12 @@ in a way that preserves similarity as per the
       <span class="symbol">
         <a href="SymmetrizingEmbedding.html"><span class="name">SymmetrizingEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">One can create a symmetric version of any Bregman Divergence</a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@SymmetrizingEmbeddingextendsEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">One can create a symmetric version of any Bregman Divergence</a>
 
 This one is
 
@@ -135,7 +175,16 @@ This one is
 The embedding is simply
 
 x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
-</a></p>
+</a></p><div class="fullcomment"><div class="comment cmt"><p>One can create a symmetric version of any Bregman Divergence</a>
+
+This one is
+
+  distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+
+The embedding is simply
+
+x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a></p></span></dd></dl></div>
     </li></ol>
             </div>
 
@@ -154,20 +203,28 @@ x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
       <span class="symbol">
         <a href="DenseEmbedding$.html"><span class="name">DenseEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The embedding that transforms all points to dense vectors.</p>
-    </li><li name="com.massivedatascience.transforms.Embeddings" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Embeddings"></a>
-      <a id="Embeddings:Embeddings"></a>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@DenseEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The embedding that transforms all points to dense vectors.</p>
+    </li><li name="com.massivedatascience.transforms.Embedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Embedding"></a>
+      <a id="Embedding:Embedding"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Embeddings$.html"><span class="name">Embeddings</span></a>
+        <a href="Embedding$.html"><span class="name">Embedding</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@Embedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.transforms.HaarEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="HaarEmbedding"></a>
@@ -180,8 +237,12 @@ x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
       <span class="symbol">
         <a href="HaarEmbedding$.html"><span class="name">HaarEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The embeddding that averages adjacent values, thereby lowering the dimension of
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@HaarEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The embeddding that averages adjacent values, thereby lowering the dimension of
 the data by two
 </p>
     </li><li name="com.massivedatascience.transforms.HaarWavelet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
@@ -195,7 +256,11 @@ the data by two
       <span class="symbol">
         <a href="HaarWavelet$.html"><span class="name">HaarWavelet</span></a>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@HaarWavelet" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.transforms.IdentityEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="IdentityEmbedding"></a>
@@ -208,10 +273,14 @@ the data by two
       <span class="symbol">
         <a href="IdentityEmbedding$.html"><span class="name">IdentityEmbedding</span></a><span class="result"> extends <a href="Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The identity embedding
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@IdentityEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The identity embedding
 </p>
-    </li><li name="com.massivedatascience.transforms.SymmetrizingKLEmbedding" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.transforms.SymmetrizingKLEmbedding" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="SymmetrizingKLEmbedding"></a>
       <a id="SymmetrizingKLEmbedding:SymmetrizingKLEmbedding"></a>
       <h4 class="signature">
@@ -222,8 +291,12 @@ the data by two
       <span class="symbol">
         <a href="SymmetrizingKLEmbedding$.html"><span class="name">SymmetrizingKLEmbedding</span></a><span class="result"> extends <a href="SymmetrizingEmbedding.html" class="extype" name="com.massivedatascience.transforms.SymmetrizingEmbedding">SymmetrizingEmbedding</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A symmetric version of the standard Kullback-Leibler Divergence</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.transforms.package@SymmetrizingKLEmbedding" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A symmetric version of the standard Kullback-Leibler Divergence</p><div class="fullcomment"><div class="comment cmt"><p>A symmetric version of the standard Kullback-Leibler Divergence</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a></p></span></dd></dl></div>
     </li></ol>
             </div>
 
@@ -249,6 +322,7 @@ the data by two
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

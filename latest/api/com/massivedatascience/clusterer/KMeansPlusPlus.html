@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KMeansPlusPlus - com.massivedatascience.clusterer.KMeansPlusPlus</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,13 @@
       <div id="definition">
         <img src="../../../lib/class_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a>.<a href="package.html" class="extype" name="com.massivedatascience.clusterer">clusterer</a></p>
-        <h1>KMeansPlusPlus</h1>
+        <h1>KMeansPlusPlus</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.massivedatascience.clusterer">package clusterer</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -39,7 +49,8 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This implements the
+<a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a>, <span class="extype" name="org.apache.spark.Logging">Logging</span>, <span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
@@ -91,7 +102,11 @@
       <span class="symbol">
         <span class="name">KMeansPlusPlus</span><span class="params">(<span name="ops">ops: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@&lt;init&gt;(ops:com.massivedatascience.clusterer.BregmanPointOps):com.massivedatascience.clusterer.KMeansPlusPlus" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">ops</dt><dd class="cmt"><p>distance function
 </p></dd></dl></div>
     </li></ol>
@@ -104,19 +119,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -127,8 +129,12 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -140,22 +146,13 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -166,8 +163,12 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -179,25 +180,12 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus#centers" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="centers(seed:Long,candidateCenters:IndexedSeq[com.massivedatascience.clusterer.BregmanCenter],weights:IndexedSeq[Double],totalRequested:Int,perRound:Int,numPreselected:Int):IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]"></a>
-      <a id="centers(Long,IndexedSeq[BregmanCenter],IndexedSeq[Double],Int,Int,Int):IndexedSeq[BregmanCenter]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">centers</span><span class="params">(<span name="seed">seed: <span class="extype" name="scala.Long">Long</span></span>, <span name="candidateCenters">candidateCenters: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>, <span name="weights">weights: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="totalRequested">totalRequested: <span class="extype" name="scala.Int">Int</span></span>, <span name="perRound">perRound: <span class="extype" name="scala.Int">Int</span></span>, <span name="numPreselected">numPreselected: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Select centers in rounds.</p><div class="fullcomment"><div class="comment cmt"><p>Select centers in rounds.  On each round, select 'perRound' centers, with probability of
-selection equal to the product of the given weights and distance to the closest cluster center
-of the previous round.</p><p>This version allows some centers to be pre-selected.
-</p></div><dl class="paramcmts block"><dt class="param">seed</dt><dd class="cmt"><p>a random number seed</p></dd><dt class="param">candidateCenters</dt><dd class="cmt"><p>the candidate centers</p></dd><dt class="param">weights</dt><dd class="cmt"><p>the weights on the candidate centers</p></dd><dt class="param">totalRequested</dt><dd class="cmt"><p>the total number of centers to select</p></dd><dt class="param">perRound</dt><dd class="cmt"><p>the number of centers to add per round</p></dd><dt class="param">numPreselected</dt><dd class="cmt"><p>the number of pre-selected centers</p></dd><dt>returns</dt><dd class="cmt"><p>an array of at most k cluster centers
-</p></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -209,7 +197,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -217,19 +209,6 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus#cumulativeWeights" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="cumulativeWeights(weights:IndexedSeq[Double]):IndexedSeq[Double]"></a>
-      <a id="cumulativeWeights(IndexedSeq[Double]):IndexedSeq[Double]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">cumulativeWeights</span><span class="params">(<span name="weights">weights: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>
-      </span>
-      </h4>
-      
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -241,7 +220,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -254,7 +237,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#exchange" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
@@ -267,7 +254,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">exchange</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="from">from: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]) ⇒ <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -280,7 +271,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -299,8 +294,33 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus#goodCenters" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="goodCenters(seed:Long,candidateCenters:IndexedSeq[com.massivedatascience.clusterer.BregmanCenter],weights:IndexedSeq[Double],totalRequested:Int,perRound:Int,numPreselected:Int):IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]"></a>
+      <a id="goodCenters(Long,IndexedSeq[BregmanCenter],IndexedSeq[Double],Int,Int,Int):IndexedSeq[BregmanCenter]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">goodCenters</span><span class="params">(<span name="seed">seed: <span class="extype" name="scala.Long">Long</span></span>, <span name="candidateCenters">candidateCenters: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>, <span name="weights">weights: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="totalRequested">totalRequested: <span class="extype" name="scala.Int">Int</span></span>, <span name="perRound">perRound: <span class="extype" name="scala.Int">Int</span></span>, <span name="numPreselected">numPreselected: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@goodCenters(seed:Long,candidateCenters:IndexedSeq[com.massivedatascience.clusterer.BregmanCenter],weights:IndexedSeq[Double],totalRequested:Int,perRound:Int,numPreselected:Int):IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Select centers in rounds.</p><div class="fullcomment"><div class="comment cmt"><p>Select centers in rounds.  On each round, select 'perRound' centers, with probability of
+selection equal to the product of the given weights and distance to the closest cluster center
+of the previous round.</p><p>This version allows some centers to be pre-selected.
+</p></div><dl class="paramcmts block"><dt class="param">seed</dt><dd class="cmt"><p>a random number seed</p></dd><dt class="param">candidateCenters</dt><dd class="cmt"><p>the candidate centers</p></dd><dt class="param">weights</dt><dd class="cmt"><p>the weights on the candidate centers</p></dd><dt class="param">totalRequested</dt><dd class="cmt"><p>the total number of centers to select</p></dd><dt class="param">perRound</dt><dd class="cmt"><p>the number of centers to add per round</p></dd><dt class="param">numPreselected</dt><dd class="cmt"><p>the number of pre-selected centers</p></dd><dt>returns</dt><dd class="cmt"><p>an array of at most k cluster centers
+</p></dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -312,7 +332,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -325,7 +349,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="org.apache.spark.Logging#isTraceEnabled" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isTraceEnabled():Boolean"></a>
@@ -338,7 +366,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">isTraceEnabled</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@isTraceEnabled():Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#log" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="log:org.slf4j.Logger"></a>
@@ -351,7 +383,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">log</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@log:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -364,7 +400,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logDebug(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String):Unit"></a>
@@ -377,7 +417,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logDebug(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -390,7 +434,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logError(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String):Unit"></a>
@@ -403,7 +451,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logError(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -416,7 +468,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logInfo(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String):Unit"></a>
@@ -429,7 +485,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logInfo(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logName" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logName:String"></a>
@@ -442,7 +502,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -455,7 +519,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logTrace(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String):Unit"></a>
@@ -468,7 +536,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logTrace(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -481,7 +553,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logWarning(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String):Unit"></a>
@@ -494,7 +570,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@logWarning(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -507,7 +587,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#noSync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
@@ -520,7 +604,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">noSync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -533,7 +621,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -546,23 +638,12 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus#pickWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="pickWeighted(rand:com.massivedatascience.util.XORShiftRandom,cumulative:IndexedSeq[Double]):Option[Int]"></a>
-      <a id="pickWeighted(XORShiftRandom,IndexedSeq[Double]):Option[Int]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">pickWeighted</span><span class="params">(<span name="rand">rand: <a href="../util/XORShiftRandom.html" class="extype" name="com.massivedatascience.util.XORShiftRandom">XORShiftRandom</a></span>, <span name="cumulative">cumulative: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Int">Int</span>]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Pick a point at random, weighing the choices by the given weight vector.</p><div class="fullcomment"><div class="comment cmt"><p>Pick a point at random, weighing the choices by the given weight vector.
-</p></div><dl class="paramcmts block"><dt class="param">rand</dt><dd class="cmt"><p>random number generator</p></dd><dt class="param">cumulative</dt><dd class="cmt"><p>the cumulative weights of the points</p></dd><dt>returns</dt><dd class="cmt"><p>the index of the point chosen
-</p></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#sideEffect" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sideEffect[T](v:T)(f:T=&gt;Unit):T"></a>
       <a id="sideEffect[T](T)((T)⇒Unit):T"></a>
@@ -574,7 +655,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">sideEffect</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@sideEffect[T](v:T)(f:T=&gt;Unit):T" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#sync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]"></a>
@@ -587,7 +672,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">sync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p><div class="fullcomment"><div class="comment cmt"><p>Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>type of data in RDD</p></dd><dt class="param">name</dt><dd class="cmt"><p>name to apply to RDD</p></dd><dt class="param">data</dt><dd class="cmt"><p>rdd</p></dd><dt>returns</dt><dd class="cmt"><p>the input RDD
 </p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -601,7 +690,11 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -614,25 +707,12 @@ of the previous round.</p><p>This version allows some centers to be pre-selected
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeansPlusPlus#updateDistances" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="updateDistances(points:IndexedSeq[com.massivedatascience.clusterer.BregmanPoint],distances:IndexedSeq[Double],centers:IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]):IndexedSeq[Double]"></a>
-      <a id="updateDistances(IndexedSeq[BregmanPoint],IndexedSeq[Double],IndexedSeq[BregmanCenter]):IndexedSeq[Double]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">updateDistances</span><span class="params">(<span name="points">points: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="distances">distances: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>, <span name="centers">centers: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>)</span><span class="result">: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Double">Double</span>]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Update the distance of each point to its closest cluster center, given the cluster
-centers that were added.</p><div class="fullcomment"><div class="comment cmt"><p>Update the distance of each point to its closest cluster center, given the cluster
-centers that were added.
-</p></div><dl class="paramcmts block"><dt class="param">points</dt><dd class="cmt"><p>set of candidate initial cluster centers</p></dd><dt class="param">centers</dt><dd class="cmt"><p>new cluster centers</p></dd><dt>returns</dt><dd class="cmt"><p>points with their distance to closest to cluster center updated
-</p></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -644,7 +724,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -663,7 +747,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -682,7 +770,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -701,7 +793,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">withBroadcast</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.broadcast.Broadcast">Broadcast</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.reflect.ClassTag">ClassTag</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]</span>, <span name="sc">sc: <span class="extype" name="org.apache.spark.SparkContext">SparkContext</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@withBroadcast[T,Q](v:T)(f:org.apache.spark.broadcast.Broadcast[T]=&gt;Q)(implicitevidence$1:scala.reflect.ClassTag[T],implicitsc:org.apache.spark.SparkContext):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -714,7 +810,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]</span>, <span name="blocking">blocking: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q"></a>
@@ -727,7 +827,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="names">names: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="rdds">rdds: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withNamed" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -740,7 +844,11 @@ centers that were added.
       <span class="symbol">
         <span class="name">withNamed</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeansPlusPlus@withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li></ol>
             </div>
@@ -779,6 +887,7 @@ centers that were added.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

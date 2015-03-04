@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>TrackingKMeans - com.massivedatascience.clusterer.TrackingKMeans</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,13 @@
       <div id="definition">
         <img src="../../../lib/class_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a>.<a href="package.html" class="extype" name="com.massivedatascience.clusterer">clusterer</a></p>
-        <h1>TrackingKMeans</h1>
+        <h1>TrackingKMeans</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.massivedatascience.clusterer">package clusterer</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -35,13 +45,16 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">TrackingKMeans</span><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>
+        <span class="name deprecated" title="Deprecated: ">TrackingKMeans</span><span class="result"> extends <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A KMeans implementation that tracks which clusters moved and which points are assigned to which
 clusters and the distance to the closest cluster.
-</p></div><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a>, <span class="extype" name="org.apache.spark.Logging">Logging</span>, <span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -92,7 +105,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">TrackingKMeans</span><span class="params">(<span name="updateRate">updateRate: <span class="extype" name="scala.Double">Double</span> = <span class="symbol">1.0</span></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@&lt;init&gt;(updateRate:Double):com.massivedatascience.clusterer.TrackingKMeans" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">updateRate</dt><dd class="cmt"><p>percentage of points that are updated on each round
 </p></dd></dl></div>
     </li></ol>
@@ -100,7 +117,7 @@ clusters and the distance to the closest cluster.
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.clusterer.TrackingKMeans.Assignment" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="com.massivedatascience.clusterer.TrackingKMeans.Assignment" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="AssignmentextendsProductwithSerializable"></a>
       <a id="Assignment:Assignment"></a>
       <h4 class="signature">
@@ -111,9 +128,14 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <a href="TrackingKMeans$Assignment.html"><span class="name">Assignment</span></a><span class="params">(<span name="dist">dist: <span class="extype" name="scala.Double">Double</span></span>, <span name="index">index: <span class="extype" name="scala.Int">Int</span></span>, <span name="round">round: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt"></p>
-    </li><li name="com.massivedatascience.clusterer.TrackingKMeans.FatCenter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@AssignmentextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">dist</dt><dd class="cmt"><p>the distance to the closest cluster</p></dd><dt class="param">index</dt><dd class="cmt"><p>the index of the closest cluster, or -1 if no cluster is assigned</p></dd><dt class="param">round</dt><dd class="cmt"><p>the round that this assignment was made
+</p></dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.TrackingKMeans.FatCenter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="FatCenterextendsProductwithSerializable"></a>
       <a id="FatCenter:FatCenter"></a>
       <h4 class="signature">
@@ -122,10 +144,15 @@ clusters and the distance to the closest cluster.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="TrackingKMeans$FatCenter.html"><span class="name">FatCenter</span></a><span class="params">(<span name="center">center: <a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a></span>, <span name="round">round: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">-1</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="TrackingKMeans$FatCenter.html"><span class="name">FatCenter</span></a><span class="params">(<span name="center">center: <a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a></span>, <span name="round">round: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt"></p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@FatCenterextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">center</dt><dd class="cmt"><p>the centroid of the cluster</p></dd><dt class="param">round</dt><dd class="cmt"><p>the round in which his cluster was last moved
+</p></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.TrackingKMeans.FatCenters" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="FatCenters=Array[TrackingKMeans.this.FatCenter]"></a>
       <a id="FatCenters:FatCenters"></a>
@@ -137,9 +164,13 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">FatCenters</span><span class="result"> = <span class="extype" name="scala.Array">Array</span>[<a href="TrackingKMeans$FatCenter.html" class="extype" name="com.massivedatascience.clusterer.TrackingKMeans.FatCenter">FatCenter</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@FatCenters=Array[TrackingKMeans.this.FatCenter]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.clusterer.TrackingKMeans.FatPoint" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.clusterer.TrackingKMeans.FatPoint" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="FatPointextendsProductwithSerializable"></a>
       <a id="FatPoint:FatPoint"></a>
       <h4 class="signature">
@@ -150,8 +181,13 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <a href="TrackingKMeans$FatPoint.html"><span class="name">FatPoint</span></a><span class="params">(<span name="location">location: <a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a></span>, <span name="current">current: <a href="TrackingKMeans$Assignment.html" class="extype" name="com.massivedatascience.clusterer.TrackingKMeans.Assignment">Assignment</a></span>, <span name="previous">previous: <a href="TrackingKMeans$Assignment.html" class="extype" name="com.massivedatascience.clusterer.TrackingKMeans.Assignment">Assignment</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt"></p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@FatPointextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">location</dt><dd class="cmt"><p>the location of the point</p></dd><dt class="param">current</dt><dd class="cmt"><p>the current cluster (and distance to that cluster) that this point belongs to</p></dd><dt class="param">previous</dt><dd class="cmt"><p>the previous cluster (and distance to that cluster) that this point belongs to
+</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -160,19 +196,6 @@ clusters and the distance to the closest cluster.
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -183,8 +206,12 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -196,22 +223,13 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -222,8 +240,12 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -235,20 +257,28 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.MultiKMeansClusterer#best" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="best(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centers:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):(Double,IndexedSeq[com.massivedatascience.clusterer.BregmanCenter])"></a>
-      <a id="best(Int,BregmanPointOps,RDD[BregmanPoint],Seq[IndexedSeq[BregmanCenter]]):(Double,IndexedSeq[BregmanCenter])"></a>
+      <a id="best(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centers:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion"></a>
+      <a id="best(Int,BregmanPointOps,RDD[BregmanPoint],Seq[IndexedSeq[BregmanCenter]]):ClusteringWithDistortion"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">best</span><span class="params">(<span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="centers">centers: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]]</span>)</span><span class="result">: (<span class="extype" name="scala.Double">Double</span>, <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>])</span>
+        <span class="name">best</span><span class="params">(<span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="centers">centers: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]]</span>)</span><span class="result">: <a href="MultiKMeansClusterer$$ClusteringWithDistortion.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion">ClusteringWithDistortion</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@best(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centers:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -261,7 +291,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -270,17 +304,21 @@ clusters and the distance to the closest cluster.
               
         </dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.TrackingKMeans#cluster" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="cluster(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centerArrays:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):Seq[(Double,IndexedSeq[com.massivedatascience.clusterer.BregmanCenter])]"></a>
-      <a id="cluster(Int,BregmanPointOps,RDD[BregmanPoint],Seq[IndexedSeq[BregmanCenter]]):Seq[(Double,IndexedSeq[BregmanCenter])]"></a>
+      <a id="cluster(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centerArrays:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):Seq[com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion]"></a>
+      <a id="cluster(Int,BregmanPointOps,RDD[BregmanPoint],Seq[IndexedSeq[BregmanCenter]]):Seq[ClusteringWithDistortion]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">cluster</span><span class="params">(<span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="centerArrays">centerArrays: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]]</span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[(<span class="extype" name="scala.Double">Double</span>, <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>])]</span>
+        <span class="name">cluster</span><span class="params">(<span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="centerArrays">centerArrays: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]]</span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="MultiKMeansClusterer$$ClusteringWithDistortion.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion">ClusteringWithDistortion</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@cluster(maxIterations:Int,pointOps:com.massivedatascience.clusterer.BregmanPointOps,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],centerArrays:Seq[IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]]):Seq[com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.massivedatascience.clusterer.TrackingKMeans">TrackingKMeans</a> → <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -293,7 +331,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -306,7 +348,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -319,7 +365,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -338,7 +388,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -351,7 +405,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -364,7 +422,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="org.apache.spark.Logging#isTraceEnabled" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isTraceEnabled():Boolean"></a>
@@ -377,7 +439,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">isTraceEnabled</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@isTraceEnabled():Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#log" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="log:org.slf4j.Logger"></a>
@@ -390,7 +456,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">log</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@log:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -403,7 +473,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logDebug(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String):Unit"></a>
@@ -416,7 +490,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logDebug(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -429,7 +507,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logError(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String):Unit"></a>
@@ -442,7 +524,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logError(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -455,7 +541,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logInfo(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String):Unit"></a>
@@ -468,7 +558,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logInfo(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logName" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logName:String"></a>
@@ -481,7 +575,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -494,7 +592,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logTrace(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String):Unit"></a>
@@ -507,7 +609,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logTrace(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -520,7 +626,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logWarning(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String):Unit"></a>
@@ -533,7 +643,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@logWarning(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -546,7 +660,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.TrackingKMeans#noCluster" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="noCluster:Int"></a>
@@ -559,7 +677,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">noCluster</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@noCluster:Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -572,7 +694,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -585,7 +711,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -598,7 +728,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -611,7 +745,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.TrackingKMeans#unassigned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="unassigned:TrackingKMeans.this.Assignment"></a>
@@ -624,7 +762,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">unassigned</span><span class="result">: <a href="TrackingKMeans$Assignment.html" class="extype" name="com.massivedatascience.clusterer.TrackingKMeans.Assignment">Assignment</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@unassigned:TrackingKMeans.this.Assignment" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -637,7 +779,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -656,7 +802,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -675,7 +825,11 @@ clusters and the distance to the closest cluster.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.TrackingKMeans@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -720,6 +874,7 @@ clusters and the distance to the closest cluster.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

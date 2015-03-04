@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>KMeans - com.massivedatascience.clusterer.KMeans</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,13 @@
       <div id="definition">
         <img src="../../../lib/object_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a>.<a href="package.html" class="extype" name="com.massivedatascience.clusterer">clusterer</a></p>
-        <h1>KMeans</h1>
+        <h1>KMeans</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.massivedatascience.clusterer">package clusterer</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -82,7 +92,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.clusterer.KMeans.RunConfig" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="com.massivedatascience.clusterer.KMeans.RunConfig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RunConfigextendsProductwithSerializable"></a>
       <a id="RunConfig:RunConfig"></a>
       <h4 class="signature">
@@ -93,8 +103,13 @@
       <span class="symbol">
         <a href="KMeans$$RunConfig.html"><span class="name">RunConfig</span></a><span class="params">(<span name="numClusters">numClusters: <span class="extype" name="scala.Int">Int</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span></span>, <span name="seed">seed: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The standard configuration for a clusterer that runs Lloyd's algorithm</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@RunConfigextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The standard configuration for a clusterer that runs Lloyd's algorithm</p><div class="fullcomment"><div class="comment cmt"><p>The standard configuration for a clusterer that runs Lloyd's algorithm</p></div><dl class="paramcmts block"><dt class="param">numClusters</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of parallel runs to attempt</p></dd><dt class="param">seed</dt><dd class="cmt"><p>random number seed</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations of Lloyd'a algorithm to execute
+</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -103,19 +118,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -126,8 +128,12 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -139,22 +145,13 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -165,8 +162,12 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -178,7 +179,11 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -191,7 +196,11 @@
       <span class="symbol">
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -210,7 +219,11 @@
       <span class="symbol">
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -223,7 +236,11 @@
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#exchange" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
@@ -236,7 +253,11 @@
       <span class="symbol">
         <span class="name">exchange</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="from">from: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]) ⇒ <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.exchange.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@exchange[T](name:String,from:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -249,7 +270,11 @@
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -268,7 +293,11 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -281,7 +310,11 @@
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -294,7 +327,11 @@
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="org.apache.spark.Logging#isTraceEnabled" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isTraceEnabled():Boolean"></a>
@@ -307,8 +344,34 @@
       <span class="symbol">
         <span class="name">isTraceEnabled</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@isTraceEnabled():Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
+    </li><li name="com.massivedatascience.clusterer.KMeans#iterativelyTrain" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="iterativelyTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,pointOps:Seq[com.massivedatascience.clusterer.BregmanPointOps],dataSets:Seq[org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint]],initializer:com.massivedatascience.clusterer.KMeansSelector,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="iterativelyTrain(RunConfig,Seq[BregmanPointOps],Seq[RDD[BregmanPoint]],KMeansSelector,MultiKMeansClusterer):KMeansModel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">iterativelyTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="pointOps">pointOps: <span class="extype" name="scala.Seq">Seq</span>[<a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a>]</span>, <span name="dataSets">dataSets: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]]</span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@iterativelyTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,pointOps:Seq[com.massivedatascience.clusterer.BregmanPointOps],dataSets:Seq[org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint]],initializer:com.massivedatascience.clusterer.KMeansSelector,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Train on a series of data sets, where the data sets were derived from the same
+original data set via embeddings.</p><div class="fullcomment"><div class="comment cmt"><p>Train on a series of data sets, where the data sets were derived from the same
+original data set via embeddings. Use the cluster assignments of one stage to
+initialize the clusters of the next stage.
+</p></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">dataSets</dt><dd class="cmt"><p>input data sets to use</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>clustering implementation to use</p></dd><dt>returns</dt><dd class="cmt"><p>
+</p></dd></dl></div>
     </li><li name="org.apache.spark.Logging#log" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="log:org.slf4j.Logger"></a>
       <a id="log:Logger"></a>
@@ -320,7 +383,11 @@
       <span class="symbol">
         <span class="name">log</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@log:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -333,7 +400,11 @@
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logDebug(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String):Unit"></a>
@@ -346,7 +417,11 @@
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logDebug(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -359,7 +434,11 @@
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logError(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String):Unit"></a>
@@ -372,7 +451,11 @@
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logError(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -385,7 +468,11 @@
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logInfo(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String):Unit"></a>
@@ -398,7 +485,11 @@
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logInfo(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logName" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logName:String"></a>
@@ -411,7 +502,11 @@
       <span class="symbol">
         <span class="name">logName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -424,7 +519,11 @@
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logTrace(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String):Unit"></a>
@@ -437,7 +536,11 @@
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logTrace(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -450,7 +553,11 @@
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logWarning(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String):Unit"></a>
@@ -463,7 +570,11 @@
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@logWarning(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -476,7 +587,11 @@
       <span class="symbol">
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#noSync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]"></a>
@@ -489,7 +604,11 @@
       <span class="symbol">
         <span class="name">noSync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.noSync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@noSync[T](name:String,data:org.apache.spark.rdd.RDD[T]):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -502,7 +621,11 @@
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -515,21 +638,12 @@
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeans#reSampleTrain" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reSampleTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,raw:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansInitializer,ops:Seq[com.massivedatascience.clusterer.BregmanPointOps],embeddings:Seq[com.massivedatascience.transforms.Embedding])(implicitclusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="reSampleTrain(RunConfig,RDD[WeightedVector],KMeansInitializer,Seq[BregmanPointOps],Seq[Embedding])(MultiKMeansClusterer):KMeansModel"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">reSampleTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="raw">raw: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="initializer">initializer: <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></span>, <span name="ops">ops: <span class="extype" name="scala.Seq">Seq</span>[<a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a>]</span>, <span name="embeddings">embeddings: <span class="extype" name="scala.Seq">Seq</span>[<a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
-      </span>
-      </h4>
-      
     </li><li name="com.massivedatascience.util.SparkHelper#sideEffect" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sideEffect[T](v:T)(f:T=&gt;Unit):T"></a>
       <a id="sideEffect[T](T)((T)⇒Unit):T"></a>
@@ -541,52 +655,52 @@
       <span class="symbol">
         <span class="name">sideEffect</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.sideEffect.T">T</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@sideEffect[T](v:T)(f:T=&gt;Unit):T" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeans#simpleTrain" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="simpleTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,distanceFunc:com.massivedatascience.clusterer.BregmanPointOps,bregmanPoints:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],initializer:com.massivedatascience.clusterer.KMeansInitializer)(implicitclusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="simpleTrain(RunConfig,BregmanPointOps,RDD[BregmanPoint],KMeansInitializer)(MultiKMeansClusterer):KMeansModel"></a>
+    </li><li name="com.massivedatascience.clusterer.KMeans#simpleTrain" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="simpleTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],pointOps:com.massivedatascience.clusterer.BregmanPointOps,initializer:com.massivedatascience.clusterer.KMeansSelector,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="simpleTrain(RunConfig,RDD[BregmanPoint],BregmanPointOps,KMeansSelector,MultiKMeansClusterer):KMeansModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">simpleTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="distanceFunc">distanceFunc: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="bregmanPoints">bregmanPoints: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="initializer">initializer: <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">simpleTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@simpleTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint],pointOps:com.massivedatascience.clusterer.BregmanPointOps,initializer:com.massivedatascience.clusterer.KMeansSelector,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
+</p></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeans#sparseTrain" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sparseTrain(raw:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],k:Int,maxIterations:Int,runs:Int,mode:String,initializationSteps:Int,distanceFunctionName:String,clustererName:String,embeddingNames:Seq[String]):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="sparseTrain(RDD[WeightedVector],Int,Int,Int,String,Int,String,String,Seq[String]):KMeansModel"></a>
+      <a id="sparseTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:com.massivedatascience.clusterer.BregmanPointOps,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,embeddings:Seq[com.massivedatascience.transforms.Embedding]):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="sparseTrain(RunConfig,RDD[WeightedVector],KMeansSelector,BregmanPointOps,MultiKMeansClusterer,Seq[Embedding]):KMeansModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sparseTrain</span><span class="params">(<span name="raw">raw: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mode">mode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="initializationSteps">initializationSteps: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="distanceFunctionName">distanceFunctionName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">BregmanPointOps.EUCLIDEAN</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingNames">embeddingNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="defval" name='<span class="name"><a href="../../package.html">Seq(Embeddings.LOW_DIMENSIONAL_RI, Embeddings.MEDIUM_DIMENSIONAL_RI,
-      Embeddings.HIGH_DIMENSIONAL_RI)</a></span>'>...</span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">sparseTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>, <span name="embeddings">embeddings: <span class="extype" name="scala.Seq">Seq</span>[<a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a>] = <span class="defval" name='<span class="name"><a href="../../package.html">Seq(Embedding(LOW_DIMENSIONAL_RI), Embedding(MEDIUM_DIMENSIONAL_RI),
+      Embedding(HIGH_DIMENSIONAL_RI))</a></span>'>...</span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@sparseTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:com.massivedatascience.clusterer.BregmanPointOps,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,embeddings:Seq[com.massivedatascience.transforms.Embedding]):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Iteratively train using low dimensional embedding of the high dimensional sparse input data
 using the same distance function.</p><div class="fullcomment"><div class="comment cmt"><p>Iteratively train using low dimensional embedding of the high dimensional sparse input data
 using the same distance function.
-</p></div><dl class="paramcmts block"><dt class="param">raw</dt><dd class="cmt"><p>input data</p></dd><dt class="param">k</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations per clustering run</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of different clusterings to perform</p></dd><dt class="param">mode</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">initializationSteps</dt><dd class="cmt"><p>number of initialization steps to perform</p></dd><dt class="param">distanceFunctionName</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">clustererName</dt><dd class="cmt"><p>name of the clustering implementation to use</p></dd><dt class="param">embeddingNames</dt><dd class="cmt"><p>names of the embeddings to use</p></dd><dt>returns</dt><dd class="cmt"><p>
+</p></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>clustering implementation to use</p></dd><dt class="param">embeddings</dt><dd class="cmt"><p>embeddings to use</p></dd><dt>returns</dt><dd class="cmt"><p>KMeansModel
 </p></dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeans#subSampleTrain" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="subSampleTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,pointOps:com.massivedatascience.clusterer.BregmanPointOps,raw:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansInitializer,depth:Int,embedding:com.massivedatascience.transforms.Embedding)(implicitclusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="subSampleTrain(RunConfig,BregmanPointOps,RDD[WeightedVector],KMeansInitializer,Int,Embedding)(MultiKMeansClusterer):KMeansModel"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">subSampleTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="raw">raw: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="initializer">initializer: <a href="KMeansInitializer.html" class="extype" name="com.massivedatascience.clusterer.KMeansInitializer">KMeansInitializer</a></span>, <span name="depth">depth: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">4</span></span>, <span name="embedding">embedding: <a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> = <span class="symbol"><span class="name"><a href="../../package.html">HaarEmbedding</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
-      </span>
-      </h4>
-      
     </li><li name="com.massivedatascience.util.SparkHelper#sync" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]"></a>
       <a id="sync[T](String,RDD[T],Boolean):RDD[T]"></a>
@@ -598,7 +712,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">sync</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.sync.T">T</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@sync[T](name:String,data:org.apache.spark.rdd.RDD[T],synchronous:Boolean):org.apache.spark.rdd.RDD[T]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p><div class="fullcomment"><div class="comment cmt"><p>Names and RDD, caches data in memory, and ensures that it is in computed synchronously</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>type of data in RDD</p></dd><dt class="param">name</dt><dd class="cmt"><p>name to apply to RDD</p></dd><dt class="param">data</dt><dd class="cmt"><p>rdd</p></dd><dt>returns</dt><dd class="cmt"><p>the input RDD
 </p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -612,21 +730,32 @@ using the same distance function.
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeans#timeSeriesTrain" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="timeSeriesTrain(raw:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],k:Int,maxIterations:Int,runs:Int,initializerName:String,initializationSteps:Int,distanceFunctionName:String,clustererName:String,embeddingName:String):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="timeSeriesTrain(RDD[WeightedVector],Int,Int,Int,String,Int,String,String,String):KMeansModel"></a>
+    </li><li name="com.massivedatascience.clusterer.KMeans#timeSeriesTrain" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="timeSeriesTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:com.massivedatascience.clusterer.BregmanPointOps,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,embedding:com.massivedatascience.transforms.Embedding):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="timeSeriesTrain(RunConfig,RDD[WeightedVector],KMeansSelector,BregmanPointOps,MultiKMeansClusterer,Embedding):KMeansModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">timeSeriesTrain</span><span class="params">(<span name="raw">raw: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="initializerName">initializerName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="initializationSteps">initializationSteps: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="distanceFunctionName">distanceFunctionName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">BregmanPointOps.EUCLIDEAN</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingName">embeddingName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="../../package.html">Embeddings.HAAR_EMBEDDING</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">timeSeriesTrain</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>, <span name="embedding">embedding: <a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a> = <span class="symbol"><span class="name"><a href="../../package.html">Embedding(HAAR_EMBEDDING)</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
-      
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@timeSeriesTrain(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:com.massivedatascience.clusterer.BregmanPointOps,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,embedding:com.massivedatascience.transforms.Embedding):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Re-sample data recursively
+</p><div class="fullcomment"><div class="comment cmt"><p>Re-sample data recursively
+</p></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>distance function</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>clustering implementation to use</p></dd><dt class="param">embedding</dt><dd class="cmt"><p>embedding to use</p></dd><dt>returns</dt><dd class="cmt"><p>KMeansModel
+</p></dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <a id="toString():String"></a>
@@ -638,7 +767,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeans#train" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="train(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector],k:Int,maxIterations:Int,runs:Int,mode:String,distanceFunctionNames:Seq[String],clustererName:String,embeddingNames:List[String]):com.massivedatascience.clusterer.KMeansModel"></a>
@@ -649,54 +782,56 @@ using the same distance function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">train</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mode">mode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="distanceFunctionNames">distanceFunctionNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">Seq(BregmanPointOps.EUCLIDEAN)</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingNames">embeddingNames: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../package.html">List(Embeddings.IDENTITY_EMBEDDING)</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">train</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol"><span class="name"><a href="">KMeans.defaultMaxIterations</a></span></span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol"><span class="name"><a href="">KMeans.defaultNumRuns</a></span></span></span>, <span name="mode">mode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansSelector$.html">KMeansSelector.K_MEANS_PARALLEL</a></span></span></span>, <span name="distanceFunctionNames">distanceFunctionNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">Seq(BregmanPointOps.EUCLIDEAN)</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingNames">embeddingNames: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../package.html">List(Embedding.IDENTITY_EMBEDDING)</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Train a K-Means model using Lloyd's algorithm.</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model using Lloyd's algorithm.
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@train(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector],k:Int,maxIterations:Int,runs:Int,mode:String,distanceFunctionNames:Seq[String],clustererName:String,embeddingNames:List[String]):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Train a K-Means model using Lloyd's algorithm using a signature that is similar to
+the one provided for the Spark 1.1.0 K-Means Batch clusterer.</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model using Lloyd's algorithm using a signature that is similar to
+the one provided for the Spark 1.1.0 K-Means Batch clusterer.
 </p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">k</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations of Lloyd's algorithm</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of parallel clusterings to run</p></dd><dt class="param">mode</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">distanceFunctionNames</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">clustererName</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt class="param">embeddingNames</dt><dd class="cmt"><p>sequence of embeddings to use, from lowest dimension to greatest</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
 </p></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeans#trainViaSubsampling" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="trainViaSubsampling(data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],k:Int,maxIterations:Int,runs:Int,initializerName:String,initializationSteps:Int,distanceFunctionName:String,clustererName:String,embeddingName:String,depth:Int):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="trainViaSubsampling(RDD[WeightedVector],Int,Int,Int,String,Int,String,String,String,Int):KMeansModel"></a>
+      <a id="trainViaSubsampling(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],pointOps:com.massivedatascience.clusterer.BregmanPointOps,initializer:com.massivedatascience.clusterer.KMeansSelector,embedding:com.massivedatascience.transforms.Embedding,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,depth:Int):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="trainViaSubsampling(RunConfig,RDD[WeightedVector],BregmanPointOps,KMeansSelector,Embedding,MultiKMeansClusterer,Int):KMeansModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">trainViaSubsampling</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="initializerName">initializerName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="initializationSteps">initializationSteps: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="distanceFunctionName">distanceFunctionName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">BregmanPointOps.EUCLIDEAN</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingName">embeddingName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="../../package.html">Embeddings.HAAR_EMBEDDING</a></span></span></span>, <span name="depth">depth: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">2</span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">trainViaSubsampling</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="pointOps">pointOps: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="embedding">embedding: <a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a></span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>, <span name="depth">depth: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">2</span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@trainViaSubsampling(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],pointOps:com.massivedatascience.clusterer.BregmanPointOps,initializer:com.massivedatascience.clusterer.KMeansSelector,embedding:com.massivedatascience.transforms.Embedding,clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer,depth:Int):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Train a K-Means model by recursively sub-sampling the data via the provided embedding.</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model by recursively sub-sampling the data via the provided embedding.
-</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">k</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations of Lloyd's algorithm</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of parallel clusterings to run</p></dd><dt class="param">initializerName</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">initializationSteps</dt><dd class="cmt"><p>number of steps of the initialization algorithm</p></dd><dt class="param">distanceFunctionName</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">clustererName</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt class="param">embeddingName</dt><dd class="cmt"><p>embedding to use recursively</p></dd><dt class="param">depth</dt><dd class="cmt"><p>number of times to recurse</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
+</p></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">embedding</dt><dd class="cmt"><p>embedding to use recursively</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt class="param">depth</dt><dd class="cmt"><p>number of times to recurse</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
 </p></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeans#trainWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="trainWeighted(data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],k:Int,maxIterations:Int,runs:Int,mode:String,initializationSteps:Int,distanceFunctionNames:Seq[String],clustererName:String,embeddingNames:List[String]):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="trainWeighted(RDD[WeightedVector],Int,Int,Int,String,Int,Seq[String],String,List[String]):KMeansModel"></a>
+      <a id="trainWeighted(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:Seq[com.massivedatascience.clusterer.BregmanPointOps],embeddings:Seq[com.massivedatascience.transforms.Embedding],clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel"></a>
+      <a id="trainWeighted(RunConfig,RDD[WeightedVector],KMeansSelector,Seq[BregmanPointOps],Seq[Embedding],MultiKMeansClusterer):KMeansModel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">trainWeighted</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mode">mode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="initializationSteps">initializationSteps: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="distanceFunctionNames">distanceFunctionNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">Seq(BregmanPointOps.EUCLIDEAN)</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingNames">embeddingNames: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../package.html">List(Embeddings.IDENTITY_EMBEDDING)</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
+        <span class="name">trainWeighted</span><span class="params">(<span name="runConfig">runConfig: <a href="KMeans$$RunConfig.html" class="extype" name="com.massivedatascience.clusterer.KMeans.RunConfig">RunConfig</a></span>, <span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="initializer">initializer: <a href="KMeansSelector.html" class="extype" name="com.massivedatascience.clusterer.KMeansSelector">KMeansSelector</a></span>, <span name="pointOps">pointOps: <span class="extype" name="scala.Seq">Seq</span>[<a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a>]</span>, <span name="embeddings">embeddings: <span class="extype" name="scala.Seq">Seq</span>[<a href="../transforms/Embedding.html" class="extype" name="com.massivedatascience.transforms.Embedding">Embedding</a>]</span>, <span name="clusterer">clusterer: <a href="MultiKMeansClusterer.html" class="extype" name="com.massivedatascience.clusterer.MultiKMeansClusterer">MultiKMeansClusterer</a></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
       </span>
-      </h4>
-      <p class="shortcomment cmt">Train a K-Means model using Lloyd's algorithm.</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model using Lloyd's algorithm.</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">k</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations of Lloyd's algorithm</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of parallel clusterings to run</p></dd><dt class="param">mode</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">initializationSteps</dt><dd class="cmt"><p>number of steps of the initialization algorithm</p></dd><dt class="param">distanceFunctionNames</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">clustererName</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt class="param">embeddingNames</dt><dd class="cmt"><p>sequence of embeddings to use, from lowest dimension to greatest</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
-</p></dd></dl></div>
-    </li><li name="com.massivedatascience.clusterer.KMeans#trainWithResults" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="trainWithResults(data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],k:Int,maxIterations:Int,runs:Int,mode:String,initializationSteps:Int,distanceFunctionNames:Seq[String],clustererName:String,embeddingNames:Seq[String]):com.massivedatascience.clusterer.KMeansModel"></a>
-      <a id="trainWithResults(RDD[WeightedVector],Int,Int,Int,String,Int,Seq[String],String,Seq[String]):KMeansModel"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">trainWithResults</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>, <span name="k">k: <span class="extype" name="scala.Int">Int</span></span>, <span name="maxIterations">maxIterations: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">20</span></span>, <span name="runs">runs: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">1</span></span>, <span name="mode">mode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="KMeansInitializer$.html">KMeansInitializer.K_MEANS_PARALLEL</a></span></span></span>, <span name="initializationSteps">initializationSteps: <span class="extype" name="scala.Int">Int</span> = <span class="symbol">5</span></span>, <span name="distanceFunctionNames">distanceFunctionNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="BregmanPointOps$.html">Seq(BregmanPointOps.EUCLIDEAN)</a></span></span></span>, <span name="clustererName">clustererName: <span class="extype" name="scala.Predef.String">String</span> = <span class="defval" name='<span class="name"><a href="MultiKMeansClusterer$.html">MultiKMeansClusterer.COLUMN_TRACKING</a></span>'>...</span></span>, <span name="embeddingNames">embeddingNames: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../package.html">Seq(Embeddings.IDENTITY_EMBEDDING)</a></span></span></span>)</span><span class="result">: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Train a K-Means model using Lloyd's algorithm.</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model using Lloyd's algorithm.</p></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">k</dt><dd class="cmt"><p>number of clusters desired</p></dd><dt class="param">maxIterations</dt><dd class="cmt"><p>maximum number of iterations of Lloyd's algorithm</p></dd><dt class="param">runs</dt><dd class="cmt"><p>number of parallel clusterings to run</p></dd><dt class="param">mode</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">initializationSteps</dt><dd class="cmt"><p>number of steps of the initialization algorithm</p></dd><dt class="param">distanceFunctionNames</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">clustererName</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt class="param">embeddingNames</dt><dd class="cmt"><p>sequence of embeddings to use, from lowest dimension to greatest</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model and a clustering of the input data
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@trainWeighted(runConfig:com.massivedatascience.clusterer.KMeans.RunConfig,data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector],initializer:com.massivedatascience.clusterer.KMeansSelector,pointOps:Seq[com.massivedatascience.clusterer.BregmanPointOps],embeddings:Seq[com.massivedatascience.transforms.Embedding],clusterer:com.massivedatascience.clusterer.MultiKMeansClusterer):com.massivedatascience.clusterer.KMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Train a K-Means model using Lloyd's algorithm on WeightedVectors
+</p><div class="fullcomment"><div class="comment cmt"><p>Train a K-Means model using Lloyd's algorithm on WeightedVectors
+</p></div><dl class="paramcmts block"><dt class="param">runConfig</dt><dd class="cmt"><p>run configuration</p></dd><dt class="param">data</dt><dd class="cmt"><p>input data</p></dd><dt class="param">initializer</dt><dd class="cmt"><p>initialization algorithm to use</p></dd><dt class="param">pointOps</dt><dd class="cmt"><p>the distance functions to use</p></dd><dt class="param">embeddings</dt><dd class="cmt"><p>sequence of embeddings to use, from lowest dimension to greatest</p></dd><dt class="param">clusterer</dt><dd class="cmt"><p>which k-means implementation to use</p></dd><dt>returns</dt><dd class="cmt"><p>K-Means model
 </p></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -709,7 +844,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -728,7 +867,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -747,7 +890,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -766,7 +913,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">withBroadcast</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="v">v: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.broadcast.Broadcast">Broadcast</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.reflect.ClassTag">ClassTag</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.T">T</span>]</span>, <span name="sc">sc: <span class="extype" name="org.apache.spark.SparkContext">SparkContext</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withBroadcast.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@withBroadcast[T,Q](v:T)(f:org.apache.spark.broadcast.Broadcast[T]=&gt;Q)(implicitevidence$1:scala.reflect.ClassTag[T],implicitsc:org.apache.spark.SparkContext):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -779,7 +930,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]</span>, <span name="blocking">blocking: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="synchronous">synchronous: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@withCached[T,Q](name:String,v:org.apache.spark.rdd.RDD[T],blocking:Boolean,synchronous:Boolean)(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withCached" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q"></a>
@@ -792,7 +947,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">withCached</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="names">names: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="rdds">rdds: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.T">T</span>]]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withCached.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@withCached[T,Q](names:Seq[String],rdds:Seq[org.apache.spark.rdd.RDD[T]])(f:Seq[org.apache.spark.rdd.RDD[T]]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li><li name="com.massivedatascience.util.SparkHelper#withNamed" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q"></a>
@@ -805,7 +964,11 @@ using the same distance function.
       <span class="symbol">
         <span class="name">withNamed</span><span class="tparams">[<span name="T">T</span>, <span name="Q">Q</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="v">v: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.T">T</span>]) ⇒ <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>)</span><span class="result">: <span class="extype" name="com.massivedatascience.util.SparkHelper.withNamed.Q">Q</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.KMeans$@withNamed[T,Q](name:String,v:org.apache.spark.rdd.RDD[T])(f:org.apache.spark.rdd.RDD[T]=&gt;Q):Q" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../util/SparkHelper.html" class="extype" name="com.massivedatascience.util.SparkHelper">SparkHelper</a></dd></dl></div>
     </li></ol>
             </div>
@@ -840,6 +1003,7 @@ using the same distance function.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>StreamingKMeansModel - com.massivedatascience.clusterer.StreamingKMeansModel</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,13 @@
       <div id="definition">
         <img src="../../../lib/class_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a>.<a href="package.html" class="extype" name="com.massivedatascience.clusterer">clusterer</a></p>
-        <h1>StreamingKMeansModel</h1>
+        <h1>StreamingKMeansModel</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="com.massivedatascience.clusterer">package clusterer</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -39,7 +49,26 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>:: DeveloperApi ::
+StreamingKMeansModel extends MLlib's KMeansModel for streaming
+algorithms, so it can keep track of a continuously updated weight
+associated with each cluster, and also update the model by
+doing a single iteration of the standard k-means algorithm.</p><p>The update algorithm uses the &quot;mini-batch&quot; KMeans rule,
+generalized to incorporate forgetfullness (i.e. decay).
+The update rule (for each cluster) is:</p><p>c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t]
+n_t+t = n_t * a + m_t</p><p>Where c_t is the previously estimated centroid for that cluster,
+n_t is the number of points assigned to it thus far, x_t is the centroid
+estimated on the current batch, and m_t is the number of points assigned
+to that centroid in the current batch.</p><p>The decay factor 'a' scales the contribution of the clusters as estimated thus far,
+by applying a as a discount weighting on the current point when evaluating
+new incoming data. If a=1, all batches are weighted equally. If a=0, new centroids
+are determined entirely by recent data. Lower values correspond to
+more forgetting.</p><p>Decay can optionally be specified by a half life and associated
+time unit. The time unit can either be a batch of data or a single
+data point. Considering data arrived at time t, the half life h is defined
+such that at time t + h the discount applied to the data from t is 0.5.
+The definition remains the same whether the time unit is given
+as batches or points.</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="org.apache.spark.Logging">Logging</span>, <a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -90,7 +119,11 @@
       <span class="symbol">
         <span class="name">StreamingKMeansModel</span><span class="params">(<span name="model">model: <a href="KMeansModel.html" class="extype" name="com.massivedatascience.clusterer.KMeansModel">KMeansModel</a></span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@&lt;init&gt;(model:com.massivedatascience.clusterer.KMeansModel):com.massivedatascience.clusterer.StreamingKMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li></ol>
             </div>
@@ -102,19 +135,6 @@
         <div id="values" class="values members">
               <h3>Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:AnyRef):Boolean"></a>
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
@@ -125,8 +145,12 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <a id="##():Int"></a>
@@ -138,22 +162,13 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:AnyRef):Boolean"></a>
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
@@ -164,8 +179,12 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -177,7 +196,11 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel#centerArrays" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="centerArrays:Array[com.massivedatascience.clusterer.BregmanCenter]"></a>
@@ -190,7 +213,11 @@
       <span class="symbol">
         <span class="name">centerArrays</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@centerArrays:Array[com.massivedatascience.clusterer.BregmanCenter]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel#centers" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="centers:scala.collection.immutable.IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]"></a>
@@ -203,7 +230,11 @@
       <span class="symbol">
         <span class="name">centers</span><span class="result">: <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<a href="BregmanCenter.html" class="extype" name="com.massivedatascience.clusterer.BregmanCenter">BregmanCenter</a>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@centers:scala.collection.immutable.IndexedSeq[com.massivedatascience.clusterer.BregmanCenter]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.massivedatascience.clusterer.StreamingKMeansModel">StreamingKMeansModel</a> → <a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
@@ -216,7 +247,11 @@
       <span class="symbol">
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -235,7 +270,11 @@
       <span class="symbol">
         <span class="name">clusterCenters</span><span class="result">: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@clusterCenters:IndexedSeq[org.apache.spark.mllib.linalg.Vector]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel#clusterWeights" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="clusterWeights:Array[Double]"></a>
@@ -248,7 +287,11 @@
       <span class="symbol">
         <span class="name">clusterWeights</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@clusterWeights:Array[Double]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#computeCost" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="computeCost(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector]):Double"></a>
@@ -261,7 +304,11 @@
       <span class="symbol">
         <span class="name">computeCost</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@computeCost(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector]):Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Return the K-means cost (sum of squared distances of points to their nearest center) for this
 model on the given data.</p><div class="fullcomment"><div class="comment cmt"><p>Return the K-means cost (sum of squared distances of points to their nearest center) for this
 model on the given data.
@@ -277,7 +324,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">computeCostBregman</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@computeCostBregman(data:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint]):Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#computeCostWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="computeCostWeighted(data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector]):Double"></a>
@@ -290,7 +341,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">computeCostWeighted</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Double">Double</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@computeCostWeighted(data:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector]):Double" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
@@ -303,7 +358,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a>
@@ -316,7 +375,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
@@ -329,7 +392,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -348,7 +415,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
@@ -361,7 +432,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -374,7 +449,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="org.apache.spark.Logging#isTraceEnabled" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isTraceEnabled():Boolean"></a>
@@ -387,7 +466,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">isTraceEnabled</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@isTraceEnabled():Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#log" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="log:org.slf4j.Logger"></a>
@@ -400,7 +483,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">log</span><span class="result">: <span class="extype" name="org.slf4j.Logger">Logger</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@log:org.slf4j.Logger" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -413,7 +500,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logDebug(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logDebug" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logDebug(msg:=&gt;String):Unit"></a>
@@ -426,7 +517,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logDebug</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logDebug(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -439,7 +534,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logError(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logError" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logError(msg:=&gt;String):Unit"></a>
@@ -452,7 +551,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logError</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logError(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -465,7 +568,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logInfo(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logInfo" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logInfo(msg:=&gt;String):Unit"></a>
@@ -478,7 +585,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logInfo</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logInfo(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logName" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logName:String"></a>
@@ -491,7 +602,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logName:String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -504,7 +619,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logTrace(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logTrace" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logTrace(msg:=&gt;String):Unit"></a>
@@ -517,7 +636,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logTrace</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logTrace(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String,throwable:Throwable):Unit"></a>
@@ -530,7 +653,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwable">throwable: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logWarning(msg:=&gt;String,throwable:Throwable):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="org.apache.spark.Logging#logWarning" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="logWarning(msg:=&gt;String):Unit"></a>
@@ -543,7 +670,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">logWarning</span><span class="params">(<span name="msg">msg: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@logWarning(msg:=&gt;String):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>Logging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
@@ -556,7 +687,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
@@ -569,7 +704,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
@@ -582,7 +721,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel#pointOps" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="pointOps:com.massivedatascience.clusterer.BregmanPointOps"></a>
@@ -595,7 +738,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">pointOps</span><span class="result">: <a href="BregmanPointOps.html" class="extype" name="com.massivedatascience.clusterer.BregmanPointOps">BregmanPointOps</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@pointOps:com.massivedatascience.clusterer.BregmanPointOps" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="com.massivedatascience.clusterer.StreamingKMeansModel">StreamingKMeansModel</a> → <a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predict(points:org.apache.spark.api.java.JavaRDD[org.apache.spark.mllib.linalg.Vector]):org.apache.spark.api.java.JavaRDD[Integer]"></a>
@@ -608,7 +755,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predict</span><span class="params">(<span name="points">points: <span class="extype" name="org.apache.spark.api.java.JavaRDD">JavaRDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.api.java.JavaRDD">JavaRDD</span>[<span class="extype" name="java.lang.Integer">Integer</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predict(points:org.apache.spark.api.java.JavaRDD[org.apache.spark.mllib.linalg.Vector]):org.apache.spark.api.java.JavaRDD[Integer]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Maps given points to their cluster indices.</p><div class="fullcomment"><div class="comment cmt"><p>Maps given points to their cluster indices.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predict(points:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector]):org.apache.spark.rdd.RDD[Int]"></a>
@@ -621,7 +772,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predict</span><span class="params">(<span name="points">points: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="scala.Int">Int</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predict(points:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector]):org.apache.spark.rdd.RDD[Int]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Maps given points to their cluster indices.</p><div class="fullcomment"><div class="comment cmt"><p>Maps given points to their cluster indices.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predict" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predict(point:org.apache.spark.mllib.linalg.Vector):Int"></a>
@@ -634,7 +789,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predict</span><span class="params">(<span name="point">point: <span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predict(point:org.apache.spark.mllib.linalg.Vector):Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Returns the cluster index that a given point belongs to.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the cluster index that a given point belongs to.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictBregman" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictBregman(points:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint]):org.apache.spark.rdd.RDD[Int]"></a>
@@ -647,7 +806,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictBregman</span><span class="params">(<span name="points">points: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="scala.Int">Int</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictBregman(points:org.apache.spark.rdd.RDD[com.massivedatascience.clusterer.BregmanPoint]):org.apache.spark.rdd.RDD[Int]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictBregman" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictBregman(point:com.massivedatascience.clusterer.BregmanPoint):Int"></a>
@@ -660,7 +823,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictBregman</span><span class="params">(<span name="point">point: <a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictBregman(point:com.massivedatascience.clusterer.BregmanPoint):Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictClusterAndDistance" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictClusterAndDistance(point:org.apache.spark.mllib.linalg.Vector):(Int,Double)"></a>
@@ -673,7 +840,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictClusterAndDistance</span><span class="params">(<span name="point">point: <span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span></span>)</span><span class="result">: (<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Double">Double</span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictClusterAndDistance(point:org.apache.spark.mllib.linalg.Vector):(Int,Double)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Returns the cluster index that a given point belongs to.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the cluster index that a given point belongs to.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictClusterAndDistanceBregman" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictClusterAndDistanceBregman(point:com.massivedatascience.clusterer.BregmanPoint):(Int,Double)"></a>
@@ -686,7 +857,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictClusterAndDistanceBregman</span><span class="params">(<span name="point">point: <a href="BregmanPoint.html" class="extype" name="com.massivedatascience.clusterer.BregmanPoint">BregmanPoint</a></span>)</span><span class="result">: (<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Double">Double</span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictClusterAndDistanceBregman(point:com.massivedatascience.clusterer.BregmanPoint):(Int,Double)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictClusterAndDistanceWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictClusterAndDistanceWeighted(point:com.massivedatascience.linalg.WeightedVector):(Int,Double)"></a>
@@ -699,7 +874,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictClusterAndDistanceWeighted</span><span class="params">(<span name="point">point: <a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a></span>)</span><span class="result">: (<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="scala.Double">Double</span>)</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictClusterAndDistanceWeighted(point:com.massivedatascience.linalg.WeightedVector):(Int,Double)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictWeighted(points:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector]):org.apache.spark.rdd.RDD[Int]"></a>
@@ -712,7 +891,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictWeighted</span><span class="params">(<span name="points">points: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a>]</span>)</span><span class="result">: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="scala.Int">Int</span>]</span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictWeighted(points:org.apache.spark.rdd.RDD[com.massivedatascience.linalg.WeightedVector]):org.apache.spark.rdd.RDD[Int]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Maps given points to their cluster indices.</p><div class="fullcomment"><div class="comment cmt"><p>Maps given points to their cluster indices.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.KMeansPredictor#predictWeighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="predictWeighted(point:com.massivedatascience.linalg.WeightedVector):Int"></a>
@@ -725,7 +908,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">predictWeighted</span><span class="params">(<span name="point">point: <a href="../linalg/WeightedVector.html" class="extype" name="com.massivedatascience.linalg.WeightedVector">WeightedVector</a></span>)</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@predictWeighted(point:com.massivedatascience.linalg.WeightedVector):Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="KMeansPredictor.html" class="extype" name="com.massivedatascience.clusterer.KMeansPredictor">KMeansPredictor</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
@@ -738,7 +925,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
@@ -751,7 +942,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="com.massivedatascience.clusterer.StreamingKMeansModel#update" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="update(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector],decayFactor:Double,timeUnit:String):com.massivedatascience.clusterer.StreamingKMeansModel"></a>
@@ -764,7 +959,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">update</span><span class="params">(<span name="data">data: <span class="extype" name="org.apache.spark.rdd.RDD">RDD</span>[<span class="extype" name="org.apache.spark.mllib.linalg.Vector">Vector</span>]</span>, <span name="decayFactor">decayFactor: <span class="extype" name="scala.Double">Double</span></span>, <span name="timeUnit">timeUnit: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="" class="extype" name="com.massivedatascience.clusterer.StreamingKMeansModel">StreamingKMeansModel</a></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@update(data:org.apache.spark.rdd.RDD[org.apache.spark.mllib.linalg.Vector],decayFactor:Double,timeUnit:String):com.massivedatascience.clusterer.StreamingKMeansModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <p class="shortcomment cmt">Perform a k-means update on a batch of data.</p>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
@@ -777,7 +976,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -796,7 +999,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -815,7 +1022,11 @@ model on the given data.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.clusterer.StreamingKMeansModel@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -856,6 +1067,7 @@ model on the given data.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>util - com.massivedatascience.util</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,11 @@
       <div id="definition">
         <img src="../../../lib/package_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a></p>
-        <h1>util</h1>
+        <h1>util</h1><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -69,8 +77,12 @@
       <span class="symbol">
         <a href="MathLog.html"><span class="name">MathLog</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">A function that implements a variant of the natural logarithm
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@MathLogextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A function that implements a variant of the natural logarithm
 </p>
     </li><li name="com.massivedatascience.util.SparkHelper" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="SparkHelperextendsLogging"></a>
@@ -83,9 +95,13 @@
       <span class="symbol">
         <a href="SparkHelper.html"><span class="name">SparkHelper</span></a><span class="result"> extends <span class="extype" name="org.apache.spark.Logging">Logging</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@SparkHelperextendsLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.util.XORShiftRandom" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.util.XORShiftRandom" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="XORShiftRandomextendsRandom"></a>
       <a id="XORShiftRandom:XORShiftRandom"></a>
       <h4 class="signature">
@@ -96,8 +112,14 @@
       <span class="symbol">
         <a href="XORShiftRandom.html"><span class="name">XORShiftRandom</span></a><span class="result"> extends <span class="extype" name="java.util.Random">Random</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">This code comes from Spark.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@XORShiftRandomextendsRandom" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This code comes from Spark.</p><div class="fullcomment"><div class="comment cmt"><p>This code comes from Spark.  Unfortunately, the Spark version is private to the mllib package,
+so we copied the code to a separate package.
+</p></div></div>
     </li></ol>
             </div>
 
@@ -116,8 +138,14 @@
       <span class="symbol">
         <a href="DiscreteLog$.html"><span class="name">DiscreteLog</span></a><span class="result"> extends <a href="MathLog.html" class="extype" name="com.massivedatascience.util.MathLog">MathLog</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The natural logarithm, but defined as 0.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@DiscreteLog" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The natural logarithm, but defined as 0.0 on input 0.0 logarithm function implemented
+using a table lookup on integral arguments,
+and the Math.log function when entries are non-integral or not found.</p>
     </li><li name="com.massivedatascience.util.GeneralLog" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GeneralLog"></a>
       <a id="GeneralLog:GeneralLog"></a>
@@ -129,8 +157,12 @@
       <span class="symbol">
         <a href="GeneralLog$.html"><span class="name">GeneralLog</span></a><span class="result"> extends <a href="MathLog.html" class="extype" name="com.massivedatascience.util.MathLog">MathLog</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The natural logarithm function implemented using that Math.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@GeneralLog" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The natural logarithm function implemented using that Math.log function.</p>
     </li><li name="com.massivedatascience.util.XORShiftRandom" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="XORShiftRandom"></a>
       <a id="XORShiftRandom:XORShiftRandom"></a>
@@ -142,8 +174,12 @@
       <span class="symbol">
         <a href="XORShiftRandom$.html"><span class="name">XORShiftRandom</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">Contains benchmark method and main method to run benchmark of the RNG</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.util.package@XORShiftRandom" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li></ol>
             </div>
 
@@ -169,6 +205,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>

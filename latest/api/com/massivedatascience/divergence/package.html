@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>divergence - com.massivedatascience.divergence</title>
@@ -9,6 +8,11 @@
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -26,7 +30,11 @@
       <div id="definition">
         <img src="../../../lib/package_big.png" />
         <p id="owner"><a href="../../package.html" class="extype" name="com">com</a>.<a href="../package.html" class="extype" name="com.massivedatascience">massivedatascience</a></p>
-        <h1>divergence</h1>
+        <h1>divergence</h1><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       </div>
 
       <h4 id="signature" class="signature">
@@ -58,7 +66,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="com.massivedatascience.divergence.BregmanDivergence" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="com.massivedatascience.divergence.BregmanDivergence" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="BregmanDivergenceextendsSerializable"></a>
       <a id="BregmanDivergence:BregmanDivergence"></a>
       <h4 class="signature">
@@ -69,9 +77,18 @@
       <span class="symbol">
         <a href="BregmanDivergence.html"><span class="name">BregmanDivergence</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">Bregman Divergence defines a convex function F and its gradient.</p>
-    </li><li name="com.massivedatascience.divergence.KullbackLeiblerDivergence" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@BregmanDivergenceextendsSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Bregman Divergence defines a convex function F and its gradient.</p><div class="fullcomment"><div class="comment cmt"><p>Bregman Divergence defines a convex function F and its gradient.</p><p>For convenience, we also provide methods for evaluating F and its
+gradient when points are provided using homogeneous coordinates.  Evaluating F and
+gradient of F on homogeneous coordinates is often more efficient that mapping
+the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with Bregman Divergences</a>
+</p></span><span class="cmt"><p><a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle introduction</a></p></span><span class="cmt"><p><a href="http://en.wikipedia.org/wiki/Bregman_divergence">Definition</a></p></span></dd></dl></div>
+    </li><li name="com.massivedatascience.divergence.KullbackLeiblerDivergence" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="KullbackLeiblerDivergenceextendsBregmanDivergence"></a>
       <a id="KullbackLeiblerDivergence:KullbackLeiblerDivergence"></a>
       <h4 class="signature">
@@ -82,10 +99,15 @@
       <span class="symbol">
         <a href="KullbackLeiblerDivergence.html"><span class="name">KullbackLeiblerDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">The generalized Kullback-Leibler divergence is defined on points on R+ ** n
-</p>
-    </li><li name="com.massivedatascience.divergence.KullbackLeiblerSimplexDivergence" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@KullbackLeiblerDivergenceextendsBregmanDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The generalized Kullback-Leibler divergence is defined on points on R+ ** n
+</p><div class="fullcomment"><div class="comment cmt"><p>The generalized Kullback-Leibler divergence is defined on points on R+ ** n
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a></p></span></dd></dl></div>
+    </li><li name="com.massivedatascience.divergence.KullbackLeiblerSimplexDivergence" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="KullbackLeiblerSimplexDivergenceextendsBregmanDivergence"></a>
       <a id="KullbackLeiblerSimplexDivergence:KullbackLeiblerSimplexDivergence"></a>
       <h4 class="signature">
@@ -96,8 +118,14 @@
       <span class="symbol">
         <a href="KullbackLeiblerSimplexDivergence.html"><span class="name">KullbackLeiblerSimplexDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a></span>
       </span>
-      </h4>
-      <p class="comment cmt">The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@KullbackLeiblerSimplexDivergenceextendsBregmanDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n</p><div class="fullcomment"><div class="comment cmt"><p>The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n</p><p>If we know that the points are on the simplex, then we may simplify the implementation of KL
+divergence. This trait implements that simplification.
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a></p></span></dd></dl></div>
     </li></ol>
             </div>
 
@@ -116,7 +144,11 @@
       <span class="symbol">
         <a href="BregmanDivergence$.html"><span class="name">BregmanDivergence</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@BregmanDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.divergence.GeneralizedIDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="GeneralizedIDivergence"></a>
@@ -129,10 +161,14 @@
       <span class="symbol">
         <a href="GeneralizedIDivergence$.html"><span class="name">GeneralizedIDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The generalized I-Divergence is defined on points in R**n
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@GeneralizedIDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The generalized I-Divergence is defined on points in R**n
 </p>
-    </li><li name="com.massivedatascience.divergence.ItakuraSaitoDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.divergence.ItakuraSaitoDivergence" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ItakuraSaitoDivergence"></a>
       <a id="ItakuraSaitoDivergence:ItakuraSaitoDivergence"></a>
       <h4 class="signature">
@@ -143,10 +179,16 @@
       <span class="symbol">
         <a href="ItakuraSaitoDivergence$.html"><span class="name">ItakuraSaitoDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The Itakura-Saito Divergence is defined on points in R+ ** n
-</p>
-    </li><li name="com.massivedatascience.divergence.LogisticLossDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@ItakuraSaitoDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Itakura-Saito Divergence is defined on points in R+ ** n
+</p><div class="fullcomment"><div class="comment cmt"><p>The Itakura-Saito Divergence is defined on points in R+ ** n
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance">Definition</a>
+</p></span></dd></dl></div>
+    </li><li name="com.massivedatascience.divergence.LogisticLossDivergence" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="LogisticLossDivergence"></a>
       <a id="LogisticLossDivergence:LogisticLossDivergence"></a>
       <h4 class="signature">
@@ -157,8 +199,13 @@
       <span class="symbol">
         <a href="LogisticLossDivergence$.html"><span class="name">LogisticLossDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The Logistic loss divergence is defined on points in (0.</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@LogisticLossDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Logistic loss divergence is defined on points in (0.0,1.0)</p><div class="fullcomment"><div class="comment cmt"><p>The Logistic loss divergence is defined on points in (0.0,1.0)</p><p>Logistic loss is the same as KL Divergence with the embedding into R**2</p><p>x =&gt; (x, 1.0 - x)
+</p></div></div>
     </li><li name="com.massivedatascience.divergence.NaturalKLDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="NaturalKLDivergence"></a>
       <a id="NaturalKLDivergence:NaturalKLDivergence"></a>
@@ -170,7 +217,11 @@
       <span class="symbol">
         <a href="NaturalKLDivergence$.html"><span class="name">NaturalKLDivergence</span></a><span class="result"> extends <a href="KullbackLeiblerDivergence.html" class="extype" name="com.massivedatascience.divergence.KullbackLeiblerDivergence">KullbackLeiblerDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@NaturalKLDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.divergence.NaturalKLSimplexDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="NaturalKLSimplexDivergence"></a>
@@ -183,7 +234,11 @@
       <span class="symbol">
         <a href="NaturalKLSimplexDivergence$.html"><span class="name">NaturalKLSimplexDivergence</span></a><span class="result"> extends <a href="KullbackLeiblerSimplexDivergence.html" class="extype" name="com.massivedatascience.divergence.KullbackLeiblerSimplexDivergence">KullbackLeiblerSimplexDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@NaturalKLSimplexDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.divergence.RealKLDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RealKLDivergence"></a>
@@ -196,7 +251,11 @@
       <span class="symbol">
         <a href="RealKLDivergence$.html"><span class="name">RealKLDivergence</span></a><span class="result"> extends <a href="KullbackLeiblerDivergence.html" class="extype" name="com.massivedatascience.divergence.KullbackLeiblerDivergence">KullbackLeiblerDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@RealKLDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
     </li><li name="com.massivedatascience.divergence.RealKullbackLeiblerSimplexDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="RealKullbackLeiblerSimplexDivergence"></a>
@@ -209,9 +268,13 @@
       <span class="symbol">
         <a href="RealKullbackLeiblerSimplexDivergence$.html"><span class="name">RealKullbackLeiblerSimplexDivergence</span></a><span class="result"> extends <a href="KullbackLeiblerSimplexDivergence.html" class="extype" name="com.massivedatascience.divergence.KullbackLeiblerSimplexDivergence">KullbackLeiblerSimplexDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@RealKullbackLeiblerSimplexDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
       
-    </li><li name="com.massivedatascience.divergence.SquaredEuclideanDistanceDivergence" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="com.massivedatascience.divergence.SquaredEuclideanDistanceDivergence" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="SquaredEuclideanDistanceDivergence"></a>
       <a id="SquaredEuclideanDistanceDivergence:SquaredEuclideanDistanceDivergence"></a>
       <h4 class="signature">
@@ -222,9 +285,15 @@
       <span class="symbol">
         <a href="SquaredEuclideanDistanceDivergence$.html"><span class="name">SquaredEuclideanDistanceDivergence</span></a><span class="result"> extends <a href="BregmanDivergence.html" class="extype" name="com.massivedatascience.divergence.BregmanDivergence">BregmanDivergence</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4>
-      <p class="comment cmt">The squared Euclidean distance function is defined on points in R**n
-</p>
+      </h4><span class="permalink">
+      <a href="../../../index.html#com.massivedatascience.divergence.package@SquaredEuclideanDistanceDivergence" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The squared Euclidean distance function is defined on points in R**n
+</p><div class="fullcomment"><div class="comment cmt"><p>The squared Euclidean distance function is defined on points in R**n
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://en.wikipedia.org/wiki/Euclidean_distance">Definition</a>
+</p></span></dd></dl></div>
     </li></ol>
             </div>
 
@@ -250,6 +319,7 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+
+
     </body>
       </html>
