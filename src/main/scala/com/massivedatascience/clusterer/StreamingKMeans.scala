@@ -129,8 +129,8 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
 
     // Check whether the smallest cluster is dying. If so, split the largest cluster.
     val weightsWithIndex = clusterWeights.view.zipWithIndex
-    val (maxWeight, largest) = weightsWithIndex.maxBy(_._1)
-    val (minWeight, smallest) = weightsWithIndex.minBy(_._1)
+    val (maxWeight, largest) = weightsWithIndex.maxBy{case(weight,_) => weight}
+    val (minWeight, smallest) = weightsWithIndex.minBy{case(weight,_) => weight}
     if (minWeight < 1e-8 * maxWeight) {
       logInfo(s"Cluster $smallest is dying. Split the largest cluster $largest into two.")
       val weight = (maxWeight + minWeight) / 2.0
