@@ -3,13 +3,15 @@ name := "massivedatascience-clusterer"
 
 organization := "com.massivedatascience"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.5"
 
-crossScalaVersions := Seq("2.10.4", "2.11.4")
+crossScalaVersions := Seq("2.10.4", "2.11.5")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
 scalacOptions in (Compile, compile) += "-Xfatal-warnings"
+
+ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 javacOptions ++= Seq(
   "-source", "1.7",
@@ -31,8 +33,6 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-// Try to future-proof scala jvm targets
-scalacOptions += "-target:jvm-1.7"
 
 libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.2",
