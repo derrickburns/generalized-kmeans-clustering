@@ -311,48 +311,13 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }
   }
 
-  /**
-   * Update the clusters (stochastically if rate < 1.0)
-   *
-   * @param round the round
-   * @param currentAssignments  current assignments
-   * @param previousAssignments  previous assignments
-   * @param previousCenters  the cluster centers
-   * @return the new cluster centers
-   */
-  private[this] def updatedCenters(
+  private[this]
+  def backFilledCenters(
     points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
-    previousCenters: IndexedSeq[CenterWithHistory],
     currentAssignments: RDD[Assignment],
-    previousAssignments: RDD[Assignment]): IndexedSeq[CenterWithHistory] = {
-
-    require(currentAssignments.getStorageLevel.useMemory)
-    require(previousAssignments.getStorageLevel.useMemory)
-
-    val centers = previousCenters.toArray
-    if (config.addOnly) {
-      val results = completeMovedCentroids(points, pointOps, currentAssignments,
-        previousAssignments, previousCenters.length)
-      for ((index, location) <- results) {
-        centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
-          initialized = true)
-      }
-    } else {
-      val changes = deltasOfMovedCentroids(points, pointOps, currentAssignments,
-        previousAssignments, previousCenters.length)
-      for ((index, delta) <- changes) {
-        val previous = previousCenters(index)
-        val location = if (previous.initialized)
-          delta.add(pointOps.toPoint(previous.center))
-        else
-          delta
-
-        centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
-          initialized = true)
-      }
-    }
+    centers: Array[CenterWithHistory]): IndexedSeq[CenterWithHistory] = {
 
     // adjust centers to fill in empty slots
     val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
@@ -380,6 +345,49 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     } else {
       centers.toIndexedSeq
     }
+  }
+
+  /**
+   * Update the clusters (stochastically if rate < 1.0)
+   *
+   * @param round the round
+   * @param currentAssignments  current assignments
+   * @param previousAssignments  previous assignments
+   * @param previousCenters  the cluster centers
+   * @return the new cluster centers
+   */
+  private[this]
+  def latestCenters(
+    points: RDD[BregmanPoint],
+    pointOps: BregmanPointOps,
+    round: Int,
+    previousCenters: IndexedSeq[CenterWithHistory],
+    currentAssignments: RDD[Assignment],
+    previousAssignments: RDD[Assignment]): Array[CenterWithHistory] = {
+
+    val centers = previousCenters.toArray
+    if (config.addOnly) {
+      val results = completeMovedCentroids(points, pointOps, currentAssignments,
+        previousAssignments, previousCenters.length)
+      for ((index, location) <- results) {
+        centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
+          initialized = true)
+      }
+    } else {
+      val changes = deltasOfMovedCentroids(points, pointOps, currentAssignments,
+        previousAssignments, previousCenters.length)
+      for ((index, delta) <- changes) {
+        val previous = previousCenters(index)
+        val location = if (previous.initialized)
+          delta.add(pointOps.toPoint(previous.center))
+        else
+          delta
+
+        centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable),
+          initialized = true)
+      }
+    }
+    centers
   }
 
   /**
@@ -573,15 +581,19 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       require(assignments.getStorageLevel.useMemory)
       val newAssignments = sync(s"assignments round $round", updatedAssignments(points, pointOps,
         round, assignments, centers))
-      val newCenters = updatedCenters(points, pointOps, round + 1, centers, newAssignments,
+
+      val newCenters = latestCenters(points, pointOps, round+1, centers, newAssignments,
         assignments)
-      detector.update(pointOps, (round + 1) / 2, newCenters, centers, newAssignments, assignments)
+
+      val backFilled = backFilledCenters(points, pointOps, round+1, newAssignments, newCenters)
+
+      detector.update(pointOps, (round + 1) / 2, backFilled, centers, newAssignments, assignments)
 
       if (round != 0) assignments.unpersist()
       if ((round / 2 + 1) == maxIterations || detector.stable())
-        (newAssignments, newCenters)
+        (newAssignments, backFilled)
       else
-        lloyds(round + 2, newAssignments, newCenters)
+        lloyds(round + 2, newAssignments, backFilled)
     }
 
     require(config.updateRate <= 1.0 && config.updateRate >= 0.0)
