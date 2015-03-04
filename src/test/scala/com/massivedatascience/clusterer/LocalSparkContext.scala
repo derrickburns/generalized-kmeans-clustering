@@ -27,7 +27,7 @@ import org.apache.spark.{ SparkConf, SparkContext }
 trait LocalSparkContext extends BeforeAndAfterAll { self: Suite =>
   @transient var sc: SparkContext = _
 
-  override def beforeAll() {
+  override def beforeAll() : Unit = {
     val conf = new SparkConf()
       .setMaster("local")
       .setAppName("test")
@@ -36,7 +36,7 @@ trait LocalSparkContext extends BeforeAndAfterAll { self: Suite =>
     super.beforeAll()
   }
 
-  override def afterAll() {
+  override def afterAll() : Unit = {
     if (sc != null) {
       sc.stop()
     }
