@@ -19,11 +19,12 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
+import scala.annotation.tailrec
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
@@ -40,7 +41,7 @@ import scala.collection.mutable.ArrayBuffer
  * use this code to find additional cluster centers at any time.
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
-    with SparkHelper {
+with SparkHelper {
 
   /**
    *
@@ -205,9 +206,9 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @return RDD of vectors
    */
   private[this] def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
-    rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length) }) {
+    rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length)}) {
       case (arrayRdd, (doubleRdd, i)) =>
-        arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
+        arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array}
 
     }.map(Vectors.dense)
   }
@@ -290,28 +291,30 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     centers: Seq[Centers]): Seq[Centers] = {
 
     val addedCenters = centers.map(new ArrayBuffer[BregmanCenter] ++= _)
-    val startingCosts = initialCosts.map(asVectors)
-      .getOrElse(costsFromCenters(pointOps, data, runs, centers))
-    var costs = sync("initial costs", startingCosts)
     val newCenters = Seq.fill(runs)(new ArrayBuffer[BregmanCenter]())
-    var step = 0
-    while (step < numberSteps) {
+
+    @tailrec
+    def addCenters(step: Int, costs: RDD[Vector]): RDD[Vector] = {
       logInfo(s"starting step $step")
       val stepSeed = seed ^ (step << 16)
       for ((index, center) <- select(pointOps, data, runs, requested.map(_ * 2), stepSeed, costs)) {
         newCenters(index) += center
       }
-      costs = exchange(s"costs at step $step", costs) { oldCosts =>
+      val newCosts = exchange(s"costs at step $step", costs) { oldCosts =>
         updatedCosts(pointOps, data, runs, newCenters, oldCosts)
       }
       for ((c, n) <- addedCenters.zip(newCenters)) {
         c ++= n
         n.clear()
       }
-
-      step += 1
+      if (step < numberSteps) addCenters(step + 1, newCosts) else newCosts
     }
-    costs.unpersist(blocking = false)
+
+    val startingCosts = initialCosts.map(asVectors)
+      .getOrElse(costsFromCenters(pointOps, data, runs, centers))
+    val costs = sync("initial costs", startingCosts)
+    val finalCosts = addCenters(0, costs)
+    finalCosts.unpersist(blocking=false)
     addedCenters.map(_.toIndexedSeq)
   }
 }
