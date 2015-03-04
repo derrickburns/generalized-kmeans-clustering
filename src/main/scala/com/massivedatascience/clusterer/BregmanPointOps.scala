@@ -101,10 +101,22 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
 
   /**
    * Return the index of the closest point in `centers` to `point`, as well as its distance.
+   *
+   * N.B. This is inner loop code, so until the Scala compiler is smart enough, we eschew
+   * the more functional approach.
+   *
+   * @param centers centers
+   * @param point point
+   * @param f function that creates the result
+   * @param initialDistance initial best distance
+   * @param initialIndex  initial index of best cluster
+   * @tparam T
+   * @return best index and best distance after function f application
    */
   def findClosestInfo[T](
     centers: IndexedSeq[C],
-    point: P, f: (Int, Double) => T,
+    point: P,
+    f: (Int, Double) => T,
     initialDistance: Double = Infinity,
     initialIndex: Int = -1): T = {
 
@@ -153,14 +165,12 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    * @return
    */
   def distance(p: BregmanPoint, c: BregmanCenter): Double = {
-
-    if (c.weight <= weightThreshold) {
-      Infinity
-    } else if (p.weight <= weightThreshold) {
-      0.0
-    } else {
-      val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
-      if (d < 0.0) 0.0 else d
+    weightThreshold match {
+      case x if c.weight <= x => Infinity
+      case x if p.weight <= x => 0.0
+      case _ =>
+        val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
+        if (d < 0.0) 0.0 else d
     }
   }
 }
