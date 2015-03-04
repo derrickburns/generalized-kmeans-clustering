@@ -20,7 +20,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext._
 import org.apache.spark.api.java.JavaRDD
@@ -209,12 +209,14 @@ object KMeansModel {
     points: RDD[T],
     assignments: RDD[Int]): KMeansModel = {
 
-    val centroids = assignments.zip(points).filter(_._1 >= 0).aggregateByKey(ops.make())(
+    val centroids: RDD[(Int, MutableWeightedVector)] = assignments.zip(points)
+      .filter{case (index,_) => index >= 0}
+      .aggregateByKey(ops.make())(
       (centroid, pt) => centroid.add(pt),
       (c1, c2) => c1.add(c2)
     )
 
-    val bregmanCenters = centroids.map(p => ops.toCenter(p._2.asImmutable))
+    val bregmanCenters = centroids.map{case(_, vector) => ops.toCenter(vector.asImmutable)}
     new KMeansModel(ops, bregmanCenters.collect().toIndexedSeq)
   }
 
