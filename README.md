@@ -1,3 +1,5 @@
+[![Codacy Badge](https://www.codacy.com/project/badge/4337a3e46c49481dbb22037de7dd7eac)](https://www.codacy.com/public/derrickrburns/generalized-kmeans-clustering)
+
 Generalized K-Means Clustering
 =============================
 
