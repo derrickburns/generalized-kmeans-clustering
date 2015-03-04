@@ -27,7 +27,7 @@ import scala.collection.Map
 /**
  * A simple k-means implementation that re-computes the closest cluster centers on each iteration
  * and that recomputes each cluster on each iteration.
- *
+ * @deprecated
  * @param pointOps distance function
  */
 class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging {

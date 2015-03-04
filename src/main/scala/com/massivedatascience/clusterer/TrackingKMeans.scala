@@ -78,6 +78,7 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
  * @param updateRate  percentage of points that are updated on each round
  */
 
+@deprecated
 class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
   /**

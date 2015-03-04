@@ -135,8 +135,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
   }
 
   private[this] def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
-      weights.scanLeft(0.0) { case (agg, w) => agg + w }
-
+    weights.scanLeft(0.0) { case (agg, w) => agg + w }
 
   /**
    * Pick a point at random, weighing the choices by the given cumulative weight vector.

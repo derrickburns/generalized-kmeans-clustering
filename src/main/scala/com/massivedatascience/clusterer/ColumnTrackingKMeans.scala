@@ -524,8 +524,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param centers the cluster centers
    * @return  the new assignment for the point
    */
-  private[this]
-  def reassignment(
+  private[this] def reassignment(
     pointOps: BregmanPointOps,
     point: BregmanPoint,
     assignment: Assignment,
