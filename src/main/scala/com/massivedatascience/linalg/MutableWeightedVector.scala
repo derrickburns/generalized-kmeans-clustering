@@ -40,5 +40,4 @@ trait MutableWeightedVector {
 
   def nonEmpty: Boolean
 
-
 }

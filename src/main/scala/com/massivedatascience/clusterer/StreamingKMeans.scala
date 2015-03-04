@@ -23,7 +23,7 @@ import com.massivedatascience.clusterer.StreamingKMeans.SimpleWeightedVector
 import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream

@@ -45,7 +45,7 @@ object MultiKMeansClusterer {
   val COLUMN_TRACKING = "COLUMN_TRACKING"
   val MINI_BATCH_10 = "MINI_BATCH_10"
 
-  case class ClusteringWithDistortion (distortion: Double, centers: IndexedSeq[BregmanCenter])
+  case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
     clustererName match {

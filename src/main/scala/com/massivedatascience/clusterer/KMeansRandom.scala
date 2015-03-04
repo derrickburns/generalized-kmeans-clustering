@@ -54,8 +54,7 @@ case object KMeansRandom extends KMeansSelector with SparkHelper {
     }
   }
 
-  private[this]
-  def select(ops: BregmanPointOps, rand: Random, data: RDD[BregmanPoint], count: Int) = {
+  private[this] def select(ops: BregmanPointOps, rand: Random, data: RDD[BregmanPoint], count: Int) = {
     val toCenter = ops.toCenter _
     data.takeSample(withReplacement = false, count, rand.nextInt()).map(toCenter)
   }

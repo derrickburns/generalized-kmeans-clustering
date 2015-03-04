@@ -40,7 +40,7 @@ import scala.collection.mutable.ArrayBuffer
  * use this code to find additional cluster centers at any time.
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
-  with SparkHelper {
+    with SparkHelper {
 
   /**
    *
@@ -86,8 +86,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param numberRetained number of pre-selected candidate centers to keep
    * @return arrays of selected centers
    */
-  private[this]
-  def finalClusterCenters(
+  private[this] def finalClusterCenters(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     numClusters: Int,
@@ -115,8 +114,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param centers new centers to consider
    * @return
    */
-  private[this]
-  def costsFromCenters(
+  private[this] def costsFromCenters(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     runs: Int,
@@ -139,8 +137,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param oldCosts best distance to previously considered centers
    * @return
    */
-  private[this]
-  def updatedCosts(
+  private[this] def updatedCosts(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     runs: Int,
@@ -149,10 +146,11 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
 
     implicit val sc = data.sparkContext
     withBroadcast(centers) { bcNewCenters =>
-      data.zip(oldCosts).map { case (point, oldCost) =>
-        Vectors.dense(Array.tabulate(runs) { r =>
-          math.min(pointOps.pointCost(bcNewCenters.value(r), point), oldCost(r))
-        })
+      data.zip(oldCosts).map {
+        case (point, oldCost) =>
+          Vectors.dense(Array.tabulate(runs) { r =>
+            math.min(pointOps.pointCost(bcNewCenters.value(r), point), oldCost(r))
+          })
       }
     }
   }
@@ -163,8 +161,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param seed seed for random numbers
    * @return random center per run stored in an array buffer
    */
-  private[this]
-  def randomCenters(
+  private[this] def randomCenters(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     runs: Int,
@@ -183,8 +180,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param fraction fraction of points to sample
    * @return  A map from (run, cluster index) to the sum of the weights of its points
    */
-  private[this]
-  def weights(
+  private[this] def weights(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     centerArrays: Seq[Centers],
@@ -208,8 +204,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param rdds sequence of RDDs of Doubles
    * @return RDD of vectors
    */
-  private[this]
-  def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
+  private[this] def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
     rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length) }) {
       case (arrayRdd, (doubleRdd, i)) =>
         arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
@@ -226,8 +221,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param costs costs
    * @return k * runs new points, in an array where each entry is the tuple (run, point)
    */
-  private[this]
-  def select(
+  private[this] def select(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     runs: Int,
@@ -252,7 +246,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
             val v = rand.nextDouble()
             v < c(r) * k(r) / sumCosts(r)
           }
-          if( selectedRuns.nonEmpty) {
+          if (selectedRuns.nonEmpty) {
             val cp = pointOps.toCenter(p)
             selectedRuns.map((_, cp))
           } else {
@@ -270,11 +264,9 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param runs number of runs
    * @return number of clusters needed to fulfill gap
    */
-  private[this]
-  def numbersRequested(desired: Int, centers: Option[Seq[Centers]], runs: Int): Seq[Int] =
+  private[this] def numbersRequested(desired: Int, centers: Option[Seq[Centers]], runs: Int): Seq[Int] =
     centers.map(_.map(desired - _.length))
       .getOrElse(Seq.fill(runs)(desired))
-
 
   /**
    * On each step, preRound(run) points on average for each run with probability proportional
@@ -287,8 +279,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @param centers initial centers
    * @return expanded set of centers, including initial centers
    */
-  private[this]
-  def moreCenters(
+  private[this] def moreCenters(
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     runs: Int,

@@ -20,9 +20,9 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
-import org.apache.spark.{Logging, SparkContext}
+import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import org.apache.spark.{ Logging, SparkContext }
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
@@ -39,9 +39,11 @@ object ColumnTrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   private[clusterer] case class CenterWithHistory(index: Int, round: Int, center: BregmanCenter,
-    initialized: Boolean) extends Serializable {
+      initialized: Boolean) extends Serializable {
     @inline def movedSince(r: Int): Boolean = round > r
   }
+
+  private[clusterer] def optimize[T](x: T) = { x }
 
   private[clusterer] val noCluster = -1
   private[clusterer] val unassigned = Assignment(Infinity, noCluster, -2)
@@ -52,8 +54,7 @@ object ColumnTrackingKMeans {
     def isUnassigned: Boolean = cluster == noCluster
   }
 
-  private[clusterer]
-  class ConvergenceDetector(sc: SparkContext) extends Serializable with Logging {
+  private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializable with Logging {
 
     private[this] val stats = new TrackingStats(sc)
 
@@ -106,8 +107,7 @@ object ColumnTrackingKMeans {
       logInfo(s"       replenished clusters   ${stats.replenishedClusters.value}")
     }
 
-    private[this]
-    def updateClusterStats(
+    private[this] def updateClusterStats(
       centers: IndexedSeq[CenterWithHistory],
       assignments: RDD[Assignment]): Unit = {
 
@@ -118,8 +118,7 @@ object ColumnTrackingKMeans {
       stats.emptyClusters.setValue(centers.size - clusterCounts.size)
     }
 
-    private[this]
-    def updatePointStats(
+    private[this] def updatePointStats(
       currentAssignments: RDD[Assignment],
       previousAssignments: RDD[Assignment]): Unit = {
 
@@ -142,8 +141,7 @@ object ColumnTrackingKMeans {
       }
     }
 
-    private[this]
-    def updateCenterStats(
+    private[this] def updateCenterStats(
       pointOps: BregmanPointOps,
       currentCenters: IndexedSeq[CenterWithHistory],
       previousCenters: IndexedSeq[CenterWithHistory]): Unit = {
@@ -171,9 +169,8 @@ object ColumnTrackingKMeans {
      * @param currentAssignments the assignments
      * @return a map from cluster index to number of points assigned to that cluster
      */
-    private[this]
-    def countByCluster(currentAssignments: RDD[Assignment]): Map[Int, Long] =
-      currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p)}.countByKey()
+    private[this] def countByCluster(currentAssignments: RDD[Assignment]): Map[Int, Long] =
+      currentAssignments.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
 
   }
 
@@ -273,11 +270,12 @@ object ColumnTrackingKMeans {
  *
  */
 class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
-  extends MultiKMeansClusterer with SparkHelper {
+    extends MultiKMeansClusterer with SparkHelper {
 
+  private[this] def distortion(data: RDD[Assignment]) = optimize {
 
-  private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
+  }
 
   /**
    * Identify the new cluster assignments for a sample of the points.
@@ -384,7 +382,6 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }
   }
 
-
   /**
    * Computes all centroids, but only returns centroids of changes clusters.
    * *
@@ -410,12 +407,12 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = IndexedSeq.tabulate(numCenters)(i=>pointOps.make(i))
+        val centroids = IndexedSeq.tabulate(numCenters)(i => pointOps.make(i))
         val changed = new Array[Boolean](numCenters)
         val indexBuffer = new collection.mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
 
-        @inline def update(index: Int, point: T) : Unit =
+        @inline def update(index: Int, point: T): Unit =
           if (index != -1 && !changed(index)) {
             changed(index) = true
             indexBuffer += index
@@ -461,7 +458,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = IndexedSeq.tabulate(numCenters)(i=>pointOps.make(i))
+        val centroids = IndexedSeq.tabulate(numCenters)(i => pointOps.make(i))
 
         while (z.hasNext && y.hasNext && x.hasNext) {
           val point = x.next()
@@ -527,6 +524,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param centers the cluster centers
    * @return  the new assignment for the point
    */
+  private[this]
   def reassignment(
     pointOps: BregmanPointOps,
     point: BregmanPoint,
@@ -593,8 +591,9 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     withCached("empty assignments", points.map(x => unassigned)) { empty =>
       centerArrays.map { initialCenters =>
-        val centers = initialCenters.zipWithIndex.map { case (c, i) =>
-          CenterWithHistory(i, -1, c, initialized = false)
+        val centers = initialCenters.zipWithIndex.map {
+          case (c, i) =>
+            CenterWithHistory(i, -1, c, initialized = false)
         }
         val (assignments, centersWithHistory) = lloyds(0, empty, centers)
         assignments.unpersist(blocking = false)

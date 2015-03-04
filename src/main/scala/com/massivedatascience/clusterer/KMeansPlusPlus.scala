@@ -68,8 +68,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     if (candidateCenters.length < totalRequested)
       logWarning(s"# of clusters requested $totalRequested exceeds number of points ${candidateCenters.length}")
 
-    val points = candidateCenters.zip(weights).map { case (c,w) =>
-      WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, w)
+    val points = candidateCenters.zip(weights).map {
+      case (c, w) =>
+        WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, w)
     }.map(ops.toPoint)
     val rand = new XORShiftRandom(seed)
 
@@ -121,21 +122,21 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @return  points with their distance to closest to cluster center updated
    */
 
-  private[this]
-  def updateDistances(
+  private[this] def updateDistances(
     points: IndexedSeq[BregmanPoint],
     distances: IndexedSeq[Double],
     centers: IndexedSeq[BregmanCenter]): IndexedSeq[Double] = {
 
-    val newDistances = points.zip(distances).par.map { case (p, d) =>
-      Math.min(ops.pointCost(centers, p), d)
+    val newDistances = points.zip(distances).par.map {
+      case (p, d) =>
+        Math.min(ops.pointCost(centers, p), d)
     }
     newDistances.toIndexedSeq
   }
 
-  private[this]
-  def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
-    weights.scanLeft(0.0) { case (agg, w) => agg + w }
+  private[this] def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
+      weights.scanLeft(0.0) { case (agg, w) => agg + w }
+
 
   /**
    * Pick a point at random, weighing the choices by the given cumulative weight vector.
@@ -144,8 +145,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
    * @param cumulative  the cumulative weights of the points
    * @return the index of the point chosen
    */
-  private[this]
-  def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Option[Int] = {
+  private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Option[Int] = {
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)
     if (index == -1) None else Some(index)
