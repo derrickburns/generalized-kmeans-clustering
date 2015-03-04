@@ -112,7 +112,7 @@ object ColumnTrackingKMeans {
       assignments: RDD[Assignment]): Unit = {
 
       val clusterCounts = countByCluster(assignments)
-      val biggest = clusterCounts.maxBy(_._2)
+      val biggest: (Int, Long) = clusterCounts.maxBy{case(_,size) => size}
       stats.largestCluster.setValue(biggest._2)
       stats.nonemptyClusters.setValue(clusterCounts.size)
       stats.emptyClusters.setValue(centers.size - clusterCounts.size)
