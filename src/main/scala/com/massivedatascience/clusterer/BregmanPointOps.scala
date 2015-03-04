@@ -110,7 +110,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    * @param f function that creates the result
    * @param initialDistance initial best distance
    * @param initialIndex  initial index of best cluster
-   * @tparam T
+   * @tparam T   output type of function provided
    * @return best index and best distance after function f application
    */
   def findClosestInfo[T](
