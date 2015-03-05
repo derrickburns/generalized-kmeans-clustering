@@ -40,6 +40,7 @@ pomExtra := {
         <timezone>-8</timezone>
       </developer>
     </developers>
+    <url>http://github.com/derrickburns/generalized-kmeans-clustering</url>
 }
 
 // release
