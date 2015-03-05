@@ -53,3 +53,5 @@ sparkPackageName := "derrickburns/generalized-kmeans-clustering"
 sparkVersion := "1.2.0" // the Spark Version your package depends on.
 
 sparkComponents += "mllib" // creates a dependency on spark-mllib.
+
+testOptions in Test += Tests.Argument("-Dlog4j.configuration=log4j.properties")
