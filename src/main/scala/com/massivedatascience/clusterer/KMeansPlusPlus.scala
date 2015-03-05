@@ -142,7 +142,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
     }
   }
 
-
   /**
    * Pick a point at random, weighing the choices by the given cumulative weight vector.
    *

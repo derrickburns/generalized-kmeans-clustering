@@ -26,9 +26,9 @@ import com.massivedatascience.linalg.EagerCentroid._
  */
 class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializable {
 
-  @inline def isEmpty: Boolean = raw eq empty
+  @inline def isEmpty: Boolean = raw == empty
 
-  @inline def nonEmpty: Boolean = raw ne empty
+  @inline def nonEmpty: Boolean = raw != empty
 
   def homogeneous: Vector = raw
 
