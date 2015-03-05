@@ -3,7 +3,7 @@ name := "massivedatascience-clusterer"
 
 organization := "com.massivedatascience"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.10.4"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
@@ -37,8 +37,6 @@ pomIncludeRepository := { _ => false }
 libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.2",
   "org.joda" % "joda-convert" % "1.6",
-  "org.apache.spark" %% "spark-core" % "1.2.0",
-  "org.apache.spark" %% "spark-mllib" % "1.2.0",
   // test dependencies
   "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
@@ -53,3 +51,9 @@ site.includeScaladoc()
 ghpages.settings
 
 git.remoteRepo := "git@github.com:derrickburns/generalized-kmeans-clustering.git"
+
+sparkPackageName := "com.massivedatascience/massivedatascience-clusterer"
+
+sparkVersion := "1.2.0" // the Spark Version your package depends on.
+
+sparkComponents += "mllib" // creates a dependency on spark-mllib.
