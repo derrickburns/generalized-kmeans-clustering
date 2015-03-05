@@ -13,9 +13,7 @@ scalacOptions in (Compile, compile) += "-Xfatal-warnings"
 
 javacOptions ++= Seq(
   "-source", "1.7",
-  "-target", "1.7",
-  "-bootclasspath", (new File(System.getenv("JAVA_HOME")) / "jre" / "lib" / "rt.jar").toString
-)
+  "-target", "1.7")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
