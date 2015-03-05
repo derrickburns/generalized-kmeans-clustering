@@ -57,46 +57,41 @@ Table of Contents
 
 The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11.x against Spark v1.2.0.
 
-To use the **latest snapshot** version, also add the Sonatype snapshots repository resolver.
-
 
 #### SBT
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.massivedatascience" %% "massivedatascience-clusterer" % "0.9.0-SNAPSHOT"
+  "derrickburns" %% "massivedatascience-clusterer" % "1.0.0"
 )
 
-resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+resolvers += "Bintray" at "http://dl.bintray.com/derrickburns/maven/"
 
 ```
 
 #### Maven
 
+
 ```xml
 <dependency>
-    <groupId>com.massivedatascience</groupId>
-    <artifactId>massivedatascience-clusterer_2.10</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+  <groupId>derrickburns</groupId>
+  <artifactId>massivedatascience-clusterer_2.10</artifactId>
+  <version>1.0.0</version>
 </dependency>
-
-or
 
 <dependency>
-    <groupId>com.massivedatascience</groupId>
-    <artifactId>massivedatascience-clusterer_2.11</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+  <groupId>derrickburns</groupId>
+  <artifactId>massivedatascience-clusterer_2.11</artifactId>
+  <version>1.0.0</version>
 </dependency>
+
 
 
 <repositories>
     <repository>
-        <id>oss-sonatype</id>
-        <name>oss-sonatype</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
+        <id>bintray</id>
+        <name>bintray</name>
+        <url>http://dl.bintray.com/derrickburns/maven/</url>
     </repository>
 </repositories>
 ```
@@ -216,9 +211,6 @@ object BregmanPointOps {
 
 }
 ```
-
-```object com.massivedatascience.cluseter.SquaredEuclideanPointOps``` is an instance of ```BregmanPointOps``` that supports the
-the ```SquaredEuclideanDistanceDivergence```.
 
 
 One may construct instances of ```BregmanPointOps``` using the companion object.

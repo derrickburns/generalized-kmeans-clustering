@@ -15,20 +15,11 @@ javacOptions ++= Seq(
   "-source", "1.7",
   "-target", "1.7")
 
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-
 publishMavenStyle := true
 
 publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
-
 
 libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.2",
@@ -55,3 +46,7 @@ sparkVersion := "1.2.0" // the Spark Version your package depends on.
 sparkComponents += "mllib" // creates a dependency on spark-mllib.
 
 testOptions in Test += Tests.Argument("-Dlog4j.configuration=log4j.properties")
+
+seq(bintraySettings:_*)
+
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))

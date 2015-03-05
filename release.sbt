@@ -1,19 +1,16 @@
 import sbtrelease.ReleasePlugin._
 import ReleaseKeys._
-import SonatypeKeys._
-import sbtrelease.ReleaseStateTransformations._
-import sbtrelease.Utilities._
-import com.typesafe.sbt.pgp.PgpKeys._
+import bintray.Keys._
 
-// Your project orgnization (package name)
-organization := "com.massivedatascience"
+name := "massivedatascience-clusterer"
 
-// Your profile name of the sonatype account. The default is the same with the organization
-profileName := "derrickburns"
+// Your project organization (package name)
+organization := "derrickburns"
 
-// Import default settings. This changes `publishTo` settings to use the Sonatype repository
-// and add several commands for publishing.
-sonatypeSettings
+bintrayPublishSettings
+
+bintrayOrganization in bintray := Some("derrickburns")
+
 
 // publishing
 publishMavenStyle := true
@@ -64,3 +61,5 @@ tagName <<= (name, version in ThisBuild) map { (n,v) => n + "-" + v }
 // sign artifacts
 
 publishArtifactsAction := PgpKeys.publishSigned.value
+
+
