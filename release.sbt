@@ -20,13 +20,6 @@ publishArtifact in Test := false
 pomIncludeRepository := { _ => false }
 
 pomExtra := {
-    <licenses>
-      <license>
-        <name>Apache License, Version 2.0</name>
-        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
     <scm>
       <connection>scm:git:git@github.com:derrickburns/generalized-kmeans-clustering.git</connection>
       <url>http://github.com/derrickburns/generalized-kmeans-clustering.git</url>
