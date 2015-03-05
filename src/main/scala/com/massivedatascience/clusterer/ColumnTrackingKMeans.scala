@@ -112,7 +112,7 @@ object ColumnTrackingKMeans {
       assignments: RDD[Assignment]): Unit = {
 
       val clusterCounts = countByCluster(assignments)
-      val biggest: (Int, Long) = clusterCounts.maxBy{case(_,size) => size}
+      val biggest: (Int, Long) = clusterCounts.maxBy { case (_, size) => size }
       stats.largestCluster.setValue(biggest._2)
       stats.nonemptyClusters.setValue(clusterCounts.size)
       stats.emptyClusters.setValue(centers.size - clusterCounts.size)
@@ -311,8 +311,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }
   }
 
-  private[this]
-  def backFilledCenters(
+  private[this] def backFilledCenters(
     points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
@@ -356,8 +355,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    * @param previousCenters  the cluster centers
    * @return the new cluster centers
    */
-  private[this]
-  def latestCenters(
+  private[this] def latestCenters(
     points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
@@ -582,10 +580,10 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       val newAssignments = sync(s"assignments round $round", updatedAssignments(points, pointOps,
         round, assignments, centers))
 
-      val newCenters = latestCenters(points, pointOps, round+1, centers, newAssignments,
+      val newCenters = latestCenters(points, pointOps, round + 1, centers, newAssignments,
         assignments)
 
-      val backFilled = backFilledCenters(points, pointOps, round+1, newAssignments, newCenters)
+      val backFilled = backFilledCenters(points, pointOps, round + 1, newAssignments, newCenters)
 
       detector.update(pointOps, (round + 1) / 2, backFilled, centers, newAssignments, assignments)
 

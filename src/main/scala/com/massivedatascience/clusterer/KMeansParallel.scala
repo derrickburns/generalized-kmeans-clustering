@@ -19,9 +19,9 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{SparkHelper, XORShiftRandom}
+import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec
@@ -41,7 +41,7 @@ import scala.collection.mutable.ArrayBuffer
  * use this code to find additional cluster centers at any time.
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
-with SparkHelper {
+    with SparkHelper {
 
   /**
    *
@@ -206,9 +206,9 @@ with SparkHelper {
    * @return RDD of vectors
    */
   private[this] def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
-    rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length)}) {
+    rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length) }) {
       case (arrayRdd, (doubleRdd, i)) =>
-        arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array}
+        arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
 
     }.map(Vectors.dense)
   }
@@ -314,7 +314,7 @@ with SparkHelper {
       .getOrElse(costsFromCenters(pointOps, data, runs, centers))
     val costs = sync("initial costs", startingCosts)
     val finalCosts = addCenters(0, costs)
-    finalCosts.unpersist(blocking=false)
+    finalCosts.unpersist(blocking = false)
     addedCenters.map(_.toIndexedSeq)
   }
 }

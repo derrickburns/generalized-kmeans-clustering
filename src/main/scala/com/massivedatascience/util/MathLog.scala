@@ -49,7 +49,7 @@ case object DiscreteLog extends MathLog {
 
   private val logTable = new Array[Double](cacheSize)
 
-   def logg(d: Double): Double = {
+  def logg(d: Double): Double = {
     if (d == 0.0 || d == 1.0) {
       0.0
     } else {
