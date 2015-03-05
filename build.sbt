@@ -11,8 +11,6 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
 scalacOptions in (Compile, compile) += "-Xfatal-warnings"
 
-ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-
 javacOptions ++= Seq(
   "-source", "1.7",
   "-target", "1.7",
@@ -52,7 +50,7 @@ ghpages.settings
 
 git.remoteRepo := "git@github.com:derrickburns/generalized-kmeans-clustering.git"
 
-sparkPackageName := "com.massivedatascience/massivedatascience-clusterer"
+sparkPackageName := "derrickburns/generalized-kmeans-clustering"
 
 sparkVersion := "1.2.0" // the Spark Version your package depends on.
 
