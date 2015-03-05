@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/derrickburns/generalized-kmeans-clustering.svg?branch=master)](https://travis-ci.org/derrickburns/generalized-kmeans-clustering)
 [![Codacy Badge](https://www.codacy.com/project/badge/4337a3e46c49481dbb22037de7dd7eac)](https://www.codacy.com/public/derrickrburns/generalized-kmeans-clustering)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/derrickburns/generalized-kmeans-clustering?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Generalized K-Means Clustering
 =============================
