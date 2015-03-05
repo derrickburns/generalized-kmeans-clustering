@@ -62,7 +62,7 @@ The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11
 
 ```scala
 libraryDependencies ++= Seq(
-  "derrickburns" %% "massivedatascience-clusterer" % "1.0.0"
+  "derrickburns" %% "massivedatascience-clusterer" % "1.0.1"
 )
 
 resolvers += "Bintray" at "http://dl.bintray.com/derrickburns/maven/"
@@ -76,13 +76,13 @@ resolvers += "Bintray" at "http://dl.bintray.com/derrickburns/maven/"
 <dependency>
   <groupId>derrickburns</groupId>
   <artifactId>massivedatascience-clusterer_2.10</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 
 <dependency>
   <groupId>derrickburns</groupId>
   <artifactId>massivedatascience-clusterer_2.11</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 
 
