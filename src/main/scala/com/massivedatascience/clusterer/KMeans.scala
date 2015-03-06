@@ -42,7 +42,7 @@ object KMeans extends SparkHelper with Logging {
    * @param maxIterations maximum number of iterations of Lloyd'a algorithm to execute
    */
   case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int) {
-    override def toString : String =
+    override def toString: String =
       s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
 
@@ -245,10 +245,10 @@ object KMeans extends SparkHelper with Logging {
 
     val remaining = dataSets.zip(pointOps)
     remaining match {
-      case Seq((initialData,ops)) =>
+      case Seq((initialData, ops)) =>
         simpleTrain(runConfig, initialData, ops, initializer, clusterer)
 
-      case Seq((initialData,ops), y@_*) =>
+      case Seq((initialData, ops), y @ _*) =>
         y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) {
           case (model, (data, op)) =>
             withNamed("assignments", model.predictBregman(data)) { assignments =>
@@ -274,7 +274,7 @@ object KMeans extends SparkHelper with Logging {
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[BregmanPoint]] = {
     val subs = (0 until depth).foldLeft(List(input)) {
-      case (data@List(first,_), e) => first.map(embedding.embed) :: data
+      case (data @ List(first, _), e) => first.map(embedding.embed) :: data
     }
     subs.map(_.map(pointOps.toPoint))
   }
