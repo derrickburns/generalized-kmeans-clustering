@@ -166,6 +166,10 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
       clustererName = MultiKMeansClusterer.CHANGE_TRACKING)
 
+    KMeans.train(data, k = 50, maxIterations = 10, runs = 1,
+      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
+      clustererName = MultiKMeansClusterer.RESEED)
+
     KMeans.timeSeriesTrain(
       new RunConfig(20, 1, 0, 10),
       data.map(WeightedVector.apply),

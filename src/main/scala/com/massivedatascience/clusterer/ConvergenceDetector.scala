@@ -56,7 +56,7 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
     logInfo(s"       unassigned points      ${stats.unassignedPoints.value}")
     logInfo(s"       non-empty clusters     ${stats.nonemptyClusters.value}")
     logInfo(s"       largest cluster size   ${stats.largestCluster.value}")
-    logInfo(s"       replenished clusters   ${stats.replenishedClusters.value}")
+    logInfo(s"       re-seeded clusters     ${stats.replenishedClusters.value}")
   }
 
   private[this] def updateClusterStats(

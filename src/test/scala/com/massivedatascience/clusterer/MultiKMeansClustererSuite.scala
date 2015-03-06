@@ -27,6 +27,7 @@ class MultiKMeansClustererSuite extends FunSuite with LocalSparkContext {
     MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING)
     MultiKMeansClusterer(MultiKMeansClusterer.MINI_BATCH_10)
     MultiKMeansClusterer(MultiKMeansClusterer.CHANGE_TRACKING)
+    MultiKMeansClusterer(MultiKMeansClusterer.RESEED)
 
   }
 

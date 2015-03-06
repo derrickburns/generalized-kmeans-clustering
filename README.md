@@ -311,6 +311,9 @@ The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://w
 This implementation should be used then the number of points is much larger than the dimension of the data and the
 number of clusters desired.
 
+The ```RESEED``` algorithm implements with fill empty clusters with newly seeded cluster centers
+in an effort to reach the target number of desired clusters.
+
 Objects implementing these algorithms may be constructed using the ```apply``` method of the
 companion object ```MultiKMeansClusterer```.
 
@@ -319,6 +322,7 @@ companion object ```MultiKMeansClusterer```.
 |----------------------------------|-----------------------------------|
 | ```COLUMN_TRACKING```    | high performance implementation that performs less work on later rounds  |
 | ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
+| ```RESEED```             | a clusterer that re-seeds empty clusters |
 
 
 ### Constructing K-Means Models via Lloyd's Algorithm

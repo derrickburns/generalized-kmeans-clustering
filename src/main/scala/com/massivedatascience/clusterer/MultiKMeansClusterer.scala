@@ -45,6 +45,7 @@ object MultiKMeansClusterer {
   val COLUMN_TRACKING = "COLUMN_TRACKING"
   val MINI_BATCH_10 = "MINI_BATCH_10"
   val CHANGE_TRACKING = "CHANGE_TRACKING"
+  val RESEED = "RESEED"
 
   case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
@@ -53,6 +54,7 @@ object MultiKMeansClusterer {
       case COLUMN_TRACKING => new ColumnTrackingKMeans
       case CHANGE_TRACKING => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
       case MINI_BATCH_10 => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
+      case RESEED => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(maxRoundsToBackfill = 5))
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
   }
