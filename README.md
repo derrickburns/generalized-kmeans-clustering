@@ -302,10 +302,6 @@ object MultiKMeansClusterer {
 }
 ```
 
-The ```SIMPLE``` algorithm implements Lloyd's algorithm.
-directly on Spark. If you are learning Spark and understand Lloyd's algorithm, look at this simple
-implementation.
-
 The ```COLUMN_TRACKING``` algorithm tracks the assignments of points to clusters and the distance of
 points to their assigned cluster.  In later iterations of Lloyd's algorithm, this information can
 be used to reduce the number of distance calculations needed to accurately reassign points.  This
@@ -321,8 +317,7 @@ companion object ```MultiKMeansClusterer```.
 
 | Name            | Algorithm                         |
 |----------------------------------|-----------------------------------|
-| ```SIMPLE```             | standard clusterer that recomputes all centers and point assignments on each round |
-| ```COLUMN_TRACKING```    | high performance variant of SIMPLE that performs less work on later rounds  |
+| ```COLUMN_TRACKING```    | high performance implementation that performs less work on later rounds  |
 | ```MINI_BATCH_10```      | a mini-batch clusterer that samples 10% of the data each round to update centroids |
 
 
