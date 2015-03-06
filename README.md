@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/derrickburns/generalized-kmeans-clustering.svg?branch=master)](https://travis-ci.org/derrickburns/generalized-kmeans-clustering)
 [![Codacy Badge](https://www.codacy.com/project/badge/4337a3e46c49481dbb22037de7dd7eac)](https://www.codacy.com/public/derrickrburns/generalized-kmeans-clustering)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/derrickburns/generalized-kmeans-clustering?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Download](https://api.bintray.com/packages/derrickburns/maven/massivedatascience-clusterer/images/download.svg) ](https://bintray.com/derrickburns/maven/massivedatascience-clusterer/_latestVersion)
 [![Coverage Status](https://coveralls.io/repos/derrickburns/generalized-kmeans-clustering/badge.svg?branch=master)](https://coveralls.io/r/derrickburns/generalized-kmeans-clustering?branch=master)
 
@@ -25,6 +24,10 @@ implement it using the package and send a pull request along with the paper anal
 
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
+
+
+Interested in the project?  Post a message stating your interests here:
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/derrickburns/generalized-kmeans-clustering?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 Table of Contents
