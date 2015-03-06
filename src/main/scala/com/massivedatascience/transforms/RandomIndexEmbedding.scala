@@ -48,8 +48,8 @@ class RandomIndexEmbedding(
   private[this] val on = (Math.ceil(epsilon * outputDim).toInt & -1) * 2
   private[this] val logOutputDim = Math.log(outputDim).toInt
   private[this] val hashes = computeHashes(seed)
-  private[this] val positive = hashes.take(on/2)
-  private[this] val negative = hashes.drop(on/2)
+  private[this] val positive = hashes.take(on / 2)
+  private[this] val negative = hashes.drop(on / 2)
 
   private[this] def computeHashes(seed: Long): Array[MultiplicativeHash] = {
     val rand = new XORShiftRandom(seed)
