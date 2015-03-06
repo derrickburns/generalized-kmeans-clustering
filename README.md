@@ -828,27 +828,3 @@ object KMeansModel {
 }
 
 ```
-
-### Other Differences with Spark MLLIB 1.2 K-Means Clusterer
-
-There are several other differences with this clusterer and the Spark K-Means clusterer.
-
-#### Variable number of clusters in parallel runs
-
-The Spark MLLIB 1.2 cluster can perform multiple clusterings in parallel, each targetting the
-same number of desired clusters.  In our implementation, the initial state of cluster
-centers (i.e. the initial ```KMeansModel```s used) determine the target number of clusters.
-Consequently, one can cluster for different values of number of clusters simultaneously.
-
-#### Sparse Data
-
-This clusterer works on dense and sparse data.  However, for best performance, we recommend that
-you convert your sparse data into dense data before clustering.
-In high dimensions (say > 1024), it is recommended that you embed your sparse data into a lower
-dimensional dense space using random indexing.
-
-#### Cluster Backfilling
-The standard implementation of Lloyd's algorithm suffers from the problem that cluster centers
-can vanish and not be replaced.  Our ```COLUMN_TRACKING``` implementation allows one to backfill
-empty clusters using the K Means || algorithm.
-
