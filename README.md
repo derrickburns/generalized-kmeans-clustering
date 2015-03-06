@@ -470,8 +470,7 @@ object KMeans {
 
 The ```KMeans.trainWeighted``` method ultimately makes various calls to the underlying
 ```KMeans.simpleTrain``` method, which clusters the provided ```BregmanPoint```s using
-the provided ```BregmanPointOps``` and the provided ```KMeansSelector``` with the provided
-```MultiKMeansClusterer```.
+the provided ```BregmanPointOps``` and the provided ```KMeansSelector``` with the provided ```MultiKMeansClusterer```.
 
 
 ```scala
