@@ -42,7 +42,8 @@ object KMeans extends SparkHelper with Logging {
    * @param maxIterations maximum number of iterations of Lloyd'a algorithm to execute
    */
   case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int) {
-    override def toString = s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
+    override def toString : String =
+      s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
 
   /**
@@ -234,8 +235,8 @@ object KMeans extends SparkHelper with Logging {
    */
   def iterativelyTrain(
     runConfig: RunConfig,
-    pointOps: Seq[BregmanPointOps],
-    dataSets: Seq[RDD[BregmanPoint]],
+    pointOps: List[BregmanPointOps],
+    dataSets: List[RDD[BregmanPoint]],
     initializer: KMeansSelector,
     clusterer: MultiKMeansClusterer): KMeansModel = {
 
@@ -243,16 +244,17 @@ object KMeans extends SparkHelper with Logging {
     require(pointOps.length == dataSets.length)
 
     val remaining = dataSets.zip(pointOps)
-    val first = simpleTrain(runConfig, remaining.head._1, remaining.head._2, initializer, clusterer)
-    if (remaining.tail.isEmpty) {
-      first
-    } else {
-      remaining.tail.foldLeft(first) {
-        case (model, (data, op)) =>
-          withNamed("assignments", model.predictBregman(data)) { assignments =>
-            simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
-          }
-      }
+    remaining match {
+      case Seq((initialData,ops)) =>
+        simpleTrain(runConfig, initialData, ops, initializer, clusterer)
+
+      case Seq((initialData,ops), y@_*) =>
+        y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) {
+          case (model, (data, op)) =>
+            withNamed("assignments", model.predictBregman(data)) { assignments =>
+              simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
+            }
+        }
     }
   }
 
