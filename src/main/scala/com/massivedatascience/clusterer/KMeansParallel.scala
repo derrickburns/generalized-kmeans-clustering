@@ -20,6 +20,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import org.apache.spark.Logging
 import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
@@ -41,11 +42,7 @@ import scala.collection.mutable.ArrayBuffer
  * use this code to find additional cluster centers at any time.
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
-    with SparkHelper {
-
-  class NotSerializable {}
-
-  val x = new NotSerializable
+    with SparkHelper with Logging {
 
   /**
    *
@@ -105,7 +102,6 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
 
     Seq.tabulate(centerArrays.length) { r =>
       val myCenters = centerArrays(r)
-      logInfo(s"run $r has ${myCenters.length} centers")
       val weights = IndexedSeq.tabulate(myCenters.length)(i => weightMap.getOrElse((r, i), 0.0))
       val kx = if (numClusters > myCenters.length) myCenters.length else numClusters
       kMeansPlusPlus.goodCenters(seed, myCenters, weights, kx, 1,
@@ -233,7 +229,6 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     k: Seq[Int],
     seed: Long,
     costs: RDD[Vector]): Array[(Int, BregmanCenter)] = {
-    logInfo(s"constructing updated costs per point")
     val sumCosts = costs
       .aggregate(Vectors.zeros(runs))(
         (s, v) => axpy(1.0, v, s),
@@ -299,7 +294,6 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
 
     @tailrec
     def addCenters(step: Int, costs: RDD[Vector]): RDD[Vector] = {
-      logInfo(s"starting step $step")
       val stepSeed = seed ^ (step << 16)
       for ((index, center) <- select(pointOps, data, runs, requested.map(_ * 2), stepSeed, costs)) {
         newCenters(index) += center

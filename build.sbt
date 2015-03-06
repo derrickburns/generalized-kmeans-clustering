@@ -49,7 +49,7 @@ sparkComponents += "mllib" // creates a dependency on spark-mllib.
 
 testOptions in Test += Tests.Argument("-Dlog4j.configuration=log4j.properties")
 
-seq(bintraySettings:_*)
+bintraySettings
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 

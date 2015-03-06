@@ -44,6 +44,10 @@ class BregmanTestSuite extends FunSuite {
 
     assert(z ~= gradOutput absTol 1.0e-8)
 
+    val ops = BregmanPointOps(div)
+
+    val opsSmoothed = BregmanPointOps(div, 1.0)
+
   }
 
   test("DenseSquaredEuclideanPointOps") {

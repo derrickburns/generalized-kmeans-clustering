@@ -22,13 +22,14 @@ import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.{ Embedding, HaarEmbedding, IdentityEmbedding }
 import com.massivedatascience.transforms.Embedding._
 import com.massivedatascience.util.SparkHelper
+import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 /**
  * A helper object that creates K-Means Models using the underlying classes in this package.
  */
-object KMeans extends SparkHelper {
+object KMeans extends SparkHelper with Logging {
 
   private val defaultMaxIterations = 20
   private val defaultNumRuns = 1
@@ -44,7 +45,9 @@ object KMeans extends SparkHelper {
    * @param seed random number seed
    * @param maxIterations maximum number of iterations of Lloyd'a algorithm to execute
    */
-  case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int)
+  case class RunConfig(numClusters: Int, runs: Int, seed: Int, maxIterations: Int) {
+    override def toString = s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
+  }
 
   /**
    *
@@ -241,10 +244,14 @@ object KMeans extends SparkHelper {
     clusterer: MultiKMeansClusterer): KMeansModel = {
 
     require(dataSets.nonEmpty)
+    require(pointOps.length == dataSets.length)
 
-    withCached("original", dataSets.head) { original =>
-      val remaining = dataSets.zip(pointOps).tail
-      remaining.foldLeft(simpleTrain(runConfig, original, pointOps.head, initializer, clusterer)) {
+    val remaining = dataSets.zip(pointOps)
+    val first = simpleTrain(runConfig, remaining.head._1, remaining.head._2, initializer, clusterer)
+    if (remaining.tail.isEmpty) {
+      first
+    } else {
+      remaining.tail.foldLeft(first) {
         case (model, (data, op)) =>
           withNamed("assignments", model.predictBregman(data)) { assignments =>
             simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)

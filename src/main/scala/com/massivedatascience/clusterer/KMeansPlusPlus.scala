@@ -21,6 +21,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import org.apache.spark.Logging
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -31,7 +32,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
@@ -104,13 +105,10 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with SparkHelper
       centers ++= candidateCenters.take(numPreselected)
     }
 
-    logInfo(s"starting kMeansPlusPlus initialization on ${candidateCenters.length} points")
     val maxDistances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
     val initialDistances = updateDistances(points, maxDistances, centers)
     moreCenters(initialDistances)
-    sideEffect(centers.take(totalRequested)) { result =>
-      logInfo(s"completed kMeansPlusPlus with ${result.length} centers of $totalRequested requested")
-    }
+    centers.take(totalRequested)
   }
 
   /**

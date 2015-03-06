@@ -24,6 +24,7 @@ import com.massivedatascience.divergence.BregmanDivergence
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import com.massivedatascience.transforms.Embedding._
+import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
@@ -174,6 +175,31 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       Embedding(HAAR_EMBEDDING))
 
     KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
+  }
+
+  test("iteratively train") {
+    val seed = 0
+    val r = new Random(seed)
+
+    val data = sc.parallelize(Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    /*
+
+    runConfig: RunConfig,
+    pointOps: Seq[BregmanPointOps],
+    dataSets: Seq[RDD[BregmanPoint]],
+    initializer: KMeansSelector,
+    clusterer: MultiKMeansClusterer)
+     */
+
+    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val cached = data.map(WeightedVector.apply).map(ops.toPoint).cache()
+    KMeans.iterativelyTrain(
+      new RunConfig(20, 1, 0, 10),
+      Seq(ops),
+      Seq(cached),
+      KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
+      MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING))
   }
 
   test("single cluster") {

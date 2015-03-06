@@ -24,7 +24,7 @@ import org.apache.spark.{ Logging, SparkContext }
 
 import scala.reflect.ClassTag
 
-trait SparkHelper extends Logging {
+trait SparkHelper {
 
   /**
    * Names and RDD, caches data in memory, and ensures that it is in computed synchronously
