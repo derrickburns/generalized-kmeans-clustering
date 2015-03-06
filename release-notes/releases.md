@@ -2,22 +2,28 @@
 
 ## 1.1.0
 
+The big new feature is the addition of the ```RE-SEED``` implementation of ```MultiKMeansClusterer```
+that re-seeds clusters that become empty during rounds of Lloyd's algorithm.
+
+With the addition of numerous unit tests, we fixed a few newly discovered bugs.
+
+We also added support for code coverage evaluation.
+
 - Added new ```RE-SEED``` MultiKMeansClusterer implementation
-- Added Dense Embedding to Embedding.apply
+- Added ```DenseEmbedding```
 - Deprecated old ```SIMPLE``` and ```TRACKING``` MultiKMeansClusterer implementations
 - Fixed bug in ```KMeans.iterativelyTrain```
-- Fixed bug in Dense Embedding
-- Fixed bug in GeneralizedI Divergence
-- Moved ConvergenceDetector class from ColumnTrackingKMeans object
+- Fixed bug in  ```GeneralizedIDivergence```
+- Moved ```ConvergenceDetector``` class from ```ColumnTrackingKMeans``` object
 - Changed ```RunConfig.toString``` to show names of parameters
 - Purged extra log messages
 - In-lined vector iterators
-- Eliminated Logging trait from SparkHelper
+- Eliminated ```Logging``` trait from ```SparkHelper```
 - Modified log4j test configuration to increase log level on Spark logger output
-- Added support for code coverage evaluation with Coveralls and sbt
+- Added support for code coverage evaluation with Coveralls and ```sbt```
 - Added Coveralls Badge to README
 - Updated README
-- Added organizationName to build.sbt
+- Added ```organizationName``` to build.sbt
 - Added sample logger output
 - Added numerous unit tests
 
