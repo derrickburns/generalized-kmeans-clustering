@@ -51,6 +51,8 @@ object MultiKMeansClusterer {
 
   def apply(clustererName: String): MultiKMeansClusterer = {
     clustererName match {
+      case SIMPLE => new ColumnTrackingKMeans
+      case TRACKING => new ColumnTrackingKMeans
       case COLUMN_TRACKING => new ColumnTrackingKMeans
       case CHANGE_TRACKING => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
       case MINI_BATCH_10 => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
