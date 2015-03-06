@@ -137,6 +137,26 @@ class BregmanTestSuite extends FunSuite {
     assert(distance12 ~= kl1 absTol 1.0e-8)
   }
 
+  test("logistic loss") {
+    val ops = BregmanPointOps(BregmanPointOps.LOGISTIC_LOSS)
+
+    val v1 = WeightedVector(Vectors.dense(4.0), 8.0)
+    val v2 = WeightedVector(Vectors.dense(2.0), 16.0)
+
+    val p1 = ops.toPoint(v1)
+    val p2 = ops.toPoint(v2)
+
+    val c1 = ops.toCenter(p1)
+    val c2 = ops.toCenter(p2)
+
+    val distance11 = ops.distance(p1, c1)
+    assert(distance11 ~= 0.0 absTol 1.0e-8)
+
+    val distance12 = ops.distance(p1, c2)
+
+    assert(distance12 ~= 0.41333928 absTol 1.0e-8)
+  }
+
   test("gradient") {
 
     val x = gradient(2.0)(x => x)
