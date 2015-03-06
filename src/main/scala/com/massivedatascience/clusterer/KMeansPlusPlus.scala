@@ -20,7 +20,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
-import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.Logging
 
 import scala.annotation.tailrec
@@ -59,56 +59,52 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     numPreselected: Int): IndexedSeq[BregmanCenter] = {
 
     require(candidateCenters.length > 0)
-    require(totalRequested > 0)
-    require(numPreselected >= 0)
-    require(numPreselected <= totalRequested)
-    require(totalRequested <= candidateCenters.length)
-    require(numPreselected <= totalRequested)
+    require(totalRequested > 0 && totalRequested <= candidateCenters.length)
+    require(numPreselected >= 0 && numPreselected <= totalRequested)
     require(perRound <= totalRequested)
 
     if (candidateCenters.length < totalRequested)
-      logWarning(s"# of clusters requested $totalRequested exceeds number of points ${candidateCenters.length}")
+      logWarning(s"# requested $totalRequested exceeds number of points ${candidateCenters.length}")
 
-    val points = candidateCenters.zip(weights).map {
-      case (c, w) =>
-        WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, w)
-    }.map(ops.toPoint)
+    val points = reWeightedPoints(candidateCenters, weights)
     val rand = new XORShiftRandom(seed)
-
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
     @tailrec
     def moreCenters(distances: IndexedSeq[Double]): Unit = {
       val needed = totalRequested - centers.length
       if (needed > 0) {
-        val (newDistances, additionalCenters) = update(distances)
+        val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d })
+        val selected = (0 until perRound).par.flatMap { _ =>
+          pickWeighted(rand, cumulative).iterator
+        }
+        val additionalCenters = selected.map(candidateCenters(_)).toIndexedSeq
+        val newDistances = updateDistances(points, distances, additionalCenters)
         centers ++= additionalCenters.take(needed)
-        if (additionalCenters.nonEmpty)
-          moreCenters(newDistances)
+        if (additionalCenters.nonEmpty) moreCenters(newDistances)
       }
     }
 
-    def update(distances: IndexedSeq[Double]): (IndexedSeq[Double], IndexedSeq[BregmanCenter]) = {
-      val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d })
-      val selected = (0 until perRound).par.flatMap { _ =>
-        pickWeighted(rand, cumulative).iterator
-      }
-      val newCenters = selected.map(candidateCenters(_)).toIndexedSeq
-      val newDistances = updateDistances(points, distances, newCenters)
-      (newDistances, newCenters)
-    }
-
-    if (numPreselected == 0) {
-      val newCenter = pickWeighted(rand, cumulativeWeights(weights)).map(candidateCenters(_))
-      centers += newCenter.get
+    centers ++= (if (numPreselected == 0) {
+      pickWeighted(rand, cumulativeWeights(weights)).map(candidateCenters(_))
     } else {
-      centers ++= candidateCenters.take(numPreselected)
-    }
+      candidateCenters.take(numPreselected)
+    })
 
     val maxDistances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
     val initialDistances = updateDistances(points, maxDistances, centers)
     moreCenters(initialDistances)
     centers.take(totalRequested)
+  }
+
+  private[this] def reWeightedPoints(
+    candidateCenters: IndexedSeq[BregmanCenter],
+    weights: IndexedSeq[Double]): IndexedSeq[KMeansPlusPlus.this.ops.P] = {
+
+    candidateCenters.zip(weights).map {
+      case (c, w) =>
+        WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, w)
+    }.map(ops.toPoint)
   }
 
   /**
@@ -147,9 +143,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
    * @param cumulative  the cumulative weights of the points
    * @return the index of the point chosen
    */
-  private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Option[Int] = {
+  private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)
-    if (index == -1) None else Some(index)
+    if (index == -1) Seq() else Seq(index)
   }
 }

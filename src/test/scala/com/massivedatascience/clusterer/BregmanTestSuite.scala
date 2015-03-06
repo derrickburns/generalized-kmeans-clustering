@@ -5,12 +5,11 @@ import com.massivedatascience.linalg.WeightedVector
 import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors
+import com.massivedatascience.clusterer.TestingUtils._
 
 import scala.annotation.tailrec
 
 class BregmanTestSuite extends FunSuite {
-
-  import com.massivedatascience.clusterer.TestingUtils._
 
   test("custom Bregman divergence") {
     def f(d: Vector): Double = {
