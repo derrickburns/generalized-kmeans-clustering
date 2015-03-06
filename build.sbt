@@ -53,3 +53,9 @@ seq(bintraySettings:_*)
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
+import com.typesafe.sbt.SbtGit._
+
+versionWithGit
+
+// Optionally:
+git.baseVersion := "1.0"
