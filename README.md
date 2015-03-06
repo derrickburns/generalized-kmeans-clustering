@@ -122,7 +122,7 @@ while (optionally) reassigned points are removed from their prior clusters.
 While one can assign a point to a cluster using any distance function, Lloyd's algorithm only
 converges for a certain set of distance functions called [Bregman divergences](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf). Bregman divergences
 must define two methods, ```convex```  to evaluate a function on a point and ```gradientOfConvex``` to evaluate the
-gradient of the function on a points.
+gradient of the function on a point.
 
 ```scala
 package com.massivedatascience.divergence
