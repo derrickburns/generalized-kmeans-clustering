@@ -9,9 +9,9 @@ With the addition of numerous unit tests, we fixed a few newly discovered bugs.
 
 We also added support for code coverage evaluation.
 
-- Added new ```RE-SEED``` MultiKMeansClusterer implementation
+- Added new ```RE-SEED MultiKMeansClusterer``` implementation
 - Added ```DenseEmbedding```
-- Deprecated old ```SIMPLE``` and ```TRACKING``` MultiKMeansClusterer implementations
+- Deprecated old ```SIMPLE``` and ```TRACKING MultiKMeansClusterer``` implementations
 - Fixed bug in ```KMeans.iterativelyTrain```
 - Fixed bug in  ```GeneralizedIDivergence```
 - Moved ```ConvergenceDetector``` class from ```ColumnTrackingKMeans``` object
