@@ -35,4 +35,7 @@ We also added support for code coverage evaluation.
 
 - Fixed broken pom.xml. License section was duplicated.
 
-## 1.0.0 Initial Release
+## 1.0.0
+
+- Initial release of K-Means clusterer that provides general distance functions and
+other important features that the Spark 1.2.0 clusterer does not.
