@@ -174,7 +174,7 @@ class BregmanTestSuite extends FunSuite {
 
     val distance12 = ops.distance(p1, c2)
 
-    println( distance12 )
+    println(distance12)
 
     assert(distance12 ~= 29.84111691 absTol 1.0e-8)
   }

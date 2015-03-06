@@ -20,11 +20,9 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.KMeans.RunConfig
-import com.massivedatascience.divergence.BregmanDivergence
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import com.massivedatascience.transforms.Embedding._
-import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
