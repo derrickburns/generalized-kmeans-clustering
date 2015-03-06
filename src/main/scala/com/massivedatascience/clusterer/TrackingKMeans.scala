@@ -71,15 +71,23 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
   }
 }
 
-/**
- * A KMeans implementation that tracks which clusters moved and which points are assigned to which
- * clusters and the distance to the closest cluster.
- *
- * @param updateRate  percentage of points that are updated on each round
- */
+object TrackingKMeans {
 
-class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
+  /**
+   *
+   * @param dist the distance to the closest cluster
+   * @param index the index of the closest cluster, or -1 if no cluster is assigned
+   * @param round the round that this assignment was made
+   */
+  case class Assignment(dist: Double, index: Int, round: Int) {
+    def isAssigned = index != noCluster
 
+    def isUnassigned = index == noCluster
+  }
+
+  type FatCenters = Array[FatCenter]
+  val noCluster = -1
+  val unassigned = Assignment(Infinity, noCluster, -2)
   /**
    *
    * @param center  the centroid of the cluster
@@ -116,28 +124,33 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
     def round: Int = current.round
   }
+}
 
-  type FatCenters = Array[FatCenter]
-  val noCluster = -1
-  val unassigned = Assignment(Infinity, noCluster, -2)
+/**
+ * A KMeans implementation that tracks which clusters moved and which points are assigned to which
+ * clusters and the distance to the closest cluster.
+ *
+ * @param updateRate  percentage of points that are updated on each round
+ */
 
-  /**
-   *
-   * @param dist the distance to the closest cluster
-   * @param index the index of the closest cluster, or -1 if no cluster is assigned
-   * @param round the round that this assignment was made
-   */
-  case class Assignment(dist: Double, index: Int, round: Int) {
-    def isAssigned = index != noCluster
+@deprecated("use ColumnTrackingKMeans", "1.0.2")
+class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
-    def isUnassigned = index == noCluster
-  }
+  import TrackingKMeans._
+
+  class NotSerializable {}
+
+  val x = new NotSerializable
 
   def cluster(
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
     centerArrays: Seq[IndexedSeq[BregmanCenter]]) = {
+
+    class NotSerializable {}
+
+    val x = new NotSerializable
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -182,8 +195,10 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return the fat points (points with two most recent cluster assignments)
      */
     def initialFatPoints(data: RDD[BregmanPoint], fatCenters: FatCenters) = {
-      val result = data.map(FatPoint(_, unassigned, unassigned)).map {
-        fp => fp.copy(current = closestOf(0, fatCenters, fp, (_, _) => true))
+      val un = unassigned
+      val ops = pointOps
+      val result = data.map(FatPoint(_, un, un)).map {
+        fp => fp.copy(current = closestOf(ops, 0, fatCenters, fp, (_, _) => true))
       }
       result.persist()
       data.unpersist()
@@ -241,12 +256,13 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       fatPoints: RDD[FatPoint],
       rate: Double): RDD[FatPoint] = {
 
+      val ops = pointOps
       val bcCenters = fatPoints.sparkContext.broadcast(fatCenters)
       val result = fatPoints.mapPartitionsWithIndex { (index, points) =>
         val rand = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
         points.map { p =>
-          p.assign(if (rand.nextDouble() > rate) unassigned else assignment(round, stats, centers, p))
+          p.assign(if (rand.nextDouble() > rate) unassigned else assignment(ops, round, stats, centers, p))
         }
       }
 
@@ -364,12 +380,13 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return the assignment
      */
     def closestOf(
+      pointOps: BregmanPointOps,
       round: Int,
       centers: FatCenters,
       p: FatPoint, f: (FatCenter, FatPoint) => Boolean) = {
 
-      var bestDist = Infinity
-      var bestIndex = noCluster
+      var bestDist = Double.MaxValue
+      var bestIndex = -1
       var i = 0
       val end = centers.length
       while (i < end) {
@@ -383,7 +400,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
         }
         i = i + 1
       }
-      if (bestIndex != noCluster) Assignment(bestDist, bestIndex, round) else unassigned
+      if (bestIndex != -1) Assignment(bestDist, bestIndex, round) else Assignment(Double.MaxValue, -1, -2)
     }
 
     /**
@@ -395,12 +412,13 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return  the assignment
      */
     def assignment(
+      ops: BregmanPointOps,
       round: Int,
       stats: DetailedTrackingStats,
       centers: FatCenters,
       p: FatPoint): Assignment = {
 
-      val closestDirty = closestOf(round, centers, p, (x, y) => x.movedSince(y.round))
+      val closestDirty = closestOf(ops, round, centers, p, (x, y) => x.movedSince(y.round))
       val assignment = if (p.isAssigned) {
         if (closestDirty.dist < p.distance) {
           if (closestDirty.index == p.cluster) {
@@ -414,10 +432,10 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
           stats.stationary.add(1)
           p.current
         } else {
-          best(round, stats, centers, p, closestDirty)
+          best(ops, round, stats, centers, p, closestDirty)
         }
       } else {
-        best(round, stats, centers, p, closestDirty)
+        best(ops, round, stats, centers, p, closestDirty)
       }
       if (assignment.isUnassigned) {
         log.warn("cannot find cluster to assign point {}", p)
@@ -426,13 +444,14 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     }
 
     def best(
+      ops: BregmanPointOps,
       round: Int,
       stats: DetailedTrackingStats,
       centers: FatCenters,
       p: FatPoint,
       closestDirty: Assignment): Assignment = {
 
-      val closestClean = closestOf(round, centers, p, (x, y) => !x.movedSince(y.round))
+      val closestClean = closestOf(ops, round, centers, p, (x, y) => !x.movedSince(y.round))
       if (closestDirty.isUnassigned ||
         (closestClean.isAssigned && closestClean.dist < closestDirty.dist)) {
         stats.closestClean.add(1)

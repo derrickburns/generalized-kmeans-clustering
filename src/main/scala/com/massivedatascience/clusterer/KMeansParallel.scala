@@ -43,6 +43,10 @@ import scala.collection.mutable.ArrayBuffer
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
     with SparkHelper {
 
+  class NotSerializable {}
+
+  val x = new NotSerializable
+
   /**
    *
    * @param pointOps distance function

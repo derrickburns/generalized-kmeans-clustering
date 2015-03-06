@@ -33,6 +33,10 @@ import scala.collection.generic.FilterMonadic
 
 object ColumnTrackingKMeans {
 
+  class NotSerializable {}
+
+  val x = new NotSerializable
+
   /**
    *
    * @param center  the centroid of the cluster

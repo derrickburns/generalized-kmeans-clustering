@@ -52,7 +52,7 @@ object MultiKMeansClusterer {
       case SIMPLE => new MultiKMeans
       case TRACKING => new TrackingKMeans
       case COLUMN_TRACKING => new ColumnTrackingKMeans
-      case MINI_BATCH_10 => new TrackingKMeans(0.10)
+      case MINI_BATCH_10 => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
   }

@@ -33,6 +33,10 @@ object KMeans extends SparkHelper {
   private val defaultMaxIterations = 20
   private val defaultNumRuns = 1
 
+  class NotSerializable {}
+
+  val x = new NotSerializable
+
   /**
    * The standard configuration for a clusterer that runs Lloyd's algorithm
    * @param numClusters number of clusters desired

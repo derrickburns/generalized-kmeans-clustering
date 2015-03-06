@@ -19,6 +19,12 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.clusterer.KMeans.RunConfig
+import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.transforms.Embedding
+import com.massivedatascience.transforms.Embedding._
+import org.apache.spark.rdd.RDD
+
 import scala.util.Random
 
 import org.scalatest.FunSuite
@@ -31,6 +37,32 @@ import com.massivedatascience.clusterer.BregmanPointOps._
 class KMeansSuite extends FunSuite with LocalSparkContext {
 
   import com.massivedatascience.clusterer.KMeansSelector._
+
+  test("coverage") {
+
+    val seed = 0
+    val r = new Random(seed)
+
+    val data = sc.parallelize(Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    KMeans.train(data, k = 20, maxIterations = 10)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 2)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, mode = KMeansSelector.RANDOM)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN))
+
+    KMeans.timeSeriesTrain(
+      new RunConfig(20, 1, 0, 10),
+      data.map(WeightedVector.apply),
+      KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
+      BregmanPointOps(BregmanPointOps.EUCLIDEAN),
+      MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING),
+      Embedding(HAAR_EMBEDDING));
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
+  }
 
   test("single cluster") {
     val data = sc.parallelize(Array(

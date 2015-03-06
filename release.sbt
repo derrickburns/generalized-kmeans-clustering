@@ -4,9 +4,6 @@ import bintray.Keys._
 
 name := "massivedatascience-clusterer"
 
-// Your project organization (package name)
-organization := "derrickburns"
-
 bintrayPublishSettings
 
 bintrayOrganization in bintray := Some("derrickburns")

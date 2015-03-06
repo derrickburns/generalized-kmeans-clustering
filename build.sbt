@@ -3,6 +3,8 @@ name := "massivedatascience-clusterer"
 
 organization := "com.massivedatascience"
 
+organizationName := "Massive Data Science, LLC"
+
 scalaVersion := "2.10.4"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
@@ -50,3 +52,4 @@ testOptions in Test += Tests.Argument("-Dlog4j.configuration=log4j.properties")
 seq(bintraySettings:_*)
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+
