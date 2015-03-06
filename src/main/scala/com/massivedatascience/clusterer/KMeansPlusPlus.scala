@@ -128,13 +128,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     newDistances.toIndexedSeq
   }
 
-  def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] = {
-    var cumulative = 0.0
-    weights map { weight =>
-      cumulative = cumulative + weight
-      cumulative
-    }
-  }
+  def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
+    weights.scanLeft(0.0)(_+_).tail
+
 
   /**
    * Pick a point at random, weighing the choices by the given cumulative weight vector.
