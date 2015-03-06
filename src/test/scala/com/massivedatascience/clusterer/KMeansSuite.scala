@@ -38,6 +38,117 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
   import com.massivedatascience.clusterer.KMeansSelector._
 
+
+  test("sparse vector iterator" ) {
+
+    import  com.massivedatascience.linalg._
+
+    val v = Vectors.sparse( 10, Seq((2, 30.2), (4, 42.0)) )
+
+    val iter = v.iterator
+
+    println( iter.toString )
+
+
+    assert( iter.hasNext)
+    val firstIndex = iter.index
+    assert( firstIndex == 2)
+    val firstValue = iter.value
+    assert( firstValue == 30.2)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert( secondIndex == 4)
+    val secondValue = iter.value
+    assert( secondValue == 42)
+    iter.advance()
+    assert( !iter.hasNext)
+  }
+
+  test("sparse negative vector iterator" ) {
+
+    import  com.massivedatascience.linalg._
+
+    val v = Vectors.sparse( 10, Seq((2, 30.2), (4, 42.0)) )
+
+    val iter = v.negativeIterator
+
+    assert( iter.hasNext)
+    val firstIndex = iter.index
+    assert( firstIndex == 2)
+    val firstValue = iter.value
+    assert( firstValue == -30.2)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert( secondIndex == 4)
+    val secondValue = iter.value
+    assert( secondValue == -42)
+    iter.advance()
+    assert( !iter.hasNext)
+
+    println( iter.toString )
+  }
+
+  test("dense vector iterator" ) {
+
+    import  com.massivedatascience.linalg._
+
+    val v = Vectors.dense( 5.0, 9.0 )
+
+    val iter = v.iterator
+
+    println( iter.toString )
+
+
+    assert( iter.hasNext)
+    val firstIndex = iter.index
+    assert( firstIndex == 0)
+    val firstValue = iter.value
+    assert( firstValue == 5.0)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert( secondIndex == 1)
+    val secondValue = iter.value
+    assert( secondValue == 9.0)
+    iter.advance()
+    assert( !iter.hasNext)
+  }
+
+  test("dense negative vector iterator" ) {
+
+    import  com.massivedatascience.linalg._
+
+    val v = Vectors.dense( 5.0, 9.0 )
+
+    val iter = v.negativeIterator
+
+    println( iter.toString )
+
+    assert( iter.hasNext)
+    val firstIndex = iter.index
+    assert( firstIndex == 0)
+    val firstValue = iter.value
+    assert( firstValue == -5.0)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert( secondIndex == 1)
+    val secondValue = iter.value
+    assert( secondValue == -9.0)
+    iter.advance()
+    assert( !iter.hasNext)
+  }
+
   test("coverage") {
 
     val seed = 0
