@@ -52,4 +52,15 @@ class EmbeddingSuite extends FunSuite with LocalSparkContext {
 
   }
 
+  test("random indexing embedding")  {
+    val e = Embedding(Embedding.LOW_DIMENSIONAL_RI)
+    val v1 = WeightedVector(Vectors.sparse(10, Seq( (1, 2.0), (3, 6.0))), 3.0)
+
+    val expected = Vectors.sparse(64, Seq( ( 10, 6.0), (11, -2.0), (13, -6.0), (14, 2.0)))
+    val embedded = e.embed(v1)
+
+    assert( embedded.weight == 3.0 )
+    assert( embedded.homogeneous ~== expected absTol 1E-5)
+  }
+
 }

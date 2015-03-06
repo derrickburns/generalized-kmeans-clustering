@@ -76,9 +76,9 @@ object Embedding {
     embeddingName match {
       case IDENTITY_EMBEDDING => IdentityEmbedding
       case DENSE_EMBEDDING => DenseEmbedding
-      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(lowDimension, epsilon)
-      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(mediumDimension, epsilon)
-      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(highDimension, epsilon)
+      case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(lowDimension, epsilon, seed = 0)
+      case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(mediumDimension, epsilon, seed = 0)
+      case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(highDimension, epsilon, seed = 0)
       case HAAR_EMBEDDING => HaarEmbedding
       case SYMMETRIZING_KL_EMBEDDING => SymmetrizingKLEmbedding
       case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
