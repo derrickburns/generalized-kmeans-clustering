@@ -235,8 +235,8 @@ object KMeans extends SparkHelper with Logging {
    */
   def iterativelyTrain(
     runConfig: RunConfig,
-    pointOps: List[BregmanPointOps],
-    dataSets: List[RDD[BregmanPoint]],
+    pointOps: Seq[BregmanPointOps],
+    dataSets: Seq[RDD[BregmanPoint]],
     initializer: KMeansSelector,
     clusterer: MultiKMeansClusterer): KMeansModel = {
 
