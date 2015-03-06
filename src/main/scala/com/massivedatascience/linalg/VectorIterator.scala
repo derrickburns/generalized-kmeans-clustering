@@ -19,7 +19,7 @@ package com.massivedatascience.linalg
 
 import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
 
-trait VectorIterator extends Serializable {
+sealed trait VectorIterator extends Serializable {
   def hasNext: Boolean
   def advance(): Unit
   def index: Int
@@ -27,28 +27,34 @@ trait VectorIterator extends Serializable {
   val underlying: Vector
 }
 
-class SparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
+abstract class BaseSparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
   override def toString: String = s"$i, $underlying"
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
   def index: Int = underlying.indices(i)
-  def value: Double = underlying.values(i)
 }
 
-class DenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
+abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
   override def toString: String = s"$i, $underlying"
   protected var i = 0
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
   def index: Int = i
+}
+
+@inline final class SparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
   def value: Double = underlying.values(i)
 }
 
-class NegativeSparseVectorIterator(underlying: SparseVector) extends SparseVectorIterator(underlying) {
-  override def value: Double = -underlying.values(i)
+@inline final class DenseVectorIterator(u: DenseVector) extends BaseDenseVectorIterator(u) {
+  def value: Double = underlying.values(i)
 }
 
-class NegativeDenseVectorIterator(underlying: DenseVector) extends DenseVectorIterator(underlying) {
-  override def value: Double = -underlying.values(i)
+@inline final class NegativeSparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
+  def value: Double = -underlying.values(i)
+}
+
+@inline final class NegativeDenseVectorIterator(u: DenseVector) extends BaseDenseVectorIterator(u) {
+  def value: Double = -underlying.values(i)
 }
