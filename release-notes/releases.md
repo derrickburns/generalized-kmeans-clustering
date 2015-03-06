@@ -24,7 +24,7 @@ We also added support for code coverage evaluation.
 - Added Coveralls Badge to README
 - Updated README
 - Added ```organizationName``` to build.sbt
-- Added sample logger output
+- Added sample logger output in ```SAMPLE_LOG.md```
 - Added numerous unit tests
 
 ## 1.0.2
