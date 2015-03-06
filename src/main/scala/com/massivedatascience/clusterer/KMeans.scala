@@ -274,7 +274,7 @@ object KMeans extends SparkHelper with Logging {
     depth: Int = 0,
     embedding: Embedding = HaarEmbedding): List[RDD[BregmanPoint]] = {
     val subs = (0 until depth).foldLeft(List(input)) {
-      case (data, e) => data.head.map(embedding.embed) :: data
+      case (data@List(first,_), e) => first.map(embedding.embed) :: data
     }
     subs.map(_.map(pointOps.toPoint))
   }
