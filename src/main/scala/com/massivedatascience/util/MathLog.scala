@@ -47,7 +47,7 @@ case object GeneralLog extends MathLog {
 case object DiscreteLog extends MathLog {
   private[this] val cacheSize = 1000
 
-  private val logTable = new Array[Double](cacheSize)
+  private[this] val logTable = new Array[Double](cacheSize)
 
   override def log(d: Double): Double = {
     d match {
