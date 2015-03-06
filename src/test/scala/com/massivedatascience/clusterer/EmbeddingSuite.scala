@@ -25,7 +25,8 @@ import org.apache.spark.mllib.linalg.Vectors
 import org.scalatest.FunSuite
 import com.massivedatascience.clusterer.TestingUtils._
 
-class EmbeddingTestSuite extends FunSuite with LocalSparkContext {
+
+class EmbeddingSuite extends FunSuite with LocalSparkContext {
 
   test("apply method") {
     Embedding(Embedding.SYMMETRIZING_KL_EMBEDDING)
@@ -37,38 +38,38 @@ class EmbeddingTestSuite extends FunSuite with LocalSparkContext {
     Embedding(Embedding.IDENTITY_EMBEDDING)
   }
 
-  test("symmetrized embedding") {
+  test("symmetrized embedding")  {
     val e = Embedding(Embedding.SYMMETRIZING_KL_EMBEDDING)
     val v1 = WeightedVector(Vectors.dense(4.0), 8.0)
 
     val expected = Vectors.dense(5.38629436111989)
     val embedded = e.embed(v1)
 
-    assert(embedded.weight == 8.0)
-    assert(embedded.homogeneous ~== expected absTol 1E-5)
+    assert( embedded.weight == 8.0 )
+    assert( embedded.homogeneous ~== expected absTol 1E-5)
   }
 
-  test("low dimensional random indexing embedding") {
+  test("low dimensional random indexing embedding")  {
     val e = Embedding(Embedding.LOW_DIMENSIONAL_RI)
-    val v1 = WeightedVector(Vectors.sparse(10, Seq((1, 2.0), (3, 6.0))), 3.0)
+    val v1 = WeightedVector(Vectors.sparse(10, Seq( (1, 2.0), (3, 6.0))), 3.0)
 
-    val expected = Vectors.sparse(64, Seq((10, 6.0), (11, -2.0), (13, -6.0), (14, 2.0)))
+    val expected = Vectors.sparse(64, Seq( ( 10, 6.0), (11, -2.0), (13, -6.0), (14, 2.0)))
     val embedded = e.embed(v1)
 
-    assert(embedded.weight == 3.0)
-    assert(embedded.homogeneous ~== expected absTol 1E-5)
+    assert( embedded.weight == 3.0 )
+    assert( embedded.homogeneous ~== expected absTol 1E-5)
   }
 
-  test("medium dimensional random indexing embedding") {
+  test("medium dimensional random indexing embedding")  {
     val e = Embedding(Embedding.MEDIUM_DIMENSIONAL_RI)
-    val v1 = WeightedVector(Vectors.sparse(10, Seq((1, 2.0), (3, 6.0))), 3.0)
+    val v1 = WeightedVector(Vectors.sparse(10, Seq( (1, 2.0), (3, 6.0))), 3.0)
 
-    val expected = Vectors.sparse(256, Seq((3, 6.0), (6, -2.0), (13, -2.0), (15, -6.0), (17, -2.0),
+    val expected = Vectors.sparse(256, Seq(( 3, 6.0), (6, -2.0), (13, -2.0), (15, -6.0), (17, -2.0),
       (19, -6.0), (21, 6.0), (23, 2.0), (26, 8.0), (28, 2.0), (31, -6.0)))
     val embedded = e.embed(v1)
 
-    assert(embedded.weight == 3.0)
-    assert(embedded.homogeneous ~== expected absTol 1E-5)
+    assert( embedded.weight == 3.0 )
+    assert( embedded.homogeneous ~== expected absTol 1E-5)
   }
 
 }
