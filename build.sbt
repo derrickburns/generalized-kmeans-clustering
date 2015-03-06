@@ -57,5 +57,5 @@ import com.typesafe.sbt.SbtGit._
 
 versionWithGit
 
-// Optionally:
-git.baseVersion := "1.0"
+ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats"
+

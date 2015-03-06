@@ -20,10 +20,10 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.KMeans.RunConfig
+import com.massivedatascience.divergence.BregmanDivergence
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import com.massivedatascience.transforms.Embedding._
-import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
@@ -38,115 +38,112 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
   import com.massivedatascience.clusterer.KMeansSelector._
 
+  test("sparse vector iterator") {
 
-  test("sparse vector iterator" ) {
+    import com.massivedatascience.linalg._
 
-    import  com.massivedatascience.linalg._
-
-    val v = Vectors.sparse( 10, Seq((2, 30.2), (4, 42.0)) )
-
-    val iter = v.iterator
-
-    println( iter.toString )
-
-
-    assert( iter.hasNext)
-    val firstIndex = iter.index
-    assert( firstIndex == 2)
-    val firstValue = iter.value
-    assert( firstValue == 30.2)
-
-    assert(iter.hasNext)
-    iter.advance()
-
-    val secondIndex = iter.index
-    assert( secondIndex == 4)
-    val secondValue = iter.value
-    assert( secondValue == 42)
-    iter.advance()
-    assert( !iter.hasNext)
-  }
-
-  test("sparse negative vector iterator" ) {
-
-    import  com.massivedatascience.linalg._
-
-    val v = Vectors.sparse( 10, Seq((2, 30.2), (4, 42.0)) )
-
-    val iter = v.negativeIterator
-
-    assert( iter.hasNext)
-    val firstIndex = iter.index
-    assert( firstIndex == 2)
-    val firstValue = iter.value
-    assert( firstValue == -30.2)
-
-    assert(iter.hasNext)
-    iter.advance()
-
-    val secondIndex = iter.index
-    assert( secondIndex == 4)
-    val secondValue = iter.value
-    assert( secondValue == -42)
-    iter.advance()
-    assert( !iter.hasNext)
-
-    println( iter.toString )
-  }
-
-  test("dense vector iterator" ) {
-
-    import  com.massivedatascience.linalg._
-
-    val v = Vectors.dense( 5.0, 9.0 )
+    val v = Vectors.sparse(10, Seq((2, 30.2), (4, 42.0)))
 
     val iter = v.iterator
 
-    println( iter.toString )
+    println(iter.toString)
 
-
-    assert( iter.hasNext)
+    assert(iter.hasNext)
     val firstIndex = iter.index
-    assert( firstIndex == 0)
+    assert(firstIndex == 2)
     val firstValue = iter.value
-    assert( firstValue == 5.0)
+    assert(firstValue == 30.2)
 
     assert(iter.hasNext)
     iter.advance()
 
     val secondIndex = iter.index
-    assert( secondIndex == 1)
+    assert(secondIndex == 4)
     val secondValue = iter.value
-    assert( secondValue == 9.0)
+    assert(secondValue == 42)
     iter.advance()
-    assert( !iter.hasNext)
+    assert(!iter.hasNext)
   }
 
-  test("dense negative vector iterator" ) {
+  test("sparse negative vector iterator") {
 
-    import  com.massivedatascience.linalg._
+    import com.massivedatascience.linalg._
 
-    val v = Vectors.dense( 5.0, 9.0 )
+    val v = Vectors.sparse(10, Seq((2, 30.2), (4, 42.0)))
 
     val iter = v.negativeIterator
 
-    println( iter.toString )
-
-    assert( iter.hasNext)
+    assert(iter.hasNext)
     val firstIndex = iter.index
-    assert( firstIndex == 0)
+    assert(firstIndex == 2)
     val firstValue = iter.value
-    assert( firstValue == -5.0)
+    assert(firstValue == -30.2)
 
     assert(iter.hasNext)
     iter.advance()
 
     val secondIndex = iter.index
-    assert( secondIndex == 1)
+    assert(secondIndex == 4)
     val secondValue = iter.value
-    assert( secondValue == -9.0)
+    assert(secondValue == -42)
     iter.advance()
-    assert( !iter.hasNext)
+    assert(!iter.hasNext)
+
+    println(iter.toString)
+  }
+
+  test("dense vector iterator") {
+
+    import com.massivedatascience.linalg._
+
+    val v = Vectors.dense(5.0, 9.0)
+
+    val iter = v.iterator
+
+    println(iter.toString)
+
+    assert(iter.hasNext)
+    val firstIndex = iter.index
+    assert(firstIndex == 0)
+    val firstValue = iter.value
+    assert(firstValue == 5.0)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert(secondIndex == 1)
+    val secondValue = iter.value
+    assert(secondValue == 9.0)
+    iter.advance()
+    assert(!iter.hasNext)
+  }
+
+  test("dense negative vector iterator") {
+
+    import com.massivedatascience.linalg._
+
+    val v = Vectors.dense(5.0, 9.0)
+
+    val iter = v.negativeIterator
+
+    println(iter.toString)
+
+    assert(iter.hasNext)
+    val firstIndex = iter.index
+    assert(firstIndex == 0)
+    val firstValue = iter.value
+    assert(firstValue == -5.0)
+
+    assert(iter.hasNext)
+    iter.advance()
+
+    val secondIndex = iter.index
+    assert(secondIndex == 1)
+    val secondValue = iter.value
+    assert(secondValue == -9.0)
+    iter.advance()
+    assert(!iter.hasNext)
   }
 
   test("coverage") {
@@ -164,13 +161,17 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
 
     KMeans.train(data, k = 20, maxIterations = 10, runs = 1, distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN))
 
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1,
+      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
+      clustererName = MultiKMeansClusterer.CHANGE_TRACKING)
+
     KMeans.timeSeriesTrain(
       new RunConfig(20, 1, 0, 10),
       data.map(WeightedVector.apply),
       KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
       BregmanPointOps(BregmanPointOps.EUCLIDEAN),
       MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING),
-      Embedding(HAAR_EMBEDDING));
+      Embedding(HAAR_EMBEDDING))
 
     KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
   }

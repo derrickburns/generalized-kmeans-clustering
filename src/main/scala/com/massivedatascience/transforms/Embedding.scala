@@ -45,12 +45,8 @@ case object IdentityEmbedding extends Embedding {
  * The embedding that transforms all points to dense vectors.
  */
 case object DenseEmbedding extends Embedding {
-  def embed(v: WeightedVector): WeightedVector = {
-    v match {
-      case sv: SparseVector => WeightedVector(v.homogeneous.toArray, v.weight)
-      case dv: DenseVector => dv
-    }
-  }
+  def embed(v: WeightedVector): WeightedVector =
+    WeightedVector(v.homogeneous.toArray, v.weight)
 }
 
 /**
@@ -64,6 +60,7 @@ case object HaarEmbedding extends Embedding {
 
 object Embedding {
   val IDENTITY_EMBEDDING = "IDENTITY"
+  val DENSE_EMBEDDING = "DENSE"
   val HAAR_EMBEDDING = "HAAR"
   val SYMMETRIZING_KL_EMBEDDING = "SYMMETRIZING_KL_EMBEDDING"
   val LOW_DIMENSIONAL_RI = "LOW_DIMENSIONAL_RI"
@@ -78,6 +75,7 @@ object Embedding {
   def apply(embeddingName: String): Embedding = {
     embeddingName match {
       case IDENTITY_EMBEDDING => IdentityEmbedding
+      case DENSE_EMBEDDING => DenseEmbedding
       case LOW_DIMENSIONAL_RI => new RandomIndexEmbedding(lowDimension, epsilon)
       case MEDIUM_DIMENSIONAL_RI => new RandomIndexEmbedding(mediumDimension, epsilon)
       case HIGH_DIMENSIONAL_RI => new RandomIndexEmbedding(highDimension, epsilon)

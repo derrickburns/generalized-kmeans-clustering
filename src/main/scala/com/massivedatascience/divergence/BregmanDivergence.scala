@@ -177,7 +177,7 @@ case object NaturalKLDivergence extends KullbackLeiblerDivergence {
  */
 case object GeneralizedIDivergence extends BregmanDivergence {
 
-  protected val logFunc: MathLog = DiscreteLog
+  protected val logFunc: MathLog = GeneralLog
 
   def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 

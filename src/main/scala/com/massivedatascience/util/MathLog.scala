@@ -49,24 +49,6 @@ case object DiscreteLog extends MathLog {
 
   private val logTable = new Array[Double](cacheSize)
 
-  def logg(d: Double): Double = {
-    if (d == 0.0 || d == 1.0) {
-      0.0
-    } else {
-      if (d < logTable.length) {
-        val x = d.toInt
-        if (x.toDouble == d) {
-          if (logTable(x) == 0.0) logTable(x) = Math.log(x)
-          logTable(x)
-        } else {
-          Math.log(d)
-        }
-      } else {
-        Math.log(d)
-      }
-    }
-  }
-
   override def log(d: Double): Double = {
     d match {
       case 0.0 => 0.0
