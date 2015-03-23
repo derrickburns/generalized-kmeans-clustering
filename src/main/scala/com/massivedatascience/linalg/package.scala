@@ -33,6 +33,12 @@ package object linalg {
     x
   }
 
+  implicit class RichSeq(val v: IndexedSeq[(Int, Double)]) extends AnyVal {
+    def iterator: VectorIterator = {
+      new SparseSeqIterator(v)
+    }
+  }
+
   implicit class RichVector(val v: Vector) extends AnyVal {
     def iterator: VectorIterator = {
       v match {

@@ -74,7 +74,7 @@ object KMeans extends SparkHelper with Logging {
     val clusterer = MultiKMeansClusterer(clustererName)
     val runConfig = RunConfig(k, runs, 0, maxIterations)
 
-    withCached("weighted vectors", data.map(x => WeightedVector(x))) { data =>
+    withCached[WeightedVector, KMeansModel]("weighted vectors", data.map(x => WeightedVector(x))) { data =>
       val ops = distanceFunctionNames.map(BregmanPointOps.apply)
       val initializer = KMeansSelector(mode)
       val embeddings = embeddingNames.map(Embedding.apply)

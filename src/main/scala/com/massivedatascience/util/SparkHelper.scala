@@ -38,20 +38,20 @@ trait SparkHelper {
     if (synchronous) {
       data.foreachPartition(p => None)
     }
-    data
+    data: RDD[T]
   }
 
   protected def exchange[T](name: String, from: RDD[T])(f: RDD[T] => RDD[T]): RDD[T] = {
-    val to = sync(name, f(from))
+    val to: RDD[T] = sync[T](name, f(from))
     from.unpersist()
-    to
+    to: RDD[T]
   }
 
   protected def withCached[T, Q](
     names: Seq[String],
     rdds: Seq[RDD[T]])(f: Seq[RDD[T]] => Q): Q = {
 
-    rdds.zip(names).foreach { case (r, n) => sync(n, r) }
+    rdds.zip(names).foreach { case (r, n) => sync[T](n, r) }
     val result = f(rdds)
     rdds.foreach(_.unpersist())
     result

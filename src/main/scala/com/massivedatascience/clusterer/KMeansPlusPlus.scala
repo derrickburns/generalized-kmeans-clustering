@@ -141,6 +141,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)
-    if (index == -1) Seq() else Seq(index)
+    if (index == -1) Seq[Int]() else Seq(index)
   }
 }

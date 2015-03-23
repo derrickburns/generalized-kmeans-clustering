@@ -136,13 +136,13 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   }
 
   def findClosest(centers: IndexedSeq[C], point: P): (Int, Double) =
-    findClosestInfo(centers, point, (i: Int, d: Double) => (i, d))
+    findClosestInfo[(Int, Double)](centers, point, (i: Int, d: Double) => (i, d))
 
   def findClosestCluster(centers: IndexedSeq[C], point: P): Int =
-    findClosestInfo(centers, point, (i: Int, _: Double) => i)
+    findClosestInfo[Int](centers, point, (i: Int, _: Double) => i)
 
   def findClosestDistance(centers: IndexedSeq[C], point: P): Double =
-    findClosestInfo(centers, point, (_: Int, d: Double) => d)
+    findClosestInfo[Double](centers, point, (_: Int, d: Double) => d)
 
   def distortion(data: RDD[P], centers: IndexedSeq[C]): Double =
     data.aggregate(0.0)(_ + findClosestDistance(centers, _), _ + _)

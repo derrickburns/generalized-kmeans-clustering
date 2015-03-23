@@ -107,7 +107,7 @@ class MultiKMeans extends MultiKMeansClusterer {
       val sc = data.sparkContext
       val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
       val bcActiveCenters = sc.broadcast(activeCenters)
-      val result: Array[((Int, Int), WeightedVector)] = data.mapPartitions { points =>
+      val result = data.mapPartitions[((Int, Int), WeightedVector)] { points =>
         val bcCenters = bcActiveCenters.value
         val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.make()))
         for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {

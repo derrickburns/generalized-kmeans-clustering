@@ -17,14 +17,14 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
+import org.apache.spark.mllib.linalg.{ Vectors, DenseVector, SparseVector, Vector }
 
 sealed trait VectorIterator extends Serializable {
   def hasNext: Boolean
   def advance(): Unit
   def index: Int
   def value: Double
-  val underlying: Vector
+  def toVector: Vector
 }
 
 abstract class BaseSparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
@@ -33,6 +33,7 @@ abstract class BaseSparseVectorIterator(val underlying: SparseVector) extends Ve
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
   def index: Int = underlying.indices(i)
+  def toVector = underlying
 }
 
 abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
@@ -41,6 +42,7 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
   def index: Int = i
+  def toVector = underlying
 }
 
 @inline final class SparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
@@ -57,4 +59,14 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
 
 @inline final class NegativeDenseVectorIterator(u: DenseVector) extends BaseDenseVectorIterator(u) {
   def value: Double = -underlying.values(i)
+}
+
+@inline final class SparseSeqIterator(u: IndexedSeq[(Int, Double)]) extends VectorIterator {
+  override def toString: String = s"$i, $u"
+  protected var i = 0
+  def hasNext: Boolean = i < u.length
+  def advance(): Unit = i = i + 1
+  def index: Int = u(i)._1
+  def value: Double = u(i)._2
+  def toVector: Vector = Vectors.sparse(Int.MaxValue, u)
 }

@@ -19,6 +19,7 @@ package com.massivedatascience.transforms
 
 import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
 import com.massivedatascience.linalg.{ WeightedVector, _ }
+import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 /**
  * One can create a symmetric version of any Bregman Divergence</a>
@@ -35,9 +36,11 @@ import com.massivedatascience.linalg.{ WeightedVector, _ }
  *
  */
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
-  def embed(v: WeightedVector): WeightedVector = {
-    val embedded = v.homogeneous.copy
-    WeightedVector(BLAS.axpy(1.0, divergence.gradientOfConvex(embedded), embedded), v.weight)
+  def embed(v: VectorIterator) = embed(v.toVector)
+
+  def embed(v: Vector): Vector = {
+    val embedded = v.copy
+    BLAS.axpy(1.0, divergence.gradientOfConvex(embedded), embedded)
   }
 }
 

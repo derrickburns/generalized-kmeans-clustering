@@ -258,7 +258,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
       val ops = pointOps
       val bcCenters = fatPoints.sparkContext.broadcast(fatCenters)
-      val result = fatPoints.mapPartitionsWithIndex { (index, points) =>
+      val result = fatPoints.mapPartitionsWithIndex[FatPoint] { (index, points) =>
         val rand = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
         points.map { p =>
@@ -319,7 +319,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return changes to cluster position
      */
     def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] = {
-      points.mapPartitions { pts =>
+      points.mapPartitions[(Int, (WeightedVector, Boolean))] { pts =>
         val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
         for (p <- pts if p.wasReassigned) {
           assert(p.isAssigned)
@@ -359,7 +359,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      */
     def closestPoints(points: RDD[FatPoint], centers: FatCenters): Map[Int, (FatPoint, Double)] = {
       val bcCenters = points.sparkContext.broadcast(centers)
-      points.mapPartitions { pts =>
+      points.mapPartitions[(Int, (FatPoint, Double))] { pts =>
         val bc = bcCenters.value
         pts.flatMap { p =>
           bc.zipWithIndex.map {

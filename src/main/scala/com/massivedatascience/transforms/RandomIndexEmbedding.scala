@@ -19,6 +19,7 @@ package com.massivedatascience.transforms
 
 import com.massivedatascience.linalg.{ WeightedVector, _ }
 import com.massivedatascience.util.XORShiftRandom
+import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 import org.joda.time.DateTime
 
 /**
@@ -48,8 +49,8 @@ class RandomIndexEmbedding(
   private[this] val on = (Math.ceil(epsilon * outputDim).toInt & -1) * 2
   private[this] val logOutputDim = Math.log(outputDim).toInt
   private[this] val hashes = computeHashes(seed)
-  private[this] val positive = hashes.take(on/2)
-  private[this] val negative = hashes.drop(on/2)
+  private[this] val positive = hashes.take(on / 2)
+  private[this] val negative = hashes.drop(on / 2)
 
   private[this] def computeHashes(seed: Long): Array[MultiplicativeHash] = {
     val rand = new XORShiftRandom(seed)
@@ -58,8 +59,9 @@ class RandomIndexEmbedding(
     }
   }
 
-  def embed(v: WeightedVector): WeightedVector = {
-    val iterator = v.homogeneous.iterator
+  def embed(v: Vector): Vector = embed(v.iterator)
+
+  def embed(iterator: VectorIterator): Vector = {
     val rep = new Array[Double](outputDim)
     while (iterator.hasNext) {
       val count = iterator.value
@@ -68,8 +70,9 @@ class RandomIndexEmbedding(
       for (n <- negative) rep(n.hash(index)) -= count
       iterator.advance()
     }
-    WeightedVector(rep, v.weight)
+    Vectors.dense(rep)
   }
+
 }
 
 /**

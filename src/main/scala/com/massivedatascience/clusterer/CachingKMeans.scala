@@ -169,7 +169,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     sampleRate: Double,
     seed: Int): RDD[FatPoint] = {
 
-    fatPoints.mapPartitionsWithIndex { (index, points) =>
+    fatPoints.mapPartitionsWithIndex[FatPoint] { (index, points) =>
       val rand = new XORShiftRandom(seed ^ index << 16)
       val myFatCenters = bcCenters.value
       points.map { p =>
@@ -220,7 +220,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
   }
 
   private[this] def distortion(data: RDD[FatPoint]): Double = {
-    data.mapPartitions {
+    data.mapPartitions[Double] {
       points =>
         Array(points.map { p => p.assignment(p.current).dist }.sum).iterator
     }.reduce(_ + _)
@@ -237,18 +237,22 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     bcCenters: Broadcast[Array[FatCenter]],
     points: RDD[FatPoint]): Map[Int, MutableWeightedVector] =
 
-    points.mapPartitions { changes =>
+    points.mapPartitions[(Int, MutableWeightedVector)] { (changes: Iterator[FatPoint]) =>
       val centers = bcCenters.value.map { _ => ops.make() }
 
-      for (p <- changes if p.assignment(0).index != p.assignment(1).index) {
-        if (p.assignment(p.current).index != -1) {
-          centers(p.assignment(p.current).index).add(p.point)
-        }
-        if (p.assignment(1 - p.current).index != -1) {
-          centers(p.assignment(1 - p.current).index).sub(p.point)
+      changes.foreach[Unit] { p =>
+        if (p.assignment(0).index != p.assignment(1).index) {
+          if (p.assignment(p.current).index != -1) {
+            centers(p.assignment(p.current).index).add(p.point)
+          }
+          if (p.assignment(1 - p.current).index != -1) {
+            centers(p.assignment(1 - p.current).index).sub(p.point)
+          }
         }
       }
+
       centers.zipWithIndex.map { case (l, r) => (r, l) }.iterator
+
     }.reduceByKeyLocally { case (l, r) => l.add(r) }
 
   /**

@@ -174,7 +174,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     withBroadcast(currentCenters) { bcCenters =>
       val centers = bcCenters.value
 
-      points.zip(previousAssignments).mapPartitionsWithIndex {
+      points.zip(previousAssignments).mapPartitionsWithIndex[Assignment] {
         (index, assignedPoints) =>
           val rand = new XORShiftRandom(round ^ (index << 16))
           assignedPoints.map {
@@ -451,8 +451,8 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       centers: IndexedSeq[CenterWithHistory]): (RDD[Assignment], IndexedSeq[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
-      val newAssignments = sync(s"assignments round $round", updatedAssignments(points, pointOps,
-        round, assignments, centers))
+      val newAssignments = sync[Assignment](s"assignments round $round",
+        updatedAssignments(points, pointOps, round, assignments, centers))
 
       val newCenters = latestCenters(points, pointOps, round + 1, centers, newAssignments,
         assignments)
@@ -472,7 +472,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     logInfo(s"runs = ${centerArrays.size}")
 
     val u = Assignment(Infinity, noCluster, -2)
-    withCached("empty assignments", points.map(x => u)) { empty =>
+    withCached[Assignment, Seq[ClusteringWithDistortion]]("empty assignments", points.map(x => u)) { empty =>
       centerArrays.map { initialCenters =>
         val centers = initialCenters.zipWithIndex.map {
           case (c, i) =>

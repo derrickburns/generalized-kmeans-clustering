@@ -9,9 +9,7 @@ scalaVersion := "2.10.4"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
-
-scalacOptions in (Compile, compile) += "-Xfatal-warnings"
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfatal-warnings", "-Xlint")
 
 javacOptions ++= Seq(
   "-source", "1.7",
@@ -59,3 +57,14 @@ versionWithGit
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats"
 
+// Suggested Wartremover errors to improve inference rules and avoid partial methods which throw
+wartremoverErrors ++= Seq(
+  Wart.Any,
+  Wart.Any2StringAdd,
+  Wart.EitherProjectionPartial,
+  Wart.OptionPartial,
+  Wart.Product,
+  Wart.Serializable,
+  Wart.ListOps,
+  Wart.Nothing
+)

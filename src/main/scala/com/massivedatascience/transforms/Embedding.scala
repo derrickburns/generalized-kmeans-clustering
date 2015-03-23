@@ -18,7 +18,7 @@
 package com.massivedatascience.transforms
 
 import com.massivedatascience.linalg.{ WeightedVector, _ }
-import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector }
+import org.apache.spark.mllib.linalg.{ Vectors, Vector, DenseVector, SparseVector }
 
 /**
  * An embedding of vectors into an alternative space.  Typically, embeddings are used
@@ -31,22 +31,25 @@ trait Embedding extends Serializable {
    * @param v the weighted vector
    * @return the transformed vector
    */
-  def embed(v: WeightedVector): WeightedVector
+  def embed(v: WeightedVector): WeightedVector = WeightedVector(embed(v.homogeneous), v.weight)
+  def embed(v: Vector): Vector
+  def embed(v: VectorIterator): Vector
 }
 
 /**
  * The identity embedding
  */
 case object IdentityEmbedding extends Embedding {
-  def embed(v: WeightedVector): WeightedVector = v
+  def embed(v: VectorIterator): Vector = v.toVector
+  def embed(v: Vector): Vector = v
 }
 
 /**
  * The embedding that transforms all points to dense vectors.
  */
 case object DenseEmbedding extends Embedding {
-  def embed(v: WeightedVector): WeightedVector =
-    WeightedVector(v.homogeneous.toArray, v.weight)
+  def embed(v: VectorIterator): Vector = Vectors.dense(v.toVector.toArray)
+  def embed(v: Vector): Vector = Vectors.dense(v.toArray)
 }
 
 /**
@@ -54,8 +57,8 @@ case object DenseEmbedding extends Embedding {
  * the data by two
  */
 case object HaarEmbedding extends Embedding {
-  def embed(raw: WeightedVector): WeightedVector =
-    WeightedVector(HaarWavelet.average(raw.homogeneous.toArray), raw.weight)
+  def embed(v: VectorIterator): Vector = embed(v.toVector)
+  def embed(v: Vector): Vector = Vectors.dense(HaarWavelet.average(v.toArray))
 }
 
 object Embedding {

@@ -40,7 +40,7 @@ case object KMeansRandom extends KMeansSelector with SparkHelper {
 
     val rand = new XORShiftRandom(seed)
 
-    withCached("random initial", data.filter(_.weight > ops.weightThreshold)) { filtered =>
+    withCached[BregmanPoint, Seq[IndexedSeq[BregmanCenter]]]("random initial", data.filter(_.weight > ops.weightThreshold)) { filtered =>
       val count = filtered.count()
       if (runs * k <= count) {
         val centers = select(ops, rand, filtered, runs * k)

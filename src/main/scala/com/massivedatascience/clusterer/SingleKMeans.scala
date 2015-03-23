@@ -65,7 +65,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     activeCenters: Array[BregmanCenter]): Map[Int, MutableWeightedVector] = {
 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
-    val result = data.mapPartitions { points =>
+    val result = data.mapPartitions[(Int, MutableWeightedVector)] { points =>
       val bcCenters = bcActiveCenters.value
       val centers = IndexedSeq.fill(bcCenters.length)(pointOps.make())
       for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)

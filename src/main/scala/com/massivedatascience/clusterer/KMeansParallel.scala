@@ -26,7 +26,7 @@ import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec
-import scala.collection.Map
+import scala.collection.{ immutable, Map }
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -237,7 +237,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
 
     require(costs.getStorageLevel.useMemory)
 
-    data.zip(costs).mapPartitionsWithIndex { (index, pointsWithCosts) =>
+    data.zip(costs).mapPartitionsWithIndex[(Int, BregmanCenter)] { (index, pointsWithCosts) =>
       val rand = new XORShiftRandom(seed ^ index)
       val range = 0 until runs
       pointsWithCosts.flatMap {
@@ -248,9 +248,9 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
           }
           if (selectedRuns.nonEmpty) {
             val cp = pointOps.toCenter(p)
-            selectedRuns.map((_, cp))
+            selectedRuns.map((_, cp)).toIterator
           } else {
-            None
+            Seq[(Int, BregmanCenter)]()
           }
       }
     }.collect()
@@ -310,7 +310,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
 
     val startingCosts = initialCosts.map(asVectors)
       .getOrElse(costsFromCenters(pointOps, data, runs, centers))
-    val costs = sync("initial costs", startingCosts)
+    val costs = sync[Vector]("initial costs", startingCosts)
     val finalCosts = addCenters(0, costs)
     finalCosts.unpersist(blocking = false)
     addedCenters.map(_.toIndexedSeq)
