@@ -150,7 +150,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     val seed = 0
     val r = new Random(seed)
 
-    val data = sc.parallelize(Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
 
     KMeans.train(data, k = 20, maxIterations = 10)
 
@@ -183,7 +183,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     val seed = 0
     val r = new Random(seed)
 
-    val data = sc.parallelize(Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
 
     /*
 
@@ -205,7 +205,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
   }
 
   test("single cluster") {
-    val data = sc.parallelize(Array(
+    val data = sc.parallelize[Vector](Array(
       Vectors.dense(1.0, 2.0, 6.0),
       Vectors.dense(1.0, 3.0, 0.0),
       Vectors.dense(1.0, 4.0, 6.0)
@@ -240,7 +240,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
   }
 
   test("no distinct points") {
-    val data = sc.parallelize(
+    val data = sc.parallelize[Vector](
       Array(
         Vectors.dense(1.0, 2.0, 3.0),
         Vectors.dense(1.0, 2.0, 3.0),
@@ -254,7 +254,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
   }
 
   test("more clusters than points") {
-    val data = sc.parallelize(
+    val data = sc.parallelize[Vector](
       Array(
         Vectors.dense(1.0, 2.0, 3.0),
         Vectors.dense(1.0, 3.0, 4.0)),
@@ -271,7 +271,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       Vectors.dense(1.0, 3.0, 0.0),
       Vectors.dense(1.0, 4.0, 6.0)
     )
-    val data = sc.parallelize((1 to 100).flatMap(_ => smallData), 4)
+    val data = sc.parallelize[Vector]((1 to 100).flatMap(_ => smallData), 4)
 
     // No matter how many runs or iterations we use, we should get one cluster,
     // centered at the mean of the points
@@ -304,7 +304,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
   test("single cluster with sparse data") {
 
     val n = 10000
-    val data = sc.parallelize((1 to 100).flatMap { i =>
+    val data = sc.parallelize[Vector]((1 to 100).flatMap { i =>
       val x = i / 1000.0
       Array(
         Vectors.sparse(n, Seq((0, 1.0 + x), (1, 2.0), (2, 6.0))),
@@ -380,7 +380,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       Vectors.dense(1.0, 0.0, 1.0),
       Vectors.dense(1.0, 1.0, 1.0)
     )
-    val rdd = sc.parallelize(points)
+    val rdd = sc.parallelize[Vector](points)
 
     // K-means|| initialization should place all clusters into distinct centers because
     // it will make at least five passes, and it will give non-zero probability to each
@@ -411,7 +411,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       Vectors.dense(9.0, 0.2),
       Vectors.dense(9.2, 0.0)
     )
-    val rdd = sc.parallelize(points, 3)
+    val rdd = sc.parallelize[Vector](points, 3)
 
     for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
       // Two iterations are sufficient no matter where the initial centers are.
