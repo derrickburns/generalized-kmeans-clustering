@@ -57,7 +57,7 @@ versionWithGit
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats"
 
-ScoverageSbtPlugin.ScoverageKeys.highlighting := false
+ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
 
 // Suggested Wartremover errors to improve inference rules and avoid partial methods which throw
 wartremoverErrors ++= Seq(
