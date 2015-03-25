@@ -166,8 +166,8 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    */
   def distance(p: BregmanPoint, c: BregmanCenter): Double = {
     weightThreshold match {
-      case x if c.weight <= x => Infinity
-      case x if p.weight <= x => 0.0
+      case x: Double if c.weight <= x => Infinity
+      case x: Double if p.weight <= x => 0.0
       case _ =>
         val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
         if (d < 0.0) 0.0 else d
