@@ -36,7 +36,7 @@ import org.apache.spark.mllib.linalg.{ Vector, Vectors }
  *
  */
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
-  def embed(v: VectorIterator) = embed(v.toVector)
+  def embed(v: VectorIterator): Vector = embed(v.toVector)
 
   def embed(v: Vector): Vector = {
     val embedded = v.copy
