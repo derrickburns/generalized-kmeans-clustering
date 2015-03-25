@@ -57,7 +57,14 @@ versionWithGit
 
 ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats;.*.clusterer.AssignmentSelector;.*.clusterer.MultiKMeans"
 
-ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
+def highlight(scalaVersion: String) = {
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, scalaMajor)) if scalaMajor < 11  => false
+    case _ => true
+  }
+}
+
+ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := highlight(scalaVersion.value)
 
 // Suggested Wartremover errors to improve inference rules and avoid partial methods which throw
 wartremoverErrors ++= Seq(

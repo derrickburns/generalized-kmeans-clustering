@@ -53,7 +53,7 @@ case object DiscreteLog extends MathLog {
     d match {
       case 0.0 => 0.0
       case 1.0 => 0.0
-      case x : Double if x < logTable.length =>
+      case x: Double if x < logTable.length =>
         val i = d.toInt
         if (i.toDouble == d) {
           if (logTable(i) == 0.0) logTable(i) = Math.log(d)
@@ -61,7 +61,7 @@ case object DiscreteLog extends MathLog {
         } else {
           Math.log(d)
         }
-      case x : Double => Math.log(x)
+      case x: Double => Math.log(x)
     }
   }
 }

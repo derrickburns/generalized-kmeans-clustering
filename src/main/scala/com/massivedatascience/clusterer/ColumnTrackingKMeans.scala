@@ -144,7 +144,7 @@ object ColumnTrackingKMeans {
  * </ol>
  *
  */
-case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
+class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     extends MultiKMeansClusterer with SparkHelper {
 
   private[this] def distortion(data: RDD[Assignment]) =
@@ -418,10 +418,10 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     val bestNonStationary = bestAssignment(pointOps, round, point, nonStationaryCenters)
 
     assignment match {
-      case a : Assignment if !a.isAssigned => bestAssignment(pointOps, round, point,
+      case a: Assignment if !a.isAssigned => bestAssignment(pointOps, round, point,
         stationaryCenters, bestNonStationary)
-      case a : Assignment if a.distance > bestNonStationary.distance => bestNonStationary
-      case a : Assignment if !centers(a.cluster).movedSince(a.round) => a
+      case a: Assignment if a.distance > bestNonStationary.distance => bestNonStationary
+      case a: Assignment if !centers(a.cluster).movedSince(a.round) => a
       case _ => bestAssignment(pointOps, round, point, stationaryCenters, bestNonStationary)
     }
   }

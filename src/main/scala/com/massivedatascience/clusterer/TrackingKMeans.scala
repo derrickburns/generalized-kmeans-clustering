@@ -148,10 +148,6 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     data: RDD[BregmanPoint],
     centerArrays: Seq[IndexedSeq[BregmanCenter]]) = {
 
-    class NotSerializable {}
-
-    val x = new NotSerializable
-
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
     def cluster(): Seq[ClusteringWithDistortion] = {
@@ -295,7 +291,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       else
         getExactCentroidChanges(fatPoints)
 
-      changes.map {
+      changes.foreach {
         case (index, delta) =>
           val c = fatCenters(index)
           val oldPosition = pointOps.toPoint(c.center)
@@ -349,26 +345,6 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      */
     def countByCluster(points: RDD[FatPoint]): Map[Int, Long] =
       points.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
-
-    /**
-     * Find the closest point and distance to each cluster
-     *
-     * @param points the points
-     * @param centers the clusters
-     * @return a map from cluster index to the closest point to that cluster and the distance
-     */
-    def closestPoints(points: RDD[FatPoint], centers: FatCenters): Map[Int, (FatPoint, Double)] = {
-      val bcCenters = points.sparkContext.broadcast(centers)
-      points.mapPartitions[(Int, (FatPoint, Double))] { pts =>
-        val bc = bcCenters.value
-        pts.flatMap { p =>
-          bc.zipWithIndex.map {
-            case (c, i) =>
-              (i, (p, pointOps.distance(p.location, c.center)))
-          }
-        }
-      }.reduceByKeyLocally { (x, y) => if (x._2 < y._2) x else y }
-    }
 
     /**
      * Find the closest cluster assignment that has moved/not moved since the point was last assigned.
@@ -462,28 +438,6 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       }
     }
 
-    def showEmpty(fatCenters: FatCenters, fatPoints: RDD[FatPoint]) = {
-      val cp = closestPoints(fatPoints, fatCenters)
-
-      val clusterMap = countByCluster(fatPoints)
-      Array.tabulate(fatCenters.length) { i =>
-        val count = clusterMap.getOrElse(i, 0)
-        if (count == 0) {
-          val c = fatCenters(i)
-          val d1 = cp(i)._2
-
-          println(s"center: $i = $c")
-          println(s"closest point is ${cp(i)}")
-          val closerCluster = cp(i)._1.cluster
-          val d2 = pointOps.distance(cp(i)._1.location, fatCenters(closerCluster).center)
-          println(s"closest center to that point is $closerCluster =" +
-            s"' ${fatCenters(closerCluster)} at distance $d2")
-          println()
-          assert(d1 >= d2, s"closest point to cluster $d1 should be >= to closest cluster " +
-            s"to point $d2")
-        }
-      }
-    }
     cluster()
   }
 }
