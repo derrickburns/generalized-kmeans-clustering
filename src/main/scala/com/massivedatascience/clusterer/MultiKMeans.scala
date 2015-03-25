@@ -33,6 +33,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
+@deprecated("use ColumnTrackingKMeans", "1.2.1")
 class MultiKMeans extends MultiKMeansClusterer {
 
   def cluster(
