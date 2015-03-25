@@ -5,11 +5,13 @@ organization := "com.massivedatascience"
 
 organizationName := "Massive Data Science, LLC"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.5"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfatal-warnings", "-Xlint")
+scalacOptions ++= Seq("-unchecked", "-feature")
+
+scalacOptions in (Compile, compile) ++= Seq("-Xlint", "-Xfatal-warnings", "-deprecation")
 
 javacOptions ++= Seq(
   "-source", "1.7",
@@ -66,8 +68,7 @@ def highlight(scalaVersion: String) = {
 
 ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := highlight(scalaVersion.value)
 
-// Suggested Wartremover errors to improve inference rules and avoid partial methods which throw
-wartremoverErrors ++= Seq(
+wartremoverErrors in (Compile, compile) ++= Seq(
   Wart.Any,
   Wart.Any2StringAdd,
   Wart.EitherProjectionPartial,
