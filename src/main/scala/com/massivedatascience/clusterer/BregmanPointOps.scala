@@ -308,8 +308,8 @@ private[clusterer] case object SparseRealKLPointOps extends BregmanPointOps
    */
   override def distance(p: BregmanPoint, c: BregmanCenter): Double = {
     weightThreshold match {
-      case t if c.weight <= t => Infinity
-      case t if p.weight <= t => 0.0
+      case t: Double if c.weight <= t => Infinity
+      case t: Double if p.weight <= t => 0.0
       case _ =>
         val smoothed = BLAS.sumMissing(c.homogeneous, p.inhomogeneous)
         val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous) + smoothed
