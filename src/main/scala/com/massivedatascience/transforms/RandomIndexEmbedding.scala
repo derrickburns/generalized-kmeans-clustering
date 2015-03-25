@@ -22,6 +22,10 @@ import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 import org.joda.time.DateTime
 
+object RandomIndexEmbedding {
+  final val defaultLogInputDim: Int = 63
+}
+
 /**
  *
  * Embeds vectors in high dimensional spaces into dense vectors of low dimensional space
@@ -41,7 +45,7 @@ import org.joda.time.DateTime
 class RandomIndexEmbedding(
     outputDim: Int,
     epsilon: Double,
-    logInputDim: Int = 63,
+    logInputDim: Int = RandomIndexEmbedding.defaultLogInputDim,
     seed: Long = new DateTime().getMillis) extends Embedding {
   require(epsilon < 1.0)
   require(epsilon > 0.0)
@@ -87,7 +91,7 @@ class RandomIndexEmbedding(
  */
 class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
   require(m <= l)
-  val mask = if (l >= 63) Long.MaxValue else (1 << l) - 1
+  val mask = if (l >= RandomIndexEmbedding.defaultLogInputDim) Long.MaxValue else (1 << l) - 1
   val shift = l - m
 
   def hash(index: Int): Int = (((seed * index.toLong + offset) & mask) >> shift).toInt

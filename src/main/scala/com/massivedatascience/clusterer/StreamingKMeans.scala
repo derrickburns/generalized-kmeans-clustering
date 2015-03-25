@@ -120,7 +120,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
 
         // display the updated cluster centers
         val display = centerArrays(label).size match {
-          case x if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
+          case x : Int if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
           case _ => centroid.toArray.mkString("[", ",", "]")
         }
 

@@ -70,3 +70,4 @@ wartremoverErrors ++= Seq(
   Wart.ListOps,
   Wart.Nothing
 )
+

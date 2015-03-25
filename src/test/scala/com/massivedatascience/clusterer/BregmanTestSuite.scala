@@ -2,10 +2,10 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.divergence.BregmanDivergence
 import com.massivedatascience.linalg.WeightedVector
-import org.scalatest.FunSuite
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors
 import com.massivedatascience.clusterer.TestingUtils._
+import org.scalatest.FunSuite
 
 import scala.annotation.tailrec
 
@@ -191,7 +191,7 @@ class BregmanTestSuite extends FunSuite {
     assert(z ~= 46.0 absTol 1.0e-8)
   }
 
-  def klf(x: Double) = x * Math.log(x) - x
+  def klf(x: Double): Double = x * Math.log(x) - x
 
   def kl(v: Vector, w: Vector): Double = {
     v.toArray.zip(w.toArray).foldLeft(0.0) {
@@ -201,10 +201,10 @@ class BregmanTestSuite extends FunSuite {
   }
 
   def divergence(v: Array[Double], w: Array[Double], f: (Double => Double)): Double = {
-    F(v)(f) - F(w)(f) - dot(gradient(w)(f), diff(v, w))
+    convexF(v)(f) - convexF(w)(f) - dot(gradient(w)(f), diff(v, w))
   }
 
-  def F(v: Array[Double])(implicit f: (Double => Double)): Double = {
+  def convexF(v: Array[Double])(implicit f: (Double => Double)): Double = {
     v.foldLeft(0.0) { case (agg, y) => agg + f(y) }
   }
 

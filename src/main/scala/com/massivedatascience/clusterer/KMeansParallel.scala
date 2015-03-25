@@ -206,11 +206,15 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
    * @return RDD of vectors
    */
   private[this] def asVectors(rdds: Seq[RDD[Double]]): RDD[Vector] = {
-    rdds.zipWithIndex.foldLeft(rdds.head.map { _ => new Array[Double](rdds.length) }) {
-      case (arrayRdd, (doubleRdd, i)) =>
-        arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
+    rdds match {
+      case Seq(head, _) =>
+        rdds.zipWithIndex.foldLeft(head.map { _ => new Array[Double](rdds.length) }) {
+          case (arrayRdd, (doubleRdd, i)) =>
+            arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
 
-    }.map(Vectors.dense)
+        }.map(Vectors.dense)
+      case _ => throw new IllegalArgumentException("sequence of RDDs must be non-empty")
+    }
   }
 
   /**

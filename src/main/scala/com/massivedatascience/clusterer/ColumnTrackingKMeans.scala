@@ -418,10 +418,10 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     val bestNonStationary = bestAssignment(pointOps, round, point, nonStationaryCenters)
 
     assignment match {
-      case a if !a.isAssigned => bestAssignment(pointOps, round, point, stationaryCenters,
-        bestNonStationary)
-      case a if a.distance > bestNonStationary.distance => bestNonStationary
-      case a if !centers(a.cluster).movedSince(a.round) => a
+      case a : Assignment if !a.isAssigned => bestAssignment(pointOps, round, point,
+        stationaryCenters, bestNonStationary)
+      case a : Assignment if a.distance > bestNonStationary.distance => bestNonStationary
+      case a : Assignment if !centers(a.cluster).movedSince(a.round) => a
       case _ => bestAssignment(pointOps, round, point, stationaryCenters, bestNonStationary)
     }
   }
