@@ -280,45 +280,6 @@ private[clusterer] case object ItakuraSaitoPointOps extends BregmanPointOps
 }
 
 /**
- * Implements Kullback-Leibler divergence for sparse points in R+ ** n
- *
- * We smooth the points by adding a constant to each dimension and then re-normalize the points
- * to get points on the simplex in R+ ** n.  This works fine with n is small and
- * known.  When n is large or unknown, one often uses sparse representations.  However, smoothing
- * turns a sparse vector into a dense one, and when n is large, this space is prohibitive.
- *
- * This implementation approximates smoothing by adding a penalty equal to the sum of the
- * values of the point along dimensions that are no represented in the cluster center.
- *
- * Also, with sparse data, the centroid can be of high dimension.  To address this, we limit the
- * density of the centroid by dropping low frequency entries in the SparseCentroidProvider
- */
-private[clusterer] case object SparseRealKLPointOps extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
-
-  val divergence = RealKLDivergence
-
-  /**
-   * Smooth the center using a variant Laplacian smoothing.
-   *
-   * The distance is roughly the equivalent of adding 1 to the center for
-   * each dimension of C that is zero in C but that is non-zero in P
-   *
-   * @return
-   */
-  override def distance(p: BregmanPoint, c: BregmanCenter): Double = {
-    weightThreshold match {
-      case t: Double if c.weight <= t => Infinity
-      case t: Double if p.weight <= t => 0.0
-      case _ =>
-        val smoothed = BLAS.sumMissing(c.homogeneous, p.inhomogeneous)
-        val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous) + smoothed
-        if (d < 0.0) 0.0 else d
-    }
-  }
-}
-
-/**
  * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
  * i.e. the entries in each vector are positive integers.
  */
@@ -350,6 +311,7 @@ private[clusterer] case object DiscreteSimplexSmoothedKLPointOps extends Bregman
 object BregmanPointOps {
   val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
+  @deprecated("convert data to dense vectors first", "1.3.0")
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
   val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
@@ -365,7 +327,6 @@ object BregmanPointOps {
       case DISCRETE_KL => DiscreteKLPointOps
       case SIMPLEX_SMOOTHED_KL => DiscreteSimplexSmoothedKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteSmoothedKLPointOps
-      case SPARSE_SMOOTHED_KL => SparseRealKLPointOps
       case LOGISTIC_LOSS => LogisticLossPointOps
       case GENERALIZED_I => GeneralizedIPointOps
       case ITAKURA_SAITO => ItakuraSaitoPointOps

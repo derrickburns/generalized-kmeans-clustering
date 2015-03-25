@@ -356,10 +356,6 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
       distanceFunctionNames = Seq(DISCRETE_KL))
     assert(model.clusterCenters.head ~== center absTol 1E-5)
 
-    model = KMeans.train(data, k = 1, maxIterations = 1, runs = 1, mode = K_MEANS_PARALLEL,
-      distanceFunctionNames = Seq(SPARSE_SMOOTHED_KL))
-    assert(model.clusterCenters.head ~== center absTol 1E-5)
-
     data.unpersist()
   }
 

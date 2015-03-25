@@ -33,7 +33,7 @@ abstract class BaseSparseVectorIterator(val underlying: SparseVector) extends Ve
   def hasNext: Boolean = i < underlying.values.length
   def advance(): Unit = i = i + 1
   def index: Int = underlying.indices(i)
-  def toVector = underlying
+  def toVector: SparseVector = underlying
 }
 
 abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {

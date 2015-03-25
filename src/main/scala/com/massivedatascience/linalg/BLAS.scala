@@ -89,145 +89,6 @@ object BLAS extends Serializable {
     transformed
   }
 
-  /**
-   * Computes the sum of the values in y whose values are
-   * zero in x.
-   *
-   * @param x vector
-   * @param y  vector
-   * @return  sum of y values where corresponding x values are zero
-   */
-  def sumMissing(x: Vector, y: Vector): Double = {
-    y match {
-      case dy: DenseVector =>
-        x match {
-          case dx: DenseVector =>
-            sumMissing(dx, dy)
-          case sx: SparseVector =>
-            sumMissing(sx, dy)
-          case _ =>
-            throw new UnsupportedOperationException(
-              s"axpy doesn't support x type ${x.getClass}.")
-        }
-      case sy: SparseVector =>
-        x match {
-          case sx: SparseVector =>
-            sumMissing(sx, sy)
-          case dx: DenseVector =>
-            accumulate(dx, sy)
-          case _ =>
-            throw new UnsupportedOperationException(
-              s"merge doesn't support x type ${x.getClass}.")
-        }
-    }
-  }
-
-  private def sumMissing(x: DenseVector, y: DenseVector): Double = {
-    var i = 0
-    var result = 0.0
-
-    while (i < x.size) {
-      if (x(i) == 0.0) result = result + y(i)
-      i = i + 1
-    }
-    result
-  }
-
-  private def sumMissing(x: SparseVector, y: DenseVector): Double = {
-    val xIndices = x.indices
-    val xValues = x.values
-    val yValues = y.values
-    val xLen = xIndices.length
-    val yLen = y.values.length
-
-    var i = 0
-    var j = 0
-    var result = 0.0
-
-    while (i < xLen && j < yLen) {
-      if (xIndices(i) < j) {
-        i = i + 1
-      } else if (j < xIndices(i)) {
-        result = result + yValues(j)
-        j = j + 1
-      } else {
-        if (xValues(i) == 0.0) result = result + yValues(j)
-        i = i + 1
-        j = j + 1
-      }
-    }
-
-    while (j < yLen) {
-      result = result + yValues(j)
-      j = j + 1
-
-    }
-    result
-  }
-
-  private def accumulate(x: DenseVector, y: SparseVector): Double = {
-    val yIndices = y.indices
-    val xValues = x.values
-    val yValues = y.values
-    val xLen = x.values.length
-    val yLen = yIndices.length
-
-    var i = 0
-    var j = 0
-    var result = 0.0
-
-    while (i < xLen && j < yLen) {
-      if (i < yIndices(j)) {
-        i = i + 1
-      } else if (yIndices(j) < i) {
-        result = result + yValues(j)
-        j = j + 1
-      } else {
-        if (xValues(i) == 0.0) result = result + yValues(j)
-        i = i + 1
-        j = j + 1
-      }
-    }
-    while (j < yLen) {
-      result = result + yValues(j)
-      j = j + 1
-    }
-    result
-  }
-
-  private def sumMissing(x: SparseVector, y: SparseVector): Double = {
-    val xIndices = x.indices
-    val yIndices = y.indices
-    val xValues = x.values
-    val yValues = y.values
-    val xLen = xIndices.length
-    val yLen = yIndices.length
-
-    var i = 0
-    var j = 0
-    var result = 0.0
-
-    while (i < xLen && j < yLen) {
-      if (xIndices(i) < yIndices(j)) {
-        i = i + 1
-      } else if (yIndices(j) < xIndices(i)) {
-        result = result + yValues(j)
-        j = j + 1
-      } else {
-        if (xValues(i) == 0.0) result = result + yValues(j)
-        i = i + 1
-        j = j + 1
-      }
-    }
-
-    while (j < yLen) {
-      result = result + yValues(j)
-      j = j + 1
-
-    }
-    result
-  }
-
   def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
     y match {
       case dy: DenseVector =>
@@ -323,7 +184,7 @@ object BLAS extends Serializable {
    * y += a * x
    */
   private def axpy(a: Double, x: SparseVector, y: DenseVector): Vector = {
-    val nnz = x.indices.size
+    val nnz = x.indices.length
     if (a == 1.0) {
       var k = 0
       while (k < nnz) {
@@ -387,7 +248,7 @@ object BLAS extends Serializable {
    */
 
   private def dot(x: SparseVector, y: DenseVector): Double = {
-    val nnz = x.indices.size
+    val nnz = x.indices.length
     var sum = 0.0
     var k = 0
     while (k < nnz) {
@@ -402,9 +263,9 @@ object BLAS extends Serializable {
    */
   private def dot(x: SparseVector, y: SparseVector): Double = {
     var kx = 0
-    val nnzx = x.indices.size
+    val nnzx = x.indices.length
     var ky = 0
-    val nnzy = y.indices.size
+    val nnzy = y.indices.length
     var sum = 0.0
     // y catching x
     while (kx < nnzx && ky < nnzy) {
@@ -433,7 +294,7 @@ object BLAS extends Serializable {
           case sx: SparseVector =>
             var i = 0
             var k = 0
-            val nnz = sx.indices.size
+            val nnz = sx.indices.length
             while (k < nnz) {
               val j = sx.indices(k)
               while (i < j) {
@@ -462,9 +323,9 @@ object BLAS extends Serializable {
   def scal(a: Double, x: Vector): Unit = {
     x match {
       case sx: SparseVector =>
-        f2jBLAS.dscal(sx.values.size, a, sx.values, 1)
+        f2jBLAS.dscal(sx.values.length, a, sx.values, 1)
       case dx: DenseVector =>
-        f2jBLAS.dscal(dx.values.size, a, dx.values, 1)
+        f2jBLAS.dscal(dx.values.length, a, dx.values, 1)
       case _ =>
         throw new IllegalArgumentException(s"scal doesn't support vector type ${x.getClass}.")
     }
