@@ -5,9 +5,10 @@
 This release deprecates the ```MultiKMeans```  and  ```SparseSmoothedKLPointOps```. We also
 
 - Added support for WartRemover
+- Addressed issues discovered with WartRemover by adding explicit type declarations
 - Turned on the -XLint compile option
-- Turned off coverage highlighting for the Scala 2.10 version builds to avoid a Scala bug.
-- Added waffle.io badge.
+- Turned off coverage highlighting for the Scala 2.10 version builds to avoid a Scala bug
+- Added waffle.io badge
 
 ## 1.1.0
 
