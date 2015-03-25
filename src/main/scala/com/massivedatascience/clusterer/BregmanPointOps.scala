@@ -311,7 +311,7 @@ private[clusterer] case object DiscreteSimplexSmoothedKLPointOps extends Bregman
 object BregmanPointOps {
   val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
   val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
-  @deprecated("convert data to dense vectors first", "1.3.0")
+  @deprecated("convert data to dense vectors first", "1.2.0")
   val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
   val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
