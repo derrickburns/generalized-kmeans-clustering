@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.2.0
+
+This release deprecates the ```MultiKMeans```  and  ```SparseSmoothedKLPointOps```. We also
+
+- Added support for WartRemover
+- Turned on the -XLint compile option
+- Turned off coverage highlighting for the Scala 2.10 version builds to avoid a Scala bug.
+
 ## 1.1.0
 
 The big new feature is the addition of the ```RE-SEED``` implementation of ```MultiKMeansClusterer```
