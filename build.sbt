@@ -55,7 +55,7 @@ import com.typesafe.sbt.SbtGit._
 
 versionWithGit
 
-ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats"
+ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*.clusterer.CachingKMeans;.*.clusterer.SingleKMeans;.*.clusterer.TrackingKMeans;.*.clusterer.DetailedTrackingStats;.*.linalg.HaarWavelet"
 
 ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := false
 
