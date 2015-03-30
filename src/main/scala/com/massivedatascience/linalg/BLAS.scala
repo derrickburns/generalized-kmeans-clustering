@@ -343,7 +343,6 @@ object BLAS extends Serializable {
 
   private def doAdd(v: Array[Double], c: Double): Array[Double] = {
     var i = 0
-    var s = 0.0
     while (i < v.length) {
       v(i) = v(i) + c
       i = i + 1

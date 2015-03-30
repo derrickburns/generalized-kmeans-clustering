@@ -30,6 +30,7 @@ import scala.collection.Map
  * @deprecated
  * @param pointOps distance function
  */
+
 class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging {
 
   def cluster(

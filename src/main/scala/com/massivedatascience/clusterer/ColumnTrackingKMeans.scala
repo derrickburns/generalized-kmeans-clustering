@@ -197,7 +197,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
     //val weakClusters = centers.filter(_ => myRand.nextDouble() < 0.10)
 
-    if (weakClusters.length != 0 && round < config.maxRoundsToBackfill) {
+    if (weakClusters.nonEmpty && round < config.maxRoundsToBackfill) {
       logInfo(s"replacing ${weakClusters.length} empty clusters")
       val strongClusters = centers.filter(!weakClusters.contains(_))
       val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)

@@ -123,7 +123,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
   private[this] def initialFatCenters(centers: Array[BregmanCenter]): Array[FatCenter] =
     centers.zipWithIndex.map {
       case (c, i) => FatCenter(c, i, moved = true, nonEmpty = false)
-    }.toArray
+    }
 
   /**
    * The initial fat points

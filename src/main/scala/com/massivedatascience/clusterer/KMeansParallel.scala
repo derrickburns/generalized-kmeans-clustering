@@ -26,7 +26,7 @@ import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec
-import scala.collection.{ immutable, Map }
+import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
 /**

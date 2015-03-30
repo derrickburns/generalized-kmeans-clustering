@@ -133,6 +133,7 @@ object TrackingKMeans {
  * @param updateRate  percentage of points that are updated on each round
  */
 
+//scalastyle:off
 @deprecated("use ColumnTrackingKMeans", "1.0.2")
 class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
@@ -441,3 +442,5 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     cluster()
   }
 }
+//scalastyle:on
+

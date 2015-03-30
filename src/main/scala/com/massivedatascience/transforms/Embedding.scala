@@ -53,7 +53,7 @@ case object DenseEmbedding extends Embedding {
 }
 
 /**
- * The embeddding that averages adjacent values, thereby lowering the dimension of
+ * The embedding that averages adjacent values, thereby lowering the dimension of
  * the data by two
  */
 case object HaarEmbedding extends Embedding {

@@ -51,7 +51,7 @@ class KMeansPlusPlusSuite extends FunSuite with LocalSparkContext {
       numPreselected)
 
     assert(goodCenters.length == 1)
-    assert(goodCenters(0) == candidateCenters(0))
+    assert(goodCenters.head == candidateCenters(0))
   }
 
   test("k-means plus plus keep pre-selected centers") {
@@ -82,7 +82,7 @@ class KMeansPlusPlusSuite extends FunSuite with LocalSparkContext {
       numPreselected)
 
     assert(goodCenters.length == 2)
-    assert(goodCenters(0) == candidateCenters(0))
+    assert(goodCenters.head == candidateCenters(0))
     assert(goodCenters(1) == candidateCenters(2))
   }
 

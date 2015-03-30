@@ -39,7 +39,7 @@ import scala.reflect.ClassTag
  * doing a single iteration of the standard k-means algorithm.
  *
  * The update algorithm uses the "mini-batch" KMeans rule,
- * generalized to incorporate forgetfullness (i.e. decay).
+ * generalized to incorporate forgetfulness (i.e. decay).
  * The update rule (for each cluster) is:
  *
  * c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t]

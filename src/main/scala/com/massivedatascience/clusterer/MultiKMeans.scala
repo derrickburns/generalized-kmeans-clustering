@@ -33,6 +33,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
+//scalastyle:off
 @deprecated("use ColumnTrackingKMeans", "1.2.0")
 class MultiKMeans extends MultiKMeansClusterer {
 
@@ -63,7 +64,7 @@ class MultiKMeans extends MultiKMeansClusterer {
 
         if (log.isInfoEnabled) {
           for (r <- 0 until activeCenters.length)
-            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).size} centers")
+            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
         }
 
         // Find the sum and count of points mapping to each center
@@ -137,3 +138,4 @@ class MultiKMeans extends MultiKMeansClusterer {
   }
 
 }
+//scalastyle:on

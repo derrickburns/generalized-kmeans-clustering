@@ -92,7 +92,6 @@ object HaarWavelet {
       var start = values.length
       val result = values.clone()
       while (start != 0) {
-        println(result.mkString("[", ",", "]"))
         require(start == 1 || (start & 1) == 0, "length of input must be power of 2")
         start = start >> 1
         haar(result, result, start)
@@ -102,7 +101,6 @@ object HaarWavelet {
       while (start < values.length) {
         inverseHaar(result, result, start)
         start = start << 1
-        println(result.mkString("[", ",", "]"))
       }
       result
     }
@@ -115,8 +113,6 @@ object HaarWavelet {
 
     val h1 = x.haar(y, y.clone(), y.length >> 1)
     val h2 = x.inverseHaar(h1, h1.clone(), y.length >> 1)
-
-    println(h2.mkString("[", ",", "]"))
 
   }
 

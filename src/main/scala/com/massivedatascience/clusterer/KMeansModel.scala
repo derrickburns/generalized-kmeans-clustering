@@ -133,7 +133,7 @@ object KMeansModel {
    * @param centers initial cluster centers as weighted vectors
    * @return  k-means model
    */
-  def fromWeightedVectors[T <: WeightedVector: ClassTag](ops: BregmanPointOps, centers: IndexedSeq[T]): KMeansModel = {
+  def fromWeightedVectors[T <: WeightedVector](ops: BregmanPointOps, centers: IndexedSeq[T]): KMeansModel = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
@@ -171,7 +171,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def fromCenters[T <: WeightedVector: ClassTag](
+  def fromCenters[T <: WeightedVector](
     ops: BregmanPointOps,
     data: IndexedSeq[T],
     weights: IndexedSeq[Double],
@@ -231,7 +231,7 @@ object KMeansModel {
    * @param seed random number seed
    * @return  k-means model
    */
-  def usingKMeansParallel[T <: WeightedVector: ClassTag](
+  def usingKMeansParallel[T <: WeightedVector](
     ops: BregmanPointOps,
     data: RDD[T],
     k: Int,
@@ -240,7 +240,7 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val points = data.map(ops.toPoint)
-    val centers = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed)(0)
+    val centers = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed).head
     new KMeansModel(ops, centers)
   }
 

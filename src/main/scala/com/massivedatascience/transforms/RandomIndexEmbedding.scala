@@ -17,7 +17,7 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.linalg.{ WeightedVector, _ }
+import com.massivedatascience.linalg._
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 import org.joda.time.DateTime
@@ -87,7 +87,7 @@ class RandomIndexEmbedding(
  * @param seed multiplicative seed
  * @param offset additive seed
  * @param l log of the number of dimensions of the input
- * @param m log of the numer of dimensions of the output
+ * @param m log of the number of dimensions of the output
  */
 class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
   require(m <= l)
