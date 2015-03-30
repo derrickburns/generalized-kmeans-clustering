@@ -4,6 +4,7 @@ import sbtrelease._
 import com.typesafe.sbt.SbtSite.SiteKeys._
 import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
 
+
 object Build extends Build {
   def executeTask(task: TaskKey[_], info: String): State => State = (st: State) => {
     st.log.info(info)
