@@ -66,13 +66,17 @@ The massivedatascience-clusterer project is built for both Scala 2.10.x and 2.11
 
 #### SBT
 
+<a href='https://bintray.com/derrickburns/maven/massivedatascience-clusterer/view?source=watch' alt='Get automatic notifications about new "massivedatascience-clusterer" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>
+
+If you are using SBT, simply add the following to your `build.sbt` file:
+
 ```scala
+
+resolvers += Resolver.bintrayRepo("derrickburns", "maven")
+
 libraryDependencies ++= Seq(
   "derrickburns" %% "massivedatascience-clusterer" % "x.y.z"
 )
-
-resolvers += "Bintray" at "http://dl.bintray.com/derrickburns/maven/"
-
 ```
 
 #### Maven
