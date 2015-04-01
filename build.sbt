@@ -23,7 +23,7 @@ lazy val root = (project in file(".")).
     ),
     git.remoteRepo := "git@github.com:derrickburns/generalized-kmeans-clustering.git",
     sparkPackageName := "derrickburns/generalized-kmeans-clustering",
-    sparkVersion := "1.2.0",
+    sparkVersion := "1.3.0",
     sparkComponents += "mllib",
     testOptions in Test += Tests.Argument("-Dlog4j.configuration=log4j.properties"),
     ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := highlight(scalaVersion.value),

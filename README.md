@@ -75,7 +75,7 @@ If you are using SBT, simply add the following to your `build.sbt` file:
 resolvers += Resolver.bintrayRepo("derrickburns", "maven")
 
 libraryDependencies ++= Seq(
-  "derrickburns" %% "massivedatascience-clusterer" % "x.y.z"
+  "com.massivedatascience" %% "massivedatascience-clusterer" % "x.y.z"
 )
 ```
 
@@ -84,13 +84,13 @@ libraryDependencies ++= Seq(
 
 ```xml
 <dependency>
-  <groupId>derrickburns</groupId>
+  <groupId>com.massivedatascience</groupId>
   <artifactId>massivedatascience-clusterer_2.10</artifactId>
   <version>x.y.z</version>
 </dependency>
 
 <dependency>
-  <groupId>derrickburns</groupId>
+  <groupId>com.massivedatascience</groupId>
   <artifactId>massivedatascience-clusterer_2.11</artifactId>
   <version>x.y.z</version>
 </dependency>
