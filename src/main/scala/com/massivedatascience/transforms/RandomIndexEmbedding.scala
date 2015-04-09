@@ -70,8 +70,14 @@ class RandomIndexEmbedding(
     while (iterator.hasNext) {
       val count = iterator.value
       val index = iterator.index
-      for (p <- positive) rep(p.hash(index)) += count
-      for (n <- negative) rep(n.hash(index)) -= count
+      for (p <- positive) {
+        val hashKey = p.hash(index)
+        rep(hashKey) += count
+      }
+      for (n <- negative) {
+        val hashKey = n.hash(index)
+        rep(hashKey) -= count
+      }
       iterator.advance()
     }
     Vectors.dense(rep)
