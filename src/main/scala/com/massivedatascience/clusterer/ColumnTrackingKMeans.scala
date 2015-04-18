@@ -23,10 +23,12 @@ import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDisto
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.SparkContext._
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
+import scala.collection.Map
 import scala.collection.generic.FilterMonadic
 
 object ColumnTrackingKMeans {
@@ -48,6 +50,112 @@ object ColumnTrackingKMeans {
     def isAssigned: Boolean = cluster != noCluster
 
     def isUnassigned: Boolean = cluster == noCluster
+  }
+
+  /**
+   * Find the closest cluster from a given set of clusters
+   *
+   * @param centers the cluster centers
+   * @param point the point
+   * @return the assignment of that cluster to the point
+   */
+  def bestAssignment(
+    pointOps: BregmanPointOps,
+    round: Int,
+    point: BregmanPoint,
+    centers: FilterMonadic[CenterWithHistory, Seq[CenterWithHistory]],
+    initialAssignment: Assignment = unassigned): Assignment = {
+
+    var distance = initialAssignment.distance
+    var cluster = initialAssignment.cluster
+    for (center <- centers) {
+      val dist = pointOps.distance(point, center.center)
+      if (dist < distance) {
+        cluster = center.index
+        distance = dist
+      }
+    }
+    if (cluster != noCluster) {
+      Assignment(distance, cluster, round)
+    } else {
+      unassigned
+    }
+  }
+
+  /**
+   * Find the closest cluster assignment to a given point
+   *
+   * This implementation is optimized for the cases when:
+   *
+   * a) one of the clusters that moved is closer than the previous cluster
+   *
+   * b) the previous cluster did not move.
+   *
+   * In these case distances to other stationary clusters need not be computed.  As Lloyd's
+   * algorithm proceeds, more and more clusters are stationary, so fewer and fewer distance
+   * calculations are needed.
+   *
+   * @param point point
+   * @param assignment the current assignment of the point
+   * @param round the current round
+   * @param centers the cluster centers
+   * @return  the new assignment for the point
+   */
+  def reassignment(
+    pointOps: BregmanPointOps,
+    point: BregmanPoint,
+    assignment: Assignment,
+    round: Int,
+    centers: Seq[CenterWithHistory]): Assignment = {
+
+    val nonStationaryCenters = centers.withFilter(c => c.movedSince(assignment.round) &&
+      c.center.weight > pointOps.weightThreshold)
+    val stationaryCenters = centers.withFilter(c => !c.movedSince(assignment.round) &&
+      c.center.weight > pointOps.weightThreshold)
+    val bestNonStationary = bestAssignment(pointOps, round, point, nonStationaryCenters)
+
+    assignment match {
+      case a: Assignment if !a.isAssigned => bestAssignment(pointOps, round, point,
+        stationaryCenters, bestNonStationary)
+      case a: Assignment if a.distance > bestNonStationary.distance => bestNonStationary
+      case a: Assignment if !centers(a.cluster).movedSince(a.round) => a
+      case _ => bestAssignment(pointOps, round, point, stationaryCenters, bestNonStationary)
+    }
+  }
+
+  /**
+   * Identify the new cluster assignments for a sample of the points.
+   * Persists the new assignments in memory, un-persisting the previous assignments.
+   *
+   * @param round the number of the round
+   * @param bcCenters current clusters
+   * @param previousAssignments current assignments
+   * @return points and their new assignments
+   */
+  def updatedAssignments(
+    points: RDD[BregmanPoint],
+    ops: BregmanPointOps,
+    round: Int,
+    previousAssignments: RDD[Assignment],
+    bcCenters: Broadcast[IndexedSeq[CenterWithHistory]],
+    updateRate: Double): RDD[Assignment] = {
+
+    require(previousAssignments.getStorageLevel.useMemory)
+
+    implicit val sc = points.sparkContext
+    val centers = bcCenters.value
+    val r = round
+    val pointOps = ops
+
+    points.zip(previousAssignments).mapPartitionsWithIndex[Assignment] {
+      (index, assignedPoints) =>
+        val rand = new XORShiftRandom(r ^ (index << 16))
+        assignedPoints.map {
+          case (point, assignment) =>
+            if (rand.nextDouble() > updateRate) assignment
+            else reassignment(pointOps, point, assignment, round, centers)
+        }
+    }
   }
 }
 
@@ -144,47 +252,11 @@ object ColumnTrackingKMeans {
  * </ol>
  *
  */
-class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
+case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     extends MultiKMeansClusterer with SparkHelper {
 
   private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
-
-  /**
-   * Identify the new cluster assignments for a sample of the points.
-   * Persists the new assignments in memory, un-persisting the previous assignments.
-   *
-   * @param round the number of the round
-   * @param currentCenters current clusters
-   * @param previousAssignments current assignments
-   * @return points and their new assignments
-   */
-  private[this] def updatedAssignments(
-    points: RDD[BregmanPoint],
-    pointOps: BregmanPointOps,
-    round: Int,
-    previousAssignments: RDD[Assignment],
-    currentCenters: IndexedSeq[CenterWithHistory]): RDD[Assignment] = {
-
-    require(previousAssignments.getStorageLevel.useMemory)
-
-    val updateRate = config.updateRate
-
-    implicit val sc = points.sparkContext
-    withBroadcast(currentCenters) { bcCenters =>
-      val centers = bcCenters.value
-
-      points.zip(previousAssignments).mapPartitionsWithIndex[Assignment] {
-        (index, assignedPoints) =>
-          val rand = new XORShiftRandom(round ^ (index << 16))
-          assignedPoints.map {
-            case (point, current) =>
-              if (rand.nextDouble() > updateRate) current
-              else reassignment(pointOps, point, current, round, centers)
-          }
-      }
-    }
-  }
 
   private[this] def backFilledCenters(
     points: RDD[BregmanPoint],
@@ -264,7 +336,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
   }
 
   /**
-   * Computes all centroids, but only returns centroids of changes clusters.
+   * Computes all centroids, but only returns centroids of changed clusters.
    * *
    * A previous implementation that uses aggregateByKey on (index, point) tuples was observed
    * to cause to much garbage collection overhead.
@@ -281,14 +353,14 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
-    numCenters: Int): Array[(Int, MutableWeightedVector)] = {
+    numCenters: Int): Map[Int, MutableWeightedVector] = {
 
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
 
     points.zipPartitions(assignments, previousAssignments) {
       (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = IndexedSeq.tabulate(numCenters)(i => pointOps.make(i))
+        val centroids = Array.tabulate(numCenters)(i => pointOps.make(i))
         val changed = new Array[Boolean](numCenters)
         val indexBuffer = new collection.mutable.ArrayBuilder.ofInt
         indexBuffer.sizeHint(numCenters)
@@ -313,7 +385,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
         val changedClusters = indexBuffer.result()
         changedClusters.map(index => (index, centroids(index))).iterator
-    }.reduceByKey(_.add(_)).collect()
+    }.reduceByKeyLocally(_.add(_))
   }
 
   /**
@@ -330,7 +402,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
-    numCenters: Int): Array[(Int, MutableWeightedVector)] = {
+    numCenters: Int): Map[Int, MutableWeightedVector] = {
 
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
@@ -352,78 +424,7 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           }
         }
         centroids.filter(_.nonEmpty).map(x => (x.index, x)).iterator
-    }.reduceByKey(_.add(_)).collect()
-  }
-
-  /**
-   * Find the closest cluster from a given set of clusters
-   *
-   * @param centers the cluster centers
-   * @param point the point
-   * @return the assignment of that cluster to the point
-   */
-  private[this] def bestAssignment(
-    pointOps: BregmanPointOps,
-    round: Int,
-    point: BregmanPoint,
-    centers: FilterMonadic[CenterWithHistory, Seq[CenterWithHistory]],
-    initialAssignment: Assignment = unassigned): Assignment = {
-
-    var distance = initialAssignment.distance
-    var cluster = initialAssignment.cluster
-    for (center <- centers) {
-      val dist = pointOps.distance(point, center.center)
-      if (dist < distance) {
-        cluster = center.index
-        distance = dist
-      }
-    }
-    if (cluster != noCluster) {
-      Assignment(distance, cluster, round)
-    } else {
-      unassigned
-    }
-  }
-
-  /**
-   * Find the closest cluster assignment to a given point
-   *
-   * This implementation is optimized for the cases when:
-   *
-   * a) one of the clusters that moved is closer than the previous cluster
-   *
-   * b) the previous cluster did not move.
-   *
-   * In these case distances to other stationary clusters need not be computed.  As Lloyd's
-   * algorithm proceeds, more and more clusters are stationary, so fewer and fewer distance
-   * calculations are needed.
-   *
-   * @param point point
-   * @param assignment the current assignment of the point
-   * @param round the current round
-   * @param centers the cluster centers
-   * @return  the new assignment for the point
-   */
-  private[this] def reassignment(
-    pointOps: BregmanPointOps,
-    point: BregmanPoint,
-    assignment: Assignment,
-    round: Int,
-    centers: Seq[CenterWithHistory]): Assignment = {
-
-    val nonStationaryCenters = centers.withFilter(c => c.movedSince(assignment.round) &&
-      c.center.weight > pointOps.weightThreshold)
-    val stationaryCenters = centers.withFilter(c => !c.movedSince(assignment.round) &&
-      c.center.weight > pointOps.weightThreshold)
-    val bestNonStationary = bestAssignment(pointOps, round, point, nonStationaryCenters)
-
-    assignment match {
-      case a: Assignment if !a.isAssigned => bestAssignment(pointOps, round, point,
-        stationaryCenters, bestNonStationary)
-      case a: Assignment if a.distance > bestNonStationary.distance => bestNonStationary
-      case a: Assignment if !centers(a.cluster).movedSince(a.round) => a
-      case _ => bestAssignment(pointOps, round, point, stationaryCenters, bestNonStationary)
-    }
+    }.reduceByKeyLocally(_.add(_))
   }
 
   /**
@@ -451,8 +452,11 @@ class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       centers: IndexedSeq[CenterWithHistory]): (RDD[Assignment], IndexedSeq[CenterWithHistory]) = {
 
       require(assignments.getStorageLevel.useMemory)
-      val newAssignments = sync[Assignment](s"assignments round $round",
-        updatedAssignments(points, pointOps, round, assignments, centers))
+
+      val newAssignments = withBroadcast(centers) { bcCenters =>
+        sync[Assignment](s"assignments round $round",
+          updatedAssignments(points, pointOps, round, assignments, bcCenters, config.updateRate))
+      }
 
       val newCenters = latestCenters(points, pointOps, round + 1, centers, newAssignments,
         assignments)
