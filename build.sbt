@@ -6,9 +6,8 @@ lazy val root = (project in file(".")).
     name := "massivedatascience-clusterer",
     organization := "com.massivedatascience",
     organizationName := "Massive Data Science, LLC",
-    version := "1.0",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
-    scalaVersion := "2.11.6",
+    scalaVersion := "2.10.4",
     crossScalaVersions := Seq("2.10.4", "2.11.6"),
     scalacOptions ++= Seq("-unchecked", "-feature"),
     scalacOptions in (Compile, compile) ++= Seq("-Xlint", "-Xfatal-warnings", "-deprecation"),
@@ -57,3 +56,5 @@ def highlight(scalaVersion: String) = {
     case _ => true
   }
 }
+
+
