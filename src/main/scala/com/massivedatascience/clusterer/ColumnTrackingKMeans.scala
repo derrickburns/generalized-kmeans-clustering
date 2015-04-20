@@ -22,7 +22,7 @@ import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
-import org.apache.spark.{Partitioner, HashPartitioner}
+import org.apache.spark.{ Partitioner, HashPartitioner }
 import org.apache.spark.Partitioner._
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
@@ -362,7 +362,9 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     logInfo(s"using $numCenters centers")
 
-    withBroadcast( ops ) { (bcPointOps: Broadcast[BregmanPointOps]) =>
+    implicit val sc = points.sparkContext
+
+    withBroadcast(ops) { (bcPointOps: Broadcast[BregmanPointOps]) =>
       points.zipPartitions(assignments, previousAssignments) {
         (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
           val pointOps = bcPointOps.value
@@ -392,7 +394,11 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           val changedClusters = indexBuffer.result()
           changedClusters.map(index => (index, centroids(index))).iterator
       }.combineByKey[MutableWeightedVector](
-          (x) => x, _.add(_), _.add(_), defaultPartitioner(points), mapSideCombine = false).collect()
+        (x: MutableWeightedVector) => x,
+        (_: MutableWeightedVector).add(_: MutableWeightedVector),
+        (_: MutableWeightedVector).add(_: MutableWeightedVector),
+        defaultPartitioner(points),
+        mapSideCombine = false).collect()
     }
   }
 
