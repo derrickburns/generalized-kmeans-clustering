@@ -22,6 +22,8 @@ import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
+import org.apache.spark.{Partitioner, HashPartitioner}
+import org.apache.spark.Partitioner._
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
@@ -350,7 +352,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
    */
   private[this] def completeMovedCentroids[T <: WeightedVector](
     points: RDD[T],
-    pointOps: BregmanPointOps,
+    ops: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
     numCenters: Int): Array[(Int, MutableWeightedVector)] = {
@@ -358,34 +360,40 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
 
-    points.zipPartitions(assignments, previousAssignments) {
-      (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
-        val centroids = Array.tabulate(numCenters)(i => pointOps.make(i))
-        val changed = new Array[Boolean](numCenters)
-        val indexBuffer = new collection.mutable.ArrayBuilder.ofInt
-        indexBuffer.sizeHint(numCenters)
+    logInfo(s"using $numCenters centers")
 
-        @inline def update(index: Int, point: T): Unit =
-          if (index != -1 && !changed(index)) {
-            changed(index) = true
-            indexBuffer += index
+    withBroadcast( ops ) { (bcPointOps: Broadcast[BregmanPointOps]) =>
+      points.zipPartitions(assignments, previousAssignments) {
+        (x: Iterator[T], y: Iterator[Assignment], z: Iterator[Assignment]) =>
+          val pointOps = bcPointOps.value
+          val centroids: Array[MutableWeightedVector] = Array.tabulate(numCenters)(i => pointOps.make(i))
+          val changed = new Array[Boolean](numCenters)
+          val indexBuffer = new collection.mutable.ArrayBuilder.ofInt
+          indexBuffer.sizeHint(numCenters)
+
+          def update(index: Int, point: T): Unit =
+            if (index != -1 && !changed(index)) {
+              changed(index) = true
+              indexBuffer += index
+            }
+
+          while (y.hasNext && x.hasNext && z.hasNext) {
+            val point = x.next()
+            val current = y.next()
+            val previous = z.next()
+            val index = current.cluster
+            if (index >= 0) centroids(index).add(point)
+            if (current.cluster != previous.cluster) {
+              update(previous.cluster, point)
+              update(current.cluster, point)
+            }
           }
 
-        while (y.hasNext && x.hasNext && z.hasNext) {
-          val point = x.next()
-          val current = y.next()
-          val previous = z.next()
-          val index = current.cluster
-          if (index >= 0) centroids(index).add(point)
-          if (current.cluster != previous.cluster) {
-            update(previous.cluster, point)
-            update(current.cluster, point)
-          }
-        }
-
-        val changedClusters = indexBuffer.result()
-        changedClusters.map(index => (index, centroids(index))).iterator
-    }.reduceByKey(_.add(_)).collect()
+          val changedClusters = indexBuffer.result()
+          changedClusters.map(index => (index, centroids(index))).iterator
+      }.combineByKey[MutableWeightedVector](
+          (x) => x, _.add(_), _.add(_), defaultPartitioner(points), mapSideCombine = false).collect()
+    }
   }
 
   /**
