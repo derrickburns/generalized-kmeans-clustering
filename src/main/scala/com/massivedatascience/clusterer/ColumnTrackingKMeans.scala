@@ -353,7 +353,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
-    numCenters: Int): Map[Int, MutableWeightedVector] = {
+    numCenters: Int): Array[(Int, MutableWeightedVector)] = {
 
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
@@ -385,7 +385,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
         val changedClusters = indexBuffer.result()
         changedClusters.map(index => (index, centroids(index))).iterator
-    }.reduceByKeyLocally(_.add(_))
+    }.reduceByKey(_.add(_)).collect()
   }
 
   /**
@@ -402,7 +402,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     pointOps: BregmanPointOps,
     assignments: RDD[Assignment],
     previousAssignments: RDD[Assignment],
-    numCenters: Int): Map[Int, MutableWeightedVector] = {
+    numCenters: Int): Array[(Int, MutableWeightedVector)] = {
 
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
@@ -424,7 +424,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
           }
         }
         centroids.filter(_.nonEmpty).map(x => (x.index, x)).iterator
-    }.reduceByKeyLocally(_.add(_))
+    }.reduceByKey(_.add(_)).collect()
   }
 
   /**
