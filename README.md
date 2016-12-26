@@ -26,11 +26,6 @@ implement it using the package and send a pull request along with the paper anal
 This code has been tested on data sets of tens of millions of points in a 700+ dimensional space
 using a variety of distance functions. Thanks to the excellent core Spark implementation, it rocks!
 
-
-Interested in the project?  Post a message stating your interests here:
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/derrickburns/generalized-kmeans-clustering?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-
 Table of Contents
 =================
 
@@ -109,7 +104,7 @@ libraryDependencies ++= Seq(
 
 ### Introduction
 
-The goal K-Means clustering is to produce a model of the clusters of a set of points that satisfies
+The goal of K-Means clustering is to produce a set of clusters of a set of points that satisfies
 certain optimality constraints. That model is called a K-Means model. It is fundamentally a set
 of points and a function that defines the distance from an arbitrary point to a cluster center.
 
@@ -145,7 +140,7 @@ coordinates), one gets a distance function that equals the square of the well kn
 distance. We name it the ```SquaredEuclideanDistanceDivergence```.
 
 In addition to the squared Euclidean distance function, this implementation provides several
-other very useful distance functions.   The provided ```BregmanDivergence```s may be accessed using
+other very useful distance functions.   The provided ```BregmanDivergence```s may be accessed by
 supplying the name of the desired object to the apply method of the companion object.
 
 
@@ -313,10 +308,10 @@ be used to reduce the number of distance calculations needed to accurately reass
 is a novel implementation.
 
 The ```MINI_BATCH_10``` algorithm implements the [mini-batch algorithm](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf).
-This implementation should be used then the number of points is much larger than the dimension of the data and the
+This implementation should be used when the number of points is much larger than the dimension of the data and the
 number of clusters desired.
 
-The ```RESEED``` algorithm implements with fill empty clusters with newly seeded cluster centers
+The ```RESEED``` algorithm fills empty clusters with newly seeded cluster centers
 in an effort to reach the target number of desired clusters.
 
 Objects implementing these algorithms may be constructed using the ```apply``` method of the
@@ -395,7 +390,7 @@ We also offer different initialization ```mode```s.  But
 unlike the Spark clusterer, we do not support setting the number of initialization steps for the
 mode at this level of the interface.
 
-The ```K-Means.train``` helper methods allows on to name a sequence of embeddings.
+The ```K-Means.train``` helper methods allows one to name a sequence of embeddings.
 Several embeddings are provided that may be constructed using the ```apply``` method
 of the companion object ```Embedding```.
 
@@ -508,7 +503,7 @@ object KMeans {
 #### Constructing K-Means Models Iteratively
 
 If multiple embeddings are provided, the ```KMeans.train``` method actually performs the embeddings
-are trains on the embedded data sets iteratively.
+and trains on the embedded data sets iteratively.
 
 For example, for high dimensional data, one way wish to embed the data into a lower dimension before clustering to
 reduce running time.
