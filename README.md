@@ -179,7 +179,7 @@ trait BregmanCenter
 
 
 We enrich a Bregman divergence with a set of commonly used operations, including factory
-methods ```toPoint``` and ```toCenter``` to contruct instances of the aforementioned ```BregmanPoint```
+methods ```toPoint``` and ```toCenter``` to construct instances of the aforementioned ```BregmanPoint```
 and ```BregmanCenter```.
 
 The enriched trait is the ```BregmanPointOps```.
