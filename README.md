@@ -591,7 +591,7 @@ with high-dimensional time series data, it may be advantageous to:
 * Down-sample the data via the Haar transform (aka averaging)
 * Solve the K-means clustering problem on the down-sampled data
 * Assign the downsampled points to clusters.
-* Create a new KMeansModel from the using the assignments on the original data
+* Create a new KMeansModel using the assignments on the original data
 * Solve the K-Means clustering on the KMeansModel so constructed
 
 This technique has been named the ["Anytime" Algorithm](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf).
