@@ -1,9 +1,3 @@
-[![Stories in Ready](https://badge.waffle.io/derrickburns/generalized-kmeans-clustering.png?label=ready&title=Ready)](https://waffle.io/derrickburns/generalized-kmeans-clustering)
-[![Build Status](https://travis-ci.org/derrickburns/generalized-kmeans-clustering.svg?branch=master)](https://travis-ci.org/derrickburns/generalized-kmeans-clustering)
-[![Codacy Badge](https://www.codacy.com/project/badge/4337a3e46c49481dbb22037de7dd7eac)](https://www.codacy.com/public/derrickrburns/generalized-kmeans-clustering)
-[![Download](https://api.bintray.com/packages/derrickburns/maven/massivedatascience-clusterer/images/download.svg) ](https://bintray.com/derrickburns/maven/massivedatascience-clusterer/_latestVersion)
-[![Coverage Status](https://coveralls.io/repos/derrickburns/generalized-kmeans-clustering/badge.svg?branch=master)](https://coveralls.io/r/derrickburns/generalized-kmeans-clustering?branch=master)
-
 Generalized K-Means Clustering
 =============================
 
