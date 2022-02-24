@@ -615,7 +615,7 @@ the divergence of interest is squared Euclidean distance, one can using
 down-sample the data while preserving distances between clusters, with high probability.
 
 The ```com.massivedatascience.clusterer.KMeans``` helper method provides a method, ```sparseTrain```
-that embeds into various dimensions using randoming indexing.
+that embeds into various dimensions using random indexing.
 
 ```scala
 package com.massivedatascience.clusterer
