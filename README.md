@@ -129,8 +129,8 @@ trait BregmanDivergence {
 
 ```
 
-For example, by defining ```convex``` to be the vector norm (i.e. the sum of the squares of the
-coordinates), one gets a distance function that equals the square of the well known Euclidean
+For example, by defining ```convex``` to be the squared vector norm (i.e. the sum of the squares of
+the coordinates), one gets a distance function that equals the square of the well known Euclidean
 distance. We name it the ```SquaredEuclideanDistanceDivergence```.
 
 In addition to the squared Euclidean distance function, this implementation provides several
