@@ -6,7 +6,7 @@ and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer.   Most practical varia
 K-means clustering are implemented or can be implemented with this package, including:
 
 * [clustering using general distance functions (Bregman divergences)](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
-* [clustering large numbers of points using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
+* [clustering large numbers of points using mini-batches](https://arxiv.org/abs/1108.1351)
 * [clustering high dimensional Euclidean data](http://www.ida.liu.se/~arnjo/papers/pakdd-ws-11.pdf)
 * [clustering high dimensional time series data](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
 * [clustering using symmetrized Bregman divergences](https://people.clas.ufl.edu/yun/files/article-8-1.pdf)
