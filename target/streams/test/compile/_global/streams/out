@@ -1,7 +1,0 @@
-[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/src/test/scala/com/massivedatascience/clusterer/LocalClusterSparkContext.scala:37:10: not found: value SparkSession[0m
-[0m[[0m[31merror[0m] [0m[0m    sc = SparkSession.builder().config(sparkConfig).getOrCreate()[0m
-[0m[[0m[31merror[0m] [0m[0m         ^[0m
-[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/src/test/scala/com/massivedatascience/clusterer/LocalClusterSparkContext.scala:37:40: not found: value sparkConfig[0m
-[0m[[0m[31merror[0m] [0m[0m    sc = SparkSession.builder().config(sparkConfig).getOrCreate()[0m
-[0m[[0m[31merror[0m] [0m[0m                                       ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m
