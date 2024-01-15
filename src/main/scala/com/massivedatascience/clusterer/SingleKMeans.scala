@@ -18,11 +18,12 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.MutableWeightedVector
-import org.apache.spark.Logging
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.Map
+
+import org.slf4j.LoggerFactory
+
 
 /**
  * A simple k-means implementation that re-computes the closest cluster centers on each iteration
@@ -31,7 +32,9 @@ import scala.collection.Map
  * @param pointOps distance function
  */
 
-class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging {
+class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
+
+  val logger = LoggerFactory.getLogger(getClass.getName)
 
   def cluster(
     data: RDD[BregmanPoint],
@@ -43,7 +46,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable with Logging 
     var activeCenters = centers
 
     while (active && iteration < maxIterations) {
-      logInfo(s"iteration $iteration number of centers ${activeCenters.length}")
+      logger.info(s"iteration $iteration number of centers ${activeCenters.length}")
       active = false
       for ((clusterIndex: Int, cn: MutableWeightedVector) <- centroids(data, activeCenters)) {
         val centroid = cn.asImmutable

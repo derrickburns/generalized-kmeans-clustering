@@ -21,15 +21,14 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.StreamingKMeans.SimpleWeightedVector
 import com.massivedatascience.linalg.{ BLAS, WeightedVector }
-import org.apache.spark.Logging
-import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.StreamingContext._
 import org.apache.spark.streaming.dstream.DStream
 
 import scala.collection.immutable.IndexedSeq
 import scala.reflect.ClassTag
+
+import org.slf4j.LoggerFactory
 
 /**
  * :: DeveloperApi ::
@@ -70,10 +69,11 @@ import scala.reflect.ClassTag
  * TODO - maintain weighted distortion per center.
  */
 
-class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logging {
+class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
   val pointOps = model.pointOps
   val centerArrays = model.centers.toArray
   val clusterWeights = centerArrays.map(_.weight)
+  val logger = LoggerFactory.getLogger(getClass.getName)
 
   def centers: IndexedSeq[BregmanCenter] = centerArrays.toIndexedSeq
 
@@ -124,7 +124,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
           case _ => centroid.toArray.mkString("[", ",", "]")
         }
 
-        logInfo(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
+        logger.info(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
     }
 
     // Check whether the smallest cluster is dying. If so, split the largest cluster.
@@ -132,7 +132,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor with Logg
     val (maxWeight, largest) = weightsWithIndex.maxBy { case (weight, _) => weight }
     val (minWeight, smallest) = weightsWithIndex.minBy { case (weight, _) => weight }
     if (minWeight < 1e-8 * maxWeight) {
-      logInfo(s"Cluster $smallest is dying. Split the largest cluster $largest into two.")
+      logger.info(s"Cluster $smallest is dying. Split the largest cluster $largest into two.")
       val weight = (maxWeight + minWeight) / 2.0
       clusterWeights(largest) = weight
       clusterWeights(smallest) = weight
@@ -151,7 +151,7 @@ class StreamingKMeans(
     k: Int = 2,
     decayFactor: Double = 1.0,
     timeUnit: String = StreamingKMeans.BATCHES,
-    var model: StreamingKMeansModel) extends Logging {
+    var model: StreamingKMeansModel) {
 
   /**
    * Update the clustering model by training on batches of data from a DStream.

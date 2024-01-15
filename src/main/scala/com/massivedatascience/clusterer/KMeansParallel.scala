@@ -20,8 +20,6 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
-import org.apache.spark.Logging
-import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
@@ -42,7 +40,7 @@ import scala.collection.mutable.ArrayBuffer
  * use this code to find additional cluster centers at any time.
  */
 case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector
-    with SparkHelper with Logging {
+    with SparkHelper {
 
   /**
    *
@@ -62,8 +60,6 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     initialState: Option[InitialCondition] = None,
     runs: Int,
     seedx: Long): Seq[Centers] = {
-
-    implicit val sc = data.sparkContext
 
     require(data.getStorageLevel.useMemory)
     val rand = new XORShiftRandom(seedx)

@@ -1,16 +1,19 @@
 package com.massivedatascience.clusterer
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{ Logging, SparkContext }
-import org.apache.spark.SparkContext._
+import org.apache.spark.SparkContext
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
 
 import scala.collection.Map
 
-private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializable with Logging {
+import org.slf4j.LoggerFactory
+
+private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializable {
 
   private[this] val stats = new TrackingStats(sc)
+
+  val logger = LoggerFactory.getLogger(getClass.getName)
 
   def stable(): Boolean = (stats.numNonEmptyClusters == 0) ||
     (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
@@ -34,8 +37,8 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
 
     require(currentAssignments.getStorageLevel.useMemory)
     require(previousAssignments.getStorageLevel.useMemory)
-
-    stats.currentRound.setValue(round)
+    stats.currentRound.reset()
+    stats.currentRound.add(round)
     updateCenterStats(pointOps, currentCenters, previousCenters)
     updatePointStats(currentAssignments, previousAssignments)
     updateClusterStats(currentCenters, currentAssignments)
@@ -47,16 +50,16 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
    * Report on the changes during the latest round
    */
   def report(): Unit = {
-    logInfo(s"round ${stats.currentRound.value}")
-    logInfo(s"       relocated centers      ${stats.relocatedCenters.value}")
-    logInfo(s"       lowered distortion     ${stats.improvement.value}")
-    logInfo(s"       center movement        ${stats.movement.value}")
-    logInfo(s"       reassigned points      ${stats.reassignedPoints.value}")
-    logInfo(s"       newly assigned points  ${stats.newlyAssignedPoints.value}")
-    logInfo(s"       unassigned points      ${stats.unassignedPoints.value}")
-    logInfo(s"       non-empty clusters     ${stats.nonemptyClusters.value}")
-    logInfo(s"       largest cluster size   ${stats.largestCluster.value}")
-    logInfo(s"       re-seeded clusters     ${stats.replenishedClusters.value}")
+    logger.info(s"round ${stats.currentRound.value}")
+    logger.info(s"       relocated centers      ${stats.relocatedCenters.value}")
+    logger.info(s"       lowered distortion     ${stats.improvement.value}")
+    logger.info(s"       center movement        ${stats.movement.value}")
+    logger.info(s"       reassigned points      ${stats.reassignedPoints.value}")
+    logger.info(s"       newly assigned points  ${stats.newlyAssignedPoints.value}")
+    logger.info(s"       unassigned points      ${stats.unassignedPoints.value}")
+    logger.info(s"       non-empty clusters     ${stats.nonemptyClusters.value}")
+    logger.info(s"       largest cluster size   ${stats.largestCluster.value}")
+    logger.info(s"       re-seeded clusters     ${stats.replenishedClusters.value}")
   }
 
   private[this] def updateClusterStats(
@@ -65,19 +68,22 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
 
     val clusterCounts = countByCluster(assignments)
     val biggest: (Int, Long) = clusterCounts.maxBy { case (_, size) => size }
-    stats.largestCluster.setValue(biggest._2)
-    stats.nonemptyClusters.setValue(clusterCounts.size)
-    stats.emptyClusters.setValue(centers.size - clusterCounts.size)
+    stats.largestCluster.reset()
+    stats.largestCluster.add(biggest._2)
+    stats.nonemptyClusters.reset()
+    stats.nonemptyClusters.add(clusterCounts.size)
+    stats.emptyClusters.reset()
+    stats.emptyClusters.add(centers.size - clusterCounts.size)
   }
 
   private[this] def updatePointStats(
     currentAssignments: RDD[Assignment],
     previousAssignments: RDD[Assignment]): Unit = {
 
-    stats.reassignedPoints.setValue(0)
-    stats.unassignedPoints.setValue(0)
-    stats.improvement.setValue(0)
-    stats.newlyAssignedPoints.setValue(0)
+    stats.reassignedPoints.reset()
+    stats.unassignedPoints.reset()
+    stats.improvement.reset()
+    stats.newlyAssignedPoints.reset()
     currentAssignments.zip(previousAssignments).foreach {
       case (current, previous) =>
         if (current.isAssigned) {
@@ -98,9 +104,9 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
     currentCenters: IndexedSeq[CenterWithHistory],
     previousCenters: IndexedSeq[CenterWithHistory]): Unit = {
 
-    stats.movement.setValue(0.0)
-    stats.relocatedCenters.setValue(0)
-    stats.replenishedClusters.setValue(0)
+    stats.movement.reset()
+    stats.relocatedCenters.reset()
+    stats.replenishedClusters.reset()
     for ((current, previous) <- currentCenters.zip(previousCenters)) {
       if (current.round != previous.round && previous.center.weight > pointOps.weightThreshold &&
         current.center.weight > pointOps.weightThreshold) {

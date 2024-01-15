@@ -17,28 +17,29 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.SparkContext._
 import org.apache.spark.SparkContext
 
 class TrackingStats(sc: SparkContext) extends BasicStats with Serializable {
-  val currentRound = sc.accumulator[Int](-1, "Round")
-  val newlyAssignedPoints = sc.accumulator[Int](0, "Newly Assigned Points")
-  val reassignedPoints = sc.accumulator[Int](0, "Reassigned Points")
-  val unassignedPoints = sc.accumulator[Int](0, "Unassigned Points")
-  val improvement = sc.accumulator[Double](0.0, "Improvement")
-  val relocatedCenters = sc.accumulator[Int](0, "Relocated Centers")
-  val movement = sc.accumulator[Double](0.0, "Center Movement")
-  val nonemptyClusters = sc.accumulator[Int](0, "Non-Empty Clusters")
-  val emptyClusters = sc.accumulator[Int](0, "Empty Clusters")
-  val largestCluster = sc.accumulator[Long](0, "Largest Cluster")
-  val replenishedClusters = sc.accumulator[Int](0, "Replenished Centers")
+  val currentRound = sc.longAccumulator("Round")
+  currentRound.add(-1)
+  val newlyAssignedPoints = sc.longAccumulator("Newly Assigned Points")
+  val reassignedPoints = sc.longAccumulator("Reassigned Points")
+  val unassignedPoints = sc.longAccumulator("Unassigned Points")
+  val improvement = sc.doubleAccumulator("Improvement")
+  val relocatedCenters = sc.longAccumulator("Relocated Centers")
+  val movement = sc.doubleAccumulator("Center Movement")
+  val nonemptyClusters = sc.longAccumulator("Non-Empty Clusters")
+  val emptyClusters = sc.longAccumulator("Empty Clusters")
+  val largestCluster = sc.longAccumulator("Largest Cluster")
+  val replenishedClusters = sc.longAccumulator("Replenished Centers")
+
 
   def centerMovement: Double = movement.value
 
-  def numNonEmptyClusters: Int = nonemptyClusters.value
+  def numNonEmptyClusters: Long = nonemptyClusters.value
 
-  def numEmptyClusters: Int = emptyClusters.value
+  def numEmptyClusters: Long = emptyClusters.value
 
-  def getRound: Int = currentRound.value
+  def getRound: Long = currentRound.value
 
 }

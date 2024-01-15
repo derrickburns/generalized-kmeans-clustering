@@ -19,17 +19,18 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.WeightedVector
-import com.massivedatascience.transforms.{ Embedding, HaarEmbedding, IdentityEmbedding }
+import com.massivedatascience.transforms.Embedding
 import com.massivedatascience.transforms.Embedding._
 import com.massivedatascience.util.SparkHelper
-import org.apache.spark.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.rdd.RDD
+
+import org.slf4j.LoggerFactory
 
 /**
  * A helper object that creates K-Means Models using the underlying classes in this package.
  */
-object KMeans extends SparkHelper with Logging {
+object KMeans extends SparkHelper {
 
   private val defaultMaxIterations = 20
   private val defaultNumRuns = 1
@@ -45,6 +46,9 @@ object KMeans extends SparkHelper with Logging {
     override def toString: String =
       s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
+
+  val logger = LoggerFactory.getLogger(getClass.getName)
+
 
   /**
    *
@@ -157,10 +161,12 @@ object KMeans extends SparkHelper with Logging {
     initializer: KMeansSelector,
     clusterer: MultiKMeansClusterer): KMeansModel = {
 
-    logInfo(s"runConfig = $runConfig")
-    logInfo(s"initializer = $initializer")
-    logInfo(s"distance function = $pointOps")
-    logInfo(s"clusterer implementation = $clusterer")
+
+
+    logger.info(s"runConfig = $runConfig")
+    logger.info(s"initializer = $initializer")
+    logger.info(s"distance function = $pointOps")
+    logger.info(s"clusterer implementation = $clusterer")
 
     require(data.getStorageLevel.useMemory)
     val initialCenters = initializer.init(pointOps, data, runConfig.numClusters, None,
@@ -271,8 +277,8 @@ object KMeans extends SparkHelper with Logging {
   private[this] def subsample(
     input: RDD[WeightedVector],
     pointOps: BregmanPointOps,
-    depth: Int = 0,
-    embedding: Embedding = HaarEmbedding): List[RDD[BregmanPoint]] = {
+    depth: Int,
+    embedding: Embedding): List[RDD[BregmanPoint]] = {
     val subs = (0 until depth).foldLeft(List(input)) {
       case (data @ List(first, _), e) => first.map(embedding.embed) :: data
     }
@@ -290,7 +296,7 @@ object KMeans extends SparkHelper with Logging {
   private[this] def resample(
     input: RDD[WeightedVector],
     ops: Seq[BregmanPointOps],
-    embeddings: Seq[Embedding] = Seq(IdentityEmbedding)): Seq[RDD[BregmanPoint]] = {
+    embeddings: Seq[Embedding]): Seq[RDD[BregmanPoint]] = {
 
     embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint) }
   }

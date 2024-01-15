@@ -28,10 +28,14 @@ trait LocalClusterSparkContext extends BeforeAndAfterAll {
   @transient var sc: SparkContext = _
 
   override def beforeAll() {
+
     val conf = new SparkConf()
-      .setMaster("local-cluster[2, 1, 512]")
-      .setAppName("test-cluster")
-      .set("spark.akka.frameSize", "1") // set to 1MB to detect direct serialization of data
+    conf.set("spark.broadcast.compress", "false")
+    conf.set("spark.shuffle.compress", "false")
+    conf.set("spark.shuffle.spill.compress", "false")
+    conf.set("spark.master", "local")
+    conf.setAppName("test-cluster")
+    conf.set("spark.akka.frameSize", "1") 
     sc = new SparkContext(conf)
     super.beforeAll()
   }

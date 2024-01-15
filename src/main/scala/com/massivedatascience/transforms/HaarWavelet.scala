@@ -106,14 +106,5 @@ object HaarWavelet {
     }
   }
 
-  def main(args: Array[String]): Unit = {
-
-    val y = Array(3.0, 1.0, 0.0, 4.0, 8.0, 6.0, 9.0, 9.0)
-    val x = new HaarWavelet(y.length)
-
-    val h1 = x.haar(y, y.clone(), y.length >> 1)
-    val h2 = x.inverseHaar(h1, h1.clone(), y.length >> 1)
-
-  }
 
 }

@@ -21,9 +21,12 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
 import org.apache.spark.mllib.linalg.Vectors
-import org.scalatest.FunSuite
+import org.scalatest._
+import funsuite._
 
-class KMeansPlusPlusSuite extends FunSuite with LocalSparkContext {
+import com.holdenkarau.spark.testing.LocalSparkContext
+
+class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
 
   test("k-means plus plus chooses only point with non-zero weight") {
 

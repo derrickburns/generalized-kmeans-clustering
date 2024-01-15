@@ -22,10 +22,12 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.util.DoubleAccumulator
 
 import scala.collection.mutable.ArrayBuffer
+
+import org.slf4j.LoggerFactory
 
 /**
  * A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
@@ -36,6 +38,8 @@ import scala.collection.mutable.ArrayBuffer
 //scalastyle:off
 @deprecated("use ColumnTrackingKMeans", "1.2.0")
 class MultiKMeans extends MultiKMeansClusterer {
+
+  val logger = LoggerFactory.getLogger(getClass.getName)
 
   def cluster(
     maxIterations: Int,
@@ -58,20 +62,20 @@ class MultiKMeans extends MultiKMeansClusterer {
 
       while (iteration < maxIterations && activeRuns.nonEmpty) {
         // remove the empty clusters
-        logInfo(s"iteration $iteration")
+        logger.info(s"iteration $iteration")
 
         val activeCenters = activeRuns.map(r => centers(r)).toArray
 
-        if (log.isInfoEnabled) {
+        if (logger.isInfoEnabled) {
           for (r <- 0 until activeCenters.length)
-            logInfo(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
+            logger.info(s"run ${activeRuns(r)} has ${activeCenters(r).length} centers")
         }
 
         // Find the sum and count of points mapping to each center
         val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) = getCentroids(data, activeCenters)
 
-        if (log.isInfoEnabled) {
-          for (run <- activeRuns) logInfo(s"run $run distortion ${runDistortion(run)}")
+        if (logger.isInfoEnabled) {
+          for (run <- activeRuns) logger.info(s"run $run distortion ${runDistortion(run)}")
         }
 
         for (run <- activeRuns) active(run) = false
@@ -94,7 +98,7 @@ class MultiKMeans extends MultiKMeansClusterer {
         // update distortions and print log message if run completed during this iteration
         for ((run, runIndex) <- activeRuns.zipWithIndex) {
           costs(run) = runDistortion(runIndex)
-          if (!active(run)) logInfo(s"run $run finished in ${iteration + 1} iterations")
+          if (!active(run)) logger.info(s"run $run finished in ${iteration + 1} iterations")
         }
         activeRuns = activeRuns.filter(active(_))
         iteration += 1
@@ -107,14 +111,14 @@ class MultiKMeans extends MultiKMeansClusterer {
       activeCenters: Array[Array[BregmanCenter]]): (Array[((Int, Int), WeightedVector)], Array[Double]) = {
 
       val sc = data.sparkContext
-      val runDistortion = Array.fill(activeCenters.length)(sc.accumulator(0.0))
+      val runDistortion:Array[DoubleAccumulator] = Array.fill(activeCenters.length)(sc.doubleAccumulator("distortion"))
       val bcActiveCenters = sc.broadcast(activeCenters)
       val result = data.mapPartitions[((Int, Int), WeightedVector)] { points =>
         val bcCenters = bcActiveCenters.value
         val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.make()))
         for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
           val (cluster, cost) = pointOps.findClosest(clusters, point)
-          runDistortion(run) += cost
+          runDistortion(run).add(cost)
           centers(run)(cluster).add(point)
         }
 
@@ -131,7 +135,7 @@ class MultiKMeans extends MultiKMeansClusterer {
         (x, y) => x.add(y)
       ).map(x => (x._1, x._2.asImmutable)).collect()
       bcActiveCenters.unpersist()
-      (result, runDistortion.map(x => x.localValue))
+      (result, runDistortion.map(x => x.value.doubleValue))
     }
 
     cluster()

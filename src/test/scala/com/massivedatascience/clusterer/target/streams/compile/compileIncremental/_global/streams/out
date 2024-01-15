@@ -1,0 +1,20 @@
+[0m[[0m[0mdebug[0m] [0m[0m[zinc] IncrementalCompile -----------[0m
+[0m[[0m[0mdebug[0m] [0m[0mIncrementalCompile.incrementalCompile[0m
+[0m[[0m[0mdebug[0m] [0m[0mprevious = Stamps for: 0 products, 0 sources, 0 libraries[0m
+[0m[[0m[0mdebug[0m] [0m[0mcurrent source = Set(${BASE}/MultiKMeansClustererSuite.scala, ${BASE}/TestingUtils.scala, ${BASE}/EmbeddingSuite.scala, ${BASE}/KMeansSuite.scala, ${BASE}/LocalClusterSparkContext.scala, ${BASE}/TransformsTestSuite.scala, ${BASE}/KMeansPlusPlusSuite.scala, ${BASE}/BregmanTestSuite.scala)[0m
+[0m[[0m[0mdebug[0m] [0m[0m> initialChanges = InitialChanges(Changes(added = Set(${BASE}/TestingUtils.scala, ${BASE}/KMeansPlusPlusSuite.scala, ${BASE}/BregmanTestSuite.scala, ${BASE}/KMeansSuite.scala, ${BASE}/EmbeddingSuite.scala, ${BASE}/MultiKMeansClustererSuite.scala, ${BASE}/LocalClusterSparkContext.scala, ${BASE}/TransformsTestSuite.scala), removed = Set(), changed = Set(), unmodified = ...),Set(),Set(),API Changes: Set())[0m
+[0m[[0m[0mdebug[0m] [0m[0mFull compilation, no sources in previous analysis.[0m
+[0m[[0m[0mdebug[0m] [0m[0mall 8 sources are invalidated[0m
+[0m[[0m[0mdebug[0m] [0m[0mInitial set of included nodes: [0m
+[0m[[0m[0mdebug[0m] [0m[0mRecompiling all sources: number of invalidated sources > 50.0 percent of all sources[0m
+[0m[[0m[0mdebug[0m] [0m[0mcompilation cycle 1[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 8 Scala sources to /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/src/test/scala/com/massivedatascience/clusterer/target/scala-2.12/classes ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mGetting org.scala-sbt:compiler-bridge_2.12:1.9.3:compile for Scala 2.12.18[0m
+[0m[[0m[0mdebug[0m] [0m[0m[zinc] Running cached compiler 463802f9 for Scala compiler version 2.12.18[0m
+[0m[[0m[0mdebug[0m] [0m[0m[zinc] The Scala compiler is invoked with:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	-bootclasspath[0m
+[0m[[0m[0mdebug[0m] [0m[0m	/Users/derrickburns/.sbt/boot/scala-2.12.18/lib/scala-library.jar[0m
+[0m[[0m[0mdebug[0m] [0m[0m	-classpath[0m
+[0m[[0m[0mdebug[0m] [0m[0m	/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/src/test/scala/com/massivedatascience/clusterer/target/scala-2.12/classes[0m
+[0m[[0m[0mdebug[0m] [0m[0mCompilation failed (CompilerInterface)[0m
+[0m[[0m[31merror[0m] [0m[0m(Compile / [31mcompileIncremental[0m) Compilation failed[0m

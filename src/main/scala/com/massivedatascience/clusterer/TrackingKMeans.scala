@@ -20,29 +20,32 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.XORShiftRandom
-import org.apache.spark.SparkContext._
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.{ Logging, SparkContext }
+import org.apache.spark.SparkContext
 
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
+import org.slf4j.LoggerFactory
 
-class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Serializable with Logging {
-  val newlyAssignedPoints = sc.accumulator[Int](0, s"Newly Assigned Points $round")
-  val reassignedPoints = sc.accumulator[Int](0, s"Reassigned Points $round")
-  val unassignedPoints = sc.accumulator[Int](0, s"Unassigned Points $round")
-  val improvement = sc.accumulator[Double](0.0, s"Improvement $round")
-  val relocatedCenters = sc.accumulator[Int](0, s"Relocated Centers $round")
-  val dirtyOther = sc.accumulator[Int](0, s"=> Other Moving $round")
-  val dirtySame = sc.accumulator[Int](0, s"=> Same Moving $round")
-  val stationary = sc.accumulator[Int](0, s"Stationary $round")
-  val closestClean = sc.accumulator[Int](0, s"Moving => Other Stationary $round")
-  val closestDirty = sc.accumulator[Int](0, s"Stationary => Other Moving $round")
-  val movement = sc.accumulator[Double](0.0, s"Center Movement $round")
-  val nonemptyClusters = sc.accumulator[Int](0, s"Non-Empty Clusters $round")
-  val emptyClusters = sc.accumulator[Int](0, s"Empty Clusters $round")
-  val largestCluster = sc.accumulator[Long](0, s"Largest Cluster $round")
+class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Serializable {
+  val newlyAssignedPoints = sc.longAccumulator(s"Newly Assigned Points $round")
+  val reassignedPoints = sc.longAccumulator(s"Reassigned Points $round")
+  val unassignedPoints = sc.longAccumulator(s"Unassigned Points $round")
+  val improvement = sc.doubleAccumulator(s"Improvement $round")
+  val relocatedCenters = sc.longAccumulator(s"Relocated Centers $round")
+  val dirtyOther = sc.longAccumulator(s"=> Other Moving $round")
+  val dirtySame = sc.longAccumulator(s"=> Same Moving $round")
+  val stationary = sc.longAccumulator(s"Stationary $round")
+  val closestClean = sc.longAccumulator(s"Moving => Other Stationary $round")
+  val closestDirty = sc.longAccumulator(s"Stationary => Other Moving $round")
+  val movement = sc.doubleAccumulator(s"Center Movement $round")
+  val nonemptyClusters = sc.longAccumulator(s"Non-Empty Clusters $round")
+  val emptyClusters = sc.longAccumulator(s"Empty Clusters $round")
+  val largestCluster = sc.longAccumulator(s"Largest Cluster $round")
+
+  val logger = LoggerFactory.getLogger(getClass.getName)
 
   def centerMovement = movement.value
 
@@ -53,21 +56,22 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
   def getRound = round
 
   def report() = {
-    logInfo(s"round $round")
-    logInfo(s"relocated centers = ${relocatedCenters.value}")
-    logInfo(s"lowered distortion by ${improvement.value}")
-    logInfo(s"center movement by ${movement.value}")
-    logInfo(s"reassigned points = ${reassignedPoints.value}")
-    logInfo(s"newly assigned points = ${newlyAssignedPoints.value}")
-    logInfo(s"unassigned points = ${unassignedPoints.value}")
-    logInfo(s"non-empty clusters = ${nonemptyClusters.value}")
-    logInfo(s"some other moving cluster is closest ${dirtyOther.value}")
-    logInfo(s"my cluster moved closest = ${dirtySame.value}")
 
-    logInfo(s"my stationary cluster is closest = ${stationary.value}")
-    logInfo(s"my cluster moved away and a stationary cluster is now closest = ${closestClean.value}")
-    logInfo(s"my cluster didn't move, but a moving cluster is closest = ${closestDirty.value}")
-    logInfo(s"largest cluster size ${largestCluster.value}")
+    logger.info(s"round $round")
+    logger.info(s"relocated centers = ${relocatedCenters.value}")
+    logger.info(s"lowered distortion by ${improvement.value}")
+    logger.info(s"center movement by ${movement.value}")
+    logger.info(s"reassigned points = ${reassignedPoints.value}")
+    logger.info(s"newly assigned points = ${newlyAssignedPoints.value}")
+    logger.info(s"unassigned points = ${unassignedPoints.value}")
+    logger.info(s"non-empty clusters = ${nonemptyClusters.value}")
+    logger.info(s"some other moving cluster is closest ${dirtyOther.value}")
+    logger.info(s"my cluster moved closest = ${dirtySame.value}")
+
+    logger.info(s"my stationary cluster is closest = ${stationary.value}")
+    logger.info(s"my cluster moved away and a stationary cluster is now closest = ${closestClean.value}")
+    logger.info(s"my cluster didn't move, but a moving cluster is closest = ${closestDirty.value}")
+    logger.info(s"largest cluster size ${largestCluster.value}")
   }
 }
 
@@ -143,6 +147,8 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
   val x = new NotSerializable
 
+  val logger = LoggerFactory.getLogger(getClass.getName)
+
   def cluster(
     maxIterations: Int,
     pointOps: BregmanPointOps,
@@ -155,8 +161,8 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
       assert(updateRate <= 1.0 && updateRate >= 0.0)
 
-      logInfo(s"update rate = $updateRate")
-      logInfo(s"runs = ${centerArrays.size}")
+      logger.info(s"update rate = $updateRate")
+      logger.info(s"runs = ${centerArrays.size}")
 
       val results: Seq[(Double, Array[BregmanCenter], RDD[FatPoint])] = for (centers <- centerArrays) yield {
         var fatCenters = centers.map(FatCenter(_)).toArray
@@ -218,10 +224,12 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
       val clusterCounts = countByCluster(fatPoints)
       val biggest: (Int, Long) = clusterCounts.maxBy(_._2)
-      stats.largestCluster.setValue(biggest._2)
+      stats.largestCluster.reset()
+      stats.largestCluster.add(biggest._2)
       stats.nonemptyClusters.add(clusterCounts.size)
       stats.emptyClusters.add(fatCenters.size - clusterCounts.size)
-      stats.relocatedCenters.setValue(fatCenters.count(c => c.round == round))
+      stats.relocatedCenters.reset()
+      stats.relocatedCenters.add(fatCenters.count(c => c.round == round))
     }
 
     def updateStats(stats: DetailedTrackingStats, p: FatPoint): Unit = {
@@ -415,7 +423,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
         best(ops, round, stats, centers, p, closestDirty)
       }
       if (assignment.isUnassigned) {
-        log.warn("cannot find cluster to assign point {}", p)
+        logger.warn("cannot find cluster to assign point {}", p)
       }
       assignment
     }

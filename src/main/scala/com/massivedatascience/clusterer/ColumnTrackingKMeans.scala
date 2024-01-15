@@ -22,16 +22,15 @@ import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
-import org.apache.spark.{ Partitioner, HashPartitioner }
 import org.apache.spark.Partitioner._
-import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
-import scala.collection.Map
 import scala.collection.generic.FilterMonadic
+
+import org.slf4j.LoggerFactory
 
 object ColumnTrackingKMeans {
 
@@ -144,7 +143,6 @@ object ColumnTrackingKMeans {
 
     require(previousAssignments.getStorageLevel.useMemory)
 
-    implicit val sc = points.sparkContext
     val centers = bcCenters.value
     val r = round
     val pointOps = ops
@@ -257,6 +255,9 @@ object ColumnTrackingKMeans {
 case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     extends MultiKMeansClusterer with SparkHelper {
 
+  val logger = LoggerFactory.getLogger(getClass.getName)
+
+
   private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
 
@@ -272,7 +273,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     //val weakClusters = centers.filter(_ => myRand.nextDouble() < 0.10)
 
     if (weakClusters.nonEmpty && round < config.maxRoundsToBackfill) {
-      logInfo(s"replacing ${weakClusters.length} empty clusters")
+      logger.info(s"replacing ${weakClusters.length} empty clusters")
       val strongClusters = centers.filter(!weakClusters.contains(_))
       val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
       val seed = new DateTime().getMillis
@@ -281,13 +282,13 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       val initialCondition = InitialCondition(Seq(bregmanCenters), Seq(costs))
       val newCenters = incrementer.init(pointOps, points, centers.length,
         Some(initialCondition), 1, seed)(0)
-      logInfo(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
+      logger.info(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
       val additional = newCenters.drop(bregmanCenters.length)
       val replacements = weakClusters.zip(additional).map {
         case (x, y) => x.copy(round = round,
           center = y, initialized = false)
       }
-      logInfo(s"replaced ${replacements.length} clusters")
+      logger.info(s"replaced ${replacements.length} clusters")
 
       strongClusters ++ replacements ++ weakClusters.drop(replacements.length)
     } else {
@@ -360,7 +361,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     require(points.getStorageLevel.useMemory)
     require(assignments.getStorageLevel.useMemory)
 
-    logInfo(s"using $numCenters centers")
+    logger.info(s"using $numCenters centers")
 
     implicit val sc = points.sparkContext
 
@@ -487,7 +488,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     }
 
     require(config.updateRate <= 1.0 && config.updateRate >= 0.0)
-    logInfo(s"runs = ${centerArrays.size}")
+    logger.info(s"runs = ${centerArrays.size}")
 
     val u = Assignment(Infinity, noCluster, -2)
     withCached[Assignment, Seq[ClusteringWithDistortion]]("empty assignments", points.map(x => u)) { empty =>

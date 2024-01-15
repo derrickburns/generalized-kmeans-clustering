@@ -21,10 +21,12 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.XORShiftRandom
-import org.apache.spark.Logging
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+
+import org.slf4j.LoggerFactory
+
 
 /**
  * This implements the
@@ -32,7 +34,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
 
   /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
@@ -50,6 +52,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
    * @return   an array of at most k cluster centers
    */
 
+  val logger = LoggerFactory.getLogger(getClass.getName)
+
   def goodCenters(
     seed: Long,
     candidateCenters: IndexedSeq[BregmanCenter],
@@ -64,7 +68,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     require(perRound <= totalRequested)
 
     if (candidateCenters.length < totalRequested)
-      logWarning(s"# requested $totalRequested exceeds number of points ${candidateCenters.length}")
+      logger.warn(s"# requested $totalRequested exceeds number of points ${candidateCenters.length}")
 
     val points = reWeightedPoints(candidateCenters, weights)
     val rand = new XORShiftRandom(seed)

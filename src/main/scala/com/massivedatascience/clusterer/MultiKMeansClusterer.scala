@@ -18,10 +18,9 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 
-trait MultiKMeansClusterer extends Serializable with Logging {
+trait MultiKMeansClusterer extends Serializable {
 
   def cluster(
     maxIterations: Int,

@@ -256,7 +256,6 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    val c = 1.0 - logFunc.log(w)
     trans(v, x => -w / x)
   }
 }

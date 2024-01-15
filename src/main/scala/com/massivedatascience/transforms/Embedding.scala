@@ -18,7 +18,7 @@
 package com.massivedatascience.transforms
 
 import com.massivedatascience.linalg.{ WeightedVector, _ }
-import org.apache.spark.mllib.linalg.{ Vectors, Vector, DenseVector, SparseVector }
+import org.apache.spark.mllib.linalg.{ Vectors, Vector }
 
 /**
  * An embedding of vectors into an alternative space.  Typically, embeddings are used

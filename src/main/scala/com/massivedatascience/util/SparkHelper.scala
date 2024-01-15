@@ -20,7 +20,7 @@ package com.massivedatascience.util
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.{ Logging, SparkContext }
+import org.apache.spark.SparkContext
 
 import scala.reflect.ClassTag
 

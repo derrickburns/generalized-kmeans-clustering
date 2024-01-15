@@ -19,9 +19,12 @@
 
 package com.massivedatascience.clusterer
 
-import org.scalatest.FunSuite
+import org.scalatest._
+import funsuite._
 
-class MultiKMeansClustererSuite extends FunSuite with LocalSparkContext {
+import com.holdenkarau.spark.testing.LocalSparkContext
+
+class MultiKMeansClustererSuite extends AnyFunSuite with LocalSparkContext {
 
   test("apply method") {
     MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING)

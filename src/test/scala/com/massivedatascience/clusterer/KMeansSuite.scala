@@ -26,16 +26,50 @@ import com.massivedatascience.transforms.Embedding._
 
 import scala.util.Random
 
-import org.scalatest.FunSuite
+import org.scalatest._
+import funsuite._
 
 import org.apache.spark.mllib.linalg.{ Vector, Vectors }
 
 import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.BregmanPointOps._
 
-class KMeansSuite extends FunSuite with LocalSparkContext {
+class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   import com.massivedatascience.clusterer.KMeansSelector._
+
+    test("coverage") {
+
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    KMeans.train(data, k = 20, maxIterations = 10)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 2)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, mode = KMeansSelector.RANDOM)
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN))
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1,
+      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
+      clustererName = MultiKMeansClusterer.CHANGE_TRACKING)
+
+    KMeans.train(data, k = 50, maxIterations = 10, runs = 1,
+      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
+      clustererName = MultiKMeansClusterer.RESEED)
+
+    KMeans.timeSeriesTrain(
+      new RunConfig(20, 1, 0, 10),
+      data.map(WeightedVector.apply),
+      KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
+      BregmanPointOps(BregmanPointOps.EUCLIDEAN),
+      MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING),
+      Embedding(HAAR_EMBEDDING))
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
+  }
 
   test("sparse vector iterator") {
 
@@ -145,39 +179,7 @@ class KMeansSuite extends FunSuite with LocalSparkContext {
     assert(!iter.hasNext)
   }
 
-  test("coverage") {
 
-    val seed = 0
-    val r = new Random(seed)
-
-    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
-
-    KMeans.train(data, k = 20, maxIterations = 10)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 2)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, mode = KMeansSelector.RANDOM)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN))
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1,
-      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
-      clustererName = MultiKMeansClusterer.CHANGE_TRACKING)
-
-    KMeans.train(data, k = 50, maxIterations = 10, runs = 1,
-      distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
-      clustererName = MultiKMeansClusterer.RESEED)
-
-    KMeans.timeSeriesTrain(
-      new RunConfig(20, 1, 0, 10),
-      data.map(WeightedVector.apply),
-      KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
-      BregmanPointOps(BregmanPointOps.EUCLIDEAN),
-      MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING),
-      Embedding(HAAR_EMBEDDING))
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
-  }
 
   test("iteratively train") {
     val seed = 0

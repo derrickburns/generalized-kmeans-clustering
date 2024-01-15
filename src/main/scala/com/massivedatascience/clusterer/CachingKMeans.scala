@@ -19,11 +19,11 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.MutableWeightedVector
 import com.massivedatascience.util.XORShiftRandom
-import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.{ Accumulator, Logging }
+import org.apache.spark.util.{DoubleAccumulator, LongAccumulator}
+import org.slf4j.LoggerFactory
 
 import scala.collection.Map
 
@@ -57,7 +57,7 @@ import scala.collection.Map
  */
 
 @deprecated("use ColumnTrackingKMeans", "0.9.0")
-class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
+class CachingKMeans(ops: BregmanPointOps) extends Serializable {
 
   private[this] case class Closest(dist: Double, index: Int)
 
@@ -76,8 +76,10 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     centers: Array[BregmanCenter],
     maxIterations: Int = 20,
     sampleRate: Double = 1.0): (Double, KMeansModel) = {
-    logInfo(s"sample rate = $sampleRate")
-    logInfo(s"max iterations = $maxIterations")
+
+    val logger = LoggerFactory.getLogger(getClass.getName)
+    logger.info(s"sample rate = $sampleRate")
+    logger.info(s"max iterations = $maxIterations")
 
     var fatPoints: RDD[FatPoint] = initialFatPoints(data, centers.length).persist()
     data.unpersist()
@@ -86,25 +88,25 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
     var numIterations = 0
 
     while (numMoved > 0 && numIterations < maxIterations) {
-      logInfo(s"iteration $numIterations")
+      logger.info(s"iteration $numIterations")
       val sc = data.sparkContext
       val bcCenters = sc.broadcast(fatCenters)
-      val costDiff = sc.accumulator(0.0)
-      val freshPoints = sc.accumulator[Int](0)
-      val movedPoints = sc.accumulator[Int](0)
-      val improvedPoints = sc.accumulator[Int](0)
+      val costDiff = sc.doubleAccumulator("costDiff")
+      val freshPoints = sc.longAccumulator("freshPoints")
+      val movedPoints = sc.longAccumulator("movedPoints")
+      val improvedPoints = sc.longAccumulator("improvedPoints")
 
       val changes = newAssignments(freshPoints, improvedPoints, movedPoints, costDiff, bcCenters,
         fatPoints, sampleRate, numIterations)
       fatPoints = updatedFatPoints(fatPoints, changes)
       fatCenters = updatedFatCenters(getCentroidChanges(bcCenters, fatPoints), fatCenters)
       numMoved = fatCenters.count(c => c.moved)
-      logInfo(s"lowered distortion by ${costDiff.value}")
-      logInfo(s"relocated = $numMoved centers")
-      logInfo(s"improved points = ${improvedPoints.value}")
-      logInfo(s"moved points = ${movedPoints.value}")
-      logInfo(s"fresh points = ${freshPoints.value}")
-      logInfo(s"average improvement per point = ${costDiff.value / improvedPoints.value}")
+      logger.info(s"lowered distortion by ${costDiff.value}")
+      logger.info(s"relocated = $numMoved centers")
+      logger.info(s"improved points = ${improvedPoints.value}")
+      logger.info(s"moved points = ${movedPoints.value}")
+      logger.info(s"fresh points = ${freshPoints.value}")
+      logger.info(s"average improvement per point = ${costDiff.value / improvedPoints.value}")
 
       bcCenters.unpersist()
       numIterations = numIterations + 1
@@ -160,10 +162,10 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
    * @return points and their new assignments
    */
   private[this] def newAssignments(
-    freshPoints: Accumulator[Int],
-    improvedPoints: Accumulator[Int],
-    movedPoints: Accumulator[Int],
-    costDiff: Accumulator[Double],
+    freshPoints: LongAccumulator,
+    improvedPoints: LongAccumulator,
+    movedPoints: LongAccumulator,
+    costDiff: DoubleAccumulator,
     bcCenters: Broadcast[Array[FatCenter]],
     fatPoints: RDD[FatPoint],
     sampleRate: Double,
@@ -184,7 +186,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable with Logging {
             case Closest(d, i) =>
               val diff = d - closest.dist
               if (diff > 0.0) improvedPoints.add(1)
-              costDiff += diff
+              costDiff.add(diff)
           }
           p.current = 1 - p.current
           p.assignment(p.current) = closest

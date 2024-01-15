@@ -3,9 +3,12 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import org.apache.spark.mllib.linalg.{ DenseVector, Vectors }
-import org.scalatest.FunSuite
+import org.scalatest._
+import funsuite._
 
-class TransformsTestSuite extends FunSuite {
+import com.holdenkarau.spark.testing.LocalSparkContext
+
+class TransformsTestSuite extends AnyFunSuite with LocalSparkContext { 
 
   import com.massivedatascience.clusterer.TestingUtils._
 

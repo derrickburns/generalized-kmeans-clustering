@@ -18,8 +18,8 @@
 package com.massivedatascience.transforms
 
 import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
-import com.massivedatascience.linalg.{ WeightedVector, _ }
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import com.massivedatascience.linalg._
+import org.apache.spark.mllib.linalg.{ Vector }
 
 /**
  * One can create a symmetric version of any Bregman Divergence</a>
