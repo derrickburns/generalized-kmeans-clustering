@@ -1,0 +1,1 @@
+["com.massivedatascience.clusterer.EmbeddingSuite","com.massivedatascience.clusterer.KMeansPlusPlusSuite","com.massivedatascience.clusterer.TransformsTestSuite","com.massivedatascience.clusterer.MultiKMeansClustererSuite","com.massivedatascience.clusterer.KMeansSuite","com.massivedatascience.clusterer.BregmanTestSuite"]

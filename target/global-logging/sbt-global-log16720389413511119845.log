@@ -1,0 +1,68 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(reload, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(sbtStashOnFailure, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(onFailure loadFailed, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(loadp, None, None)[0m
+[0m[[0m[0minfo[0m] [0m[0mwelcome to sbt 1.9.8 (Eclipse Adoptium Java 21.0.1)[0m
+[0m[[0m[0mdebug[0m] [0m[0m      Load.defaultLoad until apply took 1.468667ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m                Load.loadUnit: plugins took 11.007792ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m                Load.loadUnit: defsScala took 0.002666ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m[Loading] Scanning directory /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project[0m
+[0m[[0m[0mdebug[0m] [0m[0m                  Load.loadUnit: mkEval took 0.123333ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m[Loading] Found non-root projects [0m
+[0m[[0m[0mdebug[0m] [0m[0m[Loading] Done in /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project, returning: ()[0m
+[0m[[0m[0mdebug[0m] [0m[0mdeducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin)))[0m
+[0m[[0m[0mdebug[0m] [0m[0mClause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin))))[0m
+[0m[[0m[0mdebug[0m] [0m[0m  :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)[0m
+[0m[[0m[0mdebug[0m] [0m[0mPlugins.deducer#function took 1.230083 ms[0m
+[0m[[0m[0minfo[0m] [0m[0mloading settings for project generalized-kmeans-clustering-build from plugins.sbt ...[0m
+[0m[[0m[0mdebug[0m] [0m[0m                    Load.resolveProject(generalized-kmeans-clustering-build) took 1.720542ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m                  Load.loadTransitive: finalizeProject(Project(id generalized-kmeans-clustering-build, base: /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project, plugins: List(<none>))) took 3.244208ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m[Loading] Done in /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project, returning: (generalized-kmeans-clustering-build)[0m
+[0m[[0m[0mdebug[0m] [0m[0m                Load.loadUnit: loadedProjectsRaw took 5.803583ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m                Load.loadUnit: cleanEvalClasses took 0.005ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m              Load.loadUnit(file:/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/, ...) took 17.056458ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: load took 18.95275ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: resolveProjects took 0.115583ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: finalTransforms took 12.9135ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: config.delegates took 0.491375ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: Def.make(settings)... took 51.870041ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: structureIndex took 17.772459ms[0m
+[0m[[0m[0mdebug[0m] [0m[0m            Load.apply: mkStreams took 0.001709ms[0m
+[0m[[0m[0minfo[0m] [0m[0mloading project definition from /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to /Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/target/scala-2.12/sbt-1.0/classes ...[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:3:8: not found: object sbtrelease[0m
+[0m[[0m[31merror[0m] [0m[0mimport sbtrelease._[0m
+[0m[[0m[31merror[0m] [0m[0m       ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:4:21: object sbt is not a member of package com.typesafe[0m
+[0m[[0m[31merror[0m] [0m[0mimport com.typesafe.sbt.SbtSite.SiteKeys._[0m
+[0m[[0m[31merror[0m] [0m[0m                    ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:5:21: object sbt is not a member of package com.typesafe[0m
+[0m[[0m[31merror[0m] [0m[0mimport com.typesafe.sbt.SbtGhPages.GhPagesKeys._[0m
+[0m[[0m[31merror[0m] [0m[0m                    ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:8:22: not found: type Build[0m
+[0m[[0m[31merror[0m] [0m[0mobject Build extends Build {[0m
+[0m[[0m[31merror[0m] [0m[0m                     ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:17:33: not found: type ReleaseStep[0m
+[0m[[0m[31merror[0m] [0m[0m  lazy val generateAndPushDocs: ReleaseStep = { st: State =>[0m
+[0m[[0m[31merror[0m] [0m[0m                                ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:18:27: not found: value makeSite[0m
+[0m[[0m[31merror[0m] [0m[0m    val st2 = executeTask(makeSite, "Making doc site")(st)[0m
+[0m[[0m[31merror[0m] [0m[0m                          ^[0m
+[0m[[0m[31merror[0m] [0m[0m/Users/derrickburns/Documents/GitHub/generalized-kmeans-clustering/project/Build.scala:19:17: not found: value pushSite[0m
+[0m[[0m[31merror[0m] [0m[0m    executeTask(pushSite, "Publishing doc site")(st2)[0m
+[0m[[0m[31merror[0m] [0m[0m                ^[0m
+[0m[[0m[31merror[0m] [0m[0m7 errors found[0m
+[0m[[0m[31merror[0m] [0m[0m(Compile / [31mcompileIncremental[0m) Compilation failed[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(loadFailed, None, None)[0m
+[0m[[0m[33mwarn[0m] [0m[0mProject loading failed: (r)etry, (q)uit, (l)ast, or (i)gnore? (default: r)[0m

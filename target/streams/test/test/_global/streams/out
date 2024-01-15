@@ -1,0 +1,54 @@
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.TransformsTestSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.EmbeddingSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.KMeansPlusPlusSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.MultiKMeansClustererSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.KMeansSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.massivedatascience.clusterer.BregmanTestSuite, org.scalatest.tools.Framework$$anon$1@6a4955bd, false, [SuiteSelector])[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mEmbeddingSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- apply method[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- symmetrized embedding[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- low dimensional random indexing embedding[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- medium dimensional random indexing embedding[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMultiKMeansClustererSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- apply method[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mBregmanTestSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- custom Bregman divergence[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- DenseSquaredEuclideanPointOps[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- DenseSimplexKLPointOps[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- DenseKLPointOps[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- DenseKLPointOps homogeneous[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- logistic loss[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- itakura-saito[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- gradient[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mTransformsTestSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- Dense Embedding[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- Haar Embedding[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mKMeansPlusPlusSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- k-means plus plus chooses only point with non-zero weight[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- k-means plus plus keep pre-selected centers[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mKMeansSuite:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- coverage[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- sparse vector iterator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- sparse negative vector iterator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- dense vector iterator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- dense negative vector iterator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- iteratively train[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- single cluster[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- no distinct points[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- more clusters than points[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- single cluster with big dataset[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- single cluster with sparse data[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- k-means|| initialization[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- two clusters[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 20 seconds, 345 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 30[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 6, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 30, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+[0m[[0m[0mdebug[0m] [0m[0mPassed tests:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.EmbeddingSuite[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.KMeansPlusPlusSuite[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.TransformsTestSuite[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.MultiKMeansClustererSuite[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.KMeansSuite[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.massivedatascience.clusterer.BregmanTestSuite[0m
