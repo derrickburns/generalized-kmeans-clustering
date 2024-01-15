@@ -25,8 +25,6 @@ Table of Contents
 
 * [Generalized K-Means Clustering](#generalized-k-means-clustering)
     * [Getting Started](#getting-started)
-      * [SBT](#sbt)
-      * [Maven](#maven)
     * [Introduction](#introduction)
       * [Bregman Divergences](#bregman-divergences)
       * [Compute Bregman Distances Efficiently using <code>BregmanPoint</code>s  and <code>BregmanCenter</code>s](#compute-bregman-distances-efficiently-using-bregmanpoints--and-bregmancenters)
