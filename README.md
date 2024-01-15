@@ -9,7 +9,7 @@ K-means clustering are implemented or can be implemented with this package, incl
 * [clustering large numbers of points using mini-batches](http://www.eecs.tufts.edu/~dsculley/papers/fastkmeans.pdf)
 * [clustering high dimensional Euclidean data](http://www.ida.liu.se/~arnjo/papers/pakdd-ws-11.pdf)
 * [clustering high dimensional time series data](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
-* [clustering using symmetrized Bregman divergences](http://snowbird.djvuzone.org/2009/abstracts/127.pdf](https://people.clas.ufl.edu/yun/files/article-8-1.pdf)
+* [clustering using symmetrized Bregman divergences](https://people.clas.ufl.edu/yun/files/article-8-1.pdf)
 * [clustering via bisection](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
 * [clustering with near-optimality](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 * [clustering streaming data](http://papers.nips.cc/paper/3812-streaming-k-means-approximation.pdf)
