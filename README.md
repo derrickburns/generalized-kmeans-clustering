@@ -48,7 +48,7 @@ Table of Contents
 
 ### Getting Started
 
-The massivedatascience-clusterer project is built for Spark 2.4, Scala 2.12, and Java 17.
+The massivedatascience-clusterer project is built for Spark 3.4, Scala 2.12, and Java 17.
 
 
 ### Introduction
