@@ -21,8 +21,9 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.ml.linalg.Vectors
 import org.scalatest._
+import org.scalatest.matchers.should.Matchers._
 import funsuite._
 import com.holdenkarau.spark.testing.LocalSparkContext
 
@@ -46,7 +47,6 @@ class EmbeddingSuite extends AnyFunSuite with LocalSparkContext {
     val embedded = e.embed(v1)
 
     assert(embedded.weight == 8.0)
-   // assert(embedded.homogeneous ~== expected absTol 1E-5)
   }
 
   test("low dimensional random indexing embedding") {
@@ -57,7 +57,7 @@ class EmbeddingSuite extends AnyFunSuite with LocalSparkContext {
     val embedded = e.embed(v1)
 
     assert(embedded.weight == 3.0)
-    //assert(embedded.homogeneous ~== expected absTol 1E-5)
+    assert( Vectors.sqdist(embedded.homogeneous, expected) <= 1E-5 )
   }
 
   test("medium dimensional random indexing embedding") {
@@ -69,7 +69,8 @@ class EmbeddingSuite extends AnyFunSuite with LocalSparkContext {
     val embedded = e.embed(v1)
 
     assert(embedded.weight == 3.0)
-    //assert(embedded.homogeneous ~== expected absTol 1E-5)
+    assert( Vectors.sqdist(embedded.homogeneous, expected) <= 1E-5 )
+
   }
 
 }

@@ -2,8 +2,8 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.divergence.BregmanDivergence
 import com.massivedatascience.linalg.WeightedVector
-import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.linalg.Vectors
 import com.massivedatascience.clusterer.TestingUtils._
 import org.scalatest._
 import funsuite._

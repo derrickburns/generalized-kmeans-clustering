@@ -19,7 +19,7 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.ml.linalg.Vector
 import org.scalatest.exceptions.TestFailedException
 
 object TestingUtils {

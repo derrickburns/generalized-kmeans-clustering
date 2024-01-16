@@ -29,7 +29,7 @@ import scala.util.Random
 import org.scalatest._
 import funsuite._
 
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.BregmanPointOps._
