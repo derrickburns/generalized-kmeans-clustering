@@ -19,7 +19,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.divergence._
 import com.massivedatascience.linalg._
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 /**

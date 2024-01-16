@@ -23,7 +23,7 @@ import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDisto
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag

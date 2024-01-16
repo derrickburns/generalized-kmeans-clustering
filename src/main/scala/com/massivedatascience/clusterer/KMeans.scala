@@ -22,7 +22,7 @@ import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import com.massivedatascience.transforms.Embedding._
 import com.massivedatascience.util.SparkHelper
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 
 import org.slf4j.LoggerFactory

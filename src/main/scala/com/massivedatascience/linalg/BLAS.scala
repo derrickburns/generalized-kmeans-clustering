@@ -18,7 +18,7 @@
 package com.massivedatascience.linalg
 
 import com.github.fommil.netlib.{ BLAS => NetlibBLAS, F2jBLAS }
-import org.apache.spark.mllib.linalg.{ DenseVector, SparseVector, Vector }
+import org.apache.spark.ml.linalg.{ DenseVector, SparseVector, Vector }
 
 import scala.collection.mutable.ArrayBuffer
 

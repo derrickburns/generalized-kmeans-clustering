@@ -19,7 +19,7 @@ package com.massivedatascience.transforms
 
 import com.massivedatascience.linalg._
 import com.massivedatascience.util.XORShiftRandom
-import org.apache.spark.mllib.linalg.{ Vectors, Vector }
+import org.apache.spark.ml.linalg.{ Vectors, Vector }
 import org.joda.time.DateTime
 
 object RandomIndexEmbedding {

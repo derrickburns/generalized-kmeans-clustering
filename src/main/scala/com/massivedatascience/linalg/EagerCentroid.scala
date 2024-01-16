@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{ DenseVector, Vector }
+import org.apache.spark.ml.linalg.{ DenseVector, Vector }
 import com.massivedatascience.linalg.EagerCentroid._
 
 /**

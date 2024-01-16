@@ -20,7 +20,7 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.linalg.BLAS._
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec

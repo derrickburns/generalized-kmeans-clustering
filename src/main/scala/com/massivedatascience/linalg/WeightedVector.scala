@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.mllib.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 /**
  * An IMMUTABLE weighted vector.

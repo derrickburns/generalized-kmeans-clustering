@@ -17,7 +17,7 @@
 
 package com.massivedatascience
 
-import org.apache.spark.mllib.linalg.DenseVector
+import org.apache.spark.ml.linalg.DenseVector
 
 package object clusterer {
   val Infinity = Double.MaxValue

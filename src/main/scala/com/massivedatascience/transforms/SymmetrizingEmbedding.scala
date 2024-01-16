@@ -19,7 +19,7 @@ package com.massivedatascience.transforms
 
 import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
 import com.massivedatascience.linalg._
-import org.apache.spark.mllib.linalg.{ Vector }
+import org.apache.spark.ml.linalg.{ Vector }
 
 /**
  * One can create a symmetric version of any Bregman Divergence</a>
