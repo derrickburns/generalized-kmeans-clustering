@@ -190,7 +190,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       results.map(x => ClusteringWithDistortion(x._1, x._2.toIndexedSeq))
     }
 
-    /**
+    /*
      * The initial fat points
      *
      * @param data the incoming data
@@ -208,7 +208,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       result
     }
 
-    /**
+    /*
      * Augment the stats with information about the clusters
      *
      * @param round the round
@@ -245,7 +245,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       }
     }
 
-    /**
+    /*
      * Identify the new cluster assignments for a sample of the points.
      * @param round the number of the round
      * @param stats statistics on round
@@ -278,7 +278,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       result
     }
 
-    /**
+    /*
      * Update the clusters (stochasticly if rate < 1.0)
      *
      * @param round the round
@@ -314,7 +314,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
     def distortion(data: RDD[FatPoint]) = data.filter(_.isAssigned).map(_.distance).sum()
 
-    /**
+    /*
      * Identify cluster changes.
      *
      * Create an array of the changes per cluster.  Some clusters may not have changes.  They will
@@ -346,7 +346,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
         (p.cluster, p.location)
       }.aggregateByKey(pointOps.make())(_.add(_), _.add(_)).collect()
 
-    /**
+    /*
      * count number of points assigned to each cluster
      *
      * @param points the points
@@ -355,7 +355,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     def countByCluster(points: RDD[FatPoint]): Map[Int, Long] =
       points.filter(_.isAssigned).map { p => (p.cluster, p) }.countByKey()
 
-    /**
+    /*
      * Find the closest cluster assignment that has moved/not moved since the point was last assigned.
      *
      * @param round the current round
@@ -388,7 +388,7 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       if (bestIndex != -1) Assignment(bestDist, bestIndex, round) else Assignment(Double.MaxValue, -1, -2)
     }
 
-    /**
+    /*
      * Find the closest cluster assignment to a given point
      *
      * @param round the current round
