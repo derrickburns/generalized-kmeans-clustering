@@ -95,14 +95,14 @@ supplying the name of the desired object to the apply method of the companion ob
 
 | Name   | Space | Divergence              | Input   |
 |--------|-------|-------------------------|---------|
-| ```SquaredEuclideanDistanceDivergence```                  | R^d   |Squared Euclidean        |         |
-| ```RealKullbackLeiblerSimplexDivergence```           | R+^d  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   |
-| ```NaturalKLSimplexDivergence```                | N+^d  |Kullback-Leibler         | Dense   |
-| ```RealKLDivergence```       | R^d   |Kullback-Leibler         | Dense   |
-| ```NaturalKLDivergence```       | N^d   |Kullback-Leibler         | Dense   |
-| ```ItakuraSaitoDivergence```         | R+^d  |Kullback-Leibler         | Sparse  |
-| ```LogisticLossDivergence```              | R     |Logistic Loss            |         |
-| ```GeneralizedIDivergence```     | R     |Generalized I |         |
+| ```SquaredEuclideanDistanceDivergence```                  | $\mathbb{R}^d$   |Squared Euclidean        |         |
+| ```RealKullbackLeiblerSimplexDivergence```           | $\mathbb{R}^d_{>0}$  |[Kullback-Leibler](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)         | Dense   |
+| ```NaturalKLSimplexDivergence```                | $\mathbb{N}^d_{>0}$  |Kullback-Leibler         | Dense   |
+| ```RealKLDivergence```       | $\mathbb{R}^d$   |Kullback-Leibler         | Dense   |
+| ```NaturalKLDivergence```       | $\mathbb{N}^d$   |Kullback-Leibler         | Dense   |
+| ```ItakuraSaitoDivergence```         | $\mathbb{R}^d_{>0}$  |Kullback-Leibler         | Sparse  |
+| ```LogisticLossDivergence```              | $\mathbb{R}$     |Logistic Loss            |         |
+| ```GeneralizedIDivergence```     | $\mathbb{R}$     |Generalized I |         |
 
 When selecting a distance function, consider the domain of
 the input data.  For example, frequency
