@@ -38,27 +38,38 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   import com.massivedatascience.clusterer.KMeansSelector._
 
-    test("coverage") {
+  test("use two runs") {
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 2)
+  }
+
+   test("use change tracking clustering algorithm") {
 
     val seed = 0
     val r = new Random(seed)
     val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
 
-    KMeans.train(data, k = 20, maxIterations = 10)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 2)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, mode = KMeansSelector.RANDOM)
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN))
-
     KMeans.train(data, k = 20, maxIterations = 10, runs = 1,
       distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
       clustererName = MultiKMeansClusterer.CHANGE_TRACKING)
+  }
+  test("use reseed clustering algorithm") {
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
 
     KMeans.train(data, k = 50, maxIterations = 10, runs = 1,
       distanceFunctionNames = Seq(BregmanPointOps.EUCLIDEAN),
       clustererName = MultiKMeansClusterer.RESEED)
+  }
+
+  test ("cluster time series data using Haar transform") {  
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
 
     KMeans.timeSeriesTrain(
       new RunConfig(20, 1, 0, 10),
@@ -66,10 +77,25 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
       BregmanPointOps(BregmanPointOps.EUCLIDEAN),
       MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING),
-      Embedding(HAAR_EMBEDDING))
-
-    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, clustererName = MultiKMeansClusterer.MINI_BATCH_10)
+      Embedding(HAAR_EMBEDDING))  
   }
+
+  test("use random initializer") {
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    KMeans.train(data, k = 20, maxIterations = 10, runs = 1, mode = KMeansSelector.RANDOM)
+  }
+
+  test("use maximum of 10 iterations") {
+    val seed = 0
+    val r = new Random(seed)
+    val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
+
+    KMeans.train(data, k = 20, maxIterations = 10)
+  }
+
 
   test("sparse vector iterator") {
 
@@ -179,22 +205,11 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
     assert(!iter.hasNext)
   }
 
-
-
-  test("iteratively train") {
+  test("use iterative training") {
     val seed = 0
     val r = new Random(seed)
 
     val data = sc.parallelize[Vector](Array.fill(1000)(Vectors.dense(Array.fill(20)(r.nextDouble()))))
-
-    /*
-
-    runConfig: RunConfig,
-    pointOps: Seq[BregmanPointOps],
-    dataSets: Seq[RDD[BregmanPoint]],
-    initializer: KMeansSelector,
-    clusterer: MultiKMeansClusterer)
-     */
 
     val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val cached = data.map(WeightedVector.apply).map(ops.toPoint).cache()
