@@ -1,5 +1,5 @@
 ---
-description: How to creaate K-Means Models using the KMeansModel Helper Object
+description: How to create K-Means Models using the KMeansModel companion Object
 ---
 
 # Alternative KMeansModel Construction

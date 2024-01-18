@@ -1,6 +1,6 @@
 # MultiKMeansClusterer
 
-One may construct K-Means models using one of the provided clusterers that implement Lloyd's algorithm.
+Lloyd's algorithm is simple to describe, but in practice different implementations are possible that can yield dramatically different running times depending on the data being clusters. We abstract the clusterer using the `MultiKMeansClusterer` trait.
 
 ```scala
 trait MultiKMeansClusterer extends Serializable with Logging {

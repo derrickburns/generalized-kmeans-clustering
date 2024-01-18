@@ -1,6 +1,6 @@
 # KMeansModel
 
-We define our realization of a k-means model, `KMeansModel`, which we enrich with operations to find closest clusters to a point and to compute distances:
+A K-means model is a set of cluster centers.  We abstract the K-means model with the `KMeansModel` trait with methods to map an arbitrary point (viz. `Vector`, `WeightedVector`, or `BregmanPoint`) to the nearest cluster center and to compute the cost/distance to that center.&#x20;
 
 ```scala
 package com.massivedatascience.clusterer
