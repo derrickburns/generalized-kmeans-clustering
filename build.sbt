@@ -79,7 +79,6 @@ ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 ThisBuild / pgpSigningKey := Some("0xE3F60B02")  // replace with your key ID
 
-GitBook / sourceDirectory := sourceDirectory.value / "docs"
-GitBook / gitbookInstallDir := Some(baseDirectory.value / "node_modules" / "gitbook")
-enablePlugins(SitePreviewPlugin, GitBookPlugin)
+SiteScaladoc / siteSubdirName := "api/latest"
 
+enablePlugins(SitePreviewPlugin,SiteScaladocPlugin)
