@@ -1,8 +1,6 @@
 Generalized K-Means Clustering
 =============================
 
-See [gitbook](https://massive-data-science.gitbook.io/generalized-k-means-clustering/) for details.
-
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
 and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer.   Most practical variants of
 K-means clustering are implemented or can be implemented with this package, including:
