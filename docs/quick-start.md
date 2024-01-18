@@ -1,6 +1,6 @@
 # Quick Start
 
-The simplest way to train a `KMeansModel` on a fixed set of points is to use the `KMeans.train` method. This method is most similar in style to the one provided by the Spark 1.2.0 K-Means clusterer.
+The simplest way to train a `KMeansModel` on a fixed set of points is to use the `KMeans.train` method. This method is most similar in style to the one provided by the Spark 1.2.0 K-Means clusterer. 
 
 For dense data in a low dimension space using the squared Euclidean distance function, one may simply call `KMeans.train` with the data and the desired number of clusters:
 

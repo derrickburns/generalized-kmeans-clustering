@@ -78,3 +78,7 @@ ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 ThisBuild / pgpSigningKey := Some("0xE3F60B02")  // replace with your key ID
+
+GitBook / sourceDirectory := sourceDirectory.value / "docs"
+
+enablePlugins(SitePreviewPlugin, GitBookPlugin)
