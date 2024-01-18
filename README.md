@@ -1,4 +1,4 @@
-Generalized K-Means Clustering
+ƒCuGeneralized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
@@ -38,7 +38,7 @@ Table of Contents
     * [Creating a Custom K-means Clusterer](#creating-a-custom-k-means-clusterer)
       * [Custom <code>BregmanDivergence</code>](#custom-bregmandivergence)
       * [Custom <code>BregmanPointOps</code>](#custom-bregmanpointops)
-      * [Custom <code>Embedding</code>](#custom-embeddings)
+      * [Custom <code>Embedding</code>](#custom-embedding)
     * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
     * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
       * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
