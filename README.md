@@ -40,11 +40,6 @@ Table of Contents
       * [Custom <code>BregmanPointOps</code>](#custom-bregmanpointops)
       * [Custom <code>Embedding</code>](#custom-embedding)
     * [Creating K-Means Models using the <code>KMeansModel</code> Helper Object](#creating-k-means-models-using-the-kmeansmodel-helper-object)
-    * [Other Differences with Spark MLLIB 1.2 K-Means Clusterer](#other-differences-with-spark-mllib-12-k-means-clusterer)
-      * [Variable number of clusters in parallel runs](#variable-number-of-clusters-in-parallel-runs)
-      * [Sparse Data](#sparse-data)
-      * [Cluster Backfilling](#cluster-backfilling)
-
 
 ### Getting Started
 
