@@ -1,8 +1,6 @@
-# Creating a Custom Bregman Divergence
+# Creating a Custom Distance Function
 
-**Custom `BregmanDivergence`**
-
-You may create your own custom `BregmanDivergence` given a suitable continuously-differentiable real-valued and strictly convex function defined on a closed convex set in R^^N using the `apply` method of the companion object. Send a pull request to have it added the the package.
+To create a custom distance function from a Bregman Divergence, you must provide two functions: a suitable continuously-differentiable real-valued and strictly convex function defined on a closed convex set in R^^N. With these, you may use the `apply` method on the `BregmanDivergence` companion object to create a `BregmanDivergence`.
 
 ```scala
 package com.massivedatascience.divergence
@@ -20,9 +18,7 @@ object BregmanDivergence {
 }
 ```
 
-**Custom `BregmanPointOps`**
-
-You may create your own custom `BregmanPointsOps` from your own implementation of the `BregmanDivergence` trait given a `BregmanDivergence` using the `apply` method of the companion object. Send a pull request to have it added the the package.
+Finally, from your `BregmanDivergence`, you may create an instance of the distance function by using the `apply` method of the `BregmanPointOps` companion object.&#x20;
 
 ```scala
 package com.massivedatascience.clusterer

@@ -41,8 +41,6 @@ trait BregmanPointOps  {
 }
 
 object BregmanPointOps {
-
   def apply(distanceFunction: String): BregmanPointOps = ???
-
 }
 ```

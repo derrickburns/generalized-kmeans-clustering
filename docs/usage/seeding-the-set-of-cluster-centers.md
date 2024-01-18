@@ -4,9 +4,17 @@ Any K-Means model may be used as seed value to Lloyd's algorithm. In fact, our c
 
 Two algorithms are implemented that produce viable seed sets. They may be constructed by using the `apply` method of the companion object`KMeansSelector`".
 
-| Name               | Algorithm                                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `RANDOM`           | Random selection of initial k centers                                                                   |
-| `K_MEANS_PARALLEL` | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/\~sergei/papers/vldb12-kmpar.pdf) |
+| Name                              | Algorithm                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| KMeansSelector.`RANDOM`           | Random selection of initial k centers                                                                   |
+| KMeansSelector.`K_MEANS_PARALLEL` | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/\~sergei/papers/vldb12-kmpar.pdf) |
 
-Under the covers, these initializers implement the `KMeansSelector` trait
+You may create a KMeansSelector using the apply method of the KMeansSelector companion object.
+
+```scala
+package com.massivedatascience.clusterer
+
+object KMeansSelector {
+  def apply(name: String): KMeansSelector = ???
+}
+```
