@@ -1,34 +1,26 @@
 # Table of contents
 
 * [Generalized K-Means Clustering](README.md)
-
-## Getting Started
-
-* [Introduction](getting-started/introduction.md)
-* [Requirements](getting-started/requirements.md)
-* [Quick Start](getting-started/quick-start.md)
-
-## Concepts
-
-* [Bregman Divergence](concepts/bregman-divergence.md)
-* [BregmanPoint, BregmanCenter, BregmanPointOps](concepts/bregmanpoint-bregmancenter-bregmanpointops.md)
-* [KMeansModel](concepts/kmeansmodel.md)
-* [MultiKMeansClusterer](concepts/multikmeansclusterer.md)
-* [WeightedVector](concepts/weightedvector.md)
-* [KMeansSelector](concepts/kmeansselector.md)
-
-***
-
+* [Introduction](introduction.md)
+* [Requirements](requirements.md)
+* [Quick Start](quick-start.md)
+* [Concepts](concepts/README.md)
+  * [Bregman Divergence](concepts/bregman-divergence.md)
+  * [BregmanPoint, BregmanCenter, BregmanPointOps](concepts/bregmanpoint-bregmancenter-bregmanpointops.md)
+  * [KMeansModel](concepts/kmeansmodel.md)
+  * [MultiKMeansClusterer](concepts/multikmeansclusterer.md)
+  * [WeightedVector](concepts/weightedvector.md)
+  * [KMeansSelector](concepts/kmeansselector.md)
 * [Usage](usage/README.md)
   * [Distance Functions](usage/distance-functions.md)
   * [Constructing K-Means Models using Clusterers](usage/constructing-k-means-models-using-clusterers.md)
   * [Using an Embedding](usage/using-an-embedding.md)
-  * [Iterative Clustering](usage/iterative-clustering.md)
   * [Seeding the Set of Cluster Centers](usage/seeding-the-set-of-cluster-centers.md)
+  * [Iterative Clustering](usage/iterative-clustering.md)
   * [Alternative KMeansModel Construction](usage/alternative-kmeansmodel-construction.md)
-  * [Creating a Custom K-means Clusterer](usage/creating-a-custom-k-means-clusterer/README.md)
-    * [Creating a Custom Distance Function](usage/creating-a-custom-k-means-clusterer/creating-a-custom-distance-function.md)
-    * [Creating a Custom Embedding](usage/creating-a-custom-k-means-clusterer/creating-a-custom-embedding.md)
+  * [Customizing](usage/customizing/README.md)
+    * [Creating a Custom Distance Function](usage/customizing/creating-a-custom-distance-function.md)
+    * [Creating a Custom Embedding](usage/customizing/creating-a-custom-embedding.md)
 
 ## Algorithms
 

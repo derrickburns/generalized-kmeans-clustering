@@ -1,25 +1,6 @@
 # Constructing K-Means Models using Clusterers
 
-Clusterers implment LLoyd's algorithm to find  optimal clusterings by implementing the `MultiKMeansClusterer` trait.
-
-<pre><code><strong>trait MultiKMeansClusterer extends Serializable with Logging {
-</strong>  def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[(Double, IndexedSeq[BregmanCenter])]
-
-  def best(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): (Double, IndexedSeq[BregmanCenter]) = {
-    cluster(maxIterations, pointOps, data, centers).minBy(_._1)
-  }
-}
-</code></pre>
-
-We offer several different clusterers.
+We offer several different clusterers that implement LLoyd's algorithm to find optimal clusterings.
 
 | Name                                   | Algorithm                                                                          |
 | -------------------------------------- | ---------------------------------------------------------------------------------- |

@@ -18,15 +18,4 @@ trait KMeansSelector extends Serializable {
     runs: Int,
     seed: Long): Seq[IndexedSeq[BregmanCenter]]
 }
-
-object KMeansSelector {
-  def apply(name: String): KMeansSelector = ???
-}
 ```
-
-| Name               | Algorithm                                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `RANDOM`           | Random selection of initial k centers                                                                   |
-| `K_MEANS_PARALLEL` | a 5 step [K-Means Parallel implementation](http://theory.stanford.edu/\~sergei/papers/vldb12-kmpar.pdf) |
-
-Under the covers, these initializers implement the `KMeansSelector` trait
