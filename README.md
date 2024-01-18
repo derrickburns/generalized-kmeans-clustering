@@ -1,4 +1,4 @@
-ƒCuGeneralized K-Means Clustering
+Generalized K-Means Clustering
 =============================
 
 This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
@@ -348,7 +348,7 @@ of the companion object ```Embedding```.
 |-------------------------------|-------------------------------------------------------------|
 | ```IDENTITY_EMBEDDING```      | Identity                                                    |
 | ```HAAR_EMBEDDING```          | [Haar Transform](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf) |
-| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://www.sics.se/~mange/papers/RI_intro.pdf) with dimension 64 and epsilon = 0.1 |
+| ```LOW_DIMENSIONAL_RI```      | [Random Indexing](https://en.wikipedia.org/wiki/Random_indexing) with dimension 64 and epsilon = 0.1 |
 | ```MEDIUM_DIMENSIONAL_RI```   | Random Indexing with dimension 256 and epsilon = 0.1        |
 | ```HIGH_DIMENSIONAL_RI```     | Random Indexing with dimension 1024 and epsilon = 0.1       |
 | ```SYMMETRIZING_KL_EMBEDDING```     | [Symmetrizing KL Embedding](http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf)       |
