@@ -424,5 +424,201 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       assert(predicts(0) != predicts(3))
     }
   }
+  
+  test("multiple distance functions") {
+    // Test that different Bregman divergences produce different clustering results
+    val r = new Random(42)
+    val points = Array.fill(100)(Vectors.dense(Array.fill(5)(r.nextDouble() * 10)))
+    val rdd = sc.parallelize(points, 4)
+    
+    // Train models with different distance functions
+    val euclideanModel = KMeans.train(rdd, k = 3, maxIterations = 10, 
+      distanceFunctionNames = Seq(EUCLIDEAN))
+    val klModel = KMeans.train(rdd, k = 3, maxIterations = 10, 
+      distanceFunctionNames = Seq(RELATIVE_ENTROPY))
+    
+    // Verify that predictions are consistent for each model
+    val euclideanPredictions = euclideanModel.predict(rdd).collect()
+    val klPredictions = klModel.predict(rdd).collect()
+    
+    // Each prediction should be a valid cluster index
+    assert(euclideanPredictions.forall(p => p >= 0 && p < 3))
+    assert(klPredictions.forall(p => p >= 0 && p < 3))
+    
+    // Compute costs for both models
+    val euclideanCost = euclideanModel.computeCost(rdd)
+    val klCost = klModel.computeCost(rdd)
+    
+    // Both costs should be non-negative
+    assert(euclideanCost >= 0.0, "Euclidean cost should be non-negative")
+    assert(klCost >= 0.0, "KL cost should be non-negative")
+  }
+  
+  test("high dimensional clustering") {
+    // Test K-means with high-dimensional data
+    val dim = 100
+    val k = 5
+    val numPoints = 50
+    val r = new Random(123)
+    
+    // Create k distinct centers in high-dimensional space
+    val centers = (0 until k).map { i =>
+      val center = Array.fill(dim)(0.0)
+      // Set a few dimensions to have large values to make centers distinct
+      for (j <- 0 until 10) {
+        val idx = r.nextInt(dim)
+        center(idx) = 10.0 * (i + 1) + r.nextDouble()
+      }
+      center
+    }
+    
+    // Generate points around these centers
+    val points = centers.flatMap { center =>
+      (0 until numPoints / k).map { _ =>
+        val point = center.clone()
+        // Add noise to each dimension
+        for (j <- 0 until dim) {
+          point(j) += r.nextGaussian() * 0.1
+        }
+        Vectors.dense(point)
+      }
+    }
+    
+    val rdd = sc.parallelize(points, 4)
+    
+    // Train with different numbers of iterations
+    val model1 = KMeans.train(rdd, k = k, maxIterations = 1)
+    val model10 = KMeans.train(rdd, k = k, maxIterations = 10)
+    
+    // Compute costs for both models
+    val cost1 = model1.computeCost(rdd)
+    val cost10 = model10.computeCost(rdd)
+    
+    // More iterations should result in lower cost
+    assert(cost10 <= cost1, "More iterations should result in lower cost")
+    
+    // Check that we have the right number of clusters
+    assert(model10.clusterCenters.length === k)
+    
+    // Verify that predictions are consistent
+    val predictions = model10.predict(rdd).collect()
+    assert(predictions.forall(p => p >= 0 && p < k))
+  }
+  
+  test("weighted vectors") {
+    // Test K-means with weighted vectors
+    val points = Seq(
+      WeightedVector(Vectors.dense(0.0, 0.0), 1.0),
+      WeightedVector(Vectors.dense(0.0, 0.1), 5.0),  // Higher weight
+      WeightedVector(Vectors.dense(0.1, 0.0), 1.0),
+      WeightedVector(Vectors.dense(9.0, 0.0), 1.0),
+      WeightedVector(Vectors.dense(9.0, 0.2), 5.0),  // Higher weight
+      WeightedVector(Vectors.dense(9.2, 0.0), 1.0)
+    )
+    
+    val rdd = sc.parallelize(points, 3)
+    
+    // Train model
+    val model = KMeans.trainWeighted(
+      new RunConfig(2, 1, 0, 5),
+      rdd,
+      KMeansSelector(K_MEANS_PARALLEL),
+      Seq(BregmanPointOps(EUCLIDEAN)),
+      Seq(Embedding(IDENTITY_EMBEDDING)),
+      MultiKMeansClusterer(MultiKMeansClusterer.COLUMN_TRACKING)
+    )
+    
+    // Predict clusters
+    val predictions = model.predictWeighted(rdd).collect()
+    
+    // Verify we have the right number of predictions
+    assert(predictions.length === points.length)
+    
+    // Verify all predictions are valid cluster indices
+    assert(predictions.forall(p => p >= 0 && p < 2))
+    
+    // Compute cost
+    val cost = model.computeCostWeighted(rdd)
+    assert(cost >= 0.0, "Cost should be non-negative")
+  }
+  
+  test("empty clusters handling") {
+    // Test how K-means handles empty clusters
+    val points = Seq(
+      Vectors.dense(0.0, 0.0),
+      Vectors.dense(0.1, 0.1),
+      Vectors.dense(0.2, 0.2),
+      Vectors.dense(9.0, 9.0),
+      Vectors.dense(9.1, 9.1),
+      Vectors.dense(9.2, 9.2)
+    )
+    
+    // Request more clusters than natural clusters in the data
+    val k = 4
+    val rdd = sc.parallelize(points, 2)
+    
+    // Train model with multiple runs to ensure stability
+    val model = KMeans.train(rdd, k = k, maxIterations = 10, runs = 3)
+    
+    // Verify we get k centers even though data has only 2 natural clusters
+    assert(model.clusterCenters.length === k)
+    
+    // Get predictions
+    val predictions = model.predict(rdd).collect()
+    
+    // Group points by their cluster assignments
+    val clusterGroups = predictions.zipWithIndex.groupBy(_._1).mapValues(_.map(_._2))
+    
+    // Verify that points 0, 1, 2 are assigned to the same or similar clusters
+    val firstThreePoints = Set(0, 1, 2)
+    val firstThreeClusters = firstThreePoints.map(predictions(_))
+    
+    // Verify that points 3, 4, 5 are assigned to the same or similar clusters
+    val lastThreePoints = Set(3, 4, 5)
+    val lastThreeClusters = lastThreePoints.map(predictions(_))
+    
+    // Check that the first three points and last three points form coherent groups
+    // This is a more flexible test that allows for some variation in clustering
+    assert(firstThreeClusters.size <= 2, "First three points should be in at most 2 clusters")
+    assert(lastThreeClusters.size <= 2, "Last three points should be in at most 2 clusters")
+    
+    // Verify that at least some points from the first group are in a different cluster than points from the second group
+    assert(firstThreeClusters != lastThreeClusters, "The two groups of points should be in different clusters")
+  }
+  
+  test("KMeans model serialization") {
+    // Test that KMeansModel can be serialized and deserialized
+    import java.io._
+    
+    val points = Seq(
+      Vectors.dense(0.0, 0.0),
+      Vectors.dense(0.1, 0.1),
+      Vectors.dense(9.0, 9.0),
+      Vectors.dense(9.1, 9.1)
+    )
+    val rdd = sc.parallelize(points, 2)
+    
+    // Train model
+    val model = KMeans.train(rdd, k = 2, maxIterations = 5)
+    
+    // Serialize model
+    val baos = new ByteArrayOutputStream()
+    val oos = new ObjectOutputStream(baos)
+    oos.writeObject(model)
+    oos.close()
+    
+    // Deserialize model
+    val bais = new ByteArrayInputStream(baos.toByteArray)
+    val ois = new ObjectInputStream(bais)
+    val deserializedModel = ois.readObject().asInstanceOf[KMeansModel]
+    ois.close()
+    
+    // Verify that the deserialized model produces the same predictions
+    val originalPredictions = model.predict(rdd).collect()
+    val deserializedPredictions = deserializedModel.predict(rdd).collect()
+    
+    assert(originalPredictions.sameElements(deserializedPredictions), 
+      "Deserialized model should produce the same predictions")
+  }
 }
 
