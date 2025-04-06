@@ -74,6 +74,13 @@ object KMeans extends SparkHelper {
     distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
     clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
     embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)): KMeansModel = {
+    
+    // Validate input parameters
+    require(k > 0, "Number of clusters must be positive")
+    require(maxIterations > 0, "Maximum iterations must be positive")
+    require(runs > 0, "Number of runs must be positive")
+    require(distanceFunctionNames.nonEmpty, "At least one distance function must be specified")
+    require(embeddingNames.nonEmpty, "At least one embedding must be specified")
 
     val clusterer = MultiKMeansClusterer(clustererName)
     val runConfig = RunConfig(k, runs, 0, maxIterations)

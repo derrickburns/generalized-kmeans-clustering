@@ -97,6 +97,9 @@ trait KMeansPredictor {
  */
 case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCenter])
     extends KMeansPredictor with Serializable {
+  
+  // Validate that centers are not empty
+  require(centers.nonEmpty, "KMeansModel requires non-empty centers")
 
   lazy val k: Int = centers.length
 

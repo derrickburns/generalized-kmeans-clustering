@@ -61,17 +61,25 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
     runs: Int,
     seedx: Long): Seq[Centers] = {
 
+    // Ensure data is cached for performance
     require(data.getStorageLevel.useMemory)
+    
+    // Ensure data is not empty
+    val dataCount = data.count()
+    require(dataCount > 0, "Input data must not be empty")
+    
+    // If we have fewer data points than requested clusters, adjust the target
+    val adjustedTargetClusters = math.min(targetNumberClusters, dataCount.toInt)
     val rand = new XORShiftRandom(seedx)
     val seed = rand.nextLong()
     val preselectedCenters = initialState.map(_.centers)
     val initialCosts = initialState.map(_.distances)
     val centers = preselectedCenters.getOrElse(randomCenters(pointOps, data, runs, seed))
-    val requested = numbersRequested(targetNumberClusters, preselectedCenters, runs)
+    val requested = numbersRequested(adjustedTargetClusters, preselectedCenters, runs)
     val expandedCenters = moreCenters(pointOps, data, runs, initialCosts, numSteps, requested, seed,
       centers)
     val numbersRetainedCenters = preselectedCenters.map(_.map(_.size))
-    finalClusterCenters(pointOps, data, targetNumberClusters, rand.nextLong(), expandedCenters,
+    finalClusterCenters(pointOps, data, adjustedTargetClusters, rand.nextLong(), expandedCenters,
       numbersRetainedCenters)
   }
 
