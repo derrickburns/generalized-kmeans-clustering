@@ -21,6 +21,7 @@ import com.massivedatascience.divergence._
 import com.massivedatascience.linalg._
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.slf4j.LoggerFactory
 
 /**
  * A point with an additional single Double value that is used in distance computation.
@@ -162,15 +163,24 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
    *
    * @param p point
    * @param c center
-   * @return
+   * @return distance
    */
-  def distance(p: BregmanPoint, c: BregmanCenter): Double = {
+  def distance(p: P, c: C): Double = {
     weightThreshold match {
       case x: Double if c.weight <= x => Infinity
       case x: Double if p.weight <= x => 0.0
       case _ =>
         val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
-        if (d < 0.0) 0.0 else d
+        if (d < 0.0) {
+          // Negative distances can indicate numerical instability or implementation issues
+          // Log a warning for debugging purposes but return 0.0 as the minimum valid distance
+          if (d < -1e-10) {
+            // Only log if the negative value is significant (not just numerical precision issue)
+            val logger = LoggerFactory.getLogger(getClass.getName)
+            logger.warn(s"Negative distance computed: $d between point and center")
+          }
+          0.0
+        } else d
     }
   }
 }

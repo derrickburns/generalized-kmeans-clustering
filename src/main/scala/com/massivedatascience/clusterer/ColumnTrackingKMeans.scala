@@ -18,17 +18,16 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.ColumnTrackingKMeans._
-import com.massivedatascience.clusterer.KMeansSelector.InitialCondition
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import com.massivedatascience.util.{ SparkHelper, XORShiftRandom }
 import org.apache.spark.Partitioner._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.joda.time.DateTime
 
 import scala.annotation.tailrec
 import scala.collection.generic.FilterMonadic
+import scala.collection.mutable.ArrayBuffer
 
 import org.slf4j.LoggerFactory
 
@@ -261,12 +260,28 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
   private[this] def distortion(data: RDD[Assignment]) =
     data.filter(_.isAssigned).map(_.distance).sum()
 
+  /**
+   * Replace empty or weak clusters with new centers derived from points in strong clusters
+   * 
+   * @param points the data points
+   * @param pointOps distance function
+   * @param round current round number
+   * @param currentAssignments current assignments of points to clusters
+   * @param centers current cluster centers
+   * @return updated centers with empty clusters replaced when possible
+   */
   private[this] def backFilledCenters(
     points: RDD[BregmanPoint],
     pointOps: BregmanPointOps,
     round: Int,
     currentAssignments: RDD[Assignment],
     centers: Array[CenterWithHistory]): IndexedSeq[CenterWithHistory] = {
+
+    // Verify centers array is not empty
+    if (centers.isEmpty) {
+      logger.warn("Empty centers array provided to backFilledCenters")
+      return IndexedSeq.empty[CenterWithHistory]
+    }
 
     // adjust centers to fill in empty slots
     val weakClusters = centers.filter(_.center.weight < pointOps.weightThreshold)
@@ -275,18 +290,58 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     if (weakClusters.nonEmpty && round < config.maxRoundsToBackfill) {
       logger.info(s"replacing ${weakClusters.length} empty clusters")
       val strongClusters = centers.filter(!weakClusters.contains(_))
-      val bregmanCenters = strongClusters.toIndexedSeq.map(_.center)
-      val seed = new DateTime().getMillis
-      val incrementer = new KMeansParallel(2, config.fractionOfPointsToWeigh)
-      val costs = currentAssignments.map(_.distance)
-      val initialCondition = InitialCondition(Seq(bregmanCenters), Seq(costs))
-      val newCenters = incrementer.init(pointOps, points, centers.length,
-        Some(initialCondition), 1, seed)(0)
-      logger.info(s"${newCenters.length} centers returned, dropping ${bregmanCenters.length}")
-      val additional = newCenters.drop(bregmanCenters.length)
-      val replacements = weakClusters.zip(additional).map {
-        case (x, y) => x.copy(round = round,
-          center = y, initialized = false)
+
+      val replacements: IndexedSeq[CenterWithHistory] = if (strongClusters.isEmpty) {
+        logger.warn("No strong clusters available for backfilling")
+        IndexedSeq.empty[CenterWithHistory]
+      } else {
+        val assignments = currentAssignments.filter(_.isAssigned)
+        
+        // Check if we have any assignments
+        if (assignments.isEmpty()) {
+          logger.warn("No assignments available for backfilling")
+          return centers.toIndexedSeq
+        }
+        
+        val strongIndices = strongClusters.map(_.index)
+
+        val pointsInStrongClusters = points.zipPartitions(assignments) { (pts, assigns) =>
+          val buff = new ArrayBuffer[(Int, BregmanPoint)]()
+          while (pts.hasNext && assigns.hasNext) {
+            val point = pts.next()
+            val a = assigns.next()
+            if (strongIndices.contains(a.cluster)) buff.append((a.cluster, point))
+          }
+          buff.iterator
+        }.filter(_._1 >= 0).map(x => (x._1, x._2))
+
+        // Check if we have points in strong clusters
+        if (pointsInStrongClusters.isEmpty()) {
+          logger.warn("No points in strong clusters available for backfilling")
+          return centers.toIndexedSeq
+        }
+        
+        try {
+          val rand = new XORShiftRandom(round)
+          val y = pointsInStrongClusters.takeSample(withReplacement = false,
+            math.min(weakClusters.length, pointsInStrongClusters.count().toInt), rand.nextLong())
+
+          val result = y.zipWithIndex.map { case ((_, pt), i) =>
+            if (i < weakClusters.length) {
+              CenterWithHistory(weakClusters(i).index, round, pointOps.toCenter(pt), initialized = false)
+            } else {
+              // This should never happen due to the math.min above, but added as a safeguard
+              logger.error(s"Index $i out of bounds for weakClusters array of length ${weakClusters.length}")
+              null // This will be filtered out below
+            }
+          }.filter(_ != null) // Filter out any null entries
+          
+          result.toIndexedSeq
+        } catch {
+          case e: Exception =>
+            logger.error(s"Error during backfilling: ${e.getMessage}")
+            IndexedSeq.empty[CenterWithHistory]
+        }
       }
       logger.info(s"replaced ${replacements.length} clusters")
 

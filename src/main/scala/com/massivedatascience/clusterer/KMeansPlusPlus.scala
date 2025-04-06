@@ -142,9 +142,27 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
    * @param cumulative  the cumulative weights of the points
    * @return the index of the point chosen
    */
+  /**
+   * Pick a point at random, weighing the choices by the given cumulative weight vector.
+   * 
+   * @param rand  random number generator
+   * @param cumulative  the cumulative weights of the points
+   * @return the index of the point chosen
+   */
   private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
+    require(cumulative.nonEmpty, "Cumulative weights cannot be empty")
+    require(cumulative.last > 0.0, "Sum of weights must be positive")
+    
     val r = rand.nextDouble() * cumulative.last
     val index = cumulative.indexWhere(x => x > r)
-    if (index == -1) Seq[Int]() else Seq(index)
+    
+    // This should never happen if cumulative is properly constructed,
+    // but we handle it defensively to avoid returning an empty sequence
+    if (index == -1) {
+      logger.warn("Failed to find index in cumulative weights, using last index")
+      Seq(cumulative.length - 1)
+    } else {
+      Seq(index)
+    }
   }
 }
