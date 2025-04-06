@@ -23,7 +23,6 @@ import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.SparkContext
 
 import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
@@ -98,7 +97,13 @@ object TrackingKMeans {
    * @param round the round in which his cluster was last moved
    */
   case class FatCenter(center: BregmanCenter, round: Int = -1) {
-    def movedSince(r: Int): Boolean = round >= r
+    /**
+   * Check if this center has moved since a specific round
+   * 
+   * @param r the round to check against
+   * @return true if the center has moved in round r or later
+   */
+  def movedSince(r: Int): Boolean = round >= r
 
     def initialized: Boolean = round >= 0
   }
@@ -143,8 +148,10 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
 
   import TrackingKMeans._
 
+  // This class is intentionally not serializable to prevent accidental serialization
   class NotSerializable {}
 
+  // This instance ensures the class is not accidentally serialized
   val x = new NotSerializable
 
   val logger = LoggerFactory.getLogger(getClass.getName)
