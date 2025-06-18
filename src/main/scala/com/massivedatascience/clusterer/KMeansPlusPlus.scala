@@ -54,6 +54,18 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
 
   val logger = LoggerFactory.getLogger(getClass.getName)
 
+  /**
+   * Select high-quality initial centers using the K-Means++ algorithm with improved numerical stability.
+   *
+   * @param seed random number generator seed
+   * @param candidateCenters sequence of candidate centers
+   * @param weights weights for each candidate center (must be non-negative)
+   * @param totalRequested total number of centers to select
+   * @param perRound number of centers to add in each round
+   * @param numPreselected number of centers that are pre-selected (must be at the start of candidateCenters)
+   * @return sequence of selected centers
+   * @throws IllegalArgumentException if inputs are invalid
+   */
   def goodCenters(
     seed: Long,
     candidateCenters: IndexedSeq[BregmanCenter],
@@ -62,43 +74,121 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
     perRound: Int,
     numPreselected: Int): IndexedSeq[BregmanCenter] = {
 
-    require(candidateCenters.length > 0)
-    require(totalRequested > 0 && totalRequested <= candidateCenters.length)
-    require(numPreselected >= 0 && numPreselected <= totalRequested)
-    require(perRound <= totalRequested)
+    // Input validation
+    require(candidateCenters.nonEmpty, "Candidate centers cannot be empty")
+    require(candidateCenters.length == weights.length, 
+      s"Number of candidate centers (${candidateCenters.length}) must match number of weights (${weights.length})")
+    require(weights.forall(_ >= 0.0), "Weights must be non-negative")
+    require(totalRequested > 0 && totalRequested <= candidateCenters.length,
+      s"Total requested centers ($totalRequested) must be positive and <= number of candidates (${candidateCenters.length})")
+    require(numPreselected >= 0 && numPreselected <= totalRequested,
+      s"Number of preselected centers ($numPreselected) must be between 0 and total requested ($totalRequested)")
+    require(perRound > 0 && perRound <= totalRequested,
+      s"Centers per round ($perRound) must be positive and <= total requested ($totalRequested)")
 
-    if (candidateCenters.length < totalRequested)
-      logger.warn(s"# requested $totalRequested exceeds number of points ${candidateCenters.length}")
+    if (candidateCenters.length < totalRequested) {
+      logger.warn(s"Requested $totalRequested centers but only ${candidateCenters.length} candidates available")
+    }
+    
+    logger.info(s"Starting KMeans++ with ${candidateCenters.length} candidates, " +
+      s"requesting $totalRequested centers, $numPreselected preselected")
 
+    // Log weight statistics for debugging
+    val totalWeight = weights.sum
+    val minWeight = if (weights.nonEmpty) weights.min else 0.0
+    val maxWeight = if (weights.nonEmpty) weights.max else 0.0
+    logger.debug(f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f")
+    
+    // Pre-compute log-weights for numerical stability
+    val logWeights = weights.map { w =>
+      if (w > 0.0) math.log(w) else Double.NegativeInfinity
+    }
+    
     val points = reWeightedPoints(candidateCenters, weights)
     val rand = new XORShiftRandom(seed)
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
     @tailrec
-    def moreCenters(distances: IndexedSeq[Double]): Unit = {
+    def moreCenters(distances: IndexedSeq[Double], iteration: Int = 0): Unit = {
       val needed = totalRequested - centers.length
       if (needed > 0) {
-        val cumulative = cumulativeWeights(points.zip(distances).map { case (p, d) => p.weight * d })
-        val selected = (0 until perRound).par.flatMap { _ =>
-          pickWeighted(rand, cumulative).iterator
+        logger.debug(s"Round $iteration: selecting up to $perRound centers from ${distances.length} candidates")
+        
+        // Use log-sum-exp trick for numerical stability when computing probabilities
+        val logDistances = distances.map(d => if (d > 0.0) math.log(d) else Double.NegativeInfinity)
+        val maxLogDist = if (logDistances.nonEmpty) logDistances.max else 0.0
+        val logProbs = logDistances.map(_ - maxLogDist) // Subtract max for numerical stability
+        
+        // Convert back to linear scale with log-sum-exp trick
+        val probs = logProbs.map(lp => {
+          val expTerm = math.exp(lp)
+          if (expTerm.isInfinite || expTerm.isNaN) 0.0 else expTerm
+        })
+        
+        val totalProb = probs.sum
+        if (totalProb <= 0.0) {
+          logger.warn("No valid probabilities, falling back to uniform sampling")
+          val uniformSample = (0 until math.min(perRound, needed)).map(_ => 
+            rand.nextInt(candidateCenters.length))
+          centers ++= uniformSample.distinct.map(candidateCenters)
+        } else {
+          val cumulative = cumulativeWeights(probs)
+          val selected = (0 until perRound).par.flatMap { _ =>
+            pickWeighted(rand, cumulative).iterator
+          }
+          
+          val uniqueSelected = selected.distinct
+          logger.debug(s"Selected ${uniqueSelected.size} unique centers from ${selected.size} samples")
+          
+          val additionalCenters = uniqueSelected.map(candidateCenters).toIndexedSeq
+          val newDistances = updateDistances(points, distances, additionalCenters)
+          centers ++= additionalCenters.take(needed)
+          
+          if (additionalCenters.nonEmpty) {
+            moreCenters(newDistances, iteration + 1)
+          } else {
+            logger.warn("No new centers selected, stopping early")
+          }
         }
-        val additionalCenters = selected.map(candidateCenters(_)).toIndexedSeq
-        val newDistances = updateDistances(points, distances, additionalCenters)
-        centers ++= additionalCenters.take(needed)
-        if (additionalCenters.nonEmpty) moreCenters(newDistances)
       }
     }
 
-    centers ++= (if (numPreselected == 0) {
-      pickWeighted(rand, cumulativeWeights(weights)).map(candidateCenters(_))
+    // Handle pre-selected centers if any
+    if (numPreselected > 0) {
+      logger.info(s"Using $numPreselected pre-selected centers")
+      centers ++= candidateCenters.take(numPreselected)
+    } else if (weights.exists(_ > 0.0)) {
+      // Only use weighted sampling if we have positive weights
+      logger.debug("Selecting initial center using weighted sampling")
+      val initialIndex = pickWeighted(rand, cumulativeWeights(weights)).head
+      centers += candidateCenters(initialIndex)
+      logger.debug(s"Selected initial center at index $initialIndex")
     } else {
-      candidateCenters.take(numPreselected)
-    })
+      // Fall back to uniform sampling if all weights are zero
+      logger.warn("All weights are zero, falling back to uniform sampling for initial center")
+      val initialIndex = rand.nextInt(candidateCenters.length)
+      centers += candidateCenters(initialIndex)
+      logger.debug(s"Selected initial center at index $initialIndex using uniform sampling")
+    }
 
-    val maxDistances = IndexedSeq.fill(candidateCenters.length)(Double.MaxValue)
+    // Initialize distances for remaining points
+    val maxDistances = IndexedSeq.fill(points.length)(Double.MaxValue)
     val initialDistances = updateDistances(points, maxDistances, centers)
+    
+    // Run the main algorithm to select remaining centers
     moreCenters(initialDistances)
-    centers.take(totalRequested)
+    
+    val finalCenters = centers.take(totalRequested)
+    logger.info(s"Selected ${finalCenters.length} centers out of ${candidateCenters.length} candidates")
+    
+    // Log some statistics about the selected centers
+    if (finalCenters.nonEmpty) {
+      val centerIndices = finalCenters.map(c => candidateCenters.indexOf(c))
+      val centerWeights = centerIndices.map(i => if (i >= 0) weights(i) else 0.0)
+      logger.debug(s"Selected center weights: ${centerWeights.mkString(", ")}")
+    }
+    
+    finalCenters
   }
 
   private[this] def reWeightedPoints(
