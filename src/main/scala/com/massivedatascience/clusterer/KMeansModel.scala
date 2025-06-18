@@ -199,27 +199,82 @@ object KMeansModel {
   }
 
   /**
-   * Create a K-Means Model from a set of assignments of points to clusters
+   * Create a K-Means Model from a set of assignments of points to clusters.
    *
    * @param ops distance function
-   * @param points initial bregman points
-   * @param assignments assignments of points to clusters
-   * @return
+   * @param points RDD of weighted vectors representing the data points
+   * @param assignments RDD of cluster indices (0-based) corresponding to each point
+   * @return A KMeansModel with the computed cluster centers
+   * @throws IllegalArgumentException if inputs are invalid or misaligned
+   * @throws org.apache.spark.SparkException if RDD operations fail
    */
   def fromAssignments[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     points: RDD[T],
     assignments: RDD[Int]): KMeansModel = {
 
-    val centroids: RDD[(Int, MutableWeightedVector)] = assignments.zip(points)
-      .filter { case (index, _) => index >= 0 }
-      .aggregateByKey(ops.make())(
-        (centroid, pt) => centroid.add(pt),
-        (c1, c2) => c1.add(c2)
-      )
+    // Input validation
+    require(points != null, "Points RDD must not be null")
+    require(assignments != null, "Assignments RDD must not be null")
+    require(!points.partitioner.exists(_.numPartitions != assignments.partitions.length),
+      "Points and assignments must have the same number of partitions")
 
-    val bregmanCenters = centroids.map { case (_, vector) => ops.toCenter(vector.asImmutable) }
-    new KMeansModel(ops, bregmanCenters.collect().toIndexedSeq)
+    // Cache RDDs to avoid recomputation
+    val cachedPoints = points.cache()
+    val cachedAssignments = assignments.cache()
+
+    try {
+      // Check if RDDs are non-empty
+      if (cachedPoints.isEmpty()) {
+        throw new IllegalArgumentException("Points RDD must not be empty")
+      }
+      if (cachedAssignments.isEmpty()) {
+        throw new IllegalArgumentException("Assignments RDD must not be empty")
+      }
+
+      // Verify RDDs have the same number of elements
+      val pointsCount = cachedPoints.count()
+      val assignmentsCount = cachedAssignments.count()
+      if (pointsCount != assignmentsCount) {
+        throw new IllegalArgumentException(
+          s"Points (size=$pointsCount) and assignments (size=$assignmentsCount) must have the same number of elements")
+      }
+
+      // Process assignments and compute centroids
+      val centroids: RDD[(Int, MutableWeightedVector)] = {
+        // Zip with index to preserve ordering and detect misaligned data
+        val zipped = cachedAssignments.zipWithIndex().map(_.swap)
+          .join(cachedPoints.zipWithIndex().map(_.swap))
+          .map { case (_, (clusterIdx, point)) => (clusterIdx, point) }
+
+        // Filter out invalid cluster indices and compute centroids
+        zipped.filter { case (index, _) => index >= 0 }
+          .aggregateByKey(ops.make())(
+            (centroid, pt) => centroid.add(pt),
+            (c1, c2) => c1.add(c2)
+          )
+      }
+
+      // Collect and validate centroids
+      val bregmanCenters = centroids.map { case (clusterIdx, vector) =>
+        if (vector.count == 0) {
+          throw new IllegalStateException(
+            s"Empty cluster detected at index $clusterIdx. This can happen if all points are assigned to a single cluster.")
+        }
+        ops.toCenter(vector.asImmutable)
+      }
+
+      val centers = bregmanCenters.collect().toIndexedSeq
+      if (centers.isEmpty) {
+        throw new IllegalStateException("No valid clusters found. All points might be filtered out.")
+      }
+
+      new KMeansModel(ops, centers)
+    } finally {
+      // Clean up cached RDDs
+      cachedPoints.unpersist(blocking = false)
+      cachedAssignments.unpersist(blocking = false)
+    }
   }
 
   /**
