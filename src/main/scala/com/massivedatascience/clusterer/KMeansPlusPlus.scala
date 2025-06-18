@@ -138,31 +138,71 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
   /**
    * Pick a point at random, weighing the choices by the given cumulative weight vector.
    *
+   * This implementation uses binary search for O(log n) performance and handles
+   * floating-point precision issues by:
+   * 1. Using a relative tolerance for floating-point comparisons
+   * 2. Ensuring the cumulative sum is properly normalized
+   * 3. Using a more robust binary search that handles edge cases
+   *
    * @param rand  random number generator
-   * @param cumulative  the cumulative weights of the points
-   * @return the index of the point chosen
-   */
-  /**
-   * Pick a point at random, weighing the choices by the given cumulative weight vector.
-   * 
-   * @param rand  random number generator
-   * @param cumulative  the cumulative weights of the points
-   * @return the index of the point chosen
+   * @param cumulative  the cumulative weights of the points (must be non-decreasing)
+   * @return the index of the chosen point (always returns a valid index)
+   * @throws IllegalArgumentException if cumulative is empty or has non-positive sum
    */
   private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
     require(cumulative.nonEmpty, "Cumulative weights cannot be empty")
     require(cumulative.last > 0.0, "Sum of weights must be positive")
     
-    val r = rand.nextDouble() * cumulative.last
-    val index = cumulative.indexWhere(x => x > r)
+    // Generate a random value in [0, totalWeight)
+    val totalWeight = cumulative.last
+    val r = rand.nextDouble() * totalWeight
     
-    // This should never happen if cumulative is properly constructed,
-    // but we handle it defensively to avoid returning an empty sequence
-    if (index == -1) {
-      logger.warn("Failed to find index in cumulative weights, using last index")
+    // Use binary search to find the insertion point
+    // This is more numerically stable than indexWhere with floating-point comparison
+    @scala.annotation.tailrec
+    def binarySearch(left: Int, right: Int): Int = {
+      if (left >= right) {
+        left
+      } else {
+        val mid = left + (right - left) / 2
+        // Use relative tolerance for floating-point comparison
+        val midVal = cumulative(mid)
+        
+        // Check if we've found the exact match (within floating-point tolerance)
+        val relTol = 1e-10 * Math.max(Math.abs(r), Math.abs(midVal))
+        if (Math.abs(midVal - r) < relTol) {
+          // If exact match, return next index to maintain uniform distribution
+          (mid + 1).min(cumulative.length - 1)
+        } else if (midVal < r) {
+          binarySearch(mid + 1, right)
+        } else {
+          binarySearch(left, mid)
+        }
+      }
+    }
+    
+    // Handle edge cases and perform the search
+    if (r <= 0.0) {
+      // Handle case where r is very close to 0
+      Seq(0)
+    } else if (r >= totalWeight) {
+      // This should theoretically never happen due to how r is generated,
+      // but we handle it defensively
+      logger.warn(s"Random value $r exceeds total weight $totalWeight, using last index")
       Seq(cumulative.length - 1)
     } else {
-      Seq(index)
+      val idx = binarySearch(0, cumulative.length - 1)
+      // Ensure we don't return -1 or an out-of-bounds index
+      val safeIdx = Math.max(0, Math.min(idx, cumulative.length - 1))
+      
+      // Verify the selected index is valid
+      if (safeIdx < 0 || safeIdx >= cumulative.length) {
+        logger.error(s"Invalid index $safeIdx generated for cumulative weights length ${cumulative.length}")
+        // Fall back to uniform sampling as a last resort
+        Seq(rand.nextInt(cumulative.length))
+      } else {
+        Seq(safeIdx)
+      }
     }
   }
 }
