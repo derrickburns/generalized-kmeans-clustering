@@ -204,18 +204,24 @@ object KMeansModel {
    * @param ops distance function
    * @param points RDD of weighted vectors representing the data points
    * @param assignments RDD of cluster indices (0-based) corresponding to each point
+   * @param expectedNumClusters Optional expected number of clusters. If provided and greater than 0,
+   *                           the method will ensure exactly this many clusters are returned.
    * @return A KMeansModel with the computed cluster centers
    * @throws IllegalArgumentException if inputs are invalid or misaligned
    * @throws org.apache.spark.SparkException if RDD operations fail
+   * @throws IllegalStateException if no valid clusters are found or expected number of clusters cannot be satisfied
    */
   def fromAssignments[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     points: RDD[T],
-    assignments: RDD[Int]): KMeansModel = {
+    assignments: RDD[Int],
+    expectedNumClusters: Int = -1): KMeansModel = {
 
     // Input validation
     require(points != null, "Points RDD must not be null")
     require(assignments != null, "Assignments RDD must not be null")
+    require(expectedNumClusters == -1 || expectedNumClusters > 0,
+      "Expected number of clusters must be either -1 (unspecified) or positive")
     require(!points.partitioner.exists(_.numPartitions != assignments.partitions.length),
       "Points and assignments must have the same number of partitions")
 
@@ -241,35 +247,109 @@ object KMeansModel {
       }
 
       // Process assignments and compute centroids
-      val centroids: RDD[(Int, MutableWeightedVector)] = {
+      val (centroids, clusterSizes) = {
         // Zip with index to preserve ordering and detect misaligned data
         val zipped = cachedAssignments.zipWithIndex().map(_.swap)
           .join(cachedPoints.zipWithIndex().map(_.swap))
           .map { case (_, (clusterIdx, point)) => (clusterIdx, point) }
 
-        // Filter out invalid cluster indices and compute centroids
-        zipped.filter { case (index, _) => index >= 0 }
+        // Filter out invalid cluster indices, count points per cluster, and compute centroids
+        val validAssignments = zipped.filter { case (index, _) => index >= 0 }
+        
+        // Count points per cluster
+        val sizes = validAssignments
+          .map { case (clusterIdx, _) => (clusterIdx, 1L) }
+          .reduceByKey(_ + _)
+          .collectAsMap()
+          .toMap
+          .withDefaultValue(0L)
+        
+        // Compute centroids
+        val centers = validAssignments
           .aggregateByKey(ops.make())(
             (centroid, pt) => centroid.add(pt),
             (c1, c2) => c1.add(c2)
           )
+          
+        (centers, sizes)
       }
 
-      // Collect and validate centroids
-      val bregmanCenters = centroids.map { case (clusterIdx, vector) =>
-        if (vector.count == 0) {
+      // Process centroids and handle empty clusters
+      val (bregmanCenters, emptyClusters) = {
+        val centersWithIndices = centroids.map { case (clusterIdx, vector) =>
+          val size = clusterSizes.getOrElse(clusterIdx, 0L)
+          if (size == 0) {
+            (clusterIdx, None)
+          } else {
+            (clusterIdx, Some(ops.toCenter(vector.asImmutable)))
+          }
+        }.collect().toMap
+        
+        val validCenters = centersWithIndices.collect { case (_, Some(center)) => center }
+        val emptyIndices = centersWithIndices.collect { case (idx, None) => idx }.toSet
+        
+        (validCenters, emptyIndices)
+      }
+      
+      // Handle empty clusters if expected number of clusters is specified
+      val finalCenters = if (expectedNumClusters > 0) {
+        val actualNumClusters = bregmanCenters.size
+        
+        if (actualNumClusters == 0) {
           throw new IllegalStateException(
-            s"Empty cluster detected at index $clusterIdx. This can happen if all points are assigned to a single cluster.")
+            s"No valid clusters found. All points might be filtered out. " +
+            s"Expected $expectedNumClusters clusters but found 0.")
         }
-        ops.toCenter(vector.asImmutable)
+        
+        if (actualNumClusters > expectedNumClusters) {
+          throw new IllegalStateException(
+            s"Found $actualNumClusters clusters but expected at most $expectedNumClusters. " +
+            "This indicates invalid cluster indices in the assignments.")
+        }
+        
+        if (actualNumClusters < expectedNumClusters) {
+          // Add empty clusters to match the expected number
+          val existingIndices = bregmanCenters.indices.toSet
+          val newClusters = (0 until expectedNumClusters)
+            .filterNot(existingIndices.contains)
+            .map { idx =>
+              // For empty clusters, we could initialize with a zero vector or use another strategy
+              // Here we use the first valid center as a fallback, or a zero vector if no centers exist
+              if (bregmanCenters.nonEmpty) {
+                // Clone the first center but with zero weight as a fallback
+                val firstCenter = bregmanCenters.head
+                ops.toCenter(WeightedVector(firstCenter.inhomogeneous, 0.0))
+              } else {
+                // This should not happen due to previous checks, but added for safety
+                ops.toCenter(WeightedVector(Vectors.dense(Array.fill(ops.dimension)(0.0)), 0.0))
+              }
+            }
+          
+          (bregmanCenters ++ newClusters).toIndexedSeq
+        } else {
+          bregmanCenters.toIndexedSeq
+        }
+      } else {
+        // If no expected number of clusters is specified, just use what we have
+        if (bregmanCenters.isEmpty) {
+          throw new IllegalStateException(
+            "No valid clusters found. All points might be filtered out.")
+        }
+        bregmanCenters.toIndexedSeq
+      }
+      
+      // Log warnings about empty clusters if any
+      if (emptyClusters.nonEmpty) {
+        val emptyIndicesStr = emptyClusters.toSeq.sorted.mkString(", ")
+        val warningMsg = 
+          s"Found ${emptyClusters.size} empty cluster(s) with indices: $emptyIndicesStr. " +
+          "These clusters will be initialized with zero-weighted centers."
+        
+        // Log the warning (you might want to use a proper logging framework in production)
+        System.err.println(s"WARN: $warningMsg")
       }
 
-      val centers = bregmanCenters.collect().toIndexedSeq
-      if (centers.isEmpty) {
-        throw new IllegalStateException("No valid clusters found. All points might be filtered out.")
-      }
-
-      new KMeansModel(ops, centers)
+      new KMeansModel(ops, finalCenters)
     } finally {
       // Clean up cached RDDs
       cachedPoints.unpersist(blocking = false)
