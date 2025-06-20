@@ -72,11 +72,15 @@ class RandomIndexEmbedding(
       val index = iterator.index
       for (p <- positive) {
         val hashKey = p.hash(index)
-        rep(hashKey) += count
+        if (hashKey >= 0 && hashKey < rep.length) {
+          rep(hashKey) += count
+        }
       }
       for (n <- negative) {
         val hashKey = n.hash(index)
-        rep(hashKey) -= count
+        if (hashKey >= 0 && hashKey < rep.length) {
+          rep(hashKey) -= count
+        }
       }
       iterator.advance()
     }

@@ -20,7 +20,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
+import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -309,7 +309,7 @@ object KMeansModel {
         
         if (actualNumClusters < expectedNumClusters) {
           // Add empty clusters to match the expected number
-          val existingIndices = bregmanCenters.indices.toSet
+          val existingIndices = centroids.keys.collect().toSet
           val newClusters = (0 until expectedNumClusters)
             .filterNot(existingIndices.contains)
             .map { idx =>
@@ -321,7 +321,8 @@ object KMeansModel {
                 ops.toCenter(WeightedVector(firstCenter.inhomogeneous, 0.0))
               } else {
                 // This should not happen due to previous checks, but added for safety
-                ops.toCenter(WeightedVector(Vectors.dense(Array.fill(ops.dimension)(0.0)), 0.0))
+                // Create a zero vector with a reasonable default dimension
+                ops.toCenter(WeightedVector(Vectors.dense(Array.fill(10)(0.0)), 0.0))
               }
             }
           
@@ -377,7 +378,9 @@ object KMeansModel {
     seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
 
     val points = data.map(ops.toPoint)
-    val centers = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed).head
+    val initializedCenters = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed)
+    require(initializedCenters.nonEmpty, "KMeansParallel.init returned empty centers")
+    val centers = initializedCenters.head
     new KMeansModel(ops, centers)
   }
 

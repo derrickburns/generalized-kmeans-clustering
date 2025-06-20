@@ -50,9 +50,11 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
       active = false
       for ((clusterIndex: Int, cn: MutableWeightedVector) <- centroids(data, activeCenters)) {
         val centroid = cn.asImmutable
-        if (centroid.weight == 0.0) {
+        if (centroid.weight <= pointOps.weightThreshold) {
           active = true
+          // Mark center for removal instead of setting to null
           activeCenters(clusterIndex) = null.asInstanceOf[BregmanCenter]
+          logger.warn(s"Cluster $clusterIndex has insufficient weight (${centroid.weight}), marking for removal")
         } else {
           active = active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
           activeCenters(clusterIndex) = pointOps.toCenter(centroid)

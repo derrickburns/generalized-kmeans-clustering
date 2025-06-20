@@ -86,6 +86,9 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
     convex(v) / w - logFunc.log(w) - 1.0
   }
 
@@ -112,6 +115,9 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
     val c = v.copy
     scal(1.0 / w, c)
     convex(c)
@@ -141,7 +147,13 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
    */
   def convex(v: Vector): Double = dot(v, v)
 
-  def convexHomogeneous(v: Vector, w: Double): Double = dot(v, v) / (w * w)
+  def convexHomogeneous(v: Vector, w: Double): Double = {
+    if (w == 0.0) {
+      0.0  // For Euclidean distance, allow zero weight and return 0
+    } else {
+      dot(v, v) / (w * w)
+    }
+  }
 
   def gradientOfConvex(v: Vector): Vector = {
     val c = v.copy
@@ -150,9 +162,16 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    val c = v.copy
-    scal(2.0 / w, c)
-    c
+    if (w == 0.0) {
+      // For zero weight, return zero vector
+      val c = v.copy
+      scal(0.0, c)
+      c
+    } else {
+      val c = v.copy
+      scal(2.0 / w, c)
+      c
+    }
   }
 }
 
@@ -182,6 +201,9 @@ case object GeneralizedIDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
     val logW = logFunc.log(w)
     dot(v, trans(v, logFunc.log(_) - logW)) / w
   }
@@ -213,7 +235,13 @@ case object LogisticLossDivergence extends BregmanDivergence {
   }
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
     val x = v(0) / w
+    if (x <= 0.0 || x >= 1.0) {
+      throw new IllegalArgumentException(s"Value must be in (0,1), got: $x")
+    }
     x * log(x) + (1.0 - x) * log(1.0 - x)
   }
 
@@ -223,7 +251,13 @@ case object LogisticLossDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
     val x = v(0) / w
+    if (x <= 0.0 || x >= 1.0) {
+      throw new IllegalArgumentException(s"Value must be in (0,1), got: $x")
+    }
     Vectors.dense(log(x) - log(1.0 - x))
   }
 }
@@ -256,7 +290,15 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    trans(v, x => -w / x)
+    if (w <= 0.0) {
+      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+    }
+    trans(v, x => {
+      if (x <= 0.0) {
+        throw new IllegalArgumentException(s"Vector element must be positive, got: $x")
+      }
+      -w / x
+    })
   }
 }
 
@@ -287,6 +329,9 @@ object BregmanDivergence {
       def convex(v: Vector): Double = f(v)
 
       def convexHomogeneous(v: Vector, w: Double): Double = {
+        if (w <= 0.0) {
+          throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+        }
         val c = v.copy
         scal(1.0 / w, c)
         convex(c)
@@ -295,6 +340,9 @@ object BregmanDivergence {
       def gradientOfConvex(v: Vector): Vector = gradientF(v)
 
       def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
+        if (w <= 0.0) {
+          throw new IllegalArgumentException(s"Weight must be positive, got: $w")
+        }
         val c = v.copy
         scal(1.0 / w, c)
         gradientF(c)

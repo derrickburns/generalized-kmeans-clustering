@@ -24,7 +24,12 @@ object HaarWavelet {
     val result = new Array[Double](len)
     var i = 0
     while (i < len) {
-      result(i) = (input(2 * i) + input(2 * i + 1)) / 2.0
+      val baseIndex = 2 * i
+      if (baseIndex + 1 < input.length) {
+        result(i) = (input(baseIndex) + input(baseIndex + 1)) / 2.0
+      } else if (baseIndex < input.length) {
+        result(i) = input(baseIndex) / 2.0
+      }
       i = i + 1
     }
     result
@@ -41,21 +46,31 @@ object HaarWavelet {
      * @param halfLength half the length of array
      */
     def haar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
+      require(halfLength >= 0, "halfLength must be non-negative")
+      require(halfLength * 2 <= input.length, s"Input array length ${input.length} insufficient for halfLength $halfLength")
+      require(halfLength * 2 <= tmp.length, s"Temp array length ${tmp.length} insufficient for halfLength $halfLength")
+      
       var i = 0
       while (i != halfLength) {
         val j = i << 1
-        tmp(i) = input(j)
-        tmp(halfLength + i) = input(j + 1)
+        if (j < input.length && j + 1 < input.length && 
+            i < tmp.length && halfLength + i < tmp.length) {
+          tmp(i) = input(j)
+          tmp(halfLength + i) = input(j + 1)
+        }
         i = i + 1
       }
 
       i = 0
       while (i != halfLength) {
         val j = halfLength + i
-        val l = tmp(i) / 2.0
-        val r = tmp(j) / 2.0
-        result(i) = l + r
-        result(j) = l - r
+        if (i < tmp.length && j < tmp.length && 
+            i < result.length && j < result.length) {
+          val l = tmp(i) / 2.0
+          val r = tmp(j) / 2.0
+          result(i) = l + r
+          result(j) = l - r
+        }
         i = i + 1
       }
       result
@@ -68,21 +83,31 @@ object HaarWavelet {
      * @param halfLength half the length of the coordinates
      */
     def inverseHaar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
+      require(halfLength >= 0, "halfLength must be non-negative")
+      require(halfLength * 2 <= result.length, s"Result array length ${result.length} insufficient for halfLength $halfLength")
+      require(halfLength * 2 <= tmp.length, s"Temp array length ${tmp.length} insufficient for halfLength $halfLength")
+      
       var i = 0
       while (i != halfLength) {
         val j = halfLength + i
-        val l = input(i)
-        val r = input(j)
-        tmp(i) = l + r
-        tmp(j) = l - r
+        if (i < input.length && j < input.length && 
+            i < tmp.length && j < tmp.length) {
+          val l = input(i)
+          val r = input(j)
+          tmp(i) = l + r
+          tmp(j) = l - r
+        }
         i = i + 1
       }
 
       i = 0
       while (i != halfLength) {
         val j = i << 1
-        result(j) = tmp(i)
-        result(j + 1) = tmp(halfLength + i)
+        if (i < tmp.length && halfLength + i < tmp.length && 
+            j < result.length && j + 1 < result.length) {
+          result(j) = tmp(i)
+          result(j + 1) = tmp(halfLength + i)
+        }
         i = i + 1
       }
       result

@@ -222,8 +222,12 @@ trait NonSmoothedPointCenterFactory extends PointCenterFactory {
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = v.homogeneous
     val w = v.weight
+    if (w < 0.0) {
+      throw new IllegalArgumentException(s"Weight cannot be negative, got: $w")
+    }
     val df = divergence.gradientOfConvexHomogeneous(h, w)
-    BregmanCenter(v, BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w), df)
+    val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
+    BregmanCenter(v, dotGradMinusF, df)
   }
 }
 
@@ -243,8 +247,12 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = BLAS.add(v.homogeneous, smoothingFactor)
     val w = v.weight + v.homogeneous.size * smoothingFactor
+    if (w < 0.0) {
+      throw new IllegalArgumentException(s"Smoothed weight cannot be negative, got: $w")
+    }
     val df = divergence.gradientOfConvexHomogeneous(h, w)
-    BregmanCenter(h, w, BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w), df)
+    val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
+    BregmanCenter(h, w, dotGradMinusF, df)
   }
 }
 

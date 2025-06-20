@@ -82,9 +82,11 @@ class MultiKMeans extends MultiKMeansClusterer {
 
         for (((runIndex: Int, clusterIndex: Int), cn: MutableWeightedVector) <- centroids) {
           val run = activeRuns(runIndex)
-          if (cn.weight == 0.0) {
+          if (cn.weight <= pointOps.weightThreshold) {
             active(run) = true
+            // Mark center for removal instead of setting to null
             centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
+            logger.warn(s"Run $run, cluster $clusterIndex has insufficient weight (${cn.weight}), marking for removal")
           } else {
             val centroid = cn.asImmutable
             active(run) = active(run) || pointOps.centerMoved(pointOps.toPoint(centroid), centers(run)(clusterIndex))

@@ -99,10 +99,10 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
     val maxWeight = if (weights.nonEmpty) weights.max else 0.0
     logger.debug(f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f")
     
-    // Pre-compute log-weights for numerical stability
-    val logWeights = weights.map { w =>
-      if (w > 0.0) math.log(w) else Double.NegativeInfinity
-    }
+    // Pre-compute log-weights for numerical stability (if needed for future use)
+    // val logWeights = weights.map { w =>
+    //   if (w > 0.0) math.log(w) else Double.NegativeInfinity
+    // }
     
     val points = reWeightedPoints(candidateCenters, weights)
     val rand = new XORShiftRandom(seed)
@@ -184,7 +184,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
     // Log some statistics about the selected centers
     if (finalCenters.nonEmpty) {
       val centerIndices = finalCenters.map(c => candidateCenters.indexOf(c))
-      val centerWeights = centerIndices.map(i => if (i >= 0) weights(i) else 0.0)
+      val centerWeights = centerIndices.map(i => if (i >= 0 && i < weights.length) weights(i) else 0.0)
       logger.debug(s"Selected center weights: ${centerWeights.mkString(", ")}")
     }
     

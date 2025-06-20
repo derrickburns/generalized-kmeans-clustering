@@ -16,7 +16,7 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
   val logger = LoggerFactory.getLogger(getClass.getName)
 
   def stable(): Boolean = (stats.numNonEmptyClusters == 0) ||
-    (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
+    (stats.numNonEmptyClusters > 0 && stats.movement.value / stats.numNonEmptyClusters < 1e-05)
 
   /**
    * Collect the statistics about this round
