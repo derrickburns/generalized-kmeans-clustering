@@ -61,7 +61,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       clustererName = MultiKMeansClusterer.RESEED)
 
     KMeans.timeSeriesTrain(
-      new RunConfig(20, 1, 0, 10),
+      RunConfig(20, 1, 0, 10),
       data.map(WeightedVector.apply),
       KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
       BregmanPointOps(BregmanPointOps.EUCLIDEAN),
@@ -199,7 +199,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
     val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val cached = data.map(WeightedVector.apply).map(ops.toPoint).cache()
     KMeans.iterativelyTrain(
-      new RunConfig(20, 1, 0, 10),
+      RunConfig(20, 1, 0, 10),
       Seq(ops),
       Seq(cached),
       KMeansSelector(KMeansSelector.K_MEANS_PARALLEL),
@@ -520,7 +520,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
     
     // Train model
     val model = KMeans.trainWeighted(
-      new RunConfig(2, 1, 0, 5),
+      RunConfig(2, 1, 0, 5),
       rdd,
       KMeansSelector(K_MEANS_PARALLEL),
       Seq(BregmanPointOps(EUCLIDEAN)),

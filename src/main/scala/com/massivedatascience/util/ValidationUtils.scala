@@ -22,29 +22,40 @@ import org.apache.spark.ml.linalg.Vector
 object ValidationUtils {
 
   def requirePositiveWeight(weight: Double, context: String = "Weight"): Unit = {
-    if (weight <= 0.0) {
+    if (!java.lang.Double.isFinite(weight) || weight <= 0.0) {
       throw new IllegalArgumentException(s"$context must be positive, got: $weight")
     }
   }
 
   def requireNonNegativeWeight(weight: Double, context: String = "Weight"): Unit = {
-    if (weight < 0.0) {
+    if (!java.lang.Double.isFinite(weight) || weight < 0.0) {
       throw new IllegalArgumentException(s"$context cannot be negative, got: $weight")
     }
   }
 
   def requireValidProbability(value: Double, context: String = "Probability"): Unit = {
-    if (value < 0.0 || value > 1.0) {
+    if (java.lang.Double.isNaN(value) || value < 0.0 || value > 1.0) {
       throw new IllegalArgumentException(s"$context must be between 0 and 1, got: $value")
     }
   }
 
   def requirePositiveVector(vector: Vector, context: String = "Vector elements"): Unit = {
-    val values = vector.toArray
-    values.foreach { value =>
-      if (value <= 0.0) {
-        throw new IllegalArgumentException(s"$context must be positive, found: $value")
-      }
+    // For sparse vectors, only check explicitly stored non-zero values
+    // For dense vectors, check all values
+    vector match {
+      case sparse: org.apache.spark.ml.linalg.SparseVector =>
+        sparse.values.foreach { value =>
+          if (value <= 0.0) {
+            throw new IllegalArgumentException(s"$context must be positive, found: $value")
+          }
+        }
+      case _ =>
+        val values = vector.toArray
+        values.foreach { value =>
+          if (value <= 0.0) {
+            throw new IllegalArgumentException(s"$context must be positive, found: $value")
+          }
+        }
     }
   }
 
