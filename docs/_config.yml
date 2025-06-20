@@ -1,0 +1,5 @@
+title: Generalized K-Means Clustering
+description: A Scala library for generalized K-means clustering using Bregman divergences on Apache Spark
+theme: jekyll-theme-minimal
+markdown: kramdown
+highlighter: rouge
