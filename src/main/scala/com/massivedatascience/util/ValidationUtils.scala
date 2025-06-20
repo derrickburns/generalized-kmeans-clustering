@@ -40,7 +40,8 @@ object ValidationUtils {
   }
 
   def requirePositiveVector(vector: Vector, context: String = "Vector elements"): Unit = {
-    vector.foreachNonZero { (_, value) =>
+    val values = vector.toArray
+    values.foreach { value =>
       if (value <= 0.0) {
         throw new IllegalArgumentException(s"$context must be positive, found: $value")
       }
@@ -48,7 +49,8 @@ object ValidationUtils {
   }
 
   def requireNonNegativeVector(vector: Vector, context: String = "Vector elements"): Unit = {
-    vector.foreachNonZero { (_, value) =>
+    val values = vector.toArray
+    values.foreach { value =>
       if (value < 0.0) {
         throw new IllegalArgumentException(s"$context cannot be negative, found: $value")
       }
@@ -88,7 +90,7 @@ object ValidationUtils {
   }
 
   def requireFinite(value: Double, context: String = "Value"): Unit = {
-    if (!value.isFinite) {
+    if (!java.lang.Double.isFinite(value)) {
       throw new IllegalArgumentException(s"$context must be finite, got: $value")
     }
   }

@@ -33,10 +33,8 @@
 // addSbtPlugin("org.scalastyle"  %% "scalastyle-sbt-plugin" % "0.6.0")
 
 // Modern SBT plugins for code quality and dependency management
-addSbtPlugin("com.github.sbt" % "sbt-dependency-updates" % "1.2.7")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.9")
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.11.1")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.3")
 
 // Publishing plugins
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.21")
