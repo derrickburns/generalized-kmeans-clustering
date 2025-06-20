@@ -11,11 +11,8 @@
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
     libraryDependencies ++= Seq(
-      "joda-time" % "joda-time" % "2.2",
-      "org.joda" % "joda-convert" % "1.6",
-      "org.scalactic" %% "scalactic" % "3.2.17",
-      "org.scalatest" %% "scalatest" % "3.2.17" % "test"
-
+      "org.scalactic" %% "scalactic" % "3.2.18",
+      "org.scalatest" %% "scalatest" % "3.2.18" % "test"
     )
     val sparkPackageName = "derrickburns/generalized-kmeans-clustering"
     // sparkComponents += "mllib"

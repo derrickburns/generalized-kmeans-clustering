@@ -19,6 +19,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.divergence._
 import com.massivedatascience.linalg._
+import com.massivedatascience.util.ValidationUtils
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
@@ -222,9 +223,7 @@ trait NonSmoothedPointCenterFactory extends PointCenterFactory {
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = v.homogeneous
     val w = v.weight
-    if (w < 0.0) {
-      throw new IllegalArgumentException(s"Weight cannot be negative, got: $w")
-    }
+    ValidationUtils.requireNonNegativeWeight(w, "Weight for center creation")
     val df = divergence.gradientOfConvexHomogeneous(h, w)
     val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
     BregmanCenter(v, dotGradMinusF, df)
@@ -247,9 +246,7 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
   def toCenter(v: WeightedVector): BregmanCenter = {
     val h = BLAS.add(v.homogeneous, smoothingFactor)
     val w = v.weight + v.homogeneous.size * smoothingFactor
-    if (w < 0.0) {
-      throw new IllegalArgumentException(s"Smoothed weight cannot be negative, got: $w")
-    }
+    ValidationUtils.requireNonNegativeWeight(w, "Smoothed weight for center creation")
     val df = divergence.gradientOfConvexHomogeneous(h, w)
     val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
     BregmanCenter(h, w, dotGradMinusF, df)

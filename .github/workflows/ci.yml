@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        java-version: [17]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        
+    - name: Cache SBT dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.ivy2/cache
+          ~/.sbt
+          ~/.coursier/cache
+        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
+        restore-keys: |
+          ${{ runner.os }}-sbt-
+          
+    - name: Compile
+      run: sbt compile
+      
+    - name: Run tests
+      run: sbt test
+      
+    - name: Check code style
+      run: sbt scalastyle
+      
+    - name: Generate test coverage report
+      run: sbt coverage test coverageReport
+      
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./target/scala-2.12/scoverage-report/scoverage.xml
+        fail_ci_if_error: false

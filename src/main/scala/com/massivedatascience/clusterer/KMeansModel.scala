@@ -25,6 +25,7 @@ import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
+import org.slf4j.LoggerFactory
 
 import scala.reflect.ClassTag
 
@@ -111,6 +112,8 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
 }
 
 object KMeansModel {
+
+  private val logger = LoggerFactory.getLogger(getClass.getName)
 
   /**
    * Create a K-means model from given cluster centers and weights
@@ -346,8 +349,8 @@ object KMeansModel {
           s"Found ${emptyClusters.size} empty cluster(s) with indices: $emptyIndicesStr. " +
           "These clusters will be initialized with zero-weighted centers."
         
-        // Log the warning (you might want to use a proper logging framework in production)
-        System.err.println(s"WARN: $warningMsg")
+        // Log the warning using SLF4J logger
+        logger.warn(warningMsg)
       }
 
       new KMeansModel(ops, finalCenters)

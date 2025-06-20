@@ -18,7 +18,7 @@
 package com.massivedatascience.divergence
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog }
+import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog, ValidationUtils }
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 /**
@@ -86,9 +86,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
+    ValidationUtils.requirePositiveWeight(w, "Weight for KL simplex divergence")
     convex(v) / w - logFunc.log(w) - 1.0
   }
 
@@ -115,9 +113,7 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, x => logFunc.log(x) - 1), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
+    ValidationUtils.requirePositiveWeight(w, "Weight for KL divergence")
     val c = v.copy
     scal(1.0 / w, c)
     convex(c)
@@ -201,9 +197,7 @@ case object GeneralizedIDivergence extends BregmanDivergence {
   def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
+    ValidationUtils.requirePositiveWeight(w, "Weight for generalized I-divergence")
     val logW = logFunc.log(w)
     dot(v, trans(v, logFunc.log(_) - logW)) / w
   }
@@ -235,10 +229,9 @@ case object LogisticLossDivergence extends BregmanDivergence {
   }
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
+    ValidationUtils.requirePositiveWeight(w, "Weight for logistic loss divergence")
     val x = v(0) / w
+    ValidationUtils.requireValidProbability(x, "Normalized value for logistic loss")
     if (x <= 0.0 || x >= 1.0) {
       throw new IllegalArgumentException(s"Value must be in (0,1), got: $x")
     }
@@ -251,10 +244,9 @@ case object LogisticLossDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
+    ValidationUtils.requirePositiveWeight(w, "Weight for logistic loss gradient")
     val x = v(0) / w
+    ValidationUtils.requireValidProbability(x, "Normalized value for logistic loss gradient")
     if (x <= 0.0 || x >= 1.0) {
       throw new IllegalArgumentException(s"Value must be in (0,1), got: $x")
     }
@@ -290,15 +282,9 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    if (w <= 0.0) {
-      throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-    }
-    trans(v, x => {
-      if (x <= 0.0) {
-        throw new IllegalArgumentException(s"Vector element must be positive, got: $x")
-      }
-      -w / x
-    })
+    ValidationUtils.requirePositiveWeight(w, "Weight for Itakura-Saito gradient")
+    ValidationUtils.requirePositiveVector(v, "Vector elements for Itakura-Saito gradient")
+    trans(v, x => -w / x)
   }
 }
 
@@ -329,9 +315,7 @@ object BregmanDivergence {
       def convex(v: Vector): Double = f(v)
 
       def convexHomogeneous(v: Vector, w: Double): Double = {
-        if (w <= 0.0) {
-          throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-        }
+        ValidationUtils.requirePositiveWeight(w, "Weight for custom divergence")
         val c = v.copy
         scal(1.0 / w, c)
         convex(c)
@@ -340,9 +324,7 @@ object BregmanDivergence {
       def gradientOfConvex(v: Vector): Vector = gradientF(v)
 
       def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-        if (w <= 0.0) {
-          throw new IllegalArgumentException(s"Weight must be positive, got: $w")
-        }
+        ValidationUtils.requirePositiveWeight(w, "Weight for custom divergence gradient")
         val c = v.copy
         scal(1.0 / w, c)
         gradientF(c)

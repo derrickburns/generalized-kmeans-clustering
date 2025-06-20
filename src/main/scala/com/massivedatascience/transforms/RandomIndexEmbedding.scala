@@ -20,7 +20,7 @@ package com.massivedatascience.transforms
 import com.massivedatascience.linalg._
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.ml.linalg.{ Vectors, Vector }
-import org.joda.time.DateTime
+import java.time.Instant
 
 object RandomIndexEmbedding {
   final val defaultLogInputDim: Int = 63
@@ -46,7 +46,7 @@ class RandomIndexEmbedding(
     outputDim: Int,
     epsilon: Double,
     logInputDim: Int = RandomIndexEmbedding.defaultLogInputDim,
-    seed: Long = new DateTime().getMillis) extends Embedding {
+    seed: Long = Instant.now().toEpochMilli) extends Embedding {
   require(epsilon < 1.0)
   require(epsilon > 0.0)
 
