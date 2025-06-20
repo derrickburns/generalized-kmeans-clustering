@@ -226,13 +226,104 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
     weights.scanLeft(0.0)(_ + _).tail
 
   /**
-   * Pick a point at random, weighing the choices by the given cumulative weight vector.
+   * Pick a point at random using the alias method for O(1) sampling.
+   * 
+   * The alias method provides constant-time sampling from discrete distributions
+   * by pre-computing alias and probability tables. This is more efficient than
+   * binary search for repeated sampling from the same distribution.
    *
-   * This implementation uses binary search for O(log n) performance and handles
-   * floating-point precision issues by:
-   * 1. Using a relative tolerance for floating-point comparisons
-   * 2. Ensuring the cumulative sum is properly normalized
-   * 3. Using a more robust binary search that handles edge cases
+   * @param rand random number generator
+   * @param weights the original weights (not cumulative)
+   * @return the index of the chosen point
+   */
+  private[this] def pickWeightedAlias(rand: XORShiftRandom, weights: IndexedSeq[Double]): Seq[Int] = {
+    require(weights.nonEmpty, "Weights cannot be empty")
+    require(weights.exists(_ > 0.0), "At least one weight must be positive")
+    
+    val n = weights.length
+    val totalWeight = weights.sum
+    
+    if (totalWeight <= 0.0) {
+      return Seq(rand.nextInt(n))
+    }
+    
+    // Build alias table using Vose's algorithm
+    val (alias, prob) = buildAliasTable(weights)
+    
+    // Sample using alias method
+    val uniformIndex = rand.nextInt(n)
+    val uniformProb = rand.nextDouble()
+    
+    val selectedIndex = if (uniformProb < prob(uniformIndex)) {
+      uniformIndex
+    } else {
+      alias(uniformIndex)
+    }
+    
+    Seq(selectedIndex)
+  }
+  
+  /**
+   * Build alias table for O(1) sampling using Vose's algorithm.
+   * 
+   * @param weights the probability weights
+   * @return tuple of (alias table, probability table)
+   */
+  private[this] def buildAliasTable(weights: IndexedSeq[Double]): (Array[Int], Array[Double]) = {
+    val n = weights.length
+    val totalWeight = weights.sum
+    
+    // Normalize weights to sum to n (required for alias method)
+    val normalizedWeights = weights.map(w => n * w / totalWeight)
+    
+    val alias = Array.fill(n)(0)
+    val prob = Array.fill(n)(0.0)
+    
+    // Separate into small and large probability buckets
+    val small = scala.collection.mutable.Queue[Int]()
+    val large = scala.collection.mutable.Queue[Int]()
+    
+    for (i <- normalizedWeights.indices) {
+      prob(i) = normalizedWeights(i)
+      if (normalizedWeights(i) < 1.0) {
+        small.enqueue(i)
+      } else {
+        large.enqueue(i)
+      }
+    }
+    
+    // Build alias table
+    while (small.nonEmpty && large.nonEmpty) {
+      val smallIdx = small.dequeue()
+      val largeIdx = large.dequeue()
+      
+      alias(smallIdx) = largeIdx
+      prob(largeIdx) = prob(largeIdx) + prob(smallIdx) - 1.0
+      
+      if (prob(largeIdx) < 1.0) {
+        small.enqueue(largeIdx)
+      } else {
+        large.enqueue(largeIdx)
+      }
+    }
+    
+    // Handle remaining items (should all have probability 1.0)
+    while (large.nonEmpty) {
+      val idx = large.dequeue()
+      prob(idx) = 1.0
+    }
+    
+    while (small.nonEmpty) {
+      val idx = small.dequeue()
+      prob(idx) = 1.0
+    }
+    
+    (alias, prob)
+  }
+
+  /**
+   * Pick a point at random, weighing the choices by the given cumulative weight vector.
+   * This is the legacy method maintained for backward compatibility.
    *
    * @param rand  random number generator
    * @param cumulative  the cumulative weights of the points (must be non-decreasing)
@@ -243,25 +334,35 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
     require(cumulative.nonEmpty, "Cumulative weights cannot be empty")
     require(cumulative.last > 0.0, "Sum of weights must be positive")
     
-    // Generate a random value in [0, totalWeight)
+    // For small distributions, use binary search; for large ones, use alias method
+    if (cumulative.length <= 32) {
+      pickWeightedBinarySearch(rand, cumulative)
+    } else {
+      // Convert cumulative to weights for alias method
+      val weights = cumulative.zipWithIndex.map { case (cum, i) =>
+        if (i == 0) cum else cum - cumulative(i - 1)
+      }
+      pickWeightedAlias(rand, weights)
+    }
+  }
+  
+  /**
+   * Binary search implementation for small distributions.
+   */
+  private[this] def pickWeightedBinarySearch(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
     val totalWeight = cumulative.last
     val r = rand.nextDouble() * totalWeight
     
-    // Use binary search to find the insertion point
-    // This is more numerically stable than indexWhere with floating-point comparison
     @scala.annotation.tailrec
     def binarySearch(left: Int, right: Int): Int = {
       if (left >= right) {
         left
       } else {
         val mid = left + (right - left) / 2
-        // Use relative tolerance for floating-point comparison
         val midVal = cumulative(mid)
         
-        // Check if we've found the exact match (within floating-point tolerance)
         val relTol = 1e-10 * Math.max(Math.abs(r), Math.abs(midVal))
         if (Math.abs(midVal - r) < relTol) {
-          // If exact match, return next index to maintain uniform distribution
           (mid + 1).min(cumulative.length - 1)
         } else if (midVal < r) {
           binarySearch(mid + 1, right)
@@ -271,24 +372,17 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
       }
     }
     
-    // Handle edge cases and perform the search
     if (r <= 0.0) {
-      // Handle case where r is very close to 0
       Seq(0)
     } else if (r >= totalWeight) {
-      // This should theoretically never happen due to how r is generated,
-      // but we handle it defensively
       logger.warn(s"Random value $r exceeds total weight $totalWeight, using last index")
       Seq(cumulative.length - 1)
     } else {
       val idx = binarySearch(0, cumulative.length - 1)
-      // Ensure we don't return -1 or an out-of-bounds index
       val safeIdx = Math.max(0, Math.min(idx, cumulative.length - 1))
       
-      // Verify the selected index is valid
       if (safeIdx < 0 || safeIdx >= cumulative.length) {
         logger.error(s"Invalid index $safeIdx generated for cumulative weights length ${cumulative.length}")
-        // Fall back to uniform sampling as a last resort
         Seq(rand.nextInt(cumulative.length))
       } else {
         Seq(safeIdx)

@@ -78,6 +78,8 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
 
   val distanceThreshold = 1e-8
 
+  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+
   /**
    * converted a weighted vector to a point
    * @param v input vector
@@ -122,17 +124,37 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     initialDistance: Double = Infinity,
     initialIndex: Int = -1): T = {
 
+    // Pre-filter centers by weight threshold to avoid repeated checks
+    if (point.weight <= weightThreshold) {
+      return f(initialIndex, 0.0)
+    }
+
     var bestDistance = initialDistance
     var bestIndex = initialIndex
     var i = 0
     val end = centers.length
+    
+    // Inline distance calculation for better performance
     while (i < end && bestDistance > 0.0) {
-      val d = distance(point, centers(i))
-      if (d < bestDistance) {
-        bestIndex = i
-        bestDistance = d
+      val center = centers(i)
+      if (center.weight > weightThreshold) {
+        // Inline distance computation to avoid function call overhead
+        val d = point.f + center.dotGradMinusF - BLAS.dot(center.gradient, point.inhomogeneous)
+        // Handle negative distances inline for better performance
+        val validDistance = if (d < 0.0) {
+          if (d < -1e-10) {
+            // Only log significant negative distances, avoid logging overhead in tight loop
+            logger.warn(s"Negative distance computed: $d between point and center")
+          }
+          0.0
+        } else d
+        
+        if (validDistance < bestDistance) {
+          bestIndex = i
+          bestDistance = validDistance
+        }
       }
-      i = i + 1
+      i += 1
     }
     f(bestIndex, bestDistance)
   }
