@@ -16,7 +16,20 @@
     )
     val sparkPackageName = "derrickburns/generalized-kmeans-clustering"
     // sparkComponents += "mllib"
-    Test / testOptions += Tests.Argument("-Dlog4j.configuration=log4j.properties")
+    Test / testOptions += Tests.Argument("-Dlog4j.configurationFile=log4j2.properties")
+    Test / fork := true
+    Test / javaOptions ++= Seq(
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",  
+      "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+      "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED",
+      "-Djava.awt.headless=true",
+      "-XX:+IgnoreUnrecognizedVMOptions",
+      "-Dlog4j.configurationFile=log4j2.properties",
+      "-Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.F2jBLAS",
+      "-Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.F2jLAPACK",
+      "-Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK"
+    )
 
 val sparkVersion = "3.4.0"
 
@@ -28,7 +41,9 @@ libraryDependencies ++= Seq(
   "com.holdenkarau" %% "spark-testing-base" % "3.4.0_1.4.7" % "test"
 )
 
-libraryDependencies += "com.github.fommil.netlib" % "all" % "1.1.2"
+libraryDependencies ++= Seq(
+  "com.github.fommil.netlib" % "core" % "1.1.2"
+)
 
 
 

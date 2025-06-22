@@ -20,30 +20,85 @@
 package com.massivedatascience.clusterer
 
 import org.scalatest.{ Suite, BeforeAndAfterAll }
-
 import org.apache.spark.{ SparkConf, SparkContext }
+import org.apache.spark.sql.SparkSession
+
+object SharedSparkContext {
+  @volatile private var _sparkContext: SparkContext = _
+  @volatile private var _sparkSession: SparkSession = _
+  private val lock = new Object()
+  
+  def getOrCreate(): SparkContext = {
+    if (_sparkContext == null || _sparkContext.isStopped) {
+      lock.synchronized {
+        if (_sparkContext == null || _sparkContext.isStopped) {
+          // Stop any existing context first
+          if (_sparkContext != null && !_sparkContext.isStopped) {
+            _sparkContext.stop()
+          }
+          
+          val conf = new SparkConf()
+            .setMaster("local[2]")  // Use 2 cores for better parallelism
+            .setAppName("test-cluster")
+            .set("spark.broadcast.compress", "false")
+            .set("spark.shuffle.compress", "false") 
+            .set("spark.shuffle.spill.compress", "false")
+            .set("spark.rpc.message.maxSize", "1")  // Updated from deprecated spark.akka.frameSize
+            .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+            .set("spark.sql.warehouse.dir", System.getProperty("java.io.tmpdir"))
+            .set("spark.driver.host", "127.0.0.1")  // Use explicit IP to avoid hostname resolution warnings
+            .set("spark.driver.bindAddress", "127.0.0.1")
+            .set("spark.ui.enabled", "false")  // Disable UI for tests
+            .set("spark.sql.adaptive.enabled", "false")  // Disable adaptive query execution
+            .set("spark.sql.adaptive.coalescePartitions.enabled", "false")
+            .set("spark.sql.execution.arrow.pyspark.enabled", "false")  // Disable Arrow for tests
+            .set("spark.sql.execution.arrow.sparkr.enabled", "false")   // Disable Arrow for R
+            .set("spark.hadoop.fs.file.impl.disable.cache", "true")     // Disable file system cache for tests
+            .set("spark.sql.codegen.wholeStage", "false")               // Disable code generation for tests
+            .set("spark.sql.codegen.fallback", "true")                  // Enable fallback for code generation
+            .set("spark.sql.catalogImplementation", "in-memory")        // Use in-memory catalog for tests
+            .set("spark.eventLog.enabled", "false")                     // Disable event logging for tests
+            .set("spark.dynamicAllocation.enabled", "false")            // Disable dynamic allocation
+            .set("spark.serializer.objectStreamReset", "1")             // Reset object stream frequently
+            
+          _sparkContext = new SparkContext(conf)
+          _sparkSession = SparkSession.builder().config(conf).getOrCreate()
+        }
+      }
+    }
+    _sparkContext
+  }
+  
+  def getSparkSession(): SparkSession = {
+    getOrCreate()  // Ensure context is created
+    _sparkSession
+  }
+  
+  def stop(): Unit = {
+    lock.synchronized {
+      if (_sparkSession != null) {
+        _sparkSession.stop()
+        _sparkSession = null
+      }
+      if (_sparkContext != null && !_sparkContext.isStopped) {
+        _sparkContext.stop()
+        _sparkContext = null
+      }
+    }
+  }
+}
 
 trait LocalClusterSparkContext extends BeforeAndAfterAll {
   self: Suite =>
   @transient var sc: SparkContext = _
 
   override def beforeAll() {
-
-    val conf = new SparkConf()
-    conf.set("spark.broadcast.compress", "false")
-    conf.set("spark.shuffle.compress", "false")
-    conf.set("spark.shuffle.spill.compress", "false")
-    conf.set("spark.master", "local")
-    conf.setAppName("test-cluster")
-    conf.set("spark.akka.frameSize", "1") 
-    sc = new SparkContext(conf)
+    sc = SharedSparkContext.getOrCreate()
     super.beforeAll()
   }
 
   override def afterAll() {
-    if (sc != null) {
-      sc.stop()
-    }
+    // Don't stop the shared context here - let the JVM shutdown hook handle it
     super.afterAll()
   }
 }

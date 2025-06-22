@@ -63,7 +63,7 @@ trait KMeansPredictor {
 
   // operations on WeightedVectors
 
-  def predictWeighted(point: WeightedVector): Int = predictWeighted(pointOps.toPoint(point))
+  def predictWeighted(point: WeightedVector): Int = predictBregman(pointOps.toPoint(point))
 
   /** Maps given points to their cluster indices. */
   def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
@@ -86,7 +86,7 @@ trait KMeansPredictor {
     pointOps.findClosest(centers, point)
 
   def computeCostBregman(data: RDD[BregmanPoint]): Double =
-    data.map(p => pointOps.findClosestDistance(centers, pointOps.toPoint(p))).sum()
+    data.map(p => pointOps.findClosestDistance(centers, p)).sum()
 
 }
 
