@@ -206,6 +206,18 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
         } else d
     }
   }
+
+  /**
+   * Scale a BregmanPoint by a factor, creating a new weighted point.
+   * This is used in soft clustering to weight points by their membership probabilities.
+   * 
+   * @param point The point to scale
+   * @param factor The scaling factor (e.g., membership probability)
+   * @return A new WeightedVector with adjusted weight
+   */
+  def scale(point: P, factor: Double): WeightedVector = {
+    WeightedVector(point.homogeneous, point.weight * factor)
+  }
 }
 
 /**
