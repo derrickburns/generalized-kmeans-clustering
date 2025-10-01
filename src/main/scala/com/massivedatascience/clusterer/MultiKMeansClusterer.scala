@@ -46,6 +46,11 @@ object MultiKMeansClusterer {
   val CHANGE_TRACKING = "CHANGE_TRACKING"
   val RESEED = "RESEED"
 
+  // Coreset-based clusterers
+  val CORESET = "CORESET"
+  val CORESET_FAST = "CORESET_FAST"
+  val CORESET_HIGH_QUALITY = "CORESET_HIGH_QUALITY"
+
   case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
@@ -56,6 +61,12 @@ object MultiKMeansClusterer {
       case CHANGE_TRACKING => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
       case MINI_BATCH_10 => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
       case RESEED => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(maxRoundsToBackfill = 5))
+
+      // Coreset variants
+      case CORESET => CoresetKMeans(CoresetKMeans.defaultConfig)
+      case CORESET_FAST => CoresetKMeans.fast()
+      case CORESET_HIGH_QUALITY => CoresetKMeans.highQuality()
+
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
   }

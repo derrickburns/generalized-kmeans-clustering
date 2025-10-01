@@ -307,4 +307,130 @@ object KMeans extends SparkHelper {
 
     embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint) }
   }
+
+  /**
+   * Train using coreset approximation with optional refinement.
+   *
+   * This method provides a convenient API for coreset-based clustering that:
+   * 1. Builds a small coreset from the full dataset
+   * 2. Clusters the coreset (fast, in-memory)
+   * 3. Optionally refines centers on the full dataset
+   *
+   * @param data Input data
+   * @param k Number of clusters
+   * @param compressionRatio Target coreset size as fraction of data (0.01 = 1%)
+   * @param enableRefinement If true, refine centers on full data after coreset clustering
+   * @param maxIterations Maximum iterations for clustering
+   * @param runs Number of parallel runs
+   * @param mode Initialization algorithm (recommend CORESET_INIT for large data)
+   * @param distanceFunctionName Distance function to use
+   * @return K-Means model
+   */
+  def trainWithCoreset(
+      data: RDD[Vector],
+      k: Int,
+      compressionRatio: Double = 0.01,
+      enableRefinement: Boolean = true,
+      maxIterations: Int = 50,
+      runs: Int = 1,
+      mode: String = KMeansSelector.CORESET_INIT,
+      distanceFunctionName: String = BregmanPointOps.EUCLIDEAN): KMeansModel = {
+
+    require(k > 0, "Number of clusters must be positive")
+    require(compressionRatio > 0.0 && compressionRatio <= 1.0,
+      s"Compression ratio must be in (0,1], got: $compressionRatio")
+    require(maxIterations > 0, "Maximum iterations must be positive")
+    require(runs > 0, "Number of runs must be positive")
+
+    logger.info(s"Training with coreset: k=$k, compressionRatio=$compressionRatio, " +
+      s"refinement=$enableRefinement, mode=$mode")
+
+    withCached("weighted", data.map(WeightedVector(_))) { weightedData =>
+      val pointOps = BregmanPointOps(distanceFunctionName)
+
+      // Determine coreset size
+      val dataSize = weightedData.count()
+      val coresetSize = math.max(k * 10, (dataSize * compressionRatio).toInt)
+
+      logger.info(s"Data size: $dataSize, coreset size: $coresetSize")
+
+      // Configure coreset clusterer
+      val coresetConfig = if (enableRefinement) {
+        CoresetKMeansConfig(
+          coresetConfig = coreset.CoresetConfig(coresetSize = coresetSize),
+          maxIterations = maxIterations,
+          refinementIterations = 3,
+          enableRefinement = true
+        )
+      } else {
+        CoresetKMeansConfig(
+          coresetConfig = coreset.CoresetConfig(coresetSize = coresetSize),
+          maxIterations = maxIterations,
+          enableRefinement = false
+        )
+      }
+
+      val clusterer = CoresetKMeans(coresetConfig)
+      val initializer = KMeansSelector(mode)
+      val runConfig = RunConfig(k, runs, 0, maxIterations)
+
+      trainWeighted(runConfig, weightedData, initializer, Seq(pointOps),
+        Seq(Embedding(Embedding.IDENTITY_EMBEDDING)), clusterer)
+    }
+  }
+
+  /**
+   * Automatically choose the best clustering strategy based on data size.
+   *
+   * Small data (< 10K points): Standard k-means with K-Means|| initialization
+   * Medium data (10K - 1M points): Coreset with refinement
+   * Large data (> 1M points): Fast coreset with aggressive compression
+   *
+   * @param data Input data
+   * @param k Number of clusters
+   * @param maxIterations Maximum iterations
+   * @param distanceFunctionName Distance function to use
+   * @return K-Means model
+   */
+  def trainSmart(
+      data: RDD[Vector],
+      k: Int,
+      maxIterations: Int = 50,
+      distanceFunctionName: String = BregmanPointOps.EUCLIDEAN): KMeansModel = {
+
+    require(k > 0, "Number of clusters must be positive")
+    require(maxIterations > 0, "Maximum iterations must be positive")
+
+    // Count data to determine strategy
+    val dataSize = data.count()
+
+    logger.info(s"Smart training: data size = $dataSize, k = $k")
+
+    val (clustererName, initializerName, compressionRatio) = dataSize match {
+      case n if n < 10000 =>
+        logger.info("Using standard k-means (small dataset)")
+        (MultiKMeansClusterer.COLUMN_TRACKING, KMeansSelector.K_MEANS_PARALLEL, 1.0)
+
+      case n if n < 1000000 =>
+        logger.info("Using coreset with refinement (medium dataset)")
+        (MultiKMeansClusterer.CORESET, KMeansSelector.CORESET_INIT, 0.05)
+
+      case _ =>
+        logger.info("Using fast coreset (large dataset)")
+        (MultiKMeansClusterer.CORESET_FAST, KMeansSelector.CORESET_INIT_FAST, 0.01)
+    }
+
+    if (compressionRatio >= 1.0) {
+      // Use standard training for small data
+      train(data, k, maxIterations, runs = 1,
+        mode = initializerName,
+        distanceFunctionNames = Seq(distanceFunctionName),
+        clustererName = clustererName)
+    } else {
+      // Use coreset training for large data
+      trainWithCoreset(data, k, compressionRatio, enableRefinement = true,
+        maxIterations = maxIterations, mode = initializerName,
+        distanceFunctionName = distanceFunctionName)
+    }
+  }
 }
