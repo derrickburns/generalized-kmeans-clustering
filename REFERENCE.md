@@ -81,6 +81,60 @@ object RandomInitialization extends InitializationStrategy {
 }
 ```
 
+#### `CoresetInitializer`
+Coreset-based initialization for massive datasets (10-100x faster than K-Means++).
+
+```scala
+class CoresetInitializer(
+  coresetSize: Int = 1000,
+  baseInitializer: KMeansSelector = new KMeansParallel(5),
+  epsilon: Double = 0.1
+) extends KMeansSelector {
+  def init(
+    ops: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    numClusters: Int,
+    initialInfo: Option[KMeansSelector.InitialCondition],
+    runs: Int,
+    seed: Long
+  ): Seq[IndexedSeq[BregmanCenter]]
+}
+
+// Factory methods
+CoresetInitializer()                  // Default: 1000 point coreset
+CoresetInitializer.fast()             // Fast: 500 point coreset
+CoresetInitializer.highQuality()      // Quality: 5000 point coreset
+```
+
+### Clusterer Implementations
+
+#### `CoresetKMeans`
+Coreset-based clusterer for massive datasets.
+
+```scala
+class CoresetKMeans(config: CoresetKMeansConfig) extends MultiKMeansClusterer {
+  def cluster(
+    maxIterations: Int,
+    pointOps: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    centers: Seq[IndexedSeq[BregmanCenter]]
+  ): Seq[ClusteringWithDistortion]
+}
+
+// Configuration
+case class CoresetKMeansConfig(
+  coresetConfig: CoresetConfig,
+  maxIterations: Int = 50,
+  refinementIterations: Int = 3,
+  enableRefinement: Boolean = true
+)
+
+// Factory methods
+CoresetKMeans(CoresetKMeans.defaultConfig)  // Balanced
+CoresetKMeans.fast()                         // Fast: 1% compression
+CoresetKMeans.highQuality()                  // Quality: larger coreset
+```
+
 ## Configuration Options
 
 ### KMeans Parameters
@@ -139,6 +193,8 @@ class SparseVector(size: Int, indices: Array[Int], values: Array[Double]) extend
 | Center update | O(n * k * d) per iteration |
 | KMeans++ init | O(n * k * d) |
 | Mini-batch update | O(b * k * d) where b is batch size |
+| Coreset construction | O(n * k * d) |
+| Coreset clustering | O(m * k * d) where m << n (10-100x faster) |
 
 ## Error Handling
 

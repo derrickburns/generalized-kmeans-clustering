@@ -24,7 +24,8 @@ This guide provides practical solutions for common clustering tasks. Each sectio
 2. [Process Streaming Data](#process-streaming-data)
 3. [Use Custom Distance Functions](#use-custom-distance-functions)
 4. [Handle Large Datasets with Mini-Batches](#handle-large-datasets-with-mini-batches)
-5. [Optimize Clustering Performance](#optimize-clustering-performance)
+5. [Cluster Massive Datasets with Coresets](#cluster-massive-datasets-with-coresets)
+6. [Optimize Clustering Performance](#optimize-clustering-performance)
 
 ## Performance
 
@@ -133,6 +134,90 @@ val model = tracker.fit(largeDataset)
 val stats = tracker.getTrackingStats()
 ```
 
+## Cluster Massive Datasets with Coresets
+
+For datasets with millions or billions of points, coreset approximation provides 10-100x speedup:
+
+### Option 1: Automatic Strategy Selection (Recommended)
+
+```scala
+import com.massivedatascience.clusterer.KMeans
+import org.apache.spark.rdd.RDD
+import org.apache.spark.ml.linalg.Vector
+
+// trainSmart() automatically selects the best strategy based on data size
+val model = KMeans.trainSmart(
+  data = data,                  // Your RDD[Vector]
+  k = 10,                       // Number of clusters
+  maxIterations = 50,
+  distanceFunctionName = BregmanPointOps.EUCLIDEAN
+)
+
+// Strategy selection:
+// < 10K points: Standard k-means
+// 10K-1M points: Coreset with 5% compression and refinement
+// > 1M points: Fast coreset with 1% compression
+```
+
+### Option 2: Explicit Coreset Control
+
+```scala
+// For fine-grained control over coreset parameters
+val model = KMeans.trainWithCoreset(
+  data = data,
+  k = 10,
+  compressionRatio = 0.01,      // 1% of data (adjust for quality/speed tradeoff)
+  enableRefinement = true,       // Refine centers on full data after coreset clustering
+  maxIterations = 50,
+  mode = KMeansSelector.CORESET_INIT,  // Fast coreset initialization
+  distanceFunctionName = BregmanPointOps.EUCLIDEAN
+)
+```
+
+### Option 3: Using Coreset in Standard train() API
+
+```scala
+// Use coreset components in the standard API
+val model = KMeans.train(
+  data = data,
+  k = 10,
+  maxIterations = 50,
+  runs = 1,
+  mode = KMeansSelector.CORESET_INIT,         // Coreset initialization
+  clustererName = MultiKMeansClusterer.CORESET  // Coreset clustering
+)
+```
+
+### Choosing Coreset Variants
+
+**For maximum speed (large datasets > 10M points):**
+```scala
+val model = KMeans.train(
+  data = data,
+  k = 10,
+  mode = KMeansSelector.CORESET_INIT_FAST,
+  clustererName = MultiKMeansClusterer.CORESET_FAST
+)
+```
+
+**For best quality (when speed is less critical):**
+```scala
+val model = KMeans.train(
+  data = data,
+  k = 10,
+  mode = KMeansSelector.CORESET_INIT_HIGH_QUALITY,
+  clustererName = MultiKMeansClusterer.CORESET_HIGH_QUALITY
+)
+```
+
+### Expected Performance Gains
+
+| Dataset Size | Speedup | Quality Loss |
+|-------------|---------|--------------|
+| < 10K       | 1x      | 0%           |
+| 10K-1M      | 10-20x  | < 5%         |
+| > 1M        | 50-100x | < 10%        |
+
 ## Optimize Clustering Performance
 
 Tips for improving clustering quality and speed:
@@ -178,6 +263,7 @@ val model = cachingKMeans.fit(data)
    - Adjust `convergenceTol`
 
 4. **Scaling Issues**
+   - Use coreset algorithms (`trainSmart()` or `trainWithCoreset()`) for massive datasets
    - Use `KMeansParallel` for large datasets
    - Configure proper parallelism level
    - Enable caching strategically

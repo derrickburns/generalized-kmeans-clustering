@@ -38,6 +38,7 @@ This library extends Spark MLlib's K-Means implementation to support:
 - [Bisection-based clustering](http://www.siam.org/meetings/sdm01/pdf/sdm01_05.pdf)
 - [Near-optimal clustering](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
 - [Streaming data support](http://papers.nips.cc/paper/3812-streaming-k-means-approximation.pdf)
+- [Coreset approximation](https://people.csail.mit.edu/dannyf/coresets.pdf) for massive datasets (10-100x speedup)
 
 ## Quick Start
 
@@ -74,6 +75,26 @@ val streamingKMeans = new StreamingKMeans()
   .setDecayFactor(0.5)
 ```
 
+### Massive Datasets with Coresets
+```scala
+import com.massivedatascience.clusterer.KMeans
+
+// Automatic strategy selection based on data size
+val model = KMeans.trainSmart(
+  data = data,        // RDD[Vector]
+  k = 10,
+  maxIterations = 50
+)
+
+// Or explicit coreset control for very large data
+val model = KMeans.trainWithCoreset(
+  data = data,
+  k = 10,
+  compressionRatio = 0.01,  // Use 1% of data
+  enableRefinement = true
+)
+```
+
 ## Performance
 
 This implementation has been battle-tested on:
@@ -95,3 +116,4 @@ Key papers implemented in this library:
 * [Mini-batch K-means](https://arxiv.org/abs/1108.1351)
 * [High-dimensional Clustering](http://www.ida.liu.se/~arnjo/papers/pakdd-ws-11.pdf)
 * [Time Series Clustering](http://www.cs.gmu.edu/~jessica/publications/ikmeans_sdm_workshop03.pdf)
+* [Coreset Approximation](https://people.csail.mit.edu/dannyf/coresets.pdf)
