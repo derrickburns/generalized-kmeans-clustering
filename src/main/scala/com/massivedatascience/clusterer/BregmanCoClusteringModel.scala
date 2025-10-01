@@ -20,7 +20,6 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.linalg.WeightedVector
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 
@@ -360,20 +359,20 @@ case class CoClusteringModelSummary(
     sb.append(s"Column clusters: $numColClusters\n")
     sb.append(s"Total blocks: ${numRowClusters * numColClusters}\n")
     sb.append(s"Total entries: $totalEntries\n")
-    sb.append(s"Block sparsity: ${(sparsity * 100).formatted("%.2f")}%\n")
-    sb.append(s"Reconstruction error: ${reconstructionError.formatted("%.6f")}\n")
-    sb.append(s"Final objective: ${finalObjective.formatted("%.6f")}\n")
+    sb.append(f"Block sparsity: ${sparsity * 100}%.2f%%\n")
+    sb.append(f"Reconstruction error: $reconstructionError%.6f\n")
+    sb.append(f"Final objective: $finalObjective%.6f\n")
     sb.append(s"Iterations: $iterations\n")
-    sb.append(s"Convergence rate: ${getConvergenceRate.formatted("%.6f")}\n")
+    sb.append(f"Convergence rate: $getConvergenceRate%.6f\n")
     
     sb.append(s"\nRow Cluster Statistics:\n")
     rowStats.zipWithIndex.foreach { case (stats, idx) =>
-      sb.append(s"  Cluster $idx: ${stats.uniqueIndices} rows, ${stats.totalEntries} entries, mean=${stats.mean.formatted("%.3f")}\n")
+      sb.append(f"  Cluster $idx: ${stats.uniqueIndices} rows, ${stats.totalEntries} entries, mean=${stats.mean}%.3f\n")
     }
-    
+
     sb.append(s"\nColumn Cluster Statistics:\n")
     colStats.zipWithIndex.foreach { case (stats, idx) =>
-      sb.append(s"  Cluster $idx: ${stats.uniqueIndices} columns, ${stats.totalEntries} entries, mean=${stats.mean.formatted("%.3f")}\n")
+      sb.append(f"  Cluster $idx: ${stats.uniqueIndices} columns, ${stats.totalEntries} entries, mean=${stats.mean}%.3f\n")
     }
     
     sb.toString()

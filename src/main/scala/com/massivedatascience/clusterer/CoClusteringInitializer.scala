@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
@@ -253,44 +253,45 @@ class CoClusteringInitializer(
    * K-means++ style center selection.
    */
   private def kmeansPlusPlusSelection(
-      marginals: Map[Long, BregmanPoint], 
+      marginals: Map[Long, BregmanPoint],
       numClusters: Int): IndexedSeq[BregmanPoint] = {
-    
+
     val points = marginals.values.toSeq
     if (points.isEmpty) return IndexedSeq.empty
-    
+
     val centers = mutable.ListBuffer[BregmanPoint]()
-    
+
     // Select first center randomly
     centers += points(random.nextInt(points.length))
-    
+
     // Select remaining centers using D^2 weighting
     for (_ <- 1 until numClusters) {
+      val centerSeq = centers.toIndexedSeq.map(c => pointOps.toCenter(c))
       val weights = points.map { point =>
-        val minDistance = centers.map(pointOps.distance(point, _)).min
+        val minDistance = centerSeq.map(pointOps.distance(point, _)).min
         minDistance * minDistance
       }
-      
+
       val totalWeight = weights.sum
       if (totalWeight > 0) {
         val threshold = random.nextDouble() * totalWeight
         var cumulativeWeight = 0.0
         var selectedIndex = 0
-        
+
         for (i <- weights.indices) {
           cumulativeWeight += weights(i)
           if (cumulativeWeight >= threshold) {
             selectedIndex = i
           }
         }
-        
+
         centers += points(selectedIndex)
       } else {
         // Fallback to random selection
         centers += points(random.nextInt(points.length))
       }
     }
-    
+
     centers.toIndexedSeq
   }
   
@@ -298,11 +299,12 @@ class CoClusteringInitializer(
    * Assign marginals to nearest centers.
    */
   private def assignToNearestCenters(
-      marginals: Map[Long, BregmanPoint], 
+      marginals: Map[Long, BregmanPoint],
       centers: IndexedSeq[BregmanPoint]): Map[Long, Int] = {
-    
+
+    val centerSeq = centers.map(c => pointOps.toCenter(c))
     marginals.map { case (idx, point) =>
-      val (closestIndex, _) = pointOps.findClosest(centers, point)
+      val (closestIndex, _) = pointOps.findClosest(centerSeq, point)
       idx -> closestIndex
     }
   }

@@ -251,8 +251,8 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       |  <div class="metric">Row Clusters: ${summary.numRowClusters}</div>
       |  <div class="metric">Column Clusters: ${summary.numColClusters}</div>
       |  <div class="metric">Total Entries: ${summary.totalEntries}</div>
-      |  <div class="metric">Reconstruction Error: ${summary.reconstructionError.formatted("%.6f")}</div>
-      |  <div class="metric">Block Sparsity: ${(summary.sparsity * 100).formatted("%.2f")}%</div>
+      |  <div class="metric">Reconstruction Error: ${f"${summary.reconstructionError}%.6f"}</div>
+      |  <div class="metric">Block Sparsity: ${f"${summary.sparsity * 100}%.2f"}%</div>
       |  <div class="metric">Iterations: ${summary.iterations}</div>
       |</div>
       |""".stripMargin)
@@ -265,12 +265,12 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
     html.append(s"""
       |<div class="section">
       |  <h2>Quality Metrics</h2>
-      |  <div class="metric">Overall Quality: <span class="$qualityClass">${quality.overallQuality.formatted("%.3f")}</span></div>
-      |  <div class="metric">Row Silhouette: ${quality.rowSilhouetteScore.formatted("%.3f")}</div>
-      |  <div class="metric">Column Silhouette: ${quality.colSilhouetteScore.formatted("%.3f")}</div>
-      |  <div class="metric">Block Cohesion: ${quality.blockCohesion.formatted("%.3f")}</div>
-      |  <div class="metric">Separation Index: ${quality.separationIndex.formatted("%.3f")}</div>
-      |  <div class="metric">Modularity: ${quality.modularity.formatted("%.3f")}</div>
+      |  <div class="metric">Overall Quality: <span class="$qualityClass">${f"${quality.overallQuality}%.3f"}</span></div>
+      |  <div class="metric">Row Silhouette: ${f"${quality.rowSilhouetteScore}%.3f"}</div>
+      |  <div class="metric">Column Silhouette: ${f"${quality.colSilhouetteScore}%.3f"}</div>
+      |  <div class="metric">Block Cohesion: ${f"${quality.blockCohesion}%.3f"}</div>
+      |  <div class="metric">Separation Index: ${f"${quality.separationIndex}%.3f"}</div>
+      |  <div class="metric">Modularity: ${f"${quality.modularity}%.3f"}</div>
       |</div>
       |""".stripMargin)
     
@@ -279,8 +279,8 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       |<div class="section">
       |  <h2>Block Pattern Analysis</h2>
       |  <div class="metric">Non-empty Blocks: ${patterns.totalNonEmptyBlocks}</div>
-      |  <div class="metric">Block Density: ${patterns.blockDensity.formatted("%.3f")}</div>
-      |  <div class="metric">Connectivity: ${patterns.connectivity.formatted("%.3f")}</div>
+      |  <div class="metric">Block Density: ${f"${patterns.blockDensity}%.3f"}</div>
+      |  <div class="metric">Connectivity: ${f"${patterns.connectivity}%.3f"}</div>
       |  
       |  <h3>Pattern Distribution</h3>
       |  <table class="pattern-table">
@@ -300,7 +300,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       |""".stripMargin)
     
     patterns.dominantBlocks.take(5).foreach { case (row, col, score) =>
-      html.append(s"    <tr><td>$row</td><td>$col</td><td>${score.formatted("%.3f")}</td></tr>\n")
+      html.append(f"    <tr><td>$row</td><td>$col</td><td>$score%.3f</td></tr>\n")
     }
     
     html.append("""

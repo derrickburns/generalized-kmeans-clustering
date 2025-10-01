@@ -95,6 +95,8 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
+    ValidationUtils.requirePositiveWeight(w, "Weight for KL simplex divergence gradient")
+    ValidationUtils.requirePositiveVector(v, "Vector elements for KL simplex divergence gradient")
     val c = logFunc.log(w)
     trans(v, x => logFunc.log(x) - c)
   }
@@ -124,6 +126,8 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
   }
 
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
+    ValidationUtils.requirePositiveWeight(w, "Weight for KL divergence gradient")
+    ValidationUtils.requirePositiveVector(v, "Vector elements for KL divergence gradient")
     val c = logFunc.log(w)
     trans(v, x => logFunc.log(x) - c)
   }

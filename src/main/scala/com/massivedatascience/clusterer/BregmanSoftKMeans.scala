@@ -78,12 +78,20 @@ case class SoftClusteringResult(
   
   /**
    * Get the effective number of clusters (entropy-based measure).
+   *
+   * For each point, the effective number of clusters is exp(entropy).
+   * We return the average effective number across all points.
+   *
+   * This correctly handles:
+   * - Hard assignment (entropy=0) → exp(0) = 1 effective cluster
+   * - Uniform over k clusters (entropy=ln(k)) → exp(ln(k)) = k effective clusters
    */
   def effectiveNumberOfClusters: Double = {
-    val entropies = memberships.map { case (_, probs) =>
-      -probs.map(p => if (p > config.minMembership) p * log(p) else 0.0).sum
+    val effectiveClustersPerPoint = memberships.map { case (_, probs) =>
+      val entropy = -probs.map(p => if (p > config.minMembership) p * log(p) else 0.0).sum
+      exp(entropy)  // Convert entropy to effective number of clusters for this point
     }
-    exp(entropies.mean())
+    effectiveClustersPerPoint.mean()  // Average across all points
   }
   
   /**
@@ -237,28 +245,32 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
   
   /**
    * Compute soft assignment probabilities for all points.
-   * 
+   *
    * Uses the Boltzmann distribution: p(c|x) ∝ exp(-β * D_φ(x, μ_c))
+   *
+   * Uses the log-sum-exp trick for numerical stability by subtracting the minimum
+   * distance before exponentiating. This ensures the largest probability is exp(0) = 1.0.
    */
   private def computeSoftAssignments(
       data: RDD[BregmanPoint],
       centers: IndexedSeq[BregmanCenter],
       pointOps: BregmanPointOps): RDD[(BregmanPoint, Array[Double])] = {
-    
+
     val beta = config.beta
     val minMembership = config.minMembership
     val broadcastCenters = data.sparkContext.broadcast(centers)
-    
+
     data.map { point =>
       val distances = broadcastCenters.value.map(center => pointOps.distance(point, center))
-      
+
       // Compute unnormalized probabilities: exp(-β * distance)
-      val maxDistance = distances.max
+      // Use min distance for numerical stability (log-sum-exp trick)
+      // This ensures the largest probability is exp(0) = 1.0
+      val minDistance = distances.min
       val unnormalizedProbs = distances.map { dist =>
-        // Subtract max for numerical stability
-        math.exp(-beta * (dist - maxDistance))
+        math.exp(-beta * (dist - minDistance))
       }
-      
+
       // Normalize to get probabilities
       val totalProb = unnormalizedProbs.sum
       val probabilities: Array[Double] = if (totalProb > 1e-100) {
@@ -267,12 +279,12 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
         // Fallback: uniform distribution
         Array.fill(centers.length)(1.0 / centers.length)
       }
-      
+
       // Apply minimum membership threshold
       val adjustedProbs = probabilities.map(p => math.max(p, minMembership))
       val adjustedSum = adjustedProbs.sum
       val normalizedProbs = adjustedProbs.map(_ / adjustedSum)
-      
+
       (point, normalizedProbs)
     }
   }

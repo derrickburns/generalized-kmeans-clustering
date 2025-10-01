@@ -67,9 +67,17 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
     assignments: RDD[Assignment]): Unit = {
 
     val clusterCounts = countByCluster(assignments)
-    val biggest: (Int, Long) = clusterCounts.maxBy { case (_, size) => size }
-    stats.largestCluster.reset()
-    stats.largestCluster.add(biggest._2)
+
+    // Handle the case where there are no clusters (empty assignments)
+    if (clusterCounts.nonEmpty) {
+      val biggest: (Int, Long) = clusterCounts.maxBy { case (_, size) => size }
+      stats.largestCluster.reset()
+      stats.largestCluster.add(biggest._2)
+    } else {
+      stats.largestCluster.reset()
+      stats.largestCluster.add(0L)
+    }
+
     stats.nonemptyClusters.reset()
     stats.nonemptyClusters.add(clusterCounts.size)
     stats.emptyClusters.reset()

@@ -99,7 +99,7 @@ class RandomIndexEmbedding(
  * @param l log of the number of dimensions of the input
  * @param m log of the number of dimensions of the output
  */
-class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) {
+class MultiplicativeHash(seed: Long, offset: Long, l: Int, m: Int) extends Serializable {
   require(m <= l)
   val mask = if (l >= RandomIndexEmbedding.defaultLogInputDim) Long.MaxValue else (1 << l) - 1
   val shift = l - m

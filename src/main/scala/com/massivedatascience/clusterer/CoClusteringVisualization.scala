@@ -18,11 +18,9 @@
 package com.massivedatascience.clusterer
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.util.{Random, Try}
 
 /**
  * Specialized visualization utilities for co-clustering results.
@@ -70,10 +68,10 @@ object CoClusteringVisualization {
     for (r <- 0 until numRowClusters; c <- 0 until numColClusters) {
       val stats = blockStats(r)(c)
       val value = if (stats.count > 0) stats.mean else 0.0
-      
+
       values += ((r, c, value))
-      labels += ((r, c, s"Block($r,$c): ${stats.count} entries, mean=${value.formatted("%.3f")}"))
-      
+      labels += ((r, c, f"Block($r,$c): ${stats.count} entries, mean=$value%.3f"))
+
       if (value != 0.0) {
         globalMin = math.min(globalMin, value)
         globalMax = math.max(globalMax, value)
@@ -133,7 +131,7 @@ object CoClusteringVisualization {
         metadata = Map(
           "uniqueRows" -> stats.uniqueIndices.toString,
           "totalEntries" -> stats.totalEntries.toString,
-          "mean" -> stats.mean.formatted("%.3f")
+          "mean" -> f"${stats.mean}%.3f"
         )
       )
     }
@@ -150,7 +148,7 @@ object CoClusteringVisualization {
         metadata = Map(
           "uniqueCols" -> stats.uniqueIndices.toString,
           "totalEntries" -> stats.totalEntries.toString,
-          "mean" -> stats.mean.formatted("%.3f")
+          "mean" -> f"${stats.mean}%.3f"
         )
       )
     }
@@ -168,8 +166,8 @@ object CoClusteringVisualization {
           label = s"Block($r,$c)",
           metadata = Map(
             "blockCount" -> stats.count.toString,
-            "blockMean" -> stats.mean.formatted("%.3f"),
-            "blockWeight" -> stats.totalWeight.formatted("%.3f")
+            "blockMean" -> f"${stats.mean}%.3f",
+            "blockWeight" -> f"${stats.totalWeight}%.3f"
           )
         )
       }
@@ -224,11 +222,11 @@ object CoClusteringVisualization {
     
     // Row cluster size distribution
     val rowSizes = rowStats.map(_.totalEntries)
-    val rowSizeHist = createHistogram(rowSizes, 10)
-    
+    val rowSizeHist = createHistogramInt(rowSizes, 10)
+
     // Column cluster size distribution
     val colSizes = colStats.map(_.totalEntries)
-    val colSizeHist = createHistogram(colSizes, 10)
+    val colSizeHist = createHistogramInt(colSizes, 10)
     
     // Block density distribution
     val blockDensities = blockStats.flatten.filter(_.count > 0).map(_.totalWeight)
@@ -268,12 +266,11 @@ object CoClusteringVisualization {
   def exportD3JSON(
       model: BregmanCoClusteringModel,
       entries: RDD[MatrixEntry]): String = {
-    
+
     val heatmap = generateHeatmapData(model, entries)
     val network = generateNetworkGraphData(model, entries)
     val convergence = generateConvergencePlotData(model)
-    val distribution = generateDistributionData(model, entries)
-    
+
     val json = new mutable.StringBuilder()
     json.append("{\n")
     
@@ -363,7 +360,7 @@ object CoClusteringVisualization {
        |    <div class="metric">Row Clusters: ${summary.numRowClusters}</div>
        |    <div class="metric">Column Clusters: ${summary.numColClusters}</div>
        |    <div class="metric">Total Entries: ${summary.totalEntries}</div>
-       |    <div class="metric">Reconstruction Error: ${summary.reconstructionError.formatted("%.6f")}</div>
+       |    <div class="metric">Reconstruction Error: ${f"${summary.reconstructionError}%.6f"}</div>
        |    <div class="metric">Iterations: ${summary.iterations}</div>
        |  </div>
        |  
@@ -567,41 +564,41 @@ object CoClusteringVisualization {
   }
   
   // Helper methods
-  
-  private def createHistogram(values: Seq[Int], numBins: Int): Seq[(Double, Int)] = {
+
+  private def createHistogramInt(values: Seq[Int], numBins: Int): Seq[(Double, Int)] = {
     if (values.isEmpty) return Seq.empty
-    
+
     val min = values.min.toDouble
     val max = values.max.toDouble
     val binWidth = (max - min) / numBins
-    
+
     val bins = Array.fill(numBins)(0)
-    
+
     values.foreach { value =>
       val binIndex = if (value == max) numBins - 1 else ((value - min) / binWidth).toInt
       bins(binIndex) += 1
     }
-    
+
     bins.zipWithIndex.map { case (count, idx) =>
       val binCenter = min + (idx + 0.5) * binWidth
       (binCenter, count)
     }.toSeq
   }
-  
+
   private def createHistogram(values: Seq[Double], numBins: Int): Seq[(Double, Int)] = {
     if (values.isEmpty) return Seq.empty
-    
+
     val min = values.min
     val max = values.max
     val binWidth = (max - min) / numBins
-    
+
     val bins = Array.fill(numBins)(0)
-    
+
     values.foreach { value =>
       val binIndex = if (value == max) numBins - 1 else ((value - min) / binWidth).toInt
       bins(binIndex) += 1
     }
-    
+
     bins.zipWithIndex.map { case (count, idx) =>
       val binCenter = min + (idx + 0.5) * binWidth
       (binCenter, count)

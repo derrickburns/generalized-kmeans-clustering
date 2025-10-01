@@ -35,7 +35,9 @@ trait KMeansPredictor {
 
   def centers: IndexedSeq[BregmanCenter]
 
-  def clusterCenters: IndexedSeq[Vector] = centers.map(pointOps.toPoint).map(_.inhomogeneous)
+  def validCenters: IndexedSeq[BregmanCenter] = centers
+
+  def clusterCenters: IndexedSeq[Vector] = validCenters.map(pointOps.toPoint).map(_.inhomogeneous)
 
   // operations on Vectors
 
@@ -63,30 +65,50 @@ trait KMeansPredictor {
 
   // operations on WeightedVectors
 
-  def predictWeighted(point: WeightedVector): Int = predictBregman(pointOps.toPoint(point))
+  private def validateDimension(point: WeightedVector): Unit = {
+    val expectedDim = centers.head.gradient.size
+    val actualDim = point.inhomogeneous.size
+    require(actualDim == expectedDim,
+      s"Point dimension $actualDim does not match model dimension $expectedDim")
+  }
+
+  def predictWeighted(point: WeightedVector): Int = {
+    validateDimension(point)
+    predictBregman(pointOps.toPoint(point))
+  }
 
   /** Maps given points to their cluster indices. */
   def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
-    predictBregman(points.map(p => pointOps.toPoint(p)))
+    predictBregman(points.map(pointOps.toPoint))
 
   def computeCostWeighted(data: RDD[WeightedVector]): Double =
-    computeCostBregman(data.map(p => pointOps.toPoint(p)))
+    computeCostBregman(data.map(pointOps.toPoint))
 
-  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) =
+  def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) = {
+    validateDimension(point)
     predictClusterAndDistanceBregman(pointOps.toPoint(point))
+  }
 
   // operations on BregmanPoints
 
-  def predictBregman(point: BregmanPoint): Int = pointOps.findClosestCluster(centers, point)
+  def predictBregman(point: BregmanPoint): Int = {
+    val prediction = pointOps.findClosestCluster(validCenters, point)
+    if (prediction >= 0 && prediction < validCenters.length) prediction
+    else 0 // Fallback to first cluster if invalid
+  }
 
   def predictBregman(points: RDD[BregmanPoint]): RDD[Int] =
-    points.map(p => pointOps.findClosestCluster(centers, p))
+    points.map { p =>
+      val prediction = pointOps.findClosestCluster(validCenters, p)
+      if (prediction >= 0 && prediction < validCenters.length) prediction
+      else 0
+    }
 
   def predictClusterAndDistanceBregman(point: BregmanPoint): (Int, Double) =
-    pointOps.findClosest(centers, point)
+    pointOps.findClosest(validCenters, point)
 
   def computeCostBregman(data: RDD[BregmanPoint]): Double =
-    data.map(p => pointOps.findClosestDistance(centers, p)).sum()
+    data.map(p => pointOps.findClosestDistance(validCenters, p)).sum()
 
 }
 
@@ -98,11 +120,29 @@ trait KMeansPredictor {
  */
 case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCenter])
     extends KMeansPredictor with Serializable {
-  
-  // Validate that centers are not empty
-  require(centers.nonEmpty, "KMeansModel requires non-empty centers")
 
-  lazy val k: Int = centers.length
+  private val logger = LoggerFactory.getLogger(getClass.getName)
+
+  // Filter out invalid centers (zero/near-zero weight or non-finite coordinates)
+  override lazy val validCenters: IndexedSeq[BregmanCenter] = {
+    val valid = centers.filter { c =>
+      c.weight > WeightSanitizer.MIN_VALID_WEIGHT &&
+      c.gradient.toArray.forall(x => java.lang.Double.isFinite(x))
+    }
+
+    if (valid.length < centers.length) {
+      logger.warn(s"Filtered out ${centers.length - valid.length} invalid centers " +
+                  s"(zero weight or non-finite coordinates). Using ${valid.length} valid centers.")
+    }
+
+    valid
+  }
+
+  // Validate that we have at least one valid center
+  require(validCenters.nonEmpty,
+    s"KMeansModel requires at least one valid center, got ${centers.length} total, ${validCenters.length} valid")
+
+  lazy val k: Int = validCenters.length
 
   /**
    * Returns the cluster centers.  N.B. These are in the embedded space where the clustering
@@ -250,15 +290,31 @@ object KMeansModel {
       }
 
       // Process assignments and compute centroids
-      val (centroids, clusterSizes) = {
+      val (centroids, clusterSizes, hasInvalidAssignments) = {
         // Zip with index to preserve ordering and detect misaligned data
         val zipped = cachedAssignments.zipWithIndex().map(_.swap)
           .join(cachedPoints.zipWithIndex().map(_.swap))
           .map { case (_, (clusterIdx, point)) => (clusterIdx, point) }
 
+        // Check for invalid cluster indices
+        val allIndices = cachedAssignments.collect()
+        val hasNegative = allIndices.exists(_ < 0)
+        val maxIndex = if (allIndices.nonEmpty) allIndices.max else -1
+        val hasOutOfBounds = expectedNumClusters > 0 && maxIndex >= expectedNumClusters
+
+        // Throw exception if there are invalid assignments
+        if (hasNegative) {
+          throw new IllegalArgumentException(
+            s"Invalid cluster assignment: found negative cluster index in assignments")
+        }
+        if (hasOutOfBounds) {
+          throw new IllegalArgumentException(
+            s"Invalid cluster assignment: found cluster index $maxIndex but expected at most ${expectedNumClusters - 1}")
+        }
+
         // Filter out invalid cluster indices, count points per cluster, and compute centroids
         val validAssignments = zipped.filter { case (index, _) => index >= 0 }
-        
+
         // Count points per cluster
         val sizes = validAssignments
           .map { case (clusterIdx, _) => (clusterIdx, 1L) }
@@ -266,15 +322,15 @@ object KMeansModel {
           .collectAsMap()
           .toMap
           .withDefaultValue(0L)
-        
+
         // Compute centroids
         val centers = validAssignments
           .aggregateByKey(ops.make())(
             (centroid, pt) => centroid.add(pt),
             (c1, c2) => c1.add(c2)
           )
-          
-        (centers, sizes)
+
+        (centers, sizes, hasNegative || hasOutOfBounds)
       }
 
       // Process centroids and handle empty clusters
