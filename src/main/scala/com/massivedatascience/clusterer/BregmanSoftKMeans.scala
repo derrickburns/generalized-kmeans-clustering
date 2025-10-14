@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 import scala.math.{exp, log}
 
@@ -39,13 +38,12 @@ case class BregmanSoftKMeansConfig(
     minMembership: Double = 1e-10,
     maxIterations: Int = 100,
     convergenceThreshold: Double = 1e-6,
-    computeObjective: Boolean = true) {
-  
-  require(beta > 0.0, s"Beta (inverse temperature) must be positive, got: $beta")
-  require(minMembership > 0.0 && minMembership < 1.0, 
-    s"Minimum membership must be in (0,1), got: $minMembership")
-  require(maxIterations > 0, s"Max iterations must be positive, got: $maxIterations")
-  require(convergenceThreshold > 0.0, s"Convergence threshold must be positive, got: $convergenceThreshold")
+    computeObjective: Boolean = true) extends ConfigValidator {
+
+  requirePositive(beta, "Beta (inverse temperature)")
+  requireInRange(minMembership, 0.0, 1.0, "Minimum membership")
+  requirePositive(maxIterations, "Max iterations")
+  requirePositive(convergenceThreshold, "Convergence threshold")
 }
 
 /**
@@ -123,9 +121,7 @@ case class SoftClusteringResult(
  * values lead to softer (more fuzzy) assignments.
  */
 case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans.defaultConfig)
-    extends MultiKMeansClusterer {
-  
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with Logging {
   
   /**
    * Perform soft clustering on the given data.

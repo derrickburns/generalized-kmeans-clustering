@@ -29,8 +29,6 @@ import scala.annotation.tailrec
 import scala.collection.generic.FilterMonadic
 import scala.collection.mutable.ArrayBuffer
 
-import org.slf4j.LoggerFactory
-
 object ColumnTrackingKMeans {
 
   /**
@@ -252,9 +250,7 @@ object ColumnTrackingKMeans {
  *
  */
 case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
-    extends MultiKMeansClusterer with SparkHelper {
-
-  val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with SparkHelper with Logging {
 
 
   private[this] def distortion(data: RDD[Assignment]) =
