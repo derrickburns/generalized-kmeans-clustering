@@ -62,6 +62,16 @@ object MultiKMeansClusterer {
   val ANNEALED_HIGH_QUALITY = "ANNEALED_HIGH_QUALITY"
   val ANNEALED_ROBUST = "ANNEALED_ROBUST"
 
+  // Bisecting (hierarchical divisive) clusterers
+  val BISECTING = "BISECTING"
+  val BISECTING_BY_COST = "BISECTING_BY_COST"
+  val BISECTING_FAST = "BISECTING_FAST"
+
+  // X-means (automatic k selection) clusterers
+  val XMEANS = "XMEANS"
+  val XMEANS_AIC = "XMEANS_AIC"
+  val XMEANS_FAST = "XMEANS_FAST"
+
   case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
@@ -88,6 +98,16 @@ object MultiKMeansClusterer {
       case ANNEALED_FAST => AnnealedKMeans.fast()
       case ANNEALED_HIGH_QUALITY => AnnealedKMeans.highQuality()
       case ANNEALED_ROBUST => AnnealedKMeans.robustInit()
+
+      // Bisecting variants
+      case BISECTING => BisectingKMeans()
+      case BISECTING_BY_COST => BisectingKMeans.byCost()
+      case BISECTING_FAST => BisectingKMeans.fast()
+
+      // X-means variants
+      case XMEANS => XMeans()
+      case XMEANS_AIC => XMeans.withAIC()
+      case XMEANS_FAST => XMeans.fast()
 
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
