@@ -389,20 +389,33 @@ class MovementConvergence extends ConvergenceCheck with Logging {
       weightCol: Option[String],
       kernel: BregmanKernel): (Double, Double) = {
 
-    // Compute max movement
-    val movement = oldCenters.zip(newCenters).map { case (old, neu) =>
-      val diff = old.zip(neu).map { case (a, b) => a - b }
-      math.sqrt(diff.map(d => d * d).sum)
-    }.max
+    // Compute max movement (only for centers that exist in both arrays)
+    val minLength = math.min(oldCenters.length, newCenters.length)
+    val movement = if (minLength > 0) {
+      (0 until minLength).map { i =>
+        val diff = oldCenters(i).zip(newCenters(i)).map { case (a, b) => a - b }
+        math.sqrt(diff.map(d => d * d).sum)
+      }.max
+    } else {
+      0.0
+    }
 
     // Compute total distortion
     val spark = assigned.sparkSession
     val bcCenters = spark.sparkContext.broadcast(newCenters)
     val bcKernel = spark.sparkContext.broadcast(kernel)
+    val numCenters = newCenters.length
 
     val distortionUDF = udf { (features: Vector, clusterId: Int) =>
-      val center = Vectors.dense(bcCenters.value(clusterId))
-      bcKernel.value.divergence(features, center)
+      // Only compute distortion for valid cluster IDs
+      if (clusterId >= 0 && clusterId < numCenters) {
+        val center = Vectors.dense(bcCenters.value(clusterId))
+        bcKernel.value.divergence(features, center)
+      } else {
+        // Point assigned to dropped cluster - use 0.0 distortion
+        // (these points will be reassigned in the next iteration)
+        0.0
+      }
     }
 
     val actualWeightCol = weightCol.getOrElse("weight")

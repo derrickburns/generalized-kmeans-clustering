@@ -9,21 +9,30 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     strategy:
+      fail-fast: false
       matrix:
-        java-version: [17]
-        
+        java-version: [11, 17]
+        scala-version: ['2.12', '2.13']
+        spark-version: ['3.4.0', '3.5.1']
+        exclude:
+          # Spark 3.4.0 doesn't support Scala 2.13 well
+          - scala-version: '2.13'
+            spark-version: '3.4.0'
+
+    name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up JDK ${{ matrix.java-version }}
       uses: actions/setup-java@v4
       with:
         java-version: ${{ matrix.java-version }}
         distribution: 'temurin'
-        
+
     - name: Cache SBT dependencies
       uses: actions/cache@v4
       with:
@@ -31,24 +40,34 @@ jobs:
           ~/.ivy2/cache
           ~/.sbt
           ~/.coursier/cache
-        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
+        key: ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
         restore-keys: |
+          ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-
           ${{ runner.os }}-sbt-
-          
+
     - name: Compile
-      run: sbt compile
-      
+      run: sbt ++${{ matrix.scala-version }}.* compile
+      env:
+        SPARK_VERSION: ${{ matrix.spark-version }}
+
     - name: Run tests
-      run: sbt test
-      
+      run: sbt ++${{ matrix.scala-version }}.* test
+      env:
+        SPARK_VERSION: ${{ matrix.spark-version }}
+
     - name: Check code style
-      run: sbt scalastyle
-      
+      run: sbt ++${{ matrix.scala-version }}.* scalastyle
+      if: matrix.scala-version == '2.12' && matrix.java-version == 17
+
     - name: Generate test coverage report
-      run: sbt coverage test coverageReport
-      
+      run: sbt ++${{ matrix.scala-version }}.* coverage test coverageReport
+      if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+      env:
+        SPARK_VERSION: ${{ matrix.spark-version }}
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
+      if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
       with:
         file: ./target/scala-2.12/scoverage-report/scoverage.xml
         fail_ci_if_error: false

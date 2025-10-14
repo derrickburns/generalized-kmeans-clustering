@@ -368,7 +368,7 @@ For dense data in a low dimension space using the squared Euclidean distance fun
 one may simply call ```KMeans.train``` with the data and the desired number of clusters:
 
 ```scala
-import com.com.massivedatascience.clusterer
+import com.massivedatascience.clusterer
 import org.apache.spark.mllib.linalg.Vector
 
 val model : KMeansModel = KMeans.train(data: RDD[Vector], k: Int)

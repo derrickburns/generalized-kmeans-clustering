@@ -86,7 +86,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
   // Note: Some property tests are currently ignored due to an edge case bug in MovementConvergence
   // that causes ArrayIndexOutOfBoundsException when clusters become empty during iterations.
 
-  ignore("Property: number of predictions equals number of input points") {
+  test("Property: number of predictions equals number of input points") {
     forAll(dimGen, kGen, Gen.choose(20, 50)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {  // Ensure at least 5 points per cluster
         val sparkSession = spark
@@ -112,7 +112,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
 
   // Property 2: All cluster assignments are within valid range [0, k)
 
-  ignore("Property: cluster assignments are in valid range [0, k)") {
+  test("Property: cluster assignments are in valid range [0, k)") {
     forAll(dimGen, kGen, Gen.choose(20, 50)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
@@ -182,7 +182,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
   // Note: This test occasionally triggers an ArrayIndexOutOfBoundsException in MovementConvergence
   // when clusters become empty during iterations. This is a known issue to be fixed.
 
-  ignore("Property: clustering cost is always non-negative") {
+  test("Property: clustering cost is always non-negative") {
     forAll(dimGen, kGen, Gen.choose(20, 40)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
@@ -210,7 +210,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
 
   // Property 5: Distance column values are non-negative
 
-  ignore("Property: distance column contains non-negative values") {
+  test("Property: distance column contains non-negative values") {
     forAll(dimGen, kGen, Gen.choose(20, 40)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
@@ -245,7 +245,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
   // Note: This test occasionally triggers an ArrayIndexOutOfBoundsException in MovementConvergence
   // when clusters become empty during iterations. This is a known issue to be fixed.
 
-  ignore("Property: model has exactly k cluster centers") {
+  test("Property: model has exactly k cluster centers") {
     forAll(dimGen, kGen, Gen.choose(20, 40)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
@@ -274,7 +274,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
   // Note: This test occasionally triggers an ArrayIndexOutOfBoundsException in MovementConvergence
   // when clusters become empty during iterations. This is a known issue to be fixed.
 
-  ignore("Property: cluster center dimensions match input dimensions") {
+  test("Property: cluster center dimensions match input dimensions") {
     forAll(dimGen, kGen, Gen.choose(20, 40)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
@@ -368,7 +368,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
 
   // Property 10: Weighted clustering preserves total weight
 
-  ignore("Property: weighted clustering respects point weights") {
+  test("Property: weighted clustering respects point weights") {
     forAll(dimGen, kGen, Gen.choose(20, 30)) { (dim: Int, k: Int, numPoints: Int) =>
       whenever(numPoints >= k * 5) {
         val sparkSession = spark
