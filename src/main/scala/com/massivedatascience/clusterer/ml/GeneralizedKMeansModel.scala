@@ -13,9 +13,29 @@ import org.apache.spark.sql.types.StructType
 /**
  * Model fitted by GeneralizedKMeans.
  *
- * @param uid unique identifier
- * @param clusterCenters cluster centers (k x d array)
- * @param kernelName name of the Bregman kernel used during training
+ * Represents a trained clustering model that can:
+ * - Transform new data by assigning cluster labels
+ * - Predict clusters for individual feature vectors
+ * - Compute clustering cost (sum of distances to centers)
+ * - Integrate with Spark ML Pipelines
+ *
+ * Example usage:
+ * {{{
+ *   // After fitting
+ *   val predictions = model.transform(testData)
+ *   val cost = model.computeCost(testData)
+ *
+ *   // Single point prediction
+ *   val cluster = model.predict(featureVector)
+ *
+ *   // Access cluster information
+ *   println(s"Found ${model.numClusters} clusters")
+ *   model.clusterCentersAsVectors.foreach(println)
+ * }}}
+ *
+ * @param uid unique identifier for this model instance
+ * @param clusterCenters cluster centers as k x d array (k clusters, d dimensions)
+ * @param kernelName name of the Bregman kernel used during training (e.g., "SquaredEuclidean", "KL")
  */
 class GeneralizedKMeansModel(
     override val uid: String,
@@ -26,21 +46,29 @@ class GeneralizedKMeansModel(
     with DefaultParamsWritable
     with Logging {
 
+  /**
+   * Constructs a model with a random UID.
+   *
+   * @param clusterCenters cluster centers as k x d array
+   * @param kernelName name of the Bregman kernel
+   */
   def this(clusterCenters: Array[Array[Double]], kernelName: String) =
     this(Identifiable.randomUID("gkmeans"), clusterCenters, kernelName)
 
   /**
-   * Number of clusters.
+   * Number of clusters (k).
    */
   def numClusters: Int = clusterCenters.length
 
   /**
-   * Dimensionality of features.
+   * Dimensionality of features (d).
    */
   def numFeatures: Int = clusterCenters.headOption.map(_.length).getOrElse(0)
 
   /**
-   * Get cluster centers as ML Vector array.
+   * Get cluster centers as Spark ML Vector array.
+   *
+   * @return array of k cluster center vectors
    */
   def clusterCentersAsVectors: Array[Vector] = clusterCenters.map(Vectors.dense)
 
@@ -101,17 +129,35 @@ class GeneralizedKMeansModel(
     result
   }
 
+  /**
+   * Check and transform the input schema.
+   *
+   * @param schema input schema
+   * @return output schema with prediction column added
+   */
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)
   }
 
+  /**
+   * Create a copy of this model with optional parameter overrides.
+   *
+   * @param extra optional parameter map to override current parameters
+   * @return new model instance with copied parameters
+   */
   override def copy(extra: ParamMap): GeneralizedKMeansModel = {
     val copied = new GeneralizedKMeansModel(uid, clusterCenters, kernelName)
     copyValues(copied, extra)
   }
 
   /**
-   * Compute the sum of squared distances from each point to its assigned center.
+   * Compute the clustering cost (sum of divergences from points to their assigned centers).
+   *
+   * This is equivalent to the Within-Cluster Sum of Squares (WCSS) for Squared Euclidean divergence.
+   * Lower cost indicates tighter, more compact clusters.
+   *
+   * @param dataset input dataset with features column
+   * @return total cost (sum of all point-to-center distances)
    */
   def computeCost(dataset: Dataset[_]): Double = {
     val df = dataset.toDF()
@@ -146,7 +192,12 @@ class GeneralizedKMeansModel(
   }
 
   /**
-   * Predict cluster for a single feature vector.
+   * Predict the cluster index for a single feature vector.
+   *
+   * Returns the index (0 to k-1) of the cluster whose center has minimum divergence to the input.
+   *
+   * @param features input feature vector (must have same dimension as training data)
+   * @return cluster index (0-based)
    */
   def predict(features: Vector): Int = {
     val kernel = createKernel(kernelName, $(smoothing))

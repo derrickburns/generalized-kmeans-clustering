@@ -44,21 +44,69 @@ class GeneralizedKMeans(override val uid: String)
   def this() = this(Identifiable.randomUID("gkmeans"))
 
   // Parameter setters
+
+  /** Sets the number of clusters to create (k must be > 1). Default: 2. */
   def setK(value: Int): this.type = set(k, value)
+
+  /**
+   * Sets the Bregman divergence function.
+   * Options: "squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic".
+   * Default: "squaredEuclidean".
+   */
   def setDivergence(value: String): this.type = set(divergence, value)
+
+  /** Sets the smoothing parameter for divergences that need it (KL, Itakura-Saito, etc). Default: 1e-10. */
   def setSmoothing(value: Double): this.type = set(smoothing, value)
+
+  /** Sets the features column name. Default: "features". */
   def setFeaturesCol(value: String): this.type = set(featuresCol, value)
+
+  /** Sets the prediction output column name. Default: "prediction". */
   def setPredictionCol(value: String): this.type = set(predictionCol, value)
+
+  /** Sets the optional weight column for weighted clustering. */
   def setWeightCol(value: String): this.type = set(weightCol, value)
+
+  /** Sets the maximum number of iterations. Default: 20. */
   def setMaxIter(value: Int): this.type = set(maxIter, value)
+
+  /** Sets the convergence tolerance (max center movement). Default: 1e-4. */
   def setTol(value: Double): this.type = set(tol, value)
+
+  /** Sets the random seed for reproducibility. Default: current time. */
   def setSeed(value: Long): this.type = set(seed, value)
+
+  /**
+   * Sets the assignment strategy for mapping points to clusters.
+   * Options: "auto" (default), "broadcast", "crossJoin".
+   * "auto" chooses the best strategy based on the divergence.
+   */
   def setAssignmentStrategy(value: String): this.type = set(assignmentStrategy, value)
+
+  /**
+   * Sets the strategy for handling empty clusters.
+   * Options: "reseedRandom" (default), "dropEmpty".
+   * "reseedRandom" fills empty clusters with random points.
+   */
   def setEmptyClusterStrategy(value: String): this.type = set(emptyClusterStrategy, value)
+
+  /** Sets the checkpoint interval (0 to disable). Default: 10. */
   def setCheckpointInterval(value: Int): this.type = set(checkpointInterval, value)
+
+  /** Sets the checkpoint directory for intermediate results. */
   def setCheckpointDir(value: String): this.type = set(checkpointDir, value)
+
+  /**
+   * Sets the initialization algorithm.
+   * Options: "k-means||" (default), "random".
+   * "k-means||" is the parallel variant of k-means++.
+   */
   def setInitMode(value: String): this.type = set(initMode, value)
+
+  /** Sets the number of steps for k-means|| initialization. Default: 2. */
   def setInitSteps(value: Int): this.type = set(initSteps, value)
+
+  /** Sets an optional column name to store distances to assigned centers. */
   def setDistanceCol(value: String): this.type = set(distanceCol, value)
 
   override def fit(dataset: Dataset[_]): GeneralizedKMeansModel = {
