@@ -172,6 +172,27 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     data.aggregate(0.0)(_ + findClosestDistance(centers, _), _ + _)
 
   /**
+   * Assign each point to its closest cluster center.
+   * Returns RDD of (clusterIndex, point) pairs.
+   */
+  def assignPointsToClusters(data: RDD[P], centers: IndexedSeq[C]): RDD[(Int, P)] = {
+    data.map { point =>
+      (findClosestCluster(centers, point), point)
+    }
+  }
+
+  /**
+   * Assign each point to its closest cluster center with distance.
+   * Returns RDD of (clusterIndex, (point, distance)) tuples.
+   */
+  def assignPointsWithDistance(data: RDD[P], centers: IndexedSeq[C]): RDD[(Int, (P, Double))] = {
+    data.map { point =>
+      val (cluster, distance) = findClosest(centers, point)
+      (cluster, (point, distance))
+    }
+  }
+
+  /**
    * Return the K-means cost of a given point against the given cluster centers.
    */
   def pointCost(centers: IndexedSeq[C], point: P): Double = findClosestDistance(centers, point)

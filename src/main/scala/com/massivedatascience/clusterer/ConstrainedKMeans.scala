@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 /**
  * Pairwise constraints for semi-supervised clustering.
@@ -98,10 +97,10 @@ case class Constraints(
 case class ConstrainedKMeansConfig(
     constraints: Constraints = Constraints(),
     violationPenalty: Double = Double.PositiveInfinity,
-    maxViolations: Int = 0) {
+    maxViolations: Int = 0) extends ConfigValidator {
 
-  require(violationPenalty > 0.0, s"Violation penalty must be positive, got: $violationPenalty")
-  require(maxViolations >= 0, s"Max violations must be non-negative, got: $maxViolations")
+  requirePositive(violationPenalty, "Violation penalty")
+  requireNonNegative(maxViolations, "Max violations")
 
   def hasHardConstraints: Boolean = violationPenalty.isInfinity && maxViolations == 0
 }
@@ -142,9 +141,7 @@ case class ConstrainedKMeansConfig(
 class ConstrainedKMeans(
     config: ConstrainedKMeansConfig,
     baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans())
-    extends MultiKMeansClusterer {
-
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with Logging {
 
   def cluster(
       maxIterations: Int,

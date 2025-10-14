@@ -20,7 +20,6 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import com.massivedatascience.clusterer.coreset.{BregmanCoreset, BregmanSensitivity, CoresetConfig, CoresetResult, WeightedPoint}
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 /**
  * Configuration for core-set based K-means clustering.
@@ -36,11 +35,11 @@ case class CoresetKMeansConfig(
     maxIterations: Int = 50,
     refinementIterations: Int = 3,
     convergenceThreshold: Double = 1e-6,
-    enableRefinement: Boolean = true) {
-  
-  require(maxIterations > 0, s"Max iterations must be positive, got: $maxIterations")
-  require(refinementIterations >= 0, s"Refinement iterations must be non-negative, got: $refinementIterations")
-  require(convergenceThreshold > 0.0, s"Convergence threshold must be positive, got: $convergenceThreshold")
+    enableRefinement: Boolean = true) extends ConfigValidator {
+
+  requirePositive(maxIterations, "Max iterations")
+  requireNonNegative(refinementIterations, "Refinement iterations")
+  requirePositive(convergenceThreshold, "Convergence threshold")
 }
 
 /**
@@ -88,10 +87,8 @@ case class CoresetKMeansResult(
  * performs exact clustering on the core-set, then optionally refines
  * the centers using the full dataset.
  */
-case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConfig) 
-    extends MultiKMeansClusterer {
-  
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConfig)
+    extends MultiKMeansClusterer with Logging {
   
   /**
    * Cluster the given points using core-set approximation.

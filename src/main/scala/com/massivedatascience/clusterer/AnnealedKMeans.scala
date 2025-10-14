@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 /**
  * Configuration for annealed (deterministic annealing) k-means clustering.
@@ -46,16 +45,15 @@ case class AnnealedKMeansConfig(
     stepsPerTemperature: Int = 5,
     maxTemperatures: Int = 20,
     convergenceThreshold: Double = 1e-4,
-    minMembership: Double = 1e-10) {
+    minMembership: Double = 1e-10) extends ConfigValidator {
 
-  require(initialBeta > 0.0, s"Initial beta must be positive, got: $initialBeta")
-  require(finalBeta > initialBeta, s"Final beta must be > initial beta, got: $finalBeta > $initialBeta")
-  require(annealingRate > 1.0, s"Annealing rate must be > 1.0, got: $annealingRate")
-  require(stepsPerTemperature > 0, s"Steps per temperature must be positive, got: $stepsPerTemperature")
-  require(maxTemperatures > 0, s"Max temperatures must be positive, got: $maxTemperatures")
-  require(convergenceThreshold > 0.0, s"Convergence threshold must be positive, got: $convergenceThreshold")
-  require(Seq("exponential", "linear").contains(annealingSchedule),
-    s"Invalid annealing schedule: $annealingSchedule")
+  requirePositive(initialBeta, "Initial beta")
+  requireGreaterThan(finalBeta, initialBeta, "Final beta")
+  requireGreaterThan(annealingRate, 1.0, "Annealing rate")
+  requirePositive(stepsPerTemperature, "Steps per temperature")
+  requirePositive(maxTemperatures, "Max temperatures")
+  requirePositive(convergenceThreshold, "Convergence threshold")
+  requireOneOf(annealingSchedule, Seq("exponential", "linear"), "Annealing schedule")
 }
 
 /**
@@ -89,9 +87,7 @@ case class AnnealedKMeansConfig(
  * @param config Configuration parameters
  */
 class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig())
-    extends MultiKMeansClusterer {
-
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with Logging {
 
   def cluster(
       maxIterations: Int,

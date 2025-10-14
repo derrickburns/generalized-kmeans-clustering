@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 /**
  * Configuration for online (sequential) k-means clustering.
@@ -35,12 +34,10 @@ import org.slf4j.LoggerFactory
  */
 case class OnlineKMeansConfig(
     learningRateDecay: String = "standard",
-    constantRate: Double = 0.01) {
+    constantRate: Double = 0.01) extends ConfigValidator {
 
-  require(constantRate > 0.0 && constantRate <= 1.0,
-    s"Constant rate must be in (0,1], got: $constantRate")
-  require(Seq("standard", "sqrt", "constant").contains(learningRateDecay),
-    s"Invalid learning rate decay: $learningRateDecay")
+  requireInRange(constantRate, 0.0, 1.0, "Constant rate")
+  requireOneOf(learningRateDecay, Seq("standard", "sqrt", "constant"), "Learning rate decay")
 }
 
 /**
@@ -70,9 +67,8 @@ case class OnlineKMeansConfig(
  *
  * @param config Configuration parameters
  */
-class OnlineKMeans(config: OnlineKMeansConfig = OnlineKMeansConfig()) extends MultiKMeansClusterer {
-
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+class OnlineKMeans(config: OnlineKMeansConfig = OnlineKMeansConfig())
+    extends MultiKMeansClusterer with Logging {
 
   def cluster(
       maxIterations: Int,

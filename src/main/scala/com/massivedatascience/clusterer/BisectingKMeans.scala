@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 /**
  * Configuration for bisecting k-means clustering.
@@ -33,12 +32,11 @@ import org.slf4j.LoggerFactory
 case class BisectingKMeansConfig(
     maxIterationsPerSplit: Int = 20,
     minClusterSize: Int = 2,
-    splitCriterion: String = "largest") {
+    splitCriterion: String = "largest") extends ConfigValidator {
 
-  require(maxIterationsPerSplit > 0, s"Max iterations must be positive, got: $maxIterationsPerSplit")
-  require(minClusterSize >= 2, s"Min cluster size must be >= 2, got: $minClusterSize")
-  require(Seq("largest", "highest_cost").contains(splitCriterion),
-    s"Invalid split criterion: $splitCriterion")
+  requirePositive(maxIterationsPerSplit, "Max iterations per split")
+  requireAtLeast(minClusterSize, 2, "Min cluster size")
+  requireOneOf(splitCriterion, Seq("largest", "highest_cost"), "Split criterion")
 }
 
 /**
@@ -72,9 +70,7 @@ case class BisectingKMeansConfig(
 class BisectingKMeans(
     config: BisectingKMeansConfig = BisectingKMeansConfig(),
     baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans())
-    extends MultiKMeansClusterer {
-
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with Logging {
 
   def cluster(
       maxIterations: Int,

@@ -19,7 +19,6 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 import scala.math.{log, Pi}
 
 /**
@@ -38,13 +37,12 @@ case class XMeansConfig(
     maxK: Int = 20,
     criterion: String = "bic",
     maxIterationsPerK: Int = 20,
-    improvementThreshold: Double = -1.0) {
+    improvementThreshold: Double = -1.0) extends ConfigValidator {
 
-  require(minK > 0, s"Min k must be positive, got: $minK")
-  require(maxK >= minK, s"Max k must be >= min k, got: $maxK < $minK")
-  require(Seq("bic", "aic").contains(criterion),
-    s"Invalid criterion: $criterion (must be 'bic' or 'aic')")
-  require(maxIterationsPerK > 0, s"Max iterations must be positive, got: $maxIterationsPerK")
+  requirePositive(minK, "Min k")
+  requireAtLeast(maxK, minK, "Max k")
+  requireOneOf(criterion, Seq("bic", "aic"), "Criterion")
+  requirePositive(maxIterationsPerK, "Max iterations per k")
 }
 
 /**
@@ -89,9 +87,7 @@ case class XMeansConfig(
 class XMeans(
     config: XMeansConfig = XMeansConfig(),
     baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans())
-    extends MultiKMeansClusterer {
-
-  @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
+    extends MultiKMeansClusterer with Logging {
 
   def cluster(
       maxIterations: Int,
