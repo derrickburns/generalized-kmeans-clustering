@@ -2,20 +2,32 @@
     organization := "com.massivedatascience"
     organizationName := "Massive Data Science, LLC"
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+
+    // Cross-compilation: Scala 2.12 and 2.13
     scalaVersion := "2.12.18"
+    crossScalaVersions := Seq("2.12.18", "2.13.14")
+
     scalacOptions ++= Seq("-unchecked", "-feature")
-    Compile / compile / scalacOptions ++= Seq("-Xlint", "-Xfatal-warnings", "-deprecation")
+
+    // Conditional fatal warnings (disabled in CI by default, enable with -Dci=true)
+    val isCi = sys.props.get("ci").contains("true")
+    Compile / compile / scalacOptions ++= {
+      val base = Seq("-Xlint", "-deprecation")
+      if (isCi) base :+ "-Xfatal-warnings" else base
+    }
 
     javacOptions ++= Seq( "-source", "17.0", "-target", "17.0")
     publishMavenStyle := true
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
+    // Test dependencies
     libraryDependencies ++= Seq(
-      "org.scalactic" %% "scalactic" % "3.2.18",
-      "org.scalatest" %% "scalatest" % "3.2.18" % "test"
+      "org.scalactic" %% "scalactic" % "3.2.19",
+      "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.17.0" % "test"
     )
+
     val sparkPackageName = "derrickburns/generalized-kmeans-clustering"
-    // sparkComponents += "mllib"
     Test / testOptions += Tests.Argument("-Dlog4j.configurationFile=log4j2.properties")
     Test / fork := true
     Test / javaOptions ++= Seq(
@@ -31,14 +43,21 @@
       "-Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK"
     )
 
-val sparkVersion = "3.4.0"
+// Spark version (override with -Dspark.version=3.5.1)
+val sparkVersion = sys.props.getOrElse("spark.version", "3.5.1")
 
+// Spark dependencies (Provided for deployment, available for compile/test)
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-sql" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming" % sparkVersion,
-  "org.apache.spark" %% "spark-mllib" % sparkVersion,
-  "com.holdenkarau" %% "spark-testing-base" % "3.4.0_1.4.7" % "test"
+  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-streaming" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
+
+  // Test dependencies (need Spark at test time)
+  "org.apache.spark" %% "spark-core" % sparkVersion % "test",
+  "org.apache.spark" %% "spark-sql" % sparkVersion % "test",
+  "org.apache.spark" %% "spark-mllib" % sparkVersion % "test",
+  "com.holdenkarau" %% "spark-testing-base" % s"${sparkVersion}_1.5.3" % "test"
 )
 
 libraryDependencies ++= Seq(

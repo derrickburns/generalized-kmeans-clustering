@@ -1,9 +1,17 @@
 Generalized K-Means Clustering
 =============================
 
-This project generalizes the Spark MLLIB Batch K-Means (v1.1.0) clusterer
-and the Spark MLLIB Streaming K-Means (v1.2.0) clusterer.   Most practical variants of
-K-means clustering are implemented or can be implemented with this package, including:
+> **🆕 New DataFrame API Available!** Version 0.6.0 introduces a modern DataFrame-native API with Spark ML integration. See [DataFrame API Examples](DATAFRAME_API_EXAMPLES.md) for the new recommended approach.
+
+This project generalizes the Spark MLLIB K-Means clusterer to support multiple Bregman divergences and advanced clustering variants. It provides both a legacy RDD-based API and a new DataFrame API with full Spark ML Pipeline integration.
+
+**Key Features:**
+* **DataFrame API (Recommended):** Native Spark ML Estimator/Model pattern with 5 Bregman divergences
+* **Multiple Distance Functions:** Squared Euclidean, KL Divergence, Itakura-Saito, Generalized I, Logistic Loss
+* **Advanced Variants:** Bisecting K-Means, X-means, Constrained K-Means, Soft K-Means, Online/Streaming K-Means
+* **Production Ready:** Tested on datasets with tens of millions of points in 700+ dimensional spaces
+
+Most practical variants of K-means clustering are implemented or can be implemented with this package, including:
 
 * [clustering using general distance functions (Bregman divergences)](http://www.cs.utexas.edu/users/inderjit/public_papers/bregmanclustering_jmlr.pdf)
 * [clustering large numbers of points using mini-batches](https://arxiv.org/abs/1108.1351)
@@ -25,6 +33,8 @@ Table of Contents
 =================
 
 * [Generalized K-Means Clustering](#generalized-k-means-clustering)
+    * [Quick Start (DataFrame API)](#quick-start-dataframe-api)
+    * [Quick Start (Legacy RDD API)](#quick-start-legacy-rdd-api)
     * [Getting Started](#getting-started)
     * [Introduction](#introduction)
       * [Bregman Divergences](#bregman-divergences)
@@ -47,10 +57,69 @@ Table of Contents
       * [Cluster Backfilling](#cluster-backfilling)
 
 
+### Quick Start (DataFrame API)
+
+**Recommended for new projects.** The DataFrame API provides a modern, type-safe interface with full Spark ML integration.
+
+```scala
+import com.massivedatascience.clusterer.ml.GeneralizedKMeans
+import org.apache.spark.ml.linalg.Vectors
+
+// Create training data
+val data = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.0, 0.0)),
+  Tuple1(Vectors.dense(1.0, 1.0)),
+  Tuple1(Vectors.dense(9.0, 8.0)),
+  Tuple1(Vectors.dense(8.0, 9.0))
+)).toDF("features")
+
+// Train model with KL Divergence
+val kmeans = new GeneralizedKMeans()
+  .setK(2)
+  .setDivergence("kl")  // or "squaredEuclidean", "itakuraSaito", etc.
+  .setMaxIter(20)
+
+val model = kmeans.fit(data)
+val predictions = model.transform(data)
+predictions.show()
+```
+
+**See [DataFrame API Examples](DATAFRAME_API_EXAMPLES.md) for complete documentation.**
+
+### Quick Start (Legacy RDD API)
+
+**For existing projects.** The RDD API remains fully supported for backward compatibility.
+
+```scala
+import com.massivedatascience.clusterer.KMeans
+import org.apache.spark.mllib.linalg.Vectors
+
+val data = sc.parallelize(Array(
+  Vectors.dense(0.0, 0.0),
+  Vectors.dense(1.0, 1.0),
+  Vectors.dense(9.0, 8.0),
+  Vectors.dense(8.0, 9.0)
+))
+
+val model = KMeans.train(
+  data,
+  runs = 1,
+  k = 2,
+  maxIterations = 20
+)
+```
+
 ### Getting Started
 
-The massivedatascience-clusterer project is built for Spark 3.4, Scala 2.12, and Java 17.
+The massivedatascience-clusterer project is built for:
+- **Spark 3.5.1** (overridable via `-Dspark.version`)
+- **Scala 2.12.18 / 2.13.14** (cross-compiled)
+- **Java 17**
 
+**Dependencies:**
+```scala
+libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.6.0"
+```
 
 ### Introduction
 
