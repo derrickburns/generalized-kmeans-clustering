@@ -51,6 +51,17 @@ object MultiKMeansClusterer {
   val CORESET_FAST = "CORESET_FAST"
   val CORESET_HIGH_QUALITY = "CORESET_HIGH_QUALITY"
 
+  // Online (sequential) clusterers
+  val ONLINE = "ONLINE"
+  val ONLINE_FAST = "ONLINE_FAST"
+  val ONLINE_CONSERVATIVE = "ONLINE_CONSERVATIVE"
+
+  // Annealed (deterministic annealing) clusterers
+  val ANNEALED = "ANNEALED"
+  val ANNEALED_FAST = "ANNEALED_FAST"
+  val ANNEALED_HIGH_QUALITY = "ANNEALED_HIGH_QUALITY"
+  val ANNEALED_ROBUST = "ANNEALED_ROBUST"
+
   case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
@@ -66,6 +77,17 @@ object MultiKMeansClusterer {
       case CORESET => CoresetKMeans(CoresetKMeans.defaultConfig)
       case CORESET_FAST => CoresetKMeans.fast()
       case CORESET_HIGH_QUALITY => CoresetKMeans.highQuality()
+
+      // Online variants
+      case ONLINE => OnlineKMeans()
+      case ONLINE_FAST => OnlineKMeans.fast()
+      case ONLINE_CONSERVATIVE => OnlineKMeans.conservative()
+
+      // Annealed variants
+      case ANNEALED => AnnealedKMeans()
+      case ANNEALED_FAST => AnnealedKMeans.fast()
+      case ANNEALED_HIGH_QUALITY => AnnealedKMeans.highQuality()
+      case ANNEALED_ROBUST => AnnealedKMeans.robustInit()
 
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")
     }
