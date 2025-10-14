@@ -25,7 +25,6 @@ import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.rdd.RDD
-import org.slf4j.LoggerFactory
 
 import scala.reflect.ClassTag
 
@@ -119,9 +118,7 @@ trait KMeansPredictor {
  * @param centers cluster centers
  */
 case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCenter])
-    extends KMeansPredictor with Serializable {
-
-  private val logger = LoggerFactory.getLogger(getClass.getName)
+    extends KMeansPredictor with Serializable with Logging {
 
   // Filter out invalid centers (zero/near-zero weight or non-finite coordinates)
   override lazy val validCenters: IndexedSeq[BregmanCenter] = {
@@ -151,9 +148,7 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
   lazy val weightedClusterCenters: IndexedSeq[WeightedVector] = centers.map(pointOps.toPoint)
 }
 
-object KMeansModel {
-
-  private val logger = LoggerFactory.getLogger(getClass.getName)
+object KMeansModel extends Logging {
 
   /**
    * Create a K-means model from given cluster centers and weights

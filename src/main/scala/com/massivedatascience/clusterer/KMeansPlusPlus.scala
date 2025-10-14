@@ -25,8 +25,6 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
-import org.slf4j.LoggerFactory
-
 
 /**
  * This implements the
@@ -34,7 +32,7 @@ import org.slf4j.LoggerFactory
  *
  * @param ops distance function
  */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /**
    * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
@@ -51,8 +49,6 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable {
    * @param numPreselected the number of pre-selected centers
    * @return   an array of at most k cluster centers
    */
-
-  val logger = LoggerFactory.getLogger(getClass.getName)
 
   /**
    * Select high-quality initial centers using the K-Means++ algorithm with improved numerical stability.

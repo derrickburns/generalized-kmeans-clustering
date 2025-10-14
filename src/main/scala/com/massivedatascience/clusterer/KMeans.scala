@@ -25,12 +25,10 @@ import com.massivedatascience.util.SparkHelper
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-import org.slf4j.LoggerFactory
-
 /**
  * A helper object that creates K-Means Models using the underlying classes in this package.
  */
-object KMeans extends SparkHelper {
+object KMeans extends SparkHelper with Logging {
 
   private val defaultMaxIterations = 20
   private val defaultNumRuns = 1
@@ -46,8 +44,6 @@ object KMeans extends SparkHelper {
     override def toString: String =
       s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
-
-  val logger = LoggerFactory.getLogger(getClass.getName)
 
 
   /**
