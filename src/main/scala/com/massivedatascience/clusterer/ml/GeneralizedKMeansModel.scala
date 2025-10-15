@@ -28,7 +28,7 @@ import org.apache.spark.sql.types.StructType
   *   val cluster = model.predict(featureVector)
   *
   *   // Access cluster information
-  *   println(s"Found ${model.numClusters} clusters")
+  *   println(s"Found \${model.numClusters} clusters")
   *   model.clusterCentersAsVectors.foreach(println)
   * }}}
   *
@@ -259,7 +259,7 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
 
       // Save cluster centers as Parquet
       val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
-      val centersDF = sc
+      val centersDF = spark.sparkContext
         .parallelize(instance.clusterCenters.zipWithIndex)
         .map { case (center, idx) =>
           (idx, Vectors.dense(center))
