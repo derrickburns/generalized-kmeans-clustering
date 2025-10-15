@@ -10,8 +10,9 @@ The DataFrame API is built around a **single source of truth** design: the `Lloy
 2. [Architecture Diagram](#architecture-diagram)
 3. [Component Details](#component-details)
 4. [Design Patterns](#design-patterns)
-5. [Extension Points](#extension-points)
-6. [Performance Considerations](#performance-considerations)
+5. [Hierarchical Clustering: Bisecting K-Means](#hierarchical-clustering-bisecting-k-means)
+6. [Extension Points](#extension-points)
+7. [Performance Considerations](#performance-considerations)
 
 ---
 
@@ -370,6 +371,203 @@ case class LloydsConfig(
 - Easy to test (inject mocks)
 - Easy to extend (add new strategies)
 - Clear dependencies
+
+---
+
+## Hierarchical Clustering: Bisecting K-Means
+
+While `GeneralizedKMeans` uses the Lloyd's algorithm with pluggable strategies, `BisectingKMeans` implements a hierarchical divisive clustering approach that offers different tradeoffs and use cases.
+
+### Algorithm Overview
+
+Bisecting K-Means is a **top-down hierarchical** algorithm:
+
+1. **Start**: All points begin in a single cluster
+2. **Select**: Choose the largest cluster to split
+3. **Split**: Use k=2 clustering to divide the selected cluster
+4. **Repeat**: Continue until reaching the target k clusters
+
+This contrasts with Lloyd's algorithm, which assigns all points to k clusters simultaneously.
+
+### Architecture
+
+```
+BisectingKMeans (Estimator)
+    ├─ fit(DataFrame) → GeneralizedKMeansModel
+    │   ├─ bisect(): Main loop
+    │   │   ├─ Find largest cluster
+    │   │   ├─ splitCluster(): k=2 Lloyd's
+    │   │   │   ├─ AssignmentStrategy (reused)
+    │   │   │   └─ UpdateStrategy (reused)
+    │   │   └─ Reassign points
+    │   └─ Return cluster centers
+    └─ Parameters:
+        ├─ k: Target number of clusters
+        ├─ minDivisibleClusterSize: Minimum size to split
+        ├─ divergence: Same as GeneralizedKMeans
+        └─ All Lloyd's parameters (maxIter, tol, etc.)
+```
+
+### Key Design Decisions
+
+#### 1. Reusing Strategies
+
+**Decision**: Reuse `AssignmentStrategy` and `UpdateStrategy` from the Lloyd's iterator for the k=2 splits.
+
+**Benefits**:
+- Code reuse and consistency
+- All divergences automatically supported
+- Performance optimizations (SE cross-join) work immediately
+- Easier to maintain and test
+
+**Implementation**:
+```scala
+private def splitCluster(
+  clusterData: DataFrame,
+  featuresCol: String,
+  weightCol: Option[String],
+  kernel: BregmanKernel
+): (Array[Double], Array[Double]) = {
+
+  // Drop "cluster" column to avoid conflicts
+  val cleanData = clusterData.drop("cluster")
+
+  // Run k=2 Lloyd's using existing strategies
+  val assigner = createAssignmentStrategy("auto")
+  val updater = createUpdateStrategy(divergence)
+
+  var centers = initializeTwoCenters(cleanData)
+  for (_ <- 0 until maxIter) {
+    val assigned = assigner.assign(cleanData, featuresCol, weightCol, centers, kernel)
+    centers = updater.update(assigned, featuresCol, weightCol, 2, kernel)
+  }
+
+  (centers(0), centers(1))
+}
+```
+
+#### 2. DataFrame Column Management
+
+**Challenge**: Avoiding duplicate "cluster" columns when reassigning points.
+
+**Solution**:
+- Drop the "cluster" column before passing to `splitCluster`
+- Use `withColumn("cluster_new", ...)` → `drop("cluster")` → `rename("cluster_new", "cluster")`
+- This ensures clean DataFrame schema throughout
+
+```scala
+// Update cluster assignments
+val oldClusteredDF = clusteredDF
+val oldClusterCol = oldClusteredDF("cluster")  // Capture before dropping
+clusteredDF = oldClusteredDF
+  .withColumn("cluster_new", assignUDF(col(featuresCol), oldClusterCol))
+  .drop("cluster")
+  .withColumnRenamed("cluster_new", "cluster")
+```
+
+#### 3. Shared Model Output
+
+**Decision**: Both `GeneralizedKMeans` and `BisectingKMeans` return `GeneralizedKMeansModel`.
+
+**Benefits**:
+- Users can use the same model API regardless of training method
+- Prediction, transformation, and cost computation work identically
+- Easy to compare algorithms (same evaluation metrics)
+- No code duplication for model operations
+
+**Tradeoff**: Hierarchical structure information is lost (only final flat clustering is returned)
+
+### Parameters
+
+| Parameter | Default | Purpose |
+|-----------|---------|---------|
+| `k` | 2 | Target number of clusters (must be > 1) |
+| `minDivisibleClusterSize` | 1 | Minimum cluster size to allow splitting |
+| `divergence` | "squaredEuclidean" | Same as GeneralizedKMeans |
+| `maxIter` | 20 | Iterations per split (not total iterations) |
+| `tol` | 1e-4 | Convergence tolerance per split |
+| `seed` | Random | Random seed for initialization |
+
+**Key difference**: `maxIter` controls iterations *per k=2 split*, not total clustering iterations.
+
+### When to Use Bisecting vs Standard K-Means
+
+| Aspect | Bisecting K-Means | Standard K-Means (Lloyd's) |
+|--------|-------------------|----------------------------|
+| **Initialization sensitivity** | Low (hierarchical structure) | High (depends on random init) |
+| **Determinism** | More deterministic | Less deterministic |
+| **Imbalanced clusters** | Handles well | May struggle |
+| **Large k** | Faster (local splits) | Slower (global assignment) |
+| **Very large data** | Similar | Similar (with optimizations) |
+| **Streaming/mini-batch** | Not applicable | Well-suited |
+| **Hierarchical structure** | Implicit (not exposed) | None |
+
+### Data Flow Example
+
+**Input**: 12 points, k=3
+
+**Step 1**: Initial state
+```
+Cluster 0: [all 12 points]
+```
+
+**Step 2**: Split cluster 0 into 0 and 1
+```
+k=2 clustering on all points:
+Cluster 0: [points 0-5]    (size=6)
+Cluster 1: [points 6-11]   (size=6)
+```
+
+**Step 3**: Split largest cluster (0) into 0 and 2
+```
+k=2 clustering on cluster 0's points:
+Cluster 0: [points 0-2]    (size=3)
+Cluster 2: [points 3-5]    (size=3)
+Cluster 1: [unchanged]     (size=6)
+```
+
+**Output**: 3 clusters with centers computed by the update strategy
+
+### Performance Characteristics
+
+**Time Complexity**:
+- Worst case: O(k * maxIter * n * d)
+- Often faster than Lloyd's for large k because:
+  - Each split only processes subset of points
+  - Fewer global reassignments
+
+**Space Complexity**:
+- O(n * d) for data (cached)
+- O(k * d) for centers
+- Temporary O(subset_size) for each split
+
+**Optimization Opportunities**:
+- **Caching**: The main DataFrame is cached for repeated splits
+- **SE optimization**: Reuses `SECrossJoinAssignment` when applicable
+- **Early stopping**: `minDivisibleClusterSize` prevents unnecessary splits
+
+### Testing Strategy
+
+The `BisectingKMeansSuite` validates:
+
+1. **Correctness**: Produces valid k clusters
+2. **Divergence support**: Works with all Bregman divergences
+3. **Parameter handling**: `minDivisibleClusterSize` prevents small splits
+4. **Determinism**: More stable than random initialization
+5. **Weighted data**: Respects weight column
+6. **Hierarchical structure**: Splits follow expected pattern
+7. **Edge cases**: k=2, single points, etc.
+
+### Future Enhancements
+
+Potential improvements (not yet implemented):
+
+1. **Expose hierarchy**: Return dendrogram structure
+2. **Split selection strategies**: Beyond "largest cluster"
+   - Highest variance
+   - Custom user function
+3. **Parallel splits**: Split multiple clusters simultaneously
+4. **Incremental updates**: Add new data to existing hierarchy
 
 ---
 
