@@ -25,7 +25,6 @@ import org.apache.spark.rdd.RDD
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
-import scala.math.Infinity
 
 object ColumnTrackingKMeans {
 
@@ -40,8 +39,11 @@ object ColumnTrackingKMeans {
   }
 
   private[clusterer] val noCluster: Int = -1
+
+  private[clusterer] val PosInf: Double = Double.PositiveInfinity
+
   private[clusterer] val unassigned: Assignment =
-    Assignment(Infinity, noCluster, -2)
+    Assignment(PosInf, noCluster, -2)
 
   private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
     def isAssigned: Boolean = cluster != noCluster
@@ -333,7 +335,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       else lloyds(round + 2, newAssignments, backFilled)
     }
 
-    val emptyAssign = ColumnTrackingKMeans.Assignment(Infinity, ColumnTrackingKMeans.noCluster, -2)
+    val emptyAssign = ColumnTrackingKMeans.Assignment(ColumnTrackingKMeans.PosInf, ColumnTrackingKMeans.noCluster, -2)
     withCached("empty assignments", points.map(_ => emptyAssign)) { empty =>
       centerArrays.map { initialCenters =>
         val centers = initialCenters.zipWithIndex.map { case (c, i) =>
