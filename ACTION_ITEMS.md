@@ -84,6 +84,21 @@
 - foreachBatch integration with Structured Streaming
 - Mutable state management
 
+### K-Medoids (PAM/CLARA) - COMPLETED October 2025 ✅
+- [x] Implement PAM (Partitioning Around Medoids) algorithm
+- [x] Implement CLARA for large datasets
+- [x] Add support for custom distance functions (Euclidean, Manhattan, Cosine)
+- [x] Create comprehensive test suite (26/26 tests passing)
+- [x] Add examples and documentation (306 lines)
+
+**Deliverables**:
+- Robust clustering using actual data points as medoids
+- More resistant to outliers than K-Means
+- CLARA sampling-based variant for datasets > 10,000 points
+- Auto sample sizing (40 + 2*k)
+- Model persistence (save/load)
+- Performance tuning guidelines
+
 ### Python Wrapper (October 2025)
 - [x] Create PySpark wrapper for GeneralizedKMeans
 - [x] Add smoke test for CI workflow
@@ -199,25 +214,36 @@ Bring RDD-based advanced algorithms to DataFrame API:
 - `src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala` ✓
 - `src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala` ✓
 
-### 3. K-Medoids (PAM/CLARA)
-**Effort**: 3-4 weeks
+### 3. K-Medoids (PAM/CLARA) - COMPLETED October 2025 ✅
+**Effort**: 3-4 weeks (COMPLETED)
 **Impact**: High (industry standard algorithm)
 
-- [ ] Implement PAM (Partitioning Around Medoids) algorithm
-- [ ] Implement CLARA for large datasets (sampling-based PAM)
-- [ ] Add support for custom distance functions
-- [ ] Create comprehensive tests
-- [ ] Add to DataFrame API
+- [x] Implement PAM (Partitioning Around Medoids) algorithm
+- [x] Implement CLARA for large datasets (sampling-based PAM)
+- [x] Add support for custom distance functions
+- [x] Create comprehensive tests
+- [x] Add to DataFrame API
+- [x] Add examples and documentation
 
-**Benefits**:
-- More robust than K-Means
-- Works with arbitrary distance functions
-- Industry standard for non-Euclidean spaces
+**Deliverables**:
+- Full PAM implementation with BUILD and SWAP phases
+- CLARA sampling-based variant for large datasets
+- Multiple distance functions (Euclidean, Manhattan, Cosine)
+- 26/26 tests passing (16 PAM + 10 CLARA)
+- 306 lines of comprehensive examples
+- Model persistence (save/load)
 
-**Files to create**:
-- `src/main/scala/com/massivedatascience/clusterer/KMedoids.scala` (RDD-based)
-- `src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala` (DataFrame)
-- `src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala`
+**Features delivered**:
+- Robust clustering using actual data points as medoids
+- More resistant to outliers than K-Means
+- Works with arbitrary distance metrics
+- Auto sample sizing for CLARA (40 + 2*k)
+- Performance tuning guidelines
+- Time complexity: PAM O(k(n-k)²), CLARA O(numSamples × k(s-k)²)
+
+**Files created**:
+- `src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala` ✓ (740 lines)
+- `src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala` ✓ (776 lines)
 
 ---
 
@@ -371,18 +397,20 @@ Bring RDD-based advanced algorithms to DataFrame API:
 
 ## 📦 Release Planning
 
-### Version 0.6.0 (Current - In Progress)
+### Version 0.6.0 (Current - COMPLETED October 2025)
 - ✅ Scala 2.13 migration
 - ✅ K-Medians implementation
 - ✅ Python wrapper
-- ✅ Bisecting K-Means (DataFrame) - COMPLETED
-- ✅ X-Means (DataFrame) - COMPLETED
+- ✅ Bisecting K-Means (DataFrame)
+- ✅ X-Means (DataFrame)
+- ✅ Soft K-Means (DataFrame)
+- ✅ Streaming K-Means (DataFrame)
+- ✅ K-Medoids (PAM/CLARA)
 
 ### Version 0.7.0 (Q1 2026)
-- DataFrame Soft K-Means
-- DataFrame Streaming K-Means
-- K-Medoids (PAM/CLARA)
 - Enhanced testing suite
+- Performance benchmarking
+- Documentation improvements
 
 ### Version 0.8.0 (Q2 2026)
 - Elkan's acceleration
