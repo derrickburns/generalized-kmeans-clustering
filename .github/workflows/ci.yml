@@ -14,12 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         java-version: [11, 17]
-        scala-version: ['2.12', '2.13']
+        scala-version: ['2.12.18', '2.13.13']   # <-- pin exact versions
         spark-version: ['3.4.0', '3.5.1']
         exclude:
-          # Spark 3.4.0 doesn't support Scala 2.13 well
-          - scala-version: '2.13'
-            spark-version: '3.4.0'
+          - scala-version: '2.13.13'
+            spark-version: '3.4.0'  # keep your exclusion logic
 
     name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
 
@@ -33,9 +32,14 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
 
-      # ✅ Install sbt (fixes "sbt: command not found")
       - name: Set up sbt
         uses: sbt/setup-sbt@v1
+
+      # 🔧 Remove IDE artifacts that pull semanticdb (breaks on 2.13.14)
+      - name: Clean editor files
+        run: |
+          rm -f project/metals.sbt
+          rm -rf .metals .bloop
 
       - name: Cache SBT/Coursier/Ivy
         uses: actions/cache@v4
@@ -51,27 +55,27 @@ jobs:
             ${{ runner.os }}-sbt-
 
       - name: Compile
-        run: sbt ++${{ matrix.scala-version }}.* compile
+        run: sbt ++${{ matrix.scala-version }} clean compile
         env:
           SPARK_VERSION: ${{ matrix.spark-version }}
 
       - name: Run tests
-        run: sbt ++${{ matrix.scala-version }}.* test
+        run: sbt ++${{ matrix.scala-version }} test
         env:
           SPARK_VERSION: ${{ matrix.spark-version }}
 
       - name: Check code style
-        if: matrix.scala-version == '2.12' && matrix.java-version == 17
-        run: sbt ++${{ matrix.scala-version }}.* scalastyle
+        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17
+        run: sbt ++${{ matrix.scala-version }} scalastyle
 
       - name: Generate test coverage report
-        if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
-        run: sbt ++${{ matrix.scala-version }}.* coverage test coverageReport
+        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+        run: sbt ++${{ matrix.scala-version }} coverage test coverageReport
         env:
           SPARK_VERSION: ${{ matrix.spark-version }}
 
       - name: Upload coverage reports to Codecov
-        if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
         uses: codecov/codecov-action@v4
         with:
           file: ./target/scala-2.12/scoverage-report/scoverage.xml
