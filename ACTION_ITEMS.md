@@ -52,6 +52,21 @@
 - Eliminates need to specify k in advance
 - Production-ready with full test coverage
 
+### Soft K-Means (DataFrame API) - COMPLETED October 2025 ✅
+- [x] Port Soft K-Means to DataFrame API
+- [x] Implement probabilistic assignments (Boltzmann distribution)
+- [x] Add mixture model estimation capabilities
+- [x] Create comprehensive test suite (15/15 tests passing)
+- [x] Support all Bregman divergences
+- [x] Weighted data support
+
+**Deliverables**:
+- Fuzzy clustering with soft probabilistic memberships
+- Beta parameter for controlling assignment sharpness
+- effectiveNumberOfClusters() metric (entropy-based)
+- Hard and soft cost computation
+- Model persistence (save/load)
+
 ### Python Wrapper (October 2025)
 - [x] Create PySpark wrapper for GeneralizedKMeans
 - [x] Add smoke test for CI workflow
@@ -115,20 +130,29 @@ Bring RDD-based advanced algorithms to DataFrame API:
 - `src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala` ✓
 - `src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala` ✓
 
-#### Soft K-Means (Mixture Models)
-- [ ] Port Soft K-Means to DataFrame API
-- [ ] Implement probabilistic assignments
-- [ ] Add mixture model estimation
-- [ ] Create tests and examples
+#### Soft K-Means (Mixture Models) ✅
+- [x] Port Soft K-Means to DataFrame API
+- [x] Implement probabilistic assignments
+- [x] Add mixture model estimation
+- [x] Create tests and examples
 
-**Benefits**:
-- Fuzzy clustering (points belong to multiple clusters)
-- Better modeling of overlapping clusters
-- Useful for mixture model estimation
+**Status**: COMPLETED (October 2025)
+- Full DataFrame implementation (689 lines)
+- Probabilistic cluster memberships using Boltzmann distribution
+- All 15 tests passing
+- Beta parameter for controlling assignment sharpness
 
-**Files to create**:
-- `src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala`
-- `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala`
+**Features delivered**:
+- Fuzzy clustering with soft assignments
+- Support for all Bregman divergences
+- Weighted data handling
+- effectiveNumberOfClusters() metric
+- Hard and soft cost computation
+- Model persistence
+
+**Files created**:
+- `src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala` ✓
+- `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala` ✓
 
 #### Streaming K-Means
 - [ ] Integrate with Structured Streaming
