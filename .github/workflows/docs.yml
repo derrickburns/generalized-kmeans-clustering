@@ -15,9 +15,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  generate-docs:
+  # This single job now builds AND deploys
+  deploy:
     runs-on: ubuntu-latest
-    name: Generate Unidoc
+    name: Generate and Deploy API Docs
+
+    # This 'environment' block is the main fix for your error.
+    # It tells GitHub Actions that this job is intended to deploy to Pages.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,16 +36,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # This is the critical missing step that installs sbt
       - name: Set up sbt
         uses: sbt/setup-sbt@v1
 
       - name: Generate Unidoc
         run: sbt unidoc
 
+      # The 'unidoc' command generates files in 'target/scala-*/unidoc'.
+      # This step moves them into an 'api' subdirectory to match your redirect.
+      - name: Organize documentation files
+        run: |
+          mkdir -p docs/api
+          mv target/scala-*/unidoc/* docs/api/
+          
       - name: Create index redirect
         run: |
-          mkdir -p docs
           cat > docs/index.html <<'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -52,14 +65,18 @@ jobs:
           </html>
           EOF
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      # This is no longer needed in the latest versions of the deploy-pages action
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          # Upload the entire 'docs' directory which now contains
+          # both the redirect and the 'api' subdirectory
           path: 'docs'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
