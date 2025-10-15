@@ -46,7 +46,7 @@ object ColumnTrackingKMeans {
     Assignment(PosInf, noCluster, -2)
 
   private[clusterer] case class Assignment(distance: Double, cluster: Int, round: Int) {
-    def isAssigned: Boolean = cluster != noCluster
+    def isAssigned: Boolean   = cluster != noCluster
     def isUnassigned: Boolean = cluster == noCluster
   }
 
@@ -59,7 +59,7 @@ object ColumnTrackingKMeans {
     initialAssignment: Assignment = unassigned
   ): Assignment = {
     var bestDistance = initialAssignment.distance
-    var bestCluster = initialAssignment.cluster
+    var bestCluster  = initialAssignment.cluster
 
     centers.foreach { c =>
       val dist = pointOps.distance(point, c.center)
@@ -80,7 +80,8 @@ object ColumnTrackingKMeans {
     centers: Seq[CenterWithHistory]
   ): Assignment = {
 
-    val nonStationary = centers.filter(c => c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
+    val nonStationary =
+      centers.filter(c => c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
     val stationary = centers.filter(c => !c.movedSince(assignment.round) && c.center.weight > pointOps.weightThreshold)
 
     val bestNonStationary = bestAssignment(pointOps, round, point, nonStationary)
@@ -109,8 +110,8 @@ object ColumnTrackingKMeans {
 
     require(previousAssignments.getStorageLevel.useMemory, "previousAssignments must be cached in memory")
 
-    val centers = bcCenters.value
-    val r = round
+    val centers  = bcCenters.value
+    val r        = round
     val pointOps = ops
 
     points.zip(previousAssignments).mapPartitionsWithIndex { (index, iter) =>
@@ -161,24 +162,27 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
               None
             } else {
               val strongIndices = strongClusters.map(_.index).toSet
-              val pointsInStrong = points.zipPartitions(assignments) { (pts, assigns) =>
-                val buf = new ArrayBuffer[(Int, BregmanPoint)]()
-                while (pts.hasNext && assigns.hasNext) {
-                  val p = pts.next()
-                  val a = assigns.next()
-                  if (strongIndices.contains(a.cluster)) buf += ((a.cluster, p))
+              val pointsInStrong = points
+                .zipPartitions(assignments) { (pts, assigns) =>
+                  val buf = new ArrayBuffer[(Int, BregmanPoint)]()
+                  while (pts.hasNext && assigns.hasNext) {
+                    val p = pts.next()
+                    val a = assigns.next()
+                    if (strongIndices.contains(a.cluster)) buf += ((a.cluster, p))
+                  }
+                  buf.iterator
                 }
-                buf.iterator
-              }.filter(_._1 >= 0).map { case (k, v) => (k, v) }
+                .filter(_._1 >= 0)
+                .map { case (k, v) => (k, v) }
 
               if (pointsInStrong.isEmpty()) {
                 logger.warn("No points in strong clusters available for backfilling")
                 None
               } else {
                 try {
-                  val rand = new XORShiftRandom(round)
+                  val rand       = new XORShiftRandom(round)
                   val sampleSize = math.min(weakClusters.length, pointsInStrong.count().toInt)
-                  val sample = pointsInStrong.takeSample(withReplacement = false, sampleSize, rand.nextLong())
+                  val sample     = pointsInStrong.takeSample(withReplacement = false, sampleSize, rand.nextLong())
 
                   val reps = sample.zipWithIndex.collect {
                     case ((_, pt), i) if i < weakClusters.length =>
@@ -218,15 +222,17 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
   ): Array[CenterWithHistory] = {
     val centers = previousCenters.toArray
     if (config.addOnly) {
-      val results = completeMovedCentroids(points, pointOps, currentAssignments, previousAssignments, previousCenters.length)
+      val results =
+        completeMovedCentroids(points, pointOps, currentAssignments, previousAssignments, previousCenters.length)
       results.foreach { case (index, location) =>
         centers(index) = CenterWithHistory(index, round, pointOps.toCenter(location.asImmutable), initialized = true)
       }
     } else {
-      val deltas = deltasOfMovedCentroids(points, pointOps, currentAssignments, previousAssignments, previousCenters.length)
+      val deltas =
+        deltasOfMovedCentroids(points, pointOps, currentAssignments, previousAssignments, previousCenters.length)
       deltas.foreach { case (index, delta) =>
         val prev = previousCenters(index)
-        val loc = if (prev.initialized) delta.add(pointOps.toPoint(prev.center)) else delta
+        val loc  = if (prev.initialized) delta.add(pointOps.toPoint(prev.center)) else delta
         centers(index) = CenterWithHistory(index, round, pointOps.toCenter(loc.asImmutable), initialized = true)
       }
     }
@@ -246,35 +252,38 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
 
     implicit val sc = points.sparkContext
     withBroadcast(ops) { bcPointOps =>
-      points.zipPartitions(assignments, previousAssignments) { (x, y, z) =>
-        val pointOps = bcPointOps.value
-        val centroids = Array.tabulate(numCenters)(pointOps.make)
-        val changed = new Array[Boolean](numCenters)
-        val buf = ArrayBuffer[Int]()
+      points
+        .zipPartitions(assignments, previousAssignments) { (x, y, z) =>
+          val pointOps  = bcPointOps.value
+          val centroids = Array.tabulate(numCenters)(pointOps.make)
+          val changed   = new Array[Boolean](numCenters)
+          val buf       = ArrayBuffer[Int]()
 
-        while (x.hasNext && y.hasNext && z.hasNext) {
-          val p = x.next()
-          val curr = y.next()
-          val prev = z.next()
-          val idx = curr.cluster
-          if (idx >= 0) centroids(idx).add(p)
-          if (curr.cluster != prev.cluster) {
-            if (prev.cluster >= 0 && !changed(prev.cluster)) {
-              changed(prev.cluster) = true; buf += prev.cluster
-            }
-            if (curr.cluster >= 0 && !changed(curr.cluster)) {
-              changed(curr.cluster) = true; buf += curr.cluster
+          while (x.hasNext && y.hasNext && z.hasNext) {
+            val p    = x.next()
+            val curr = y.next()
+            val prev = z.next()
+            val idx  = curr.cluster
+            if (idx >= 0) centroids(idx).add(p)
+            if (curr.cluster != prev.cluster) {
+              if (prev.cluster >= 0 && !changed(prev.cluster)) {
+                changed(prev.cluster) = true; buf += prev.cluster
+              }
+              if (curr.cluster >= 0 && !changed(curr.cluster)) {
+                changed(curr.cluster) = true; buf += curr.cluster
+              }
             }
           }
+          buf.distinct.map(i => (i, centroids(i))).iterator
         }
-        buf.distinct.map(i => (i, centroids(i))).iterator
-      }.combineByKey(
-        (x: MutableWeightedVector) => x,
-        (_: MutableWeightedVector).add(_: MutableWeightedVector),
-        (_: MutableWeightedVector).add(_: MutableWeightedVector),
-        defaultPartitioner(points),
-        mapSideCombine = false
-      ).collect()
+        .combineByKey(
+          (x: MutableWeightedVector) => x,
+          (_: MutableWeightedVector).add(_: MutableWeightedVector),
+          (_: MutableWeightedVector).add(_: MutableWeightedVector),
+          defaultPartitioner(points),
+          mapSideCombine = false
+        )
+        .collect()
     }
   }
 
@@ -290,19 +299,22 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     require(assignments.getStorageLevel.useMemory)
     require(previousAssignments.getStorageLevel.useMemory)
 
-    points.zipPartitions(assignments, previousAssignments) { (x, y, z) =>
-      val centroids = IndexedSeq.tabulate(numCenters)(pointOps.make)
-      while (x.hasNext && y.hasNext && z.hasNext) {
-        val p = x.next()
-        val curr = y.next()
-        val prev = z.next()
-        if (curr != prev) {
-          if (prev.cluster >= 0) centroids(prev.cluster).sub(p)
-          if (curr.cluster >= 0) centroids(curr.cluster).add(p)
+    points
+      .zipPartitions(assignments, previousAssignments) { (x, y, z) =>
+        val centroids = IndexedSeq.tabulate(numCenters)(pointOps.make)
+        while (x.hasNext && y.hasNext && z.hasNext) {
+          val p    = x.next()
+          val curr = y.next()
+          val prev = z.next()
+          if (curr != prev) {
+            if (prev.cluster >= 0) centroids(prev.cluster).sub(p)
+            if (curr.cluster >= 0) centroids(curr.cluster).add(p)
+          }
         }
+        centroids.filter(_.nonEmpty).map(v => (v.index, v)).iterator
       }
-      centroids.filter(_.nonEmpty).map(v => (v.index, v)).iterator
-    }.reduceByKey(_.add(_)).collect()
+      .reduceByKey(_.add(_))
+      .collect()
   }
 
   /** Run full KMeans iterations and return clusterings with distortion. */
@@ -314,7 +326,7 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
   ): Seq[ClusteringWithDistortion] = {
     require(points.getStorageLevel.useMemory)
     implicit val sc = points.sparkContext
-    val detector = new ConvergenceDetector(sc)
+    val detector    = new ConvergenceDetector(sc)
 
     @tailrec
     def lloyds(
@@ -323,8 +335,10 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
       centers: IndexedSeq[CenterWithHistory]
     ): (RDD[ColumnTrackingKMeans.Assignment], IndexedSeq[CenterWithHistory]) = {
       val newAssignments = withBroadcast(centers) { bcCenters =>
-        sync("assignments round " + round,
-          ColumnTrackingKMeans.updatedAssignments(points, pointOps, round, assignments, bcCenters, config.updateRate))
+        sync(
+          "assignments round " + round,
+          ColumnTrackingKMeans.updatedAssignments(points, pointOps, round, assignments, bcCenters, config.updateRate)
+        )
       }
       val newCenters = latestCenters(points, pointOps, round + 1, centers, newAssignments, assignments)
       val backFilled = backFilledCenters(points, pointOps, round + 1, newAssignments, newCenters)
