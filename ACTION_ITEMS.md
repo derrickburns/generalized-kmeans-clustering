@@ -67,6 +67,23 @@
 - Hard and soft cost computation
 - Model persistence (save/load)
 
+### Streaming K-Means (DataFrame API) - COMPLETED October 2025 ✅
+- [x] Integrate with Structured Streaming
+- [x] Implement incremental updates with mini-batch algorithm
+- [x] Add decay factor for exponential forgetting
+- [x] Create comprehensive test suite (16/16 tests passing)
+- [x] Support all Bregman divergences
+- [x] Weighted data support
+
+**Deliverables**:
+- Real-time clustering with incremental updates
+- Exponential forgetting with decay factor
+- Time unit options (batches vs points)
+- Half-life parameter for intuitive decay
+- Automatic dying cluster handling
+- foreachBatch integration with Structured Streaming
+- Mutable state management
+
 ### Python Wrapper (October 2025)
 - [x] Create PySpark wrapper for GeneralizedKMeans
 - [x] Add smoke test for CI workflow
@@ -154,20 +171,33 @@ Bring RDD-based advanced algorithms to DataFrame API:
 - `src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala` ✓
 - `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala` ✓
 
-#### Streaming K-Means
-- [ ] Integrate with Structured Streaming
-- [ ] Implement incremental updates
-- [ ] Add decay factor for aging data
+#### Streaming K-Means - COMPLETED October 2025 ✅
+- [x] Integrate with Structured Streaming
+- [x] Implement incremental updates
+- [x] Add decay factor for aging data
+- [x] Create comprehensive test suite (16/16 tests passing)
 - [ ] Create streaming examples
 
-**Benefits**:
-- Real-time clustering updates
-- Integration with Spark Structured Streaming
-- Memory-efficient for continuous data
+**Status**: COMPLETED (October 2025)
+- Full DataFrame implementation (531 lines)
+- Mini-batch K-Means with exponential forgetting
+- All 16 tests passing
+- Decay factor with batch/point time units
+- Half-life parameter support
 
-**Files to create**:
-- `src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala`
-- `src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala`
+**Features delivered**:
+- Incremental model updates using foreachBatch API
+- Exponential forgetting with configurable decay factor
+- Time unit options (batches or points)
+- Half-life parameter for intuitive decay specification
+- Automatic dying cluster handling (splits largest cluster)
+- Support for all Bregman divergences
+- Weighted data handling
+- Mutable state with sync to immutable parent
+
+**Files created**:
+- `src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala` ✓
+- `src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala` ✓
 
 ### 3. K-Medoids (PAM/CLARA)
 **Effort**: 3-4 weeks
