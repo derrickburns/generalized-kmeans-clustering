@@ -7,8 +7,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 /** Test suite for Bisecting K-Means clustering.
   *
-  * Tests hierarchical divisive clustering with various configurations, comparing behavior with
-  * standard K-Means.
+  * Tests hierarchical divisive clustering with various configurations, comparing behavior with standard K-Means.
   */
 class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 

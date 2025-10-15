@@ -53,8 +53,7 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
   def value: Double = underlying.values(i)
 }
 
-@inline final class NegativeSparseVectorIterator(u: SparseVector)
-    extends BaseSparseVectorIterator(u) {
+@inline final class NegativeSparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
   def value: Double = -underlying.values(i)
 }
 

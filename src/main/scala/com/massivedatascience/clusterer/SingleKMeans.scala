@@ -24,8 +24,8 @@ import scala.collection.Map
 
 import org.slf4j.LoggerFactory
 
-/** A simple k-means implementation that re-computes the closest cluster centers on each iteration
-  * and that recomputes each cluster on each iteration.
+/** A simple k-means implementation that re-computes the closest cluster centers on each iteration and that recomputes
+  * each cluster on each iteration.
   * @deprecated
   * @param pointOps
   *   distance function
@@ -58,8 +58,7 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
             s"Cluster $clusterIndex has insufficient weight (${centroid.weight}), marking for removal"
           )
         } else {
-          active =
-            active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
+          active = active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
           activeCenters(clusterIndex) = pointOps.toCenter(centroid)
         }
       }

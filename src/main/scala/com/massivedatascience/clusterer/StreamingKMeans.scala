@@ -30,28 +30,27 @@ import scala.reflect.ClassTag
 
 import org.slf4j.LoggerFactory
 
-/** :: DeveloperApi :: StreamingKMeansModel extends MLlib's KMeansModel for streaming algorithms, so
-  * it can keep track of a continuously updated weight associated with each cluster, and also update
-  * the model by doing a single iteration of the standard k-means algorithm.
+/** :: DeveloperApi :: StreamingKMeansModel extends MLlib's KMeansModel for streaming algorithms, so it can keep track
+  * of a continuously updated weight associated with each cluster, and also update the model by doing a single iteration
+  * of the standard k-means algorithm.
   *
-  * The update algorithm uses the "mini-batch" KMeans rule, generalized to incorporate forgetfulness
-  * (i.e. decay). The update rule (for each cluster) is:
+  * The update algorithm uses the "mini-batch" KMeans rule, generalized to incorporate forgetfulness (i.e. decay). The
+  * update rule (for each cluster) is:
   *
   * c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t] n_t+t = n_t * a + m_t
   *
-  * Where c_t is the previously estimated centroid for that cluster, n_t is the number of points
-  * assigned to it thus far, x_t is the centroid estimated on the current batch, and m_t is the
-  * number of points assigned to that centroid in the current batch.
+  * Where c_t is the previously estimated centroid for that cluster, n_t is the number of points assigned to it thus
+  * far, x_t is the centroid estimated on the current batch, and m_t is the number of points assigned to that centroid
+  * in the current batch.
   *
-  * The decay factor 'a' scales the contribution of the clusters as estimated thus far, by applying
-  * a as a discount weighting on the current point when evaluating new incoming data. If a=1, all
-  * batches are weighted equally. If a=0, new centroids are determined entirely by recent data.
-  * Lower values correspond to more forgetting.
+  * The decay factor 'a' scales the contribution of the clusters as estimated thus far, by applying a as a discount
+  * weighting on the current point when evaluating new incoming data. If a=1, all batches are weighted equally. If a=0,
+  * new centroids are determined entirely by recent data. Lower values correspond to more forgetting.
   *
-  * Decay can optionally be specified by a half life and associated time unit. The time unit can
-  * either be a batch of data or a single data point. Considering data arrived at time t, the half
-  * life h is defined such that at time t + h the discount applied to the data from t is 0.5. The
-  * definition remains the same whether the time unit is given as batches or points.
+  * Decay can optionally be specified by a half life and associated time unit. The time unit can either be a batch of
+  * data or a single data point. Considering data arrived at time t, the half life h is defined such that at time t + h
+  * the discount applied to the data from t is 0.5. The definition remains the same whether the time unit is given as
+  * batches or points.
   */
 
 /* TODO - perform updates on centers in homogeneous coordinates
@@ -105,8 +104,7 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
 
       BLAS.scal(1.0 - lambda, centroid)
       BLAS.axpy(lambda / count, sum, centroid)
-      centerArrays(label) =
-        pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
+      centerArrays(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
 
       // display the updated cluster centers
       val display = centerArrays(label).size match {
@@ -127,8 +125,8 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
       clusterWeights(largest) = weight
       clusterWeights(smallest) = weight
       val largestClusterCenter = centerArrays(largest).inhomogeneous.toArray
-      val l = largestClusterCenter.map(x => x + 1e-14 * math.max(math.abs(x), 1.0))
-      val s = largestClusterCenter.map(x => x - 1e-14 * math.max(math.abs(x), 1.0))
+      val l                    = largestClusterCenter.map(x => x + 1e-14 * math.max(math.abs(x), 1.0))
+      val s                    = largestClusterCenter.map(x => x - 1e-14 * math.max(math.abs(x), 1.0))
       centerArrays(largest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(l, 1.0))
       centerArrays(smallest) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(s, 1.0))
     }
@@ -144,9 +142,9 @@ class StreamingKMeans(
   var model: StreamingKMeansModel
 ) {
 
-  /** Update the clustering model by training on batches of data from a DStream. This operation
-    * registers a DStream for training the model, checks whether the cluster centers have been
-    * initialized, and updates the model using each batch of data from the stream.
+  /** Update the clustering model by training on batches of data from a DStream. This operation registers a DStream for
+    * training the model, checks whether the cluster centers have been initialized, and updates the model using each
+    * batch of data from the stream.
     *
     * @param data
     *   DStream containing vector data

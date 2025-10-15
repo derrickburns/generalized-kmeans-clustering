@@ -33,15 +33,13 @@ trait WeightedVector extends Serializable {
 
 object WeightedVector {
 
-  private[this] class ImmutableInhomogeneousVector(val weight: Double, v: Vector)
-      extends WeightedVector {
+  private[this] class ImmutableInhomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
     override def toString: String         = s"InhomogeneousVector($weight, $v)"
     override val inhomogeneous: Vector    = v
     override lazy val homogeneous: Vector = asHomogeneous(v, weight)
   }
 
-  private[this] class ImmutableHomogeneousVector(val weight: Double, v: Vector)
-      extends WeightedVector {
+  private[this] class ImmutableHomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
     override def toString: String           = s"HomogeneousVector($weight, $v)"
     override lazy val inhomogeneous: Vector = asInhomogeneous(v, weight)
     override val homogeneous: Vector        = v

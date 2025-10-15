@@ -25,16 +25,15 @@ import scala.collection.mutable
 
 /** Trained Bregman co-clustering model with prediction and analysis capabilities.
   *
-  * This class encapsulates the result of co-clustering training and provides methods for making
-  * predictions, reconstructing the matrix, and analyzing the clustering structure.
+  * This class encapsulates the result of co-clustering training and provides methods for making predictions,
+  * reconstructing the matrix, and analyzing the clustering structure.
   *
   * @param result
   *   The co-clustering result from training
   * @param pointOps
   *   Bregman point operations used for distance calculations
   */
-class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: BregmanPointOps)
-    extends Serializable {
+class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: BregmanPointOps) extends Serializable {
 
   /** Predict cluster assignments for new matrix entries.
     *

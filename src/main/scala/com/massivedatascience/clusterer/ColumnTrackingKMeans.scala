@@ -95,9 +95,8 @@ object ColumnTrackingKMeans {
     *
     * b) the previous cluster did not move.
     *
-    * In these case distances to other stationary clusters need not be computed. As Lloyd's
-    * algorithm proceeds, more and more clusters are stationary, so fewer and fewer distance
-    * calculations are needed.
+    * In these case distances to other stationary clusters need not be computed. As Lloyd's algorithm proceeds, more and
+    * more clusters are stationary, so fewer and fewer distance calculations are needed.
     *
     * @param point
     *   point
@@ -137,8 +136,8 @@ object ColumnTrackingKMeans {
     }
   }
 
-  /** Identify the new cluster assignments for a sample of the points. Persists the new assignments
-    * in memory, un-persisting the previous assignments.
+  /** Identify the new cluster assignments for a sample of the points. Persists the new assignments in memory,
+    * un-persisting the previous assignments.
     *
     * @param round
     *   the number of the round
@@ -174,48 +173,43 @@ object ColumnTrackingKMeans {
   }
 }
 
-/** A KMeans implementation that tracks which clusters moved and which points are assigned to which
-  * clusters and the distance to the closest cluster.
+/** A KMeans implementation that tracks which clusters moved and which points are assigned to which clusters and the
+  * distance to the closest cluster.
   *
-  * Notably, following each iterator of Lloyd's algorithm, empty clusters are provided new centers
-  * using the K-Means-|| algorithm.
+  * Notably, following each iterator of Lloyd's algorithm, empty clusters are provided new centers using the K-Means-||
+  * algorithm.
   *
-  * We maintain for each point two assignments: 1) its current assignment and 2) its previous
-  * assignment. With this data, we can determine if a point moves between assignments by comparing
-  * the assignments.
+  * We maintain for each point two assignments: 1) its current assignment and 2) its previous assignment. With this
+  * data, we can determine if a point moves between assignments by comparing the assignments.
   *
   * We maintain for each cluster its index, generation number, centroid.
   *
   * The invariants are:
   *
-  * <ol> <li> each cluster is assigned a generation number </li> <li> generation numbers are
-  * monotonically increasing </li> <li> all clusters whose centroids change in one Lloyd's round are
-  * assigned the same generation # </li> <li> when the membership of a cluster changes, the
-  * generation number of the cluster is increased </li> <li> each point is assigned the index of the
-  * cluster that is a member of </li> </ol>
+  * <ol> <li> each cluster is assigned a generation number </li> <li> generation numbers are monotonically increasing
+  * </li> <li> all clusters whose centroids change in one Lloyd's round are assigned the same generation # </li> <li>
+  * when the membership of a cluster changes, the generation number of the cluster is increased </li> <li> each point is
+  * assigned the index of the cluster that is a member of </li> </ol>
   *
-  * Initial condition: <ol> <li> Initial cluster centroids are provided. All clusters are assigned
-  * generation -1 with the provided cluster centroids </li> <li> All points are assigned to the
-  * sentinel cluster (index == -1) with generation -2 </li> <li> (Some) points are re-assigned to
-  * (non-sentinel) clusters, resulting in the setting of the generation number of those points to -1
-  * </li> <li> The current round is set to 0 </li> </ol>
+  * Initial condition: <ol> <li> Initial cluster centroids are provided. All clusters are assigned generation -1 with
+  * the provided cluster centroids </li> <li> All points are assigned to the sentinel cluster (index == -1) with
+  * generation -2 </li> <li> (Some) points are re-assigned to (non-sentinel) clusters, resulting in the setting of the
+  * generation number of those points to -1 </li> <li> The current round is set to 0 </li> </ol>
   *
   * Lloyd's algorithm can be stated as:
   *
   * <ol> <li> Increase the round </li>
   *
-  * <li> If any points were re-assigned (change in generation number), then update the clusters
-  * impacted by the re-assignment: <ul> <li> Compute the new cluster centroids for the out-dated
-  * clusters </li> <li> Set the generation of the clusters affect to be the value of the round </li>
-  * </ul> </li>
+  * <li> If any points were re-assigned (change in generation number), then update the clusters impacted by the
+  * re-assignment: <ul> <li> Compute the new cluster centroids for the out-dated clusters </li> <li> Set the generation
+  * of the clusters affect to be the value of the round </li> </ul> </li>
   *
   * <li> Increase the round </li>
   *
-  * <li> If any centers were updated, then update the assignments of the points: <ul> <li> For each
-  * point (or a random sub-set of the points), identify the closest cluster </li> <li> If the
-  * closest cluster has a different index or generation number, then update the assignments of the
-  * point so that its index is the index of the cluster to which it is assigned and the generation
-  * is the round the new assignment is made </li> </ul> </li> </ol>
+  * <li> If any centers were updated, then update the assignments of the points: <ul> <li> For each point (or a random
+  * sub-set of the points), identify the closest cluster </li> <li> If the closest cluster has a different index or
+  * generation number, then update the assignments of the point so that its index is the index of the cluster to which
+  * it is assigned and the generation is the round the new assignment is made </li> </ul> </li> </ol>
   */
 case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     extends MultiKMeansClusterer
@@ -403,9 +397,8 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     centers
   }
 
-  /** Computes all centroids, but only returns centroids of changed clusters. * A previous
-    * implementation that uses aggregateByKey on (index, point) tuples was observed to cause to much
-    * garbage collection overhead.
+  /** Computes all centroids, but only returns centroids of changed clusters. * A previous implementation that uses
+    * aggregateByKey on (index, point) tuples was observed to cause to much garbage collection overhead.
     *
     * @param points
     *   points
@@ -580,19 +573,18 @@ case class ColumnTrackingKMeans(config: KMeansConfig = DefaultKMeansConfig)
     logger.info(s"runs = ${centerArrays.size}")
 
     val u = Assignment(Infinity, noCluster, -2)
-    withCached[Assignment, Seq[ClusteringWithDistortion]]("empty assignments", points.map(x => u)) {
-      empty =>
-        centerArrays.map { initialCenters =>
-          val centers = initialCenters.zipWithIndex.map { case (c, i) =>
-            CenterWithHistory(i, -1, c, initialized = false)
-          }
-          val (assignments, centersWithHistory) = lloyds(0, empty, centers)
-          assignments.unpersist(blocking = false)
-          ClusteringWithDistortion(
-            distortion(assignments),
-            centersWithHistory.map(_.center).toIndexedSeq
-          )
+    withCached[Assignment, Seq[ClusteringWithDistortion]]("empty assignments", points.map(x => u)) { empty =>
+      centerArrays.map { initialCenters =>
+        val centers = initialCenters.zipWithIndex.map { case (c, i) =>
+          CenterWithHistory(i, -1, c, initialized = false)
         }
+        val (assignments, centersWithHistory) = lloyds(0, empty, centers)
+        assignments.unpersist(blocking = false)
+        ClusteringWithDistortion(
+          distortion(assignments),
+          centersWithHistory.map(_.center).toIndexedSeq
+        )
+      }
     }
   }
 }

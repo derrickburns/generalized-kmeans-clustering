@@ -23,8 +23,8 @@ import org.apache.spark.ml.linalg.Vector
 
 /** A weighted point for core-set representation.
   *
-  * Represents a data point with an importance weight that reflects how many original points this
-  * weighted point represents in the core-set approximation.
+  * Represents a data point with an importance weight that reflects how many original points this weighted point
+  * represents in the core-set approximation.
   *
   * @param point
   *   The underlying Bregman point
@@ -33,14 +33,13 @@ import org.apache.spark.ml.linalg.Vector
   * @param sensitivity
   *   The sensitivity score used for sampling
   */
-case class WeightedPoint(point: BregmanPoint, importance: Double, sensitivity: Double)
-    extends Serializable {
+case class WeightedPoint(point: BregmanPoint, importance: Double, sensitivity: Double) extends Serializable {
 
   require(importance > 0.0, s"Importance weight must be positive, got: $importance")
   require(sensitivity >= 0.0, s"Sensitivity must be non-negative, got: $sensitivity")
 
-  /** Get the effective weight of this point in the core-set. This combines the original point
-    * weight with the importance weight.
+  /** Get the effective weight of this point in the core-set. This combines the original point weight with the
+    * importance weight.
     */
   def effectiveWeight: Double = point.weight * importance
 

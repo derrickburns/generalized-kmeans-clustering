@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory
 /** Initialize cluster centers using coreset-based approximation.
   *
   * This is much faster than K-Means|| for large datasets because it:
-  *   1. Builds a small coreset (e.g., 1000 points) 2. Runs initialization on the coreset instead of
-  *      full data
+  *   1. Builds a small coreset (e.g., 1000 points) 2. Runs initialization on the coreset instead of full data
   *
   * Achieves 10-100x speedup for initialization with minimal quality loss.
   *

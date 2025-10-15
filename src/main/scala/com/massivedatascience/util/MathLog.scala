@@ -38,9 +38,8 @@ case object GeneralLog extends MathLog {
   override def log(x: Double): Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
-/** The natural logarithm, but defined as 0.0 on input 0.0 logarithm function implemented using a
-  * table lookup on integral arguments, and the Math.log function when entries are non-integral or
-  * not found.
+/** The natural logarithm, but defined as 0.0 on input 0.0 logarithm function implemented using a table lookup on
+  * integral arguments, and the Math.log function when entries are non-integral or not found.
   */
 case object DiscreteLog extends MathLog {
   private[this] val cacheSize = 1000

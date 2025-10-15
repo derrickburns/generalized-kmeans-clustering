@@ -21,13 +21,12 @@ import org.slf4j.{Logger, LoggerFactory}
 
 /** Trait providing standardized logging functionality for clusterers.
   *
-  * This trait eliminates the need for each class to initialize its own logger and provides helper
-  * methods for common logging patterns.
+  * This trait eliminates the need for each class to initialize its own logger and provides helper methods for common
+  * logging patterns.
   */
 trait Logging extends Serializable {
 
-  /** Lazy logger instance initialized with the class name. Marked @transient to avoid serialization
-    * issues.
+  /** Lazy logger instance initialized with the class name. Marked @transient to avoid serialization issues.
     */
   @transient protected lazy val logger: Logger = LoggerFactory.getLogger(getClass.getName)
 

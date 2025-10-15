@@ -111,11 +111,9 @@ case class ConstrainedKMeansConfig(
   *   - Cannot-link: two points cannot be in the same cluster
   *
   * Algorithm:
-  *   1. Standard k-means with modified assignment step 2. When assigning point to cluster, respect
-  *      constraints:
+  *   1. Standard k-means with modified assignment step 2. When assigning point to cluster, respect constraints:
   *      - Cannot assign to clusters containing cannot-link points
-  *      - Should assign to same cluster as must-link points (if possible)
-  *      3. Center update unchanged (standard k-means)
+  *      - Should assign to same cluster as must-link points (if possible) 3. Center update unchanged (standard k-means)
   *
   * Constraint enforcement:
   *   - Hard constraints: violations forbidden (may fail to converge)

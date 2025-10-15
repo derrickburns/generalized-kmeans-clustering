@@ -47,8 +47,8 @@ object KMeans extends SparkHelper with Logging {
       s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
 
-  /** Train a K-Means model using Lloyd's algorithm using a signature that is similar to the one
-    * provided for the Spark 1.1.0 K-Means Batch clusterer.
+  /** Train a K-Means model using Lloyd's algorithm using a signature that is similar to the one provided for the Spark
+    * 1.1.0 K-Means Batch clusterer.
     *
     * @param data
     *   input data
@@ -90,12 +90,11 @@ object KMeans extends SparkHelper with Logging {
     val clusterer = MultiKMeansClusterer(clustererName)
     val runConfig = RunConfig(k, runs, 0, maxIterations)
 
-    withCached[WeightedVector, KMeansModel]("weighted vectors", data.map(x => WeightedVector(x))) {
-      data =>
-        val ops         = distanceFunctionNames.map(BregmanPointOps.apply)
-        val initializer = KMeansSelector(mode)
-        val embeddings  = embeddingNames.map(Embedding.apply)
-        trainWeighted(runConfig, data, initializer, ops, embeddings, clusterer)
+    withCached[WeightedVector, KMeansModel]("weighted vectors", data.map(x => WeightedVector(x))) { data =>
+      val ops         = distanceFunctionNames.map(BregmanPointOps.apply)
+      val initializer = KMeansSelector(mode)
+      val embeddings  = embeddingNames.map(Embedding.apply)
+      trainWeighted(runConfig, data, initializer, ops, embeddings, clusterer)
     }
   }
 
@@ -211,8 +210,8 @@ object KMeans extends SparkHelper with Logging {
     new KMeansModel(pointOps, finalCenters)
   }
 
-  /** Iteratively train using low dimensional embedding of the high dimensional sparse input data
-    * using the same distance function.
+  /** Iteratively train using low dimensional embedding of the high dimensional sparse input data using the same
+    * distance function.
     *
     * @param runConfig
     *   run configuration
@@ -287,9 +286,8 @@ object KMeans extends SparkHelper with Logging {
     )
   }
 
-  /** Train on a series of data sets, where the data sets were derived from the same original data
-    * set via embeddings. Use the cluster assignments of one stage to initialize the clusters of the
-    * next stage.
+  /** Train on a series of data sets, where the data sets were derived from the same original data set via embeddings.
+    * Use the cluster assignments of one stage to initialize the clusters of the next stage.
     *
     * @param runConfig
     *   run configuration
@@ -320,17 +318,16 @@ object KMeans extends SparkHelper with Logging {
         simpleTrain(runConfig, initialData, ops, initializer, clusterer)
 
       case Seq((initialData, ops), y @ _*) =>
-        y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) {
-          case (model, (data, op)) =>
-            withNamed("assignments", model.predictBregman(data)) { assignments =>
-              simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
-            }
+        y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) { case (model, (data, op)) =>
+          withNamed("assignments", model.predictBregman(data)) { assignments =>
+            simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
+          }
         }
     }
   }
 
-  /** Sub-sampled data from lowest dimension to highest dimension, repeatedly applying the same
-    * embedding. Data is returned cached.
+  /** Sub-sampled data from lowest dimension to highest dimension, repeatedly applying the same embedding. Data is
+    * returned cached.
     *
     * @param input
     *   input data set to embed
@@ -375,8 +372,8 @@ object KMeans extends SparkHelper with Logging {
   /** Train using coreset approximation with optional refinement.
     *
     * This method provides a convenient API for coreset-based clustering that:
-    *   1. Builds a small coreset from the full dataset 2. Clusters the coreset (fast, in-memory) 3.
-    *      Optionally refines centers on the full dataset
+    *   1. Builds a small coreset from the full dataset 2. Clusters the coreset (fast, in-memory) 3. Optionally refines
+    *      centers on the full dataset
     *
     * @param data
     *   Input data
@@ -463,9 +460,8 @@ object KMeans extends SparkHelper with Logging {
 
   /** Automatically choose the best clustering strategy based on data size.
     *
-    * Small data (< 10K points): Standard k-means with K-Means|| initialization Medium data (10K -
-    * 1M points): Coreset with refinement Large data (> 1M points): Fast coreset with aggressive
-    * compression
+    * Small data (< 10K points): Standard k-means with K-Means|| initialization Medium data (10K - 1M points): Coreset
+    * with refinement Large data (> 1M points): Fast coreset with aggressive compression
     *
     * @param data
     *   Input data

@@ -13,8 +13,8 @@ import scala.util.Random
 
 /** Generalized K-Means clustering with pluggable Bregman divergences.
   *
-  * This estimator implements Lloyd's algorithm for clustering with any Bregman divergence. Unlike
-  * MLlib's KMeans (which only supports Squared Euclidean distance), this supports:
+  * This estimator implements Lloyd's algorithm for clustering with any Bregman divergence. Unlike MLlib's KMeans (which
+  * only supports Squared Euclidean distance), this supports:
   *   - Squared Euclidean (L2)
   *   - Kullback-Leibler divergence (for probability distributions)
   *   - Itakura-Saito divergence (for spectral data)
@@ -47,13 +47,12 @@ class GeneralizedKMeans(override val uid: String)
   /** Sets the number of clusters to create (k must be > 1). Default: 2. */
   def setK(value: Int): this.type = set(k, value)
 
-  /** Sets the Bregman divergence function. Options: "squaredEuclidean", "kl", "itakuraSaito",
-    * "generalizedI", "logistic". Default: "squaredEuclidean".
+  /** Sets the Bregman divergence function. Options: "squaredEuclidean", "kl", "itakuraSaito", "generalizedI",
+    * "logistic". Default: "squaredEuclidean".
     */
   def setDivergence(value: String): this.type = set(divergence, value)
 
-  /** Sets the smoothing parameter for divergences that need it (KL, Itakura-Saito, etc). Default:
-    * 1e-10.
+  /** Sets the smoothing parameter for divergences that need it (KL, Itakura-Saito, etc). Default: 1e-10.
     */
   def setSmoothing(value: Double): this.type = set(smoothing, value)
 
@@ -75,13 +74,13 @@ class GeneralizedKMeans(override val uid: String)
   /** Sets the random seed for reproducibility. Default: current time. */
   def setSeed(value: Long): this.type = set(seed, value)
 
-  /** Sets the assignment strategy for mapping points to clusters. Options: "auto" (default),
-    * "broadcast", "crossJoin". "auto" chooses the best strategy based on the divergence.
+  /** Sets the assignment strategy for mapping points to clusters. Options: "auto" (default), "broadcast", "crossJoin".
+    * "auto" chooses the best strategy based on the divergence.
     */
   def setAssignmentStrategy(value: String): this.type = set(assignmentStrategy, value)
 
-  /** Sets the strategy for handling empty clusters. Options: "reseedRandom" (default), "dropEmpty".
-    * "reseedRandom" fills empty clusters with random points.
+  /** Sets the strategy for handling empty clusters. Options: "reseedRandom" (default), "dropEmpty". "reseedRandom"
+    * fills empty clusters with random points.
     */
   def setEmptyClusterStrategy(value: String): this.type = set(emptyClusterStrategy, value)
 
@@ -91,8 +90,8 @@ class GeneralizedKMeans(override val uid: String)
   /** Sets the checkpoint directory for intermediate results. */
   def setCheckpointDir(value: String): this.type = set(checkpointDir, value)
 
-  /** Sets the initialization algorithm. Options: "k-means||" (default), "random". "k-means||" is
-    * the parallel variant of k-means++.
+  /** Sets the initialization algorithm. Options: "k-means||" (default), "random". "k-means||" is the parallel variant
+    * of k-means++.
     */
   def setInitMode(value: String): this.type = set(initMode, value)
 
@@ -190,12 +189,12 @@ class GeneralizedKMeans(override val uid: String)
       case "broadcast" => new BroadcastUDFAssignment()
       case "crossJoin" => new SECrossJoinAssignment()
       case "auto"      => new AutoAssignment()
-      case _ => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
+      case _           => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
     }
   }
 
-  /** Create update strategy based on divergence. L1/Manhattan distance uses MedianUpdateStrategy,
-    * others use GradMeanUDAFUpdate.
+  /** Create update strategy based on divergence. L1/Manhattan distance uses MedianUpdateStrategy, others use
+    * GradMeanUDAFUpdate.
     */
   private def createUpdateStrategy(divName: String): UpdateStrategy = {
     divName match {
@@ -210,7 +209,7 @@ class GeneralizedKMeans(override val uid: String)
     strategy match {
       case "reseedRandom" => new ReseedRandomHandler(seed)
       case "drop"         => new DropEmptyClustersHandler()
-      case _ => throw new IllegalArgumentException(s"Unknown empty cluster strategy: $strategy")
+      case _              => throw new IllegalArgumentException(s"Unknown empty cluster strategy: $strategy")
     }
   }
 
@@ -250,8 +249,8 @@ class GeneralizedKMeans(override val uid: String)
 
   /** K-means|| initialization (simplified version).
     *
-    * This is a simplified implementation. A full implementation would use the parallel k-means++
-    * algorithm with oversampling.
+    * This is a simplified implementation. A full implementation would use the parallel k-means++ algorithm with
+    * oversampling.
     */
   private def initializeKMeansPlusPlus(
     df: DataFrame,

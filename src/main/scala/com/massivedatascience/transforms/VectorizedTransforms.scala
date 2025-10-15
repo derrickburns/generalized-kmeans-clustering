@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory
 
 /** Vectorized implementations of transform operations using BLAS for improved performance.
   *
-  * These implementations process multiple vectors in batches and use optimized BLAS operations to
-  * reduce overhead and improve cache efficiency.
+  * These implementations process multiple vectors in batches and use optimized BLAS operations to reduce overhead and
+  * improve cache efficiency.
   */
 object VectorizedTransforms {
 
@@ -36,8 +36,7 @@ object VectorizedTransforms {
 
   /** Vectorized Haar wavelet transform using batched BLAS operations.
     *
-    * Processes multiple vectors simultaneously to amortize BLAS call overhead and improve memory
-    * access patterns.
+    * Processes multiple vectors simultaneously to amortize BLAS call overhead and improve memory access patterns.
     *
     * @param vectors
     *   RDD of input vectors

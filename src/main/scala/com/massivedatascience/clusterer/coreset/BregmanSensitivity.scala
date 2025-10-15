@@ -26,8 +26,8 @@ import scala.util.Random
 
 /** Trait for computing sensitivity scores for Bregman core-set construction.
   *
-  * Sensitivity measures how much a point affects the optimal clustering cost. Points with higher
-  * sensitivity are more important to include in the core-set.
+  * Sensitivity measures how much a point affects the optimal clustering cost. Points with higher sensitivity are more
+  * important to include in the core-set.
   */
 trait BregmanSensitivity extends Serializable {
 
@@ -51,8 +51,8 @@ trait BregmanSensitivity extends Serializable {
     pointOps: BregmanPointOps
   ): Double
 
-  /** Batch compute sensitivity scores for multiple points. Default implementation calls
-    * computeSensitivity for each point.
+  /** Batch compute sensitivity scores for multiple points. Default implementation calls computeSensitivity for each
+    * point.
     */
   def computeBatchSensitivity(
     points: RDD[BregmanPoint],
@@ -88,11 +88,10 @@ class UniformSensitivity extends BregmanSensitivity {
 
 /** Distance-based sensitivity using approximate nearest clusters.
   *
-  * Points that are far from potential cluster centers have higher sensitivity because they
-  * represent outliers or sparse regions that could significantly affect clustering quality.
+  * Points that are far from potential cluster centers have higher sensitivity because they represent outliers or sparse
+  * regions that could significantly affect clustering quality.
   */
-class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L)
-    extends BregmanSensitivity {
+class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L) extends BregmanSensitivity {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -161,8 +160,7 @@ class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L)
 
 /** Density-based sensitivity using local neighborhood analysis.
   *
-  * Points in sparse regions have higher sensitivity because they represent important boundary cases
-  * or outliers.
+  * Points in sparse regions have higher sensitivity because they represent important boundary cases or outliers.
   */
 class DensityBasedSensitivity(numNeighbors: Int = 50, seed: Long = 42L) extends BregmanSensitivity {
 

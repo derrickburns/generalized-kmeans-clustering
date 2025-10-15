@@ -110,8 +110,8 @@ case class CoresetResult(
 
 /** Bregman core-set construction for efficient approximate clustering.
   *
-  * This class implements sensitivity-based sampling to create a small weighted subset of points
-  * that preserves the clustering structure for Bregman divergences.
+  * This class implements sensitivity-based sampling to create a small weighted subset of points that preserves the
+  * clustering structure for Bregman divergences.
   */
 class BregmanCoreset(config: CoresetConfig) extends Serializable {
 

@@ -25,17 +25,16 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
-/** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++
-  * initialization algorithm</a>
+/** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization
+  * algorithm</a>
   *
   * @param ops
   *   distance function
   */
 class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
-  /** Select centers in rounds. On each round, select 'perRound' centers, with probability of
-    * selection equal to the product of the given weights and distance to the closest cluster center
-    * of the previous round.
+  /** Select centers in rounds. On each round, select 'perRound' centers, with probability of selection equal to the
+    * product of the given weights and distance to the closest cluster center of the previous round.
     *
     * This version allows some centers to be pre-selected.
     *
@@ -55,8 +54,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   an array of at most k cluster centers
     */
 
-  /** Select high-quality initial centers using the K-Means++ algorithm with improved numerical
-    * stability.
+  /** Select high-quality initial centers using the K-Means++ algorithm with improved numerical stability.
     *
     * @param seed
     *   random number generator seed
@@ -235,8 +233,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       .map(ops.toPoint)
   }
 
-  /** Update the distance of each point to its closest cluster center, given the cluster centers
-    * that were added.
+  /** Update the distance of each point to its closest cluster center, given the cluster centers that were added.
     *
     * @param points
     *   set of candidate initial cluster centers
@@ -263,9 +260,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /** Pick a point at random using the alias method for O(1) sampling.
     *
-    * The alias method provides constant-time sampling from discrete distributions by pre-computing
-    * alias and probability tables. This is more efficient than binary search for repeated sampling
-    * from the same distribution.
+    * The alias method provides constant-time sampling from discrete distributions by pre-computing alias and
+    * probability tables. This is more efficient than binary search for repeated sampling from the same distribution.
     *
     * @param rand
     *   random number generator
@@ -363,8 +359,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     (alias, prob)
   }
 
-  /** Pick a point at random, weighing the choices by the given cumulative weight vector. This is
-    * the legacy method maintained for backward compatibility.
+  /** Pick a point at random, weighing the choices by the given cumulative weight vector. This is the legacy method
+    * maintained for backward compatibility.
     *
     * @param rand
     *   random number generator

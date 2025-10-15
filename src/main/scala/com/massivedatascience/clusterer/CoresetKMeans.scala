@@ -99,8 +99,8 @@ case class CoresetKMeansResult(
 
 /** Core-set based K-means clustering for Bregman divergences.
   *
-  * This implementation first constructs a small representative core-set, performs exact clustering
-  * on the core-set, then optionally refines the centers using the full dataset.
+  * This implementation first constructs a small representative core-set, performs exact clustering on the core-set,
+  * then optionally refines the centers using the full dataset.
   */
 case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConfig)
     extends MultiKMeansClusterer

@@ -27,29 +27,27 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.Map
 
-/** A K-means implementation that caches distances to clusters and that adjusts cluster centers by
-  * sampling the points on each iteration.
+/** A K-means implementation that caches distances to clusters and that adjusts cluster centers by sampling the points
+  * on each iteration.
   *
   * Maintain for each point the index of its closest cluster and the distance to that cluster.
   *
-  * Maintain for each cluster the weighted centroid of its points. Each cluster is initialized with
-  * exactly one point from the input point set. Mark each cluster as "moved."
+  * Maintain for each cluster the weighted centroid of its points. Each cluster is initialized with exactly one point
+  * from the input point set. Mark each cluster as "moved."
   *
   *   1. Broadcast the moved cluster centers and their indices.
   *
-  * 2. For each point, for each moved cluster center, mark the distance to that cluster as "stale."
-  * If the cluster is empty, mark the cluster as "empty".
+  * 2. For each point, for each moved cluster center, mark the distance to that cluster as "stale." If the cluster is
+  * empty, mark the cluster as "empty".
   *
   * 3. Select a set of points to update. Update the distance to each stale cluster centers.
   *
-  * 4. For each selected point, identify the index of the closest cluster center and the distance.
-  * If the index has moved, emit two changes: one for the old cluster center and one for the new
-  * cluster center, keyed by cluster index:
+  * 4. For each selected point, identify the index of the closest cluster center and the distance. If the index has
+  * moved, emit two changes: one for the old cluster center and one for the new cluster center, keyed by cluster index:
   *
   * (index, (point, add/subtract))
   *
-  * 5. Sum by key the changes for the clusters. Identify the moved clusters and update their
-  * locations.
+  * 5. Sum by key the changes for the clusters. Identify the moved clusters and update their locations.
   *
   * 6. If any cluster moved, then go to 1.
   */
@@ -154,8 +152,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
       FatPoint(p, Array(unassigned, unassigned), 0, Array.fill[Double](len)(Unknown))
     }
 
-  /** Update the cluster assignment of the fat points. Need to manage the RDD storage to avoid stack
-    * overflow.
+  /** Update the cluster assignment of the fat points. Need to manage the RDD storage to avoid stack overflow.
     *
     * @param fatPoints
     *   the old points

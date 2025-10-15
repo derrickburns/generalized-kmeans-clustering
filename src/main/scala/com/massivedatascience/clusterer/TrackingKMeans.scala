@@ -142,8 +142,8 @@ object TrackingKMeans {
   }
 }
 
-/** A KMeans implementation that tracks which clusters moved and which points are assigned to which
-  * clusters and the distance to the closest cluster.
+/** A KMeans implementation that tracks which clusters moved and which points are assigned to which clusters and the
+  * distance to the closest cluster.
   *
   * @param updateRate
   *   percentage of points that are updated on each round

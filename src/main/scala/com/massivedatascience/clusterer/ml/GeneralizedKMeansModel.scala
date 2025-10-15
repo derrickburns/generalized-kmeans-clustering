@@ -156,8 +156,8 @@ class GeneralizedKMeansModel(
 
   /** Compute the clustering cost (sum of divergences from points to their assigned centers).
     *
-    * This is equivalent to the Within-Cluster Sum of Squares (WCSS) for Squared Euclidean
-    * divergence. Lower cost indicates tighter, more compact clusters.
+    * This is equivalent to the Within-Cluster Sum of Squares (WCSS) for Squared Euclidean divergence. Lower cost
+    * indicates tighter, more compact clusters.
     *
     * @param dataset
     *   input dataset with features column
@@ -370,13 +370,11 @@ class GeneralizedKMeansSummary(
     */
   lazy val numPoints: Long = predictions.count()
 
-  /** Final distortion (sum of distances to assigned centers). Also known as Within-Cluster Sum of
-    * Squares (WCSS).
+  /** Final distortion (sum of distances to assigned centers). Also known as Within-Cluster Sum of Squares (WCSS).
     */
   lazy val finalDistortion: Double = distortionHistory.lastOption.getOrElse(Double.NaN)
 
-  /** Within-Cluster Sum of Squares (WCSS). Measures compactness of clusters. Lower values indicate
-    * tighter clusters.
+  /** Within-Cluster Sum of Squares (WCSS). Measures compactness of clusters. Lower values indicate tighter clusters.
     */
   lazy val wcss: Double = finalDistortion
 
@@ -393,8 +391,8 @@ class GeneralizedKMeansSummary(
     (0 until numClusters).map(i => sizesMap.getOrElse(i, 0L)).toArray
   }
 
-  /** Between-Cluster Sum of Squares (BCSS). Measures separation between clusters. Higher values
-    * indicate better separation.
+  /** Between-Cluster Sum of Squares (BCSS). Measures separation between clusters. Higher values indicate better
+    * separation.
     */
   lazy val bcss: Double = {
     val spark    = predictions.sparkSession
@@ -432,8 +430,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Calinski-Harabasz Index (Variance Ratio Criterion). Ratio of between-cluster to within-cluster
-    * variance. Higher values indicate better-defined clusters.
+  /** Calinski-Harabasz Index (Variance Ratio Criterion). Ratio of between-cluster to within-cluster variance. Higher
+    * values indicate better-defined clusters.
     *
     * CH = (BCSS / (k-1)) / (WCSS / (n-k))
     */
@@ -448,11 +446,11 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Davies-Bouldin Index. Measures average similarity between each cluster and its most similar
-    * cluster. Lower values indicate better clustering (0 is best).
+  /** Davies-Bouldin Index. Measures average similarity between each cluster and its most similar cluster. Lower values
+    * indicate better clustering (0 is best).
     *
-    * Computed as: DB = (1/k) * Σ_i max_j(R_ij) where R_ij = (s_i + s_j) / d_ij s_i = average
-    * distance within cluster i d_ij = distance between cluster centers i and j
+    * Computed as: DB = (1/k) * Σ_i max_j(R_ij) where R_ij = (s_i + s_j) / d_ij s_i = average distance within cluster i
+    * d_ij = distance between cluster centers i and j
     */
   lazy val daviesBouldinIndex: Double = {
     if (numClusters <= 1) {
@@ -512,8 +510,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Dunn Index. Ratio of minimum inter-cluster distance to maximum intra-cluster distance. Higher
-    * values indicate better clustering (more compact and well-separated).
+  /** Dunn Index. Ratio of minimum inter-cluster distance to maximum intra-cluster distance. Higher values indicate
+    * better clustering (more compact and well-separated).
     *
     * Dunn = min_ij(d(C_i, C_j)) / max_k(diam(C_k))
     */
@@ -560,8 +558,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Mean Silhouette Coefficient (sampled for efficiency). Measures how similar points are to their
-    * own cluster vs other clusters. Values range from -1 to 1:
+  /** Mean Silhouette Coefficient (sampled for efficiency). Measures how similar points are to their own cluster vs
+    * other clusters. Values range from -1 to 1:
     *   - Close to 1: point is well-matched to its cluster
     *   - Close to 0: point is on the border between clusters
     *   - Close to -1: point may be assigned to wrong cluster

@@ -160,8 +160,7 @@ case class BregmanMixtureResult(
   *
   * This estimates mixture models of the form: p(x) = Σ_k π_k * p_k(x)
   *
-  * where π_k are mixing weights and p_k(x) are exponential family distributions corresponding to
-  * Bregman divergences.
+  * where π_k are mixing weights and p_k(x) are exponential family distributions corresponding to Bregman divergences.
   *
   * The likelihood for each component is: p_k(x) ∝ exp(-D_φ(x, μ_k))
   *

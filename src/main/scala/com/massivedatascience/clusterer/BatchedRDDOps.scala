@@ -26,8 +26,8 @@ import scala.collection.mutable.ArrayBuffer
 
 /** Batched RDD operations for reducing Spark shuffle and computation overhead.
   *
-  * This class combines multiple operations that would otherwise require separate RDD
-  * transformations into single, more efficient operations.
+  * This class combines multiple operations that would otherwise require separate RDD transformations into single, more
+  * efficient operations.
   */
 object BatchedRDDOps {
 
@@ -36,8 +36,7 @@ object BatchedRDDOps {
   /** Combined assignment and centroid computation in a single RDD pass.
     *
     * This combines three operations that are often done separately:
-    *   1. Point assignment to clusters 2. Distortion calculation 3. Centroid accumulation for
-    *      cluster updates
+    *   1. Point assignment to clusters 2. Distortion calculation 3. Centroid accumulation for cluster updates
     *
     * @param points
     *   RDD of points to process
@@ -120,8 +119,8 @@ object BatchedRDDOps {
 
   /** Optimized assignment update with movement tracking using existing ColumnTrackingKMeans logic.
     *
-    * This leverages the existing incremental assignment logic that avoids redundant distance
-    * calculations for stationary centers.
+    * This leverages the existing incremental assignment logic that avoids redundant distance calculations for
+    * stationary centers.
     *
     * @param points
     *   RDD of points
@@ -222,9 +221,9 @@ object BatchedRDDOps {
       }
 
     val (totalDistortion, assignedCount, unassignedCount, clusterCounts) = stats
-    val totalPoints      = assignedCount + unassignedCount
-    val nonEmptyClusters = clusterCounts.count(_._2 > 0)
-    val maxClusterSize   = if (clusterCounts.nonEmpty) clusterCounts.values.max else 0L
+    val totalPoints                                                      = assignedCount + unassignedCount
+    val nonEmptyClusters                                                 = clusterCounts.count(_._2 > 0)
+    val maxClusterSize = if (clusterCounts.nonEmpty) clusterCounts.values.max else 0L
     val avgClusterSize =
       if (nonEmptyClusters > 0) assignedCount.toDouble / nonEmptyClusters else 0.0
 

@@ -37,8 +37,8 @@ trait AssignmentStrategy extends Serializable {
 
 /** Broadcast UDF assignment strategy.
   *
-  * Broadcasts centers to executors and uses UDF to compute assignments. Works with any Bregman
-  * divergence but may be slower than expression-based approaches.
+  * Broadcasts centers to executors and uses UDF to compute assignments. Works with any Bregman divergence but may be
+  * slower than expression-based approaches.
   */
 class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
@@ -80,8 +80,8 @@ class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
 /** Squared Euclidean cross-join assignment strategy.
   *
-  * Uses DataFrame cross-join with expression-based distance computation. Much faster than UDF for
-  * Squared Euclidean, but only works with SE kernel.
+  * Uses DataFrame cross-join with expression-based distance computation. Much faster than UDF for Squared Euclidean,
+  * but only works with SE kernel.
   */
 class SECrossJoinAssignment extends AssignmentStrategy with Logging {
 
@@ -287,8 +287,8 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
 
 /** Median update strategy for K-Medians clustering.
   *
-  * Computes component-wise weighted median for each cluster instead of gradient-based mean. More
-  * robust to outliers than mean-based methods.
+  * Computes component-wise weighted median for each cluster instead of gradient-based mean. More robust to outliers
+  * than mean-based methods.
   *
   * Note: This should be paired with L1Kernel (Manhattan distance).
   */
@@ -435,9 +435,7 @@ trait EmptyClusterHandler extends Serializable {
 
 /** Reseed empty clusters with random points.
   */
-class ReseedRandomHandler(seed: Long = System.currentTimeMillis())
-    extends EmptyClusterHandler
-    with Logging {
+class ReseedRandomHandler(seed: Long = System.currentTimeMillis()) extends EmptyClusterHandler with Logging {
 
   override def handle(
     assigned: DataFrame,

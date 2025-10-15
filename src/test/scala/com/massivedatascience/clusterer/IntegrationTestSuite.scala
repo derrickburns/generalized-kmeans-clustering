@@ -175,15 +175,13 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0 && java.lang.Double.isFinite(cost))
     } catch {
-      case e: IllegalArgumentException
-          if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable if extreme conditions cause invalid centers
         succeed
       case e: IllegalArgumentException if e.getMessage.contains("requirement failed") =>
         // Acceptable if RDD caching requirement fails during multi-stage training
         succeed
-      case e: org.apache.spark.SparkException
-          if e.getMessage.contains("does not match requested numClusters") =>
+      case e: org.apache.spark.SparkException if e.getMessage.contains("does not match requested numClusters") =>
         // Acceptable if fewer unique clusters are produced due to data characteristics
         succeed
     } finally {

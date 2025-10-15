@@ -149,12 +149,11 @@ case class BregmanCoClusteringResult(
 
 /** Bregman co-clustering algorithm implementation.
   *
-  * This class implements the alternating minimization algorithm for Bregman co-clustering, which
-  * simultaneously clusters rows and columns of a data matrix by minimizing the Bregman divergence
-  * between the original matrix and a block-constant approximation.
+  * This class implements the alternating minimization algorithm for Bregman co-clustering, which simultaneously
+  * clusters rows and columns of a data matrix by minimizing the Bregman divergence between the original matrix and a
+  * block-constant approximation.
   */
-class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPointOps)
-    extends Serializable {
+class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPointOps) extends Serializable {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 

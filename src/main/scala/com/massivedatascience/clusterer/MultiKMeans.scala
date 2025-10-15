@@ -29,8 +29,8 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.slf4j.LoggerFactory
 
-/** A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
-  * returning the one with the lowest cost.
+/** A K-Means clustering implementation that performs multiple K-means clusterings simultaneously, returning the one
+  * with the lowest cost.
   */
 
 //scalastyle:off

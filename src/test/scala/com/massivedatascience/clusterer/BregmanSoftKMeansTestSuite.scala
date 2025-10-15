@@ -301,7 +301,7 @@ class BregmanSoftKMeansTestSuite extends AnyFunSuite with LocalClusterSparkConte
 
     val softKMeans: MultiKMeansClusterer = BregmanSoftKMeans.moderatelySoft()
     val selector                         = KMeansSelector(KMeansSelector.K_MEANS_PARALLEL)
-    val initialCenters = selector.init(pointOps, points, 2, None, 3, 42L) // 3 runs
+    val initialCenters                   = selector.init(pointOps, points, 2, None, 3, 42L) // 3 runs
 
     val results = softKMeans.cluster(50, pointOps, points, initialCenters)
 

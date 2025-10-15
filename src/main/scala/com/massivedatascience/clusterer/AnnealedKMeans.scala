@@ -22,16 +22,16 @@ import org.apache.spark.rdd.RDD
 
 /** Configuration for annealed (deterministic annealing) k-means clustering.
   *
-  * Annealed k-means gradually transitions from soft to hard clustering by increasing the inverse
-  * temperature parameter (beta) according to an annealing schedule.
+  * Annealed k-means gradually transitions from soft to hard clustering by increasing the inverse temperature parameter
+  * (beta) according to an annealing schedule.
   *
   * @param initialBeta
   *   Starting inverse temperature (low = soft, high = hard)
   * @param finalBeta
   *   Ending inverse temperature
   * @param annealingSchedule
-  *   Strategy for increasing beta: "exponential" - β_new = β_old * annealingRate "linear" - β_new =
-  *   β_old + annealingRate
+  *   Strategy for increasing beta: "exponential" - β_new = β_old * annealingRate "linear" - β_new = β_old +
+  *   annealingRate
   * @param annealingRate
   *   Rate at which beta increases
   * @param stepsPerTemperature
@@ -65,8 +65,8 @@ case class AnnealedKMeansConfig(
 
 /** Annealed (deterministic annealing) k-means clustering implementation.
   *
-  * This algorithm gradually transitions from soft to hard clustering using a temperature parameter,
-  * providing several benefits over standard k-means:
+  * This algorithm gradually transitions from soft to hard clustering using a temperature parameter, providing several
+  * benefits over standard k-means:
   *
   * Benefits:
   *   - Better escape from local minima (starts globally, refines locally)
@@ -75,10 +75,9 @@ case class AnnealedKMeansConfig(
   *   - Works with any Bregman divergence
   *
   * Algorithm:
-  *   1. Start with low beta (high temperature) = very soft clustering 2. Run soft k-means
-  *      (BregmanSoftKMeans) for a few iterations 3. Increase beta (decrease temperature) = make
-  *      clustering sharper 4. Repeat until beta is high (low temperature) = hard clustering 5.
-  *      Final result approaches standard k-means
+  *   1. Start with low beta (high temperature) = very soft clustering 2. Run soft k-means (BregmanSoftKMeans) for a few
+  *      iterations 3. Increase beta (decrease temperature) = make clustering sharper 4. Repeat until beta is high (low
+  *      temperature) = hard clustering 5. Final result approaches standard k-means
   *
   * The annealing schedule controls how quickly we transition from soft to hard:
   *   - Exponential: β_t+1 = rate * β_t (faster)
@@ -92,9 +91,7 @@ case class AnnealedKMeansConfig(
   * @param config
   *   Configuration parameters
   */
-class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig())
-    extends MultiKMeansClusterer
-    with Logging {
+class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig()) extends MultiKMeansClusterer with Logging {
 
   def cluster(
     maxIterations: Int,

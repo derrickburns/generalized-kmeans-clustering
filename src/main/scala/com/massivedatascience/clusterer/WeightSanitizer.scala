@@ -20,8 +20,8 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.linalg.WeightedVector
 import org.apache.spark.rdd.RDD
 
-/** Utility for sanitizing weighted vectors to ensure numerical stability and avoid edge cases with
-  * extreme weight values.
+/** Utility for sanitizing weighted vectors to ensure numerical stability and avoid edge cases with extreme weight
+  * values.
   */
 object WeightSanitizer {
 
@@ -31,8 +31,7 @@ object WeightSanitizer {
   /** Maximum valid weight to avoid overflow issues */
   val MAX_VALID_WEIGHT = 1e100
 
-  /** Sanitize an RDD of weighted vectors by filtering out zero weights and clamping extreme values
-    * to safe ranges.
+  /** Sanitize an RDD of weighted vectors by filtering out zero weights and clamping extreme values to safe ranges.
     *
     * @param data
     *   input RDD of weighted vectors

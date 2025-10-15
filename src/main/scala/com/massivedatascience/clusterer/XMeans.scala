@@ -28,8 +28,8 @@ import scala.math.{log, Pi}
   * @param maxK
   *   Maximum number of clusters to try
   * @param criterion
-  *   Information criterion for model selection: "bic" - Bayesian Information Criterion (default)
-  *   "aic" - Akaike Information Criterion
+  *   Information criterion for model selection: "bic" - Bayesian Information Criterion (default) "aic" - Akaike
+  *   Information Criterion
   * @param maxIterationsPerK
   *   Maximum iterations for clustering at each k
   * @param improvementThreshold
@@ -51,14 +51,13 @@ case class XMeansConfig(
 
 /** X-means clustering implementation - automatically determines optimal k.
   *
-  * X-means extends k-means by automatically selecting the number of clusters using the Bayesian
-  * Information Criterion (BIC) or Akaike Information Criterion (AIC).
+  * X-means extends k-means by automatically selecting the number of clusters using the Bayesian Information Criterion
+  * (BIC) or Akaike Information Criterion (AIC).
   *
   * Algorithm:
   *   1. Start with k = minK clusters 2. For each k from minK to maxK:
-  *      a. Run k-means with k clusters b. Compute BIC or AIC score c. If score improved, continue;
-  *         else stop
-  *      3. Return clustering with best score
+  *      a. Run k-means with k clusters b. Compute BIC or AIC score c. If score improved, continue; else stop 3. Return
+  *         clustering with best score
   *
   * Information Criteria:
   *   - BIC = -2*log-likelihood + p*log(n)
@@ -171,8 +170,7 @@ class XMeans(
     Seq(bestClustering)
   }
 
-  /** Initialize centers for a given k. Uses provided initial centers if k matches, otherwise
-    * samples from data.
+  /** Initialize centers for a given k. Uses provided initial centers if k matches, otherwise samples from data.
     */
   private def initializeCenters(
     k: Int,

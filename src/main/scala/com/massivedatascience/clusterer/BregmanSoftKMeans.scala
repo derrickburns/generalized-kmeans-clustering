@@ -25,9 +25,8 @@ import scala.math.{exp, log}
 /** Configuration for Bregman soft clustering (fuzzy c-means).
   *
   * @param beta
-  *   Inverse temperature parameter controlling soft assignment sharpness. Higher values = sharper
-  *   assignments (approaches hard clustering). Lower values = softer assignments (more fuzzy
-  *   membership).
+  *   Inverse temperature parameter controlling soft assignment sharpness. Higher values = sharper assignments
+  *   (approaches hard clustering). Lower values = softer assignments (more fuzzy membership).
   * @param minMembership
   *   Minimum membership probability to avoid numerical issues
   * @param maxIterations
@@ -86,8 +85,8 @@ case class SoftClusteringResult(
 
   /** Get the effective number of clusters (entropy-based measure).
     *
-    * For each point, the effective number of clusters is exp(entropy). We return the average
-    * effective number across all points.
+    * For each point, the effective number of clusters is exp(entropy). We return the average effective number across
+    * all points.
     *
     * This correctly handles:
     *   - Hard assignment (entropy=0) → exp(0) = 1 effective cluster
@@ -117,15 +116,15 @@ case class SoftClusteringResult(
 
 /** Bregman soft clustering (fuzzy c-means) implementation.
   *
-  * This implements probabilistic clustering where each point has a membership probability for each
-  * cluster, computed using:
+  * This implements probabilistic clustering where each point has a membership probability for each cluster, computed
+  * using:
   *
   * p(cluster c | point x) ∝ exp(-β * D_φ(x, μ_c))
   *
   * where β is the inverse temperature parameter and D_φ is the Bregman divergence.
   *
-  * Higher β values lead to sharper (more decisive) assignments, while lower β values lead to softer
-  * (more fuzzy) assignments.
+  * Higher β values lead to sharper (more decisive) assignments, while lower β values lead to softer (more fuzzy)
+  * assignments.
   */
 case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans.defaultConfig)
     extends MultiKMeansClusterer
@@ -269,8 +268,8 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     *
     * Uses the Boltzmann distribution: p(c|x) ∝ exp(-β * D_φ(x, μ_c))
     *
-    * Uses the log-sum-exp trick for numerical stability by subtracting the minimum distance before
-    * exponentiating. This ensures the largest probability is exp(0) = 1.0.
+    * Uses the log-sum-exp trick for numerical stability by subtracting the minimum distance before exponentiating. This
+    * ensures the largest probability is exp(0) = 1.0.
     */
   private def computeSoftAssignments(
     data: RDD[BregmanPoint],

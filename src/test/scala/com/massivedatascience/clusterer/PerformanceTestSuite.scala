@@ -222,7 +222,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
   test("memory usage with zero-weight vectors") {
     val numPoints = 100
     val data = sc.parallelize((0 until numPoints).map { i =>
-      val weight = if (i % 10 == 0) 1e-100 else 1.0 // Use very small weight instead of exactly zero
+      val weight  = if (i % 10 == 0) 1e-100 else 1.0 // Use very small weight instead of exactly zero
       val cluster = i % 3
       WeightedVector(
         Vectors.dense(
@@ -253,8 +253,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0) // May be infinite with extreme weights
     } catch {
-      case e: IllegalArgumentException
-          if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable if extreme weights cause invalid centers
         succeed
     }

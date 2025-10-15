@@ -27,8 +27,8 @@ import org.apache.spark.rdd.RDD
   * @param minClusterSize
   *   Minimum size for a cluster to be split
   * @param splitCriterion
-  *   Criterion for selecting cluster to split: "largest" - split cluster with most points
-  *   "highest_cost" - split cluster with highest cost
+  *   Criterion for selecting cluster to split: "largest" - split cluster with most points "highest_cost" - split
+  *   cluster with highest cost
   */
 case class BisectingKMeansConfig(
   maxIterationsPerSplit: Int = 20,
@@ -44,8 +44,8 @@ case class BisectingKMeansConfig(
 /** Bisecting k-means clustering implementation.
   *
   * This is a hierarchical divisive clustering algorithm that:
-  *   1. Starts with all points in one cluster 2. Repeatedly selects a cluster and splits it into
-  *      two using k-means (k=2) 3. Continues until reaching target k clusters
+  *   1. Starts with all points in one cluster 2. Repeatedly selects a cluster and splits it into two using k-means
+  *      (k=2) 3. Continues until reaching target k clusters
   *
   * Benefits over standard k-means:
   *   - More deterministic (less sensitive to initialization)
@@ -56,9 +56,8 @@ case class BisectingKMeansConfig(
   *
   * Algorithm:
   *   1. Start: all data in one cluster 2. While num_clusters < k:
-  *      a. Select largest cluster (or highest cost cluster) b. Split it into 2 using k-means with
-  *         k=2 c. Add both sub-clusters to active clusters
-  *      3. Return final k clusters
+  *      a. Select largest cluster (or highest cost cluster) b. Split it into 2 using k-means with k=2 c. Add both
+  *         sub-clusters to active clusters 3. Return final k clusters
   *
   * Works with any Bregman divergence.
   *

@@ -4,8 +4,8 @@ import org.apache.spark.ml.linalg.{Vector, Vectors}
 
 /** Kernel interface for Bregman divergences in DataFrame-based clustering.
   *
-  * A Bregman divergence is defined by a strictly convex function F: S → ℝ where S ⊆ ℝ^d. The
-  * divergence between points x and y is: D_F(x, y) = F(x) - F(y) - ⟨∇F(y), x - y⟩
+  * A Bregman divergence is defined by a strictly convex function F: S → ℝ where S ⊆ ℝ^d. The divergence between points
+  * x and y is: D_F(x, y) = F(x) - F(y) - ⟨∇F(y), x - y⟩
   *
   * For clustering, we need:
   *   - grad(x): Gradient ∇F(x) (natural parameters)
@@ -61,8 +61,8 @@ trait BregmanKernel extends Serializable {
     */
   def name: String
 
-  /** Whether this kernel supports expression-based cross-join optimization. Only Squared Euclidean
-    * can use this fast path.
+  /** Whether this kernel supports expression-based cross-join optimization. Only Squared Euclidean can use this fast
+    * path.
     */
   def supportsExpressionOptimization: Boolean = false
 }
@@ -104,8 +104,7 @@ class SquaredEuclideanKernel extends BregmanKernel {
 
 /** Kullback-Leibler divergence kernel: F(x) = ∑_i x_i log(x_i)
   *
-  * Used for probability distributions and count data. Requires all components to be positive
-  * (probability simplex).
+  * Used for probability distributions and count data. Requires all components to be positive (probability simplex).
   *   - grad(x) = [log(x_i) + 1]
   *   - invGrad(θ) = [exp(θ_i - 1)]
   *   - divergence(x, μ) = ∑_i x_i log(x_i / μ_i)
@@ -162,8 +161,7 @@ class KLDivergenceKernel(smoothing: Double = 1e-10) extends BregmanKernel {
 
 /** Itakura-Saito divergence kernel: F(x) = -∑_i log(x_i)
   *
-  * Used for spectral analysis and audio processing. Requires all components to be strictly
-  * positive.
+  * Used for spectral analysis and audio processing. Requires all components to be strictly positive.
   *   - grad(x) = [-1/x_i]
   *   - invGrad(θ) = [-1/θ_i]
   *   - divergence(x, μ) = ∑_i (x_i/μ_i - log(x_i/μ_i) - 1)
@@ -335,8 +333,8 @@ class LogisticLossKernel(smoothing: Double = 1e-10) extends BregmanKernel {
 
 /** L1 (Manhattan distance) kernel for K-Medians clustering.
   *
-  * This is NOT a Bregman divergence, but we provide it for K-Medians support. K-Medians uses
-  * component-wise medians instead of gradient-based means.
+  * This is NOT a Bregman divergence, but we provide it for K-Medians support. K-Medians uses component-wise medians
+  * instead of gradient-based means.
   *
   *   - Distance: ||x - μ||_1 = ∑_i |x_i - μ_i|
   *   - Centers: component-wise median (not via gradient)

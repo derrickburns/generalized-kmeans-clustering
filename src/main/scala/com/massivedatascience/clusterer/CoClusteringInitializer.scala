@@ -27,8 +27,8 @@ import scala.util.Random
 
 /** Advanced initialization strategies for Bregman co-clustering.
   *
-  * This class provides various initialization methods that can significantly impact the quality and
-  * convergence speed of co-clustering algorithms.
+  * This class provides various initialization methods that can significantly impact the quality and convergence speed
+  * of co-clustering algorithms.
   */
 class CoClusteringInitializer(
   numRowClusters: Int,

@@ -58,8 +58,7 @@ trait GeneralizedKMeansParams
 
   def getSmoothing: Double = $(smoothing)
 
-  /** Name of the optional weight column. If not set, all instances are treated equally with weight
-    * 1.0. Default: None
+  /** Name of the optional weight column. If not set, all instances are treated equally with weight 1.0. Default: None
     */
   final val weightCol = new Param[String](this, "weightCol", "Weight column name")
 
@@ -94,8 +93,7 @@ trait GeneralizedKMeansParams
 
   def getEmptyClusterStrategy: String = $(emptyClusterStrategy)
 
-  /** Checkpoint interval (iterations between checkpoints). Set to 0 to disable checkpointing. Must
-    * be >= 0. Default: 10
+  /** Checkpoint interval (iterations between checkpoints). Set to 0 to disable checkpointing. Must be >= 0. Default: 10
     */
   final val checkpointInterval =
     new IntParam(this, "checkpointInterval", "Checkpoint interval", ParamValidators.gtEq(0))
@@ -123,8 +121,7 @@ trait GeneralizedKMeansParams
 
   def getInitMode: String = $(initMode)
 
-  /** Number of steps for k-means|| initialization. Only used when initMode = "k-means||". Must be >
-    * 0. Default: 2
+  /** Number of steps for k-means|| initialization. Only used when initMode = "k-means||". Must be > 0. Default: 2
     */
   final val initSteps = new IntParam(
     this,
@@ -135,8 +132,8 @@ trait GeneralizedKMeansParams
 
   def getInitSteps: Int = $(initSteps)
 
-  /** Optional column name for distances to cluster centers in transform output. If set, adds a
-    * column with distance from point to assigned center. Default: None
+  /** Optional column name for distances to cluster centers in transform output. If set, adds a column with distance
+    * from point to assigned center. Default: None
     */
   final val distanceCol = new Param[String](this, "distanceCol", "Distance column name")
 

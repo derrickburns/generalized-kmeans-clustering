@@ -40,8 +40,8 @@ trait KMeansPredictor {
 
   // operations on Vectors
 
-  /** Return the K-means cost (sum of squared distances of points to their nearest center) for this
-    * model on the given data.
+  /** Return the K-means cost (sum of squared distances of points to their nearest center) for this model on the given
+    * data.
     */
   def computeCost(data: RDD[Vector]): Double =
     computeCostWeighted(data.map(WeightedVector.apply))
@@ -149,8 +149,8 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
 
   lazy val k: Int = validCenters.length
 
-  /** Returns the cluster centers. N.B. These are in the embedded space where the clustering takes
-    * place, which may be different from the space of the input vectors!
+  /** Returns the cluster centers. N.B. These are in the embedded space where the clustering takes place, which may be
+    * different from the space of the input vectors!
     */
   lazy val weightedClusterCenters: IndexedSeq[WeightedVector] = centers.map(pointOps.toPoint)
 }
@@ -278,8 +278,8 @@ object KMeansModel extends Logging {
     * @param assignments
     *   RDD of cluster indices (0-based) corresponding to each point
     * @param expectedNumClusters
-    *   Optional expected number of clusters. If provided and greater than 0, the method will ensure
-    *   exactly this many clusters are returned.
+    *   Optional expected number of clusters. If provided and greater than 0, the method will ensure exactly this many
+    *   clusters are returned.
     * @return
     *   A KMeansModel with the computed cluster centers
     * @throws IllegalArgumentException
@@ -502,8 +502,7 @@ object KMeansModel extends Logging {
     new KMeansModel(ops, centers)
   }
 
-  /** Construct a K-Means model of a set of points using Lloyd's algorithm given a set of initial
-    * K-Means models.
+  /** Construct a K-Means model of a set of points using Lloyd's algorithm given a set of initial K-Means models.
     *
     * @param ops
     *   distance function

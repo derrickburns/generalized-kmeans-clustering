@@ -103,8 +103,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       blockCohesion = blockCohesion,
       separationIndex = separationIndex,
       modularity = modularity,
-      overallQuality =
-        (rowSilhouette + colSilhouette + blockCohesion + separationIndex + modularity) / 5.0
+      overallQuality = (rowSilhouette + colSilhouette + blockCohesion + separationIndex + modularity) / 5.0
     )
   }
 

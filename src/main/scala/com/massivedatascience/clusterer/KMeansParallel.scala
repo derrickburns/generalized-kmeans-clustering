@@ -28,19 +28,15 @@ import scala.collection.Map
 import scala.collection.mutable.ArrayBuffer
 
 /** Initialize `runs` sets of cluster centers using the <a
-  * href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>. This
-  * is a variant of k-means++ that tries to find dissimilar cluster centers by starting with a
-  * random center and then doing passes where more centers are chosen with probability proportional
-  * to their squared distance to the current cluster set. It results in a provable approximation to
-  * an optimal clustering.
+  * href="http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf">k-means|| algorithm</a>. This is a variant of
+  * k-means++ that tries to find dissimilar cluster centers by starting with a random center and then doing passes where
+  * more centers are chosen with probability proportional to their squared distance to the current cluster set. It
+  * results in a provable approximation to an optimal clustering.
   *
-  * In this implementation, we allow the client to provide an initial set of cluster centers and
-  * closest distance for each point to those cluster centers. This allows us to use this code to
-  * find additional cluster centers at any time.
+  * In this implementation, we allow the client to provide an initial set of cluster centers and closest distance for
+  * each point to those cluster centers. This allows us to use this code to find additional cluster centers at any time.
   */
-case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
-    extends KMeansSelector
-    with SparkHelper {
+case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMeansSelector with SparkHelper {
 
   /** @param pointOps
     *   distance function
@@ -80,8 +76,8 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
     val seed                   = rand.nextLong()
     val preselectedCenters     = initialState.map(_.centers)
     val initialCosts           = initialState.map(_.distances)
-    val centers   = preselectedCenters.getOrElse(randomCenters(pointOps, data, runs, seed))
-    val requested = numbersRequested(adjustedTargetClusters, preselectedCenters, runs)
+    val centers                = preselectedCenters.getOrElse(randomCenters(pointOps, data, runs, seed))
+    val requested              = numbersRequested(adjustedTargetClusters, preselectedCenters, runs)
     val expandedCenters =
       moreCenters(pointOps, data, runs, initialCosts, numSteps, requested, seed, centers)
     val numbersRetainedCenters = preselectedCenters.map(_.map(_.size))
@@ -229,9 +225,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
         .sample(withReplacement = false, fraction, seed)
         .flatMap { point =>
           val centers = bcCenters.value
-          Seq.tabulate(centers.length)(r =>
-            ((r, pointOps.findClosestCluster(centers(r), point)), point.weight)
-          )
+          Seq.tabulate(centers.length)(r => ((r, pointOps.findClosestCluster(centers(r), point)), point.weight))
         }
         .reduceByKeyLocally(_ + _)
     }
@@ -248,9 +242,8 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
     rdds match {
       case Seq(head, _) =>
         rdds.zipWithIndex
-          .foldLeft(head.map { _ => new Array[Double](rdds.length) }) {
-            case (arrayRdd, (doubleRdd, i)) =>
-              arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
+          .foldLeft(head.map { _ => new Array[Double](rdds.length) }) { case (arrayRdd, (doubleRdd, i)) =>
+            arrayRdd.zip(doubleRdd).map { case (array, double) => array(i) = double; array }
 
           }
           .map(Vectors.dense)
@@ -258,8 +251,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
     }
   }
 
-  /** Select approximately k points at random with probability proportional to the weight vectors
-    * given.
+  /** Select approximately k points at random with probability proportional to the weight vectors given.
     *
     * @param k
     *   number of points desired
@@ -327,9 +319,8 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0)
       .map(_.map(desired - _.length))
       .getOrElse(Seq.fill(runs)(desired))
 
-  /** On each step, preRound(run) points on average for each run with probability proportional to
-    * their squared distance from the centers. Note that only distances between points and new
-    * centers are computed in each iteration.
+  /** On each step, preRound(run) points on average for each run with probability proportional to their squared distance
+    * from the centers. Note that only distances between points and new centers are computed in each iteration.
     *
     * @param initialCosts
     *   initial costs

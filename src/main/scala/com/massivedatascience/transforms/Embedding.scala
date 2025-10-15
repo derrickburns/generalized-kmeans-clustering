@@ -20,9 +20,8 @@ package com.massivedatascience.transforms
 import com.massivedatascience.linalg.{WeightedVector, _}
 import org.apache.spark.ml.linalg.{Vectors, Vector}
 
-/** An embedding of vectors into an alternative space. Typically, embeddings are used to lower the
-  * dimension of the data in such a way that preserves distances using the given divergence so that
-  * clustering can proceed expeditiously.
+/** An embedding of vectors into an alternative space. Typically, embeddings are used to lower the dimension of the data
+  * in such a way that preserves distances using the given divergence so that clustering can proceed expeditiously.
   */
 trait Embedding extends Serializable {
 
@@ -81,7 +80,7 @@ object Embedding {
       case HIGH_DIMENSIONAL_RI       => new RandomIndexEmbedding(highDimension, epsilon, seed = 0)
       case HAAR_EMBEDDING            => HaarEmbedding
       case SYMMETRIZING_KL_EMBEDDING => SymmetrizingKLEmbedding
-      case _ => throw new RuntimeException(s"unknown embedding name $embeddingName")
+      case _                         => throw new RuntimeException(s"unknown embedding name $embeddingName")
     }
   }
 }

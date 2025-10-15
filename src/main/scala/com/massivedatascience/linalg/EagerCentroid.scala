@@ -20,8 +20,8 @@ package com.massivedatascience.linalg
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import com.massivedatascience.linalg.EagerCentroid._
 
-/** A mutable weighted vector that eagerly adds new vectors or subtracts vectors to a form centroid.
-  * Consequently, it is appropriate for use with dense vectors.
+/** A mutable weighted vector that eagerly adds new vectors or subtracts vectors to a form centroid. Consequently, it is
+  * appropriate for use with dense vectors.
   */
 class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializable {
 

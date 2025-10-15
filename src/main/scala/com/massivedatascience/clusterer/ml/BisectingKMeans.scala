@@ -14,8 +14,7 @@ import org.apache.spark.sql.types.StructType
   */
 trait BisectingKMeansParams extends GeneralizedKMeansParams {
 
-  /** Minimum divisible cluster size. Clusters with fewer points than this will not be split. Must
-    * be >= 1. Default: 1
+  /** Minimum divisible cluster size. Clusters with fewer points than this will not be split. Must be >= 1. Default: 1
     */
   final val minDivisibleClusterSize = new IntParam(
     this,
@@ -32,8 +31,8 @@ trait BisectingKMeansParams extends GeneralizedKMeansParams {
 /** Bisecting K-Means clustering with pluggable Bregman divergences.
   *
   * This is a hierarchical divisive clustering algorithm that:
-  *   1. Starts with all points in one cluster 2. Repeatedly selects the largest cluster and splits
-  *      it into two using k=2 clustering 3. Continues until reaching target k clusters
+  *   1. Starts with all points in one cluster 2. Repeatedly selects the largest cluster and splits it into two using
+  *      k=2 clustering 3. Continues until reaching target k clusters
   *
   * Benefits over standard k-means:
   *   - More deterministic (less sensitive to initialization)
@@ -353,7 +352,7 @@ class BisectingKMeans(override val uid: String)
       case "broadcast" => new BroadcastUDFAssignment()
       case "crossJoin" => new SECrossJoinAssignment()
       case "auto"      => new AutoAssignment()
-      case _ => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
+      case _           => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
     }
   }
 

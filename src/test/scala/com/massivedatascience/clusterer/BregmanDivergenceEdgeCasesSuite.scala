@@ -280,8 +280,8 @@ class BregmanDivergenceEdgeCasesSuite extends AnyFunSuite {
     val expectedInhomogeneous = Vectors.dense(1.0, 2.0) // (2.0, 4.0) / 2.0
     val actualInhomogeneous   = point.inhomogeneous
 
-    assert(expectedInhomogeneous.toArray.zip(actualInhomogeneous.toArray).forall {
-      case (expected, actual) => math.abs(expected - actual) < 1e-8
+    assert(expectedInhomogeneous.toArray.zip(actualInhomogeneous.toArray).forall { case (expected, actual) =>
+      math.abs(expected - actual) < 1e-8
     })
   }
 

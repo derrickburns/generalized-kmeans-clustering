@@ -11,14 +11,10 @@ import org.scalacheck.Gen
 
 /** Property-based tests for DataFrame API using ScalaCheck.
   *
-  * These tests verify invariants and properties that should hold for all inputs, helping to catch
-  * edge cases and ensure correctness across a wide range of scenarios.
+  * These tests verify invariants and properties that should hold for all inputs, helping to catch edge cases and ensure
+  * correctness across a wide range of scenarios.
   */
-class PropertyBasedTestSuite
-    extends AnyFunSuite
-    with ScalaCheckPropertyChecks
-    with Matchers
-    with BeforeAndAfterAll {
+class PropertyBasedTestSuite extends AnyFunSuite with ScalaCheckPropertyChecks with Matchers with BeforeAndAfterAll {
 
   // Configure ScalaCheck for fewer test cases but faster execution
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
@@ -310,9 +306,7 @@ class PropertyBasedTestSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val vectors = (1 to numPoints).map(_ =>
-          Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))
-        )
+        val vectors = (1 to numPoints).map(_ => Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
 
         val data = vectors.map(Tuple1.apply).toDF("features")
 
@@ -336,37 +330,36 @@ class PropertyBasedTestSuite
   // Property 9: KL divergence works with probability distributions
 
   test("Property: KL divergence handles probability distributions") {
-    forAll(Gen.choose(3, 10), Gen.choose(2, 5), Gen.choose(20, 30)) {
-      (dim: Int, k: Int, numPoints: Int) =>
-        whenever(numPoints >= k * 5) {
-          val sparkSession = spark
-          import sparkSession.implicits._
+    forAll(Gen.choose(3, 10), Gen.choose(2, 5), Gen.choose(20, 30)) { (dim: Int, k: Int, numPoints: Int) =>
+      whenever(numPoints >= k * 5) {
+        val sparkSession = spark
+        import sparkSession.implicits._
 
-          // Generate probability distributions (sum to 1)
-          val data = (1 to numPoints)
-            .map { _ =>
-              val values = Array.fill(dim)(scala.util.Random.nextDouble() + 0.1)
-              val sum    = values.sum
-              val prob   = values.map(_ / sum)
-              Tuple1(Vectors.dense(prob))
-            }
-            .toDF("features")
+        // Generate probability distributions (sum to 1)
+        val data = (1 to numPoints)
+          .map { _ =>
+            val values = Array.fill(dim)(scala.util.Random.nextDouble() + 0.1)
+            val sum    = values.sum
+            val prob   = values.map(_ / sum)
+            Tuple1(Vectors.dense(prob))
+          }
+          .toDF("features")
 
-          val kmeans = new GeneralizedKMeans()
-            .setK(k)
-            .setDivergence("kl")
-            .setSmoothing(1e-10)
-            .setMaxIter(5)
-            .setSeed(42)
+        val kmeans = new GeneralizedKMeans()
+          .setK(k)
+          .setDivergence("kl")
+          .setSmoothing(1e-10)
+          .setMaxIter(5)
+          .setSeed(42)
 
-          val model = kmeans.fit(data)
-          val cost  = model.computeCost(data)
+        val model = kmeans.fit(data)
+        val cost  = model.computeCost(data)
 
-          model.numClusters should be >= 1
-          model.numClusters should be <= k
-          cost should be >= 0.0
-          cost.isNaN shouldBe false
-        }
+        model.numClusters should be >= 1
+        model.numClusters should be <= k
+        cost should be >= 0.0
+        cost.isNaN shouldBe false
+      }
     }
   }
 

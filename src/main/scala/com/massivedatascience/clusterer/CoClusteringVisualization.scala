@@ -24,8 +24,8 @@ import scala.collection.mutable
 
 /** Specialized visualization utilities for co-clustering results.
   *
-  * This object provides methods to generate data in formats suitable for popular visualization
-  * libraries and tools including:
+  * This object provides methods to generate data in formats suitable for popular visualization libraries and tools
+  * including:
   *   - Heatmaps for block structure visualization
   *   - Network graphs for cluster relationships
   *   - Statistical plots for convergence and quality metrics
@@ -37,8 +37,7 @@ object CoClusteringVisualization {
 
   /** Generate heatmap data for block structure visualization.
     *
-    * This creates a matrix representation suitable for heatmap visualization tools like seaborn,
-    * matplotlib, or D3.js.
+    * This creates a matrix representation suitable for heatmap visualization tools like seaborn, matplotlib, or D3.js.
     *
     * @param model
     *   Trained co-clustering model
@@ -102,8 +101,8 @@ object CoClusteringVisualization {
 
   /** Generate network graph data showing relationships between clusters.
     *
-    * Creates nodes and edges for visualization in network graph libraries like NetworkX, vis.js, or
-    * D3.js force-directed layouts.
+    * Creates nodes and edges for visualization in network graph libraries like NetworkX, vis.js, or D3.js
+    * force-directed layouts.
     *
     * @param model
     *   Trained co-clustering model
@@ -330,11 +329,10 @@ object CoClusteringVisualization {
     // Convergence data
     json.append("""  "convergence": {""").append("\n")
     json.append("""    "data": [""").append("\n")
-    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach {
-      case ((iter, obj), idx) =>
-        json.append(s"""      {"iteration": $iter, "objective": $obj}""")
-        if (idx < convergence.iterations.length - 1) json.append(",")
-        json.append("\n")
+    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach { case ((iter, obj), idx) =>
+      json.append(s"""      {"iteration": $iter, "objective": $obj}""")
+      if (idx < convergence.iterations.length - 1) json.append(",")
+      json.append("\n")
     }
     json.append("""    ]""").append("\n")
     json.append("""  }""").append("\n")

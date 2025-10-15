@@ -59,9 +59,9 @@ object SharedSparkContext {
             .set(
               "spark.hadoop.fs.file.impl.disable.cache",
               "true"
-            )                                             // Disable file system cache for tests
-            .set("spark.sql.codegen.wholeStage", "false") // Disable code generation for tests
-            .set("spark.sql.codegen.fallback", "true")    // Enable fallback for code generation
+            )                                                    // Disable file system cache for tests
+            .set("spark.sql.codegen.wholeStage", "false")        // Disable code generation for tests
+            .set("spark.sql.codegen.fallback", "true")           // Enable fallback for code generation
             .set("spark.sql.catalogImplementation", "in-memory") // Use in-memory catalog for tests
             .set("spark.eventLog.enabled", "false")              // Disable event logging for tests
             .set("spark.dynamicAllocation.enabled", "false")     // Disable dynamic allocation

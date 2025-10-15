@@ -416,8 +416,7 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0) // May be infinite with extreme weights
     } catch {
-      case e: IllegalArgumentException
-          if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable failure mode when extreme weights cause all centers to be invalid
         succeed
     }

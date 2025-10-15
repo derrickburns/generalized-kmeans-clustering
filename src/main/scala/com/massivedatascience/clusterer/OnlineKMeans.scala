@@ -22,12 +22,12 @@ import org.apache.spark.rdd.RDD
 
 /** Configuration for online (sequential) k-means clustering.
   *
-  * Online k-means processes each point exactly once, updating centers incrementally. This provides
-  * O(1) space complexity and constant time per point.
+  * Online k-means processes each point exactly once, updating centers incrementally. This provides O(1) space
+  * complexity and constant time per point.
   *
   * @param learningRateDecay
-  *   How quickly the learning rate decreases: "standard" - α = 1 / (n_k + 1) "sqrt" - α = 1 /
-  *   sqrt(n_k + 1) "constant" - α = constantRate
+  *   How quickly the learning rate decreases: "standard" - α = 1 / (n_k + 1) "sqrt" - α = 1 / sqrt(n_k + 1) "constant"
+  *   \- α = constantRate
   * @param constantRate
   *   Fixed learning rate when using constant strategy
   */
@@ -63,9 +63,7 @@ case class OnlineKMeansConfig(learningRateDecay: String = "standard", constantRa
   * @param config
   *   Configuration parameters
   */
-class OnlineKMeans(config: OnlineKMeansConfig = OnlineKMeansConfig())
-    extends MultiKMeansClusterer
-    with Logging {
+class OnlineKMeans(config: OnlineKMeansConfig = OnlineKMeansConfig()) extends MultiKMeansClusterer with Logging {
 
   def cluster(
     maxIterations: Int,
@@ -85,9 +83,8 @@ class OnlineKMeans(config: OnlineKMeansConfig = OnlineKMeansConfig())
 
   /** Train online k-means on a single initial center set.
     *
-    * We do a simpler implementation: just use the standard clusterer but with a single iteration
-    * and mini-batch updates to simulate online learning. This leverages existing infrastructure
-    * while achieving online semantics.
+    * We do a simpler implementation: just use the standard clusterer but with a single iteration and mini-batch updates
+    * to simulate online learning. This leverages existing infrastructure while achieving online semantics.
     */
   private def trainOnline(
     pointOps: BregmanPointOps,

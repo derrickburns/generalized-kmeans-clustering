@@ -30,8 +30,8 @@ case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends 
   lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
-/** A cluster center with an additional Double and an additional vector containing the gradient that
-  * are used in distance computation.
+/** A cluster center with an additional Double and an additional vector containing the gradient that are used in
+  * distance computation.
   *
   * @param homogeneous
   *   point
@@ -108,8 +108,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
 
   /** Return the index of the closest point in `centers` to `point`, as well as its distance.
     *
-    * N.B. This is inner loop code, so until the Scala compiler is smart enough, we eschew the more
-    * functional approach.
+    * N.B. This is inner loop code, so until the Scala compiler is smart enough, we eschew the more functional approach.
     *
     * @param centers
     *   centers
@@ -189,8 +188,8 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
   }
 
-  /** Assign each point to its closest cluster center with distance. Returns RDD of (clusterIndex,
-    * (point, distance)) tuples.
+  /** Assign each point to its closest cluster center with distance. Returns RDD of (clusterIndex, (point, distance))
+    * tuples.
     */
   def assignPointsWithDistance(data: RDD[P], centers: IndexedSeq[C]): RDD[(Int, (P, Double))] = {
     data.map { point =>
@@ -207,8 +206,8 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
 
   /** Bregman distance function
     *
-    * The distance function is called in the innermost loop of the K-Means clustering algorithm.
-    * Therefore, we seek to make the operation as efficient as possible.
+    * The distance function is called in the innermost loop of the K-Means clustering algorithm. Therefore, we seek to
+    * make the operation as efficient as possible.
     *
     * @param p
     *   point
@@ -236,8 +235,8 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
   }
 
-  /** Scale a BregmanPoint by a factor, creating a new weighted point. This is used in soft
-    * clustering to weight points by their membership probabilities.
+  /** Scale a BregmanPoint by a factor, creating a new weighted point. This is used in soft clustering to weight points
+    * by their membership probabilities.
     *
     * @param point
     *   The point to scale
@@ -319,63 +318,48 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
 
 /** Implements Kullback-Leibler divergence on dense vectors in R+ ** n
   */
-private[clusterer] case object DenseKLPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object DenseKLPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = RealKLDivergence
 }
 
 /** Implements Generalized I-divergence on dense vectors in R+ ** n
   */
-private[clusterer] case object GeneralizedIPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object GeneralizedIPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = GeneralizedIDivergence
 }
 
 /** Implements Squared Euclidean distance on dense vectors in R ** n
   */
-private[clusterer] case object SquaredEuclideanPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object SquaredEuclideanPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = SquaredEuclideanDistanceDivergence
 }
 
 /** Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
   */
 
-private[clusterer] case object LogisticLossPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object LogisticLossPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = LogisticLossDivergence
 }
 
 /** Implements Itakura-Saito divergence on dense vectors in R+ ** n
   */
-private[clusterer] case object ItakuraSaitoPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object ItakuraSaitoPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = ItakuraSaitoDivergence
 }
 
-/** Implements the Kullback-Leibler divergence for dense points are in N+ ** n, i.e. the entries in
-  * each vector are positive integers.
+/** Implements the Kullback-Leibler divergence for dense points are in N+ ** n, i.e. the entries in each vector are
+  * positive integers.
   */
-private[clusterer] case object DiscreteKLPointOps
-    extends BregmanPointOps
-    with NonSmoothedPointCenterFactory {
+private[clusterer] case object DiscreteKLPointOps extends BregmanPointOps with NonSmoothedPointCenterFactory {
   val divergence = NaturalKLDivergence
 }
 
-/** Implements Kullback-Leibler divergence with dense points in N ** n and whose weights equal the
-  * sum of the frequencies.
+/** Implements Kullback-Leibler divergence with dense points in N ** n and whose weights equal the sum of the
+  * frequencies.
   *
-  * Because KL divergence is not defined on zero values, we smooth the points by adding 1 to all
-  * entries.
+  * Because KL divergence is not defined on zero values, we smooth the points by adding 1 to all entries.
   */
-private[clusterer] case object DiscreteSmoothedKLPointOps
-    extends BregmanPointOps
-    with SmoothedPointCenterFactory {
+private[clusterer] case object DiscreteSmoothedKLPointOps extends BregmanPointOps with SmoothedPointCenterFactory {
   val divergence      = NaturalKLDivergence
   val smoothingFactor = 1.0
 }
@@ -409,7 +393,7 @@ object BregmanPointOps {
       case LOGISTIC_LOSS        => LogisticLossPointOps
       case GENERALIZED_I        => GeneralizedIPointOps
       case ITAKURA_SAITO        => ItakuraSaitoPointOps
-      case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
+      case _                    => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
 

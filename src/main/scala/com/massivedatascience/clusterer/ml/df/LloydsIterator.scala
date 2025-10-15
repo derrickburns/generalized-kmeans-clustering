@@ -70,11 +70,11 @@ case class LloydResult(
 /** Core abstraction for Lloyd's algorithm (k-means iteration).
   *
   * This trait defines the single source of truth for the Lloyd's algorithm loop:
-  *   1. Assign each point to nearest center 2. Update centers based on assignments 3. Handle empty
-  *      clusters 4. Check convergence 5. Repeat until convergence or max iterations
+  *   1. Assign each point to nearest center 2. Update centers based on assignments 3. Handle empty clusters 4. Check
+  *      convergence 5. Repeat until convergence or max iterations
   *
-  * All clustering algorithms (standard k-means, soft k-means, constrained k-means, etc.) can be
-  * implemented by plugging in different strategies.
+  * All clustering algorithms (standard k-means, soft k-means, constrained k-means, etc.) can be implemented by plugging
+  * in different strategies.
   */
 trait LloydsIterator extends Logging {
 
@@ -104,8 +104,8 @@ trait LloydsIterator extends Logging {
 
 /** Default implementation of Lloyd's iterator.
   *
-  * This is the single implementation of the Lloyd's algorithm loop. Different clustering behaviors
-  * are achieved through pluggable strategies.
+  * This is the single implementation of the Lloyd's algorithm loop. Different clustering behaviors are achieved through
+  * pluggable strategies.
   */
 class DefaultLloydsIterator extends LloydsIterator {
 
