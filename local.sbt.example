@@ -1,0 +1,4 @@
+// Copy to local.sbt to override versions locally (git-ignored)
+ThisBuild / scalaVersion := "2.13.13"
+ThisBuild / crossScalaVersions := Seq("2.12.18","2.13.13")
+val sparkVer = "3.5.1"
