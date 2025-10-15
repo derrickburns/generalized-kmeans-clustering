@@ -471,11 +471,11 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
         val (rowCluster, colCluster) = model.predict(entry)
         ((rowCluster, colCluster), (entry.value, 1, entry.weight))
       }
-      .reduceByKey { case ((v1, c1, w1), (v2, c2, w2)) =>
-        (v1 + v2, c1 + c2, w1 + w2)
+      .reduceByKey { (t1: (Double, Int, Double), t2: (Double, Int, Double)) =>
+        (t1._1 + t2._1, t1._2 + t2._2, t1._3 + t2._3)
       }
-      .map { case ((rowCluster, colCluster), (totalValue, count, totalWeight)) =>
-        val meanValue = if (totalWeight > 0) totalValue * totalWeight / totalWeight else 0.0
+      .map { case ((rowCluster, colCluster), (totalValue: Double, count: Int, totalWeight: Double)) =>
+        val meanValue = if (totalWeight > 0) totalValue / totalWeight else 0.0
         (rowCluster, colCluster, meanValue, count, totalWeight)
       }
   }

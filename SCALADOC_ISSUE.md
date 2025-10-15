@@ -1,8 +1,12 @@
-# Scaladoc Generation Issue
+# Scaladoc Generation Issue (RESOLVED)
 
-## Problem
+## Resolution
 
-Scaladoc generation currently fails with Scala 2.12.18 due to a compiler bug when processing `XORShiftRandom.scala`:
+**✅ RESOLVED**: The project has been upgraded to Scala 2.13.14 as the default version, which resolves the scaladoc compiler bug. Documentation generation now works correctly.
+
+## Original Problem (Scala 2.12.18)
+
+Scaladoc generation failed with Scala 2.12.18 due to a compiler bug when processing `XORShiftRandom.scala`:
 
 ```
 [error] java.lang.AssertionError: assertion failed:

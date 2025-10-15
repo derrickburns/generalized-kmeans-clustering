@@ -45,11 +45,11 @@ jobs:
       fail-fast: false
       matrix:
         java-version: [11, 17]
-        scala-version: ['2.12.18', '2.13.14'] # The latest 2.13 is actually 2.13.14
+        scala-version: ['2.13.14', '2.12.18'] # 2.13 is now the default
         spark-version: ['3.4.3', '3.5.1']
         exclude:
-          - scala-version: '2.13.14' # Assuming latest 2.13
-            spark-version: '3.4.3'   # Spark 3.4 is often tested with earlier 2.13
+          - scala-version: '2.13.14'
+            spark-version: '3.4.3'   # Spark 3.4 typically uses Scala 2.12
 
     name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
     steps:

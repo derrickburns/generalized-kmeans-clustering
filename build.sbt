@@ -3,9 +3,9 @@
     organizationName := "Massive Data Science, LLC"
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
-    // Cross-compilation: Scala 2.12 and 2.13
-    scalaVersion := "2.12.18"
-    crossScalaVersions := Seq("2.12.18", "2.13.14")
+    // Cross-compilation: Scala 2.13 and 2.12
+    scalaVersion := "2.13.14"
+    crossScalaVersions := Seq("2.13.14", "2.12.18")
 
     scalacOptions ++= Seq("-unchecked", "-feature")
 
@@ -26,6 +26,16 @@
       "org.scalatest" %% "scalatest" % "3.2.19" % "test",
       "org.scalacheck" %% "scalacheck" % "1.17.0" % "test"
     )
+
+    // Scala 2.13 requires parallel collections as a separate dependency
+    libraryDependencies ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) if n >= 13 =>
+          Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+        case _ =>
+          Seq()
+      }
+    }
 
     val sparkPackageName = "derrickburns/generalized-kmeans-clustering"
     Test / testOptions += Tests.Argument("-Dlog4j.configurationFile=log4j2.properties")
@@ -67,7 +77,7 @@ libraryDependencies ++= Seq(
 // Enable Scaladoc generation with sbt-unidoc
 enablePlugins(ScalaUnidocPlugin)
 
-// Scaladoc settings (disable -diagrams to avoid compiler bugs)
+// Scaladoc settings
 Compile / doc / scalacOptions ++= Seq(
   "-doc-title", "Generalized K-Means Clustering API",
   "-doc-version", version.value,
@@ -75,12 +85,6 @@ Compile / doc / scalacOptions ++= Seq(
   "-implicits",
   "-no-link-warnings"
 )
-
-// Exclude XORShiftRandom.scala from scaladoc due to Scala 2.12 compiler bug
-Compile / doc / sources := {
-  val orig = (Compile / doc / sources).value
-  orig.filterNot(_.getName == "XORShiftRandom.scala")
-}
 
 // Unidoc settings
 ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(ThisProject)

@@ -1,11 +1,9 @@
 name: Generate API Documentation
 
-# Temporarily disabled due to Scala 2.12 scaladoc compiler bug
-# See SCALADOC_ISSUE.md for details
 on:
-  workflow_dispatch:  # Manual trigger only
-  # push:
-  #   branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -42,14 +40,14 @@ jobs:
         uses: sbt/setup-sbt@v1
 
       - name: Generate Unidoc
-        run: sbt ++2.12.18 compile doc
+        run: sbt ++2.13.14 unidoc
 
-      # The 'doc' command generates files in 'target/scala-*/api'.
-      # This step moves them into the docs/api subdirectory to match the redirect.
-      - name: Organize documentation files
+      # The 'unidoc' command generates files directly to 'docs/api'.
+      # No need to move files since build.sbt already configures the target
+      - name: Verify documentation files
         run: |
-          mkdir -p docs/api
-          mv target/scala-*/api/* docs/api/
+          ls -la docs/api/
+          echo "Documentation generated successfully"
           
       - name: Create index redirect
         run: |

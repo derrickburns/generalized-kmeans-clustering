@@ -354,7 +354,7 @@ case class KMeansParallel(numSteps: Int, sampleRate: Double = 1.0) extends KMean
         newCenters(index) += center
       }
       val newCosts = exchange(s"costs at step $step", costs) { oldCosts =>
-        updatedCosts(pointOps, data, runs, newCenters, oldCosts)
+        updatedCosts(pointOps, data, runs, newCenters.map(_.toIndexedSeq), oldCosts)
       }
       for ((c, n) <- addedCenters.zip(newCenters)) {
         c ++= n

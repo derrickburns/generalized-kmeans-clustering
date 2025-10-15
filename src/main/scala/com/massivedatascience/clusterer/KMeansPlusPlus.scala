@@ -24,6 +24,7 @@ import com.massivedatascience.util.XORShiftRandom
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.CollectionConverters._
 
 /** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization
   * algorithm</a>
@@ -199,12 +200,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
     // Initialize distances for remaining points
     val maxDistances     = IndexedSeq.fill(points.length)(Double.MaxValue)
-    val initialDistances = updateDistances(points, maxDistances, centers)
+    val initialDistances = updateDistances(points, maxDistances, centers.toIndexedSeq)
 
     // Run the main algorithm to select remaining centers
     moreCenters(initialDistances)
 
-    val finalCenters = centers.take(totalRequested)
+    val finalCenters = centers.take(totalRequested).toIndexedSeq
     logger.info(
       s"Selected ${finalCenters.length} centers out of ${candidateCenters.length} candidates"
     )
