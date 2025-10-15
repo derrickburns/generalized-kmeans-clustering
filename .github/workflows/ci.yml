@@ -24,50 +24,55 @@ jobs:
     name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK ${{ matrix.java-version }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ matrix.java-version }}
-        distribution: 'temurin'
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
 
-    - name: Cache SBT dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.ivy2/cache
-          ~/.sbt
-          ~/.coursier/cache
-        key: ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
-        restore-keys: |
-          ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-
-          ${{ runner.os }}-sbt-
+      # ✅ Install sbt (fixes "sbt: command not found")
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
 
-    - name: Compile
-      run: sbt ++${{ matrix.scala-version }}.* compile
-      env:
-        SPARK_VERSION: ${{ matrix.spark-version }}
+      - name: Cache SBT/Coursier/Ivy
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.cache/coursier
+            ~/.coursier/cache
+          key: ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
+          restore-keys: |
+            ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-
+            ${{ runner.os }}-sbt-
 
-    - name: Run tests
-      run: sbt ++${{ matrix.scala-version }}.* test
-      env:
-        SPARK_VERSION: ${{ matrix.spark-version }}
+      - name: Compile
+        run: sbt ++${{ matrix.scala-version }}.* compile
+        env:
+          SPARK_VERSION: ${{ matrix.spark-version }}
 
-    - name: Check code style
-      run: sbt ++${{ matrix.scala-version }}.* scalastyle
-      if: matrix.scala-version == '2.12' && matrix.java-version == 17
+      - name: Run tests
+        run: sbt ++${{ matrix.scala-version }}.* test
+        env:
+          SPARK_VERSION: ${{ matrix.spark-version }}
 
-    - name: Generate test coverage report
-      run: sbt ++${{ matrix.scala-version }}.* coverage test coverageReport
-      if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
-      env:
-        SPARK_VERSION: ${{ matrix.spark-version }}
+      - name: Check code style
+        if: matrix.scala-version == '2.12' && matrix.java-version == 17
+        run: sbt ++${{ matrix.scala-version }}.* scalastyle
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
-      with:
-        file: ./target/scala-2.12/scoverage-report/scoverage.xml
-        fail_ci_if_error: false
+      - name: Generate test coverage report
+        if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+        run: sbt ++${{ matrix.scala-version }}.* coverage test coverageReport
+        env:
+          SPARK_VERSION: ${{ matrix.spark-version }}
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.scala-version == '2.12' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./target/scala-2.12/scoverage-report/scoverage.xml
+          fail_ci_if_error: false
