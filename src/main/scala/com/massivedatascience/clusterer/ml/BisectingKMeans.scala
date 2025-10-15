@@ -220,10 +220,14 @@ class BisectingKMeans(override val uid: String)
 
           // Update cluster assignments
           val oldClusteredDF = clusteredDF
-          clusteredDF = oldClusteredDF.withColumn(
-            "cluster",
-            assignUDF(col(featuresCol), col("cluster"))
-          )
+          val oldClusterCol  = oldClusteredDF("cluster") // Capture before dropping
+          clusteredDF = oldClusteredDF
+            .withColumn(
+              "cluster_new",
+              assignUDF(col(featuresCol), oldClusterCol)
+            )
+            .drop("cluster")
+            .withColumnRenamed("cluster_new", "cluster")
           clusteredDF.cache()
           oldClusteredDF.unpersist()
 
@@ -261,11 +265,18 @@ class BisectingKMeans(override val uid: String)
     kernel: BregmanKernel
   ): (Array[Double], Array[Double]) = {
 
+    // Drop the "cluster" column if it exists to avoid conflicts with assignment strategy
+    val cleanData = if (clusterData.columns.contains("cluster")) {
+      clusterData.drop("cluster")
+    } else {
+      clusterData
+    }
+
     // Initialize with two random points
-    val sample = clusterData.select(featuresCol).limit(2).collect()
+    val sample = cleanData.select(featuresCol).limit(2).collect()
     if (sample.length < 2) {
       // Can't split - return same center twice
-      val center = computeCenter(clusterData, featuresCol, weightCol, kernel)
+      val center = computeCenter(cleanData, featuresCol, weightCol, kernel)
       return (center, center)
     }
 
@@ -284,7 +295,7 @@ class BisectingKMeans(override val uid: String)
 
     while (iteration < $(maxIter) && !converged) {
       // Assignment step
-      val assigned = assigner.assign(clusterData, featuresCol, weightCol, centers, kernel)
+      val assigned = assigner.assign(cleanData, featuresCol, weightCol, centers, kernel)
 
       // Update step
       val newCenters = updater.update(assigned, featuresCol, weightCol, 2, kernel)
@@ -305,7 +316,7 @@ class BisectingKMeans(override val uid: String)
       (centers(0), centers(1))
     } else {
       // Fallback: split didn't work, return same center
-      val center = computeCenter(clusterData, featuresCol, weightCol, kernel)
+      val center = computeCenter(cleanData, featuresCol, weightCol, kernel)
       (center, center)
     }
   }

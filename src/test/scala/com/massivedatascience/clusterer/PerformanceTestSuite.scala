@@ -23,6 +23,7 @@ import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import org.apache.spark.ml.linalg.Vectors
 import org.scalatest.funsuite.AnyFunSuite
+import scala.collection.parallel.CollectionConverters._
 
 class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
