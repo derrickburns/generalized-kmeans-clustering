@@ -1,0 +1,586 @@
+package com.massivedatascience.clusterer.ml
+
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.Estimator
+import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.param._
+import org.apache.spark.ml.param.shared._
+import org.apache.spark.ml.util._
+import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
+
+/** Parameters for K-Medoids clustering.
+  */
+trait KMedoidsParams extends Params with HasFeaturesCol with HasPredictionCol with HasMaxIter with HasSeed {
+
+  /** Number of clusters (k). Must be > 1.
+    */
+  final val k = new IntParam(this, "k", "Number of clusters", ParamValidators.gt(1))
+
+  def getK: Int = $(k)
+
+  /** Distance function name. Supported values:
+    *   - "euclidean" (default)
+    *   - "manhattan" (L1)
+    *   - "cosine"
+    *   - "custom" (requires custom distance function)
+    */
+  final val distanceFunction = new Param[String](
+    this,
+    "distanceFunction",
+    "Distance function",
+    ParamValidators.inArray(Array("euclidean", "manhattan", "cosine"))
+  )
+
+  def getDistanceFunction: String = $(distanceFunction)
+
+  setDefault(
+    k -> 2,
+    featuresCol -> "features",
+    predictionCol -> "prediction",
+    maxIter -> 20,
+    distanceFunction -> "euclidean"
+  )
+
+  /** Validate and transform input schema.
+    */
+  protected def validateAndTransformSchema(schema: StructType): StructType = {
+    // Add prediction column
+    val outputSchema = schema.add($(predictionCol), org.apache.spark.sql.types.IntegerType)
+    outputSchema
+  }
+}
+
+/** K-Medoids clustering using PAM (Partitioning Around Medoids) algorithm.
+  *
+  * K-Medoids is a clustering algorithm that uses actual data points as cluster centers
+  * (called medoids) instead of computed centroids like K-Means. This makes it:
+  *   - More robust to outliers
+  *   - More interpretable (medoids are real data points)
+  *   - Works with any distance function (not just Euclidean)
+  *   - More computationally expensive than K-Means
+  *
+  * The algorithm consists of two phases:
+  *   1. BUILD: Greedily select k initial medoids to minimize total cost
+  *   2. SWAP: Iteratively swap medoids with non-medoids to minimize cost
+  *
+  * Time Complexity: O(k(n-k)²) per iteration
+  *
+  * Example usage:
+  * {{{
+  * val kmedoids = new KMedoids()
+  *   .setK(3)
+  *   .setMaxIter(20)
+  *   .setDistanceFunction("manhattan")
+  *
+  * val model = kmedoids.fit(data)
+  * val predictions = model.transform(data)
+  * }}}
+  *
+  * @param uid unique identifier
+  */
+class KMedoids(override val uid: String)
+    extends Estimator[KMedoidsModel]
+    with KMedoidsParams
+    with DefaultParamsWritable
+    with Logging {
+
+  def this() = this(Identifiable.randomUID("kmedoids"))
+
+  override def fit(dataset: Dataset[_]): KMedoidsModel = {
+    transformSchema(dataset.schema, logging = true)
+
+    val df = dataset.toDF()
+    val data = df.select($(featuresCol)).rdd.map { row =>
+      row.getAs[Vector](0)
+    }.collect()
+
+    logInfo(s"K-Medoids with k=${$(k)}, maxIter=${$(maxIter)}, distanceFunction=${$(distanceFunction)}")
+    logInfo(s"Dataset size: ${data.length} points")
+
+    // Create distance function
+    val distFn = createDistanceFunction($(distanceFunction))
+
+    // BUILD phase: Initialize medoids
+    val initialMedoidIndices = buildPhase(data, $(k), distFn, $(seed))
+    logInfo(s"BUILD phase completed. Initial medoids: ${initialMedoidIndices.mkString(", ")}")
+
+    // SWAP phase: Iteratively improve medoids
+    val finalMedoidIndices = swapPhase(data, initialMedoidIndices, $(maxIter), distFn)
+    logInfo(s"SWAP phase completed. Final medoids: ${finalMedoidIndices.mkString(", ")}")
+
+    // Create model
+    val medoidVectors = finalMedoidIndices.map(data)
+    new KMedoidsModel(uid, medoidVectors, finalMedoidIndices, $(distanceFunction))
+      .setParent(this)
+  }
+
+  /** BUILD phase: Greedily select k medoids to minimize total cost.
+    *
+    * Algorithm:
+    *   1. Select first medoid as the point with minimum sum of distances to all other points
+    *   2. For i = 2 to k:
+    *      - For each non-medoid point o:
+    *        - Compute cost reduction if o becomes the next medoid
+    *      - Select point with maximum cost reduction
+    *
+    * @param data all data points
+    * @param k number of medoids
+    * @param distFn distance function
+    * @param seed random seed
+    * @return indices of selected medoids
+    */
+  private def buildPhase(
+    data: Array[Vector],
+    k: Int,
+    distFn: (Vector, Vector) => Double,
+    seed: Long
+  ): Array[Int] = {
+    val n = data.length
+    val medoidIndices = new Array[Int](k)
+    val isMedoid = new Array[Boolean](n)
+
+    // Step 1: Select first medoid (point with minimum total distance to all others)
+    var minCost = Double.PositiveInfinity
+    var firstMedoid = 0
+
+    (0 until n).foreach { i =>
+      var totalDist = 0.0
+      (0 until n).foreach { j =>
+        if (i != j) {
+          totalDist += distFn(data(i), data(j))
+        }
+      }
+
+      if (totalDist < minCost) {
+        minCost = totalDist
+        firstMedoid = i
+      }
+    }
+
+    medoidIndices(0) = firstMedoid
+    isMedoid(firstMedoid) = true
+    logInfo(s"First medoid: $firstMedoid (cost: $minCost)")
+
+    // Step 2: Greedily select remaining k-1 medoids
+    (1 until k).foreach { medoidCount =>
+      var maxGain = Double.NegativeInfinity
+      var bestCandidate = -1
+
+      // For each non-medoid point
+      (0 until n).foreach { candidate =>
+        if (!isMedoid(candidate)) {
+          // Compute cost reduction if this point becomes a medoid
+          var gain = 0.0
+
+          (0 until n).foreach { j =>
+            if (!isMedoid(j) && j != candidate) {
+              // Current distance: minimum distance to existing medoids
+              val currentDist = (0 until medoidCount).map { m =>
+                distFn(data(j), data(medoidIndices(m)))
+              }.min
+
+              // New distance: minimum of (current distance, distance to new candidate)
+              val newDist = math.min(currentDist, distFn(data(j), data(candidate)))
+
+              // Gain is the reduction in distance
+              gain += (currentDist - newDist)
+            }
+          }
+
+          if (gain > maxGain) {
+            maxGain = gain
+            bestCandidate = candidate
+          }
+        }
+      }
+
+      medoidIndices(medoidCount) = bestCandidate
+      isMedoid(bestCandidate) = true
+      logInfo(s"Selected medoid ${medoidCount + 1}: $bestCandidate (gain: $maxGain)")
+    }
+
+    medoidIndices
+  }
+
+  /** SWAP phase: Iteratively swap medoids with non-medoids to minimize cost.
+    *
+    * Algorithm:
+    *   1. For each medoid m and each non-medoid point o:
+    *      - Compute cost change if m is swapped with o
+    *   2. Perform the swap with the largest cost reduction
+    *   3. Repeat until no improvement is possible or maxIter is reached
+    *
+    * @param data all data points
+    * @param initialMedoidIndices initial medoid indices from BUILD phase
+    * @param maxIter maximum number of iterations
+    * @param distFn distance function
+    * @return final medoid indices
+    */
+  private def swapPhase(
+    data: Array[Vector],
+    initialMedoidIndices: Array[Int],
+    maxIter: Int,
+    distFn: (Vector, Vector) => Double
+  ): Array[Int] = {
+    val n = data.length
+    val k = initialMedoidIndices.length
+    val medoidIndices = initialMedoidIndices.clone()
+    val isMedoid = new Array[Boolean](n)
+    medoidIndices.foreach(i => isMedoid(i) = true)
+
+    var improved = true
+    var iteration = 0
+
+    while (improved && iteration < maxIter) {
+      improved = false
+      var bestSwapGain = 0.0
+      var bestMedoidToSwap = -1
+      var bestNonMedoidToSwap = -1
+
+      // For each medoid
+      (0 until k).foreach { medoidIdx =>
+        val medoid = medoidIndices(medoidIdx)
+
+        // For each non-medoid
+        (0 until n).foreach { nonMedoid =>
+          if (!isMedoid(nonMedoid)) {
+            // Compute cost change if we swap this medoid with this non-medoid
+            var totalCostChange = 0.0
+
+            (0 until n).foreach { j =>
+              if (!isMedoid(j) && j != nonMedoid) {
+                // Current distance: minimum distance to current medoids
+                val currentDist = medoidIndices.map(m => distFn(data(j), data(m))).min
+
+                // Distance to current medoid being considered for swap
+                val distToSwappedMedoid = distFn(data(j), data(medoid))
+
+                // Distance to potential new medoid
+                val distToNewMedoid = distFn(data(j), data(nonMedoid))
+
+                // If current closest medoid is the one being swapped
+                if (math.abs(currentDist - distToSwappedMedoid) < 1e-10) {
+                  // New distance is minimum of (second closest current medoid, new medoid)
+                  val secondClosest = medoidIndices.filter(_ != medoid).map(m => distFn(data(j), data(m))).min
+                  val newDist = math.min(secondClosest, distToNewMedoid)
+                  totalCostChange += (newDist - currentDist)
+                } else {
+                  // New distance is minimum of (current distance, new medoid)
+                  val newDist = math.min(currentDist, distToNewMedoid)
+                  totalCostChange += (newDist - currentDist)
+                }
+              }
+            }
+
+            // Negative cost change means improvement
+            if (totalCostChange < bestSwapGain) {
+              bestSwapGain = totalCostChange
+              bestMedoidToSwap = medoidIdx
+              bestNonMedoidToSwap = nonMedoid
+            }
+          }
+        }
+      }
+
+      // Perform the best swap if it improves the clustering
+      if (bestSwapGain < -1e-10) {
+        val oldMedoid = medoidIndices(bestMedoidToSwap)
+        medoidIndices(bestMedoidToSwap) = bestNonMedoidToSwap
+        isMedoid(oldMedoid) = false
+        isMedoid(bestNonMedoidToSwap) = true
+        improved = true
+        iteration += 1
+
+        logInfo(f"Iteration $iteration: Swapped medoid $oldMedoid with $bestNonMedoidToSwap (cost reduction: ${-bestSwapGain}%.4f)")
+      }
+    }
+
+    if (iteration == 0) {
+      logInfo("SWAP phase: No swaps performed (already optimal)")
+    } else {
+      logInfo(s"SWAP phase converged after $iteration iterations")
+    }
+
+    medoidIndices
+  }
+
+  /** Create distance function from name.
+    */
+  private def createDistanceFunction(name: String): (Vector, Vector) => Double = {
+    name match {
+      case "euclidean" =>
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            val d = v1(i) - v2(i)
+            sum += d * d
+            i += 1
+          }
+          math.sqrt(sum)
+        }
+
+      case "manhattan" =>
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            sum += math.abs(v1(i) - v2(i))
+            i += 1
+          }
+          sum
+        }
+
+      case "cosine" =>
+        (v1: Vector, v2: Vector) => {
+          var dot = 0.0
+          var norm1 = 0.0
+          var norm2 = 0.0
+          var i = 0
+          while (i < v1.size) {
+            dot += v1(i) * v2(i)
+            norm1 += v1(i) * v1(i)
+            norm2 += v2(i) * v2(i)
+            i += 1
+          }
+          1.0 - (dot / (math.sqrt(norm1) * math.sqrt(norm2)))
+        }
+
+      case _ =>
+        logWarning(s"Unknown distance function $name, using Euclidean")
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            val d = v1(i) - v2(i)
+            sum += d * d
+            i += 1
+          }
+          math.sqrt(sum)
+        }
+    }
+  }
+
+  // Parameter setters
+  def setK(value: Int): this.type = set(k, value)
+  def setMaxIter(value: Int): this.type = set(maxIter, value)
+  def setDistanceFunction(value: String): this.type = set(distanceFunction, value)
+  def setSeed(value: Long): this.type = set(seed, value)
+  def setFeaturesCol(value: String): this.type = set(featuresCol, value)
+  def setPredictionCol(value: String): this.type = set(predictionCol, value)
+
+  override def transformSchema(schema: StructType): StructType = {
+    validateAndTransformSchema(schema)
+  }
+
+  override def copy(extra: ParamMap): KMedoids = defaultCopy(extra)
+}
+
+object KMedoids extends DefaultParamsReadable[KMedoids] {
+  override def load(path: String): KMedoids = super.load(path)
+}
+
+/** Model produced by K-Medoids clustering.
+  *
+  * @param uid unique identifier
+  * @param medoids cluster medoid vectors
+  * @param medoidIndices indices of medoids in the original dataset (if available)
+  * @param distanceFunctionName name of the distance function used
+  */
+class KMedoidsModel(
+  override val uid: String,
+  val medoids: Array[Vector],
+  val medoidIndices: Array[Int],
+  val distanceFunctionName: String
+) extends org.apache.spark.ml.Model[KMedoidsModel]
+    with KMedoidsParams
+    with org.apache.spark.ml.util.MLWritable
+    with Logging {
+
+  /** Number of clusters.
+    */
+  def numClusters: Int = medoids.length
+
+  /** Dimensionality of features.
+    */
+  def numFeatures: Int = medoids.headOption.map(_.size).getOrElse(0)
+
+  override def transform(dataset: Dataset[_]): DataFrame = {
+    transformSchema(dataset.schema, logging = true)
+
+    val df = dataset.toDF()
+
+    // Create distance function
+    val distFn = createDistanceFunction(distanceFunctionName)
+
+    // Broadcast medoids
+    val bcMedoids = df.sparkSession.sparkContext.broadcast(medoids)
+
+    // UDF to find nearest medoid
+    val predictUDF = udf { (features: Vector) =>
+      val meds = bcMedoids.value
+      var minDist = Double.PositiveInfinity
+      var minIdx = 0
+      var i = 0
+      while (i < meds.length) {
+        val dist = distFn(features, meds(i))
+        if (dist < minDist) {
+          minDist = dist
+          minIdx = i
+        }
+        i += 1
+      }
+      minIdx
+    }
+
+    // Add prediction column
+    df.withColumn($(predictionCol), predictUDF(col($(featuresCol))))
+  }
+
+  /** Compute total cost (sum of distances from points to their assigned medoids).
+    */
+  def computeCost(dataset: Dataset[_]): Double = {
+    val df = dataset.toDF()
+    val distFn = createDistanceFunction(distanceFunctionName)
+    val bcMedoids = df.sparkSession.sparkContext.broadcast(medoids)
+
+    df.select($(featuresCol)).rdd.map { row =>
+      val features = row.getAs[Vector](0)
+      val meds = bcMedoids.value
+      meds.map(m => distFn(features, m)).min
+    }.sum()
+  }
+
+  /** Create distance function from name.
+    */
+  private def createDistanceFunction(name: String): (Vector, Vector) => Double = {
+    name match {
+      case "euclidean" =>
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            val d = v1(i) - v2(i)
+            sum += d * d
+            i += 1
+          }
+          math.sqrt(sum)
+        }
+
+      case "manhattan" =>
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            sum += math.abs(v1(i) - v2(i))
+            i += 1
+          }
+          sum
+        }
+
+      case "cosine" =>
+        (v1: Vector, v2: Vector) => {
+          var dot = 0.0
+          var norm1 = 0.0
+          var norm2 = 0.0
+          var i = 0
+          while (i < v1.size) {
+            dot += v1(i) * v2(i)
+            norm1 += v1(i) * v1(i)
+            norm2 += v2(i) * v2(i)
+            i += 1
+          }
+          1.0 - (dot / (math.sqrt(norm1) * math.sqrt(norm2)))
+        }
+
+      case _ =>
+        (v1: Vector, v2: Vector) => {
+          var sum = 0.0
+          var i = 0
+          while (i < v1.size) {
+            val d = v1(i) - v2(i)
+            sum += d * d
+            i += 1
+          }
+          math.sqrt(sum)
+        }
+    }
+  }
+
+  override def transformSchema(schema: StructType): StructType = {
+    validateAndTransformSchema(schema)
+  }
+
+  override def copy(extra: ParamMap): KMedoidsModel = {
+    val copied = new KMedoidsModel(uid, medoids.map(_.copy), medoidIndices.clone(), distanceFunctionName)
+    copyValues(copied, extra).setParent(parent)
+  }
+
+  override def write: org.apache.spark.ml.util.MLWriter = new KMedoidsModel.KMedoidsModelWriter(this)
+}
+
+object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] {
+
+  override def read: org.apache.spark.ml.util.MLReader[KMedoidsModel] = new KMedoidsModelReader
+
+  override def load(path: String): KMedoidsModel = super.load(path)
+
+  private class KMedoidsModelWriter(instance: KMedoidsModel) extends org.apache.spark.ml.util.MLWriter {
+
+    override protected def saveImpl(path: String): Unit = {
+      val spark = sparkSession
+      import spark.implicits._
+
+      // Save medoids
+      val medoidsPath = new org.apache.hadoop.fs.Path(path, "medoids").toString
+      val medoidsDF = instance.medoids.zipWithIndex.map { case (medoid, idx) =>
+        (idx, medoid.toArray)
+      }.toSeq.toDF("medoidId", "medoid")
+      medoidsDF.write.mode("overwrite").parquet(medoidsPath)
+
+      // Save medoid indices
+      val indicesPath = new org.apache.hadoop.fs.Path(path, "indices").toString
+      val indicesDF = instance.medoidIndices.zipWithIndex.map { case (idx, medoidId) =>
+        (medoidId, idx)
+      }.toSeq.toDF("medoidId", "originalIndex")
+      indicesDF.write.mode("overwrite").parquet(indicesPath)
+
+      // Save metadata
+      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
+      val metadataDF = Seq((instance.uid, instance.distanceFunctionName)).toDF("uid", "distanceFunction")
+      metadataDF.write.mode("overwrite").parquet(metadataPath)
+    }
+  }
+
+  private class KMedoidsModelReader extends org.apache.spark.ml.util.MLReader[KMedoidsModel] {
+
+    override def load(path: String): KMedoidsModel = {
+      val spark = sparkSession
+      import spark.implicits._
+
+      // Load medoids
+      val medoidsPath = new org.apache.hadoop.fs.Path(path, "medoids").toString
+      val medoidsDF = spark.read.parquet(medoidsPath)
+      val medoids = medoidsDF.as[(Int, Array[Double])].collect()
+        .sortBy(_._1)
+        .map { case (_, arr) => Vectors.dense(arr) }
+
+      // Load medoid indices
+      val indicesPath = new org.apache.hadoop.fs.Path(path, "indices").toString
+      val indicesDF = spark.read.parquet(indicesPath)
+      val medoidIndices = indicesDF.as[(Int, Int)].collect()
+        .sortBy(_._1)
+        .map(_._2)
+
+      // Load metadata
+      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
+      val metadataDF = spark.read.parquet(metadataPath)
+      val (uid, distanceFunction) = metadataDF.as[(String, String)].head()
+
+      new KMedoidsModel(uid, medoids, medoidIndices, distanceFunction)
+    }
+  }
+}
+
