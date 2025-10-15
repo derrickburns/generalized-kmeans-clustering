@@ -1,3 +1,7 @@
+# .github/workflows/ci.yml
+# This workflow is refactored to match the "Validation DAG" principle:
+# Build once (implicitly in each job) and validate concerns in parallel.
+
 name: CI
 
 on:
@@ -7,75 +11,104 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test:
+  # Job 1: Linting and Code Style (Fast, Independent Check)
+  lint:
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        java-version: [11, 17]
-        scala-version: ['2.12.18', '2.13.13']   # <-- pin exact versions
-        spark-version: ['3.4.0', '3.5.1']
-        exclude:
-          - scala-version: '2.13.13'
-            spark-version: '3.4.0'  # keep your exclusion logic
-
-    name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
-
+    name: Lint & Style Check
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK ${{ matrix.java-version }}
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          java-version: ${{ matrix.java-version }}
-          distribution: temurin
-
-      - name: Set up sbt
-        uses: sbt/setup-sbt@v1
-
-      # 🔧 Remove IDE artifacts that pull semanticdb (breaks on 2.13.14)
-      - name: Clean editor files
-        run: |
-          rm -f project/metals.sbt
-          rm -rf .metals .bloop
-
-      - name: Cache SBT/Coursier/Ivy
-        uses: actions/cache@v4
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: sbt/setup-sbt@v1
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
             ~/.sbt
             ~/.cache/coursier
-            ~/.coursier/cache
-          key: ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-${{ hashFiles('**/build.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
+          key: ${{ runner.os }}-sbt-lint-${{ hashFiles('**/build.sbt', '**/project/build.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-sbt-lint-
+
+      - name: Check Formatting and Style
+        run: |
+          sbt ++2.13.14 scalafmtCheckAll
+          sbt ++2.13.14 scalastyle
+
+  # Job 2: Core JVM Tests across the full matrix (The Longest Job)
+  test-jvm:
+    runs-on: ubuntu-latest
+    needs: lint # Optional: ensure style passes before running long tests
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [11, 17]
+        scala-version: ['2.12.18', '2.13.14'] # The latest 2.13 is actually 2.13.14
+        spark-version: ['3.4.3', '3.5.1']
+        exclude:
+          - scala-version: '2.13.14' # Assuming latest 2.13
+            spark-version: '3.4.3'   # Spark 3.4 is often tested with earlier 2.13
+
+    name: Test (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }}, Spark ${{ matrix.spark-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+      - uses: sbt/setup-sbt@v1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.cache/coursier
+          key: ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-${{ hashFiles('**/build.sbt', '**/project/build.properties') }}
           restore-keys: |
             ${{ runner.os }}-sbt-${{ matrix.scala-version }}-${{ matrix.spark-version }}-
-            ${{ runner.os }}-sbt-
 
-      - name: Compile
-        run: sbt ++${{ matrix.scala-version }} clean compile
-        env:
-          SPARK_VERSION: ${{ matrix.spark-version }}
+      - name: Run All JVM Tests
+        # The 'test' command automatically compiles. No separate compile step needed.
+        # Use -Dspark.version as per the final plan.
+        run: sbt ++${{ matrix.scala-version }} -Dspark.version=${{ matrix.spark-version }} test
 
-      - name: Run tests
-        run: sbt ++${{ matrix.scala-version }} test
-        env:
-          SPARK_VERSION: ${{ matrix.spark-version }}
+  # Job 3: Python Smoke Test (Independent Check)
+  test-python:
+    runs-on: ubuntu-latest
+    needs: lint
+    name: Python Smoke Test (PySpark 3.5.1)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17' # Pin to a modern JDK
+      - uses: sbt/setup-sbt@v1
+      - name: Build Scala 2.12 JAR for PySpark
+        run: sbt ++2.12.18 -Dspark.version=3.5.1 package
 
-      - name: Check code style
-        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17
-        run: sbt ++${{ matrix.scala-version }} scalastyle
+      - name: Run Python Smoke Test
+        run: |
+          pip install pyspark==3.5.1
+          spark-submit --jars target/scala-2.12/*generalized-kmeans*.jar python/smoke_test.py
 
-      - name: Generate test coverage report
-        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
-        run: sbt ++${{ matrix.scala-version }} coverage test coverageReport
-        env:
-          SPARK_VERSION: ${{ matrix.spark-version }}
-
-      - name: Upload coverage reports to Codecov
-        if: matrix.scala-version == '2.12.18' && matrix.java-version == 17 && matrix.spark-version == '3.5.1'
+  # Job 4: Code Coverage (Independent Check, runs only once)
+  coverage:
+    runs-on: ubuntu-latest
+    needs: lint
+    name: Code Coverage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: sbt/setup-sbt@v1
+      - name: Generate Coverage Report
+        run: sbt ++2.12.18 -Dspark.version=3.5.1 coverage test coverageReport
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: ./target/scala-2.12/scoverage-report/scoverage.xml
