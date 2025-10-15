@@ -26,7 +26,7 @@ import org.apache.spark.SparkException
   * @param assignments
   *   RDD containing the cluster index for each point in the dataset. Cluster indices should be in the range [0,
   *   numClusters).
-  * @throws IllegalArgumentException
+  * @throws java.lang.IllegalArgumentException
   *   if the number of unique clusters in assignments doesn't match numClusters
   */
 class AssignmentSelector(assignments: RDD[Int]) extends KMeansSelector {
@@ -47,7 +47,7 @@ class AssignmentSelector(assignments: RDD[Int]) extends KMeansSelector {
     *   Random seed (not used in this implementation)
     * @return
     *   A sequence of cluster centers
-    * @throws SparkException
+    * @throws org.apache.spark.SparkException
     *   if the number of unique clusters in assignments doesn't match numClusters
     */
   def init(

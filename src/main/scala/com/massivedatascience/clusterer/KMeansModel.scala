@@ -282,7 +282,7 @@ object KMeansModel extends Logging {
     *   clusters are returned.
     * @return
     *   A KMeansModel with the computed cluster centers
-    * @throws IllegalArgumentException
+    * @throws java.lang.IllegalArgumentException
     *   if inputs are invalid or misaligned
     * @throws org.apache.spark.SparkException
     *   if RDD operations fail

@@ -593,7 +593,7 @@ trait InputValidator extends Serializable {
     *   optional weight column
     * @param kernel
     *   Bregman kernel
-    * @throws IllegalArgumentException
+    * @throws java.lang.IllegalArgumentException
     *   if validation fails
     */
   def validate(

@@ -70,7 +70,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   number of centers that are pre-selected (must be at the start of candidateCenters)
     * @return
     *   sequence of selected centers
-    * @throws IllegalArgumentException
+    * @throws java.lang.IllegalArgumentException
     *   if inputs are invalid
     */
   def goodCenters(
@@ -368,7 +368,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   the cumulative weights of the points (must be non-decreasing)
     * @return
     *   the index of the chosen point (always returns a valid index)
-    * @throws IllegalArgumentException
+    * @throws java.lang.IllegalArgumentException
     *   if cumulative is empty or has non-positive sum
     */
   private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
