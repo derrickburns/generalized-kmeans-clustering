@@ -893,6 +893,331 @@ println(s"X-Means automatically selected k=${model.numClusters}")
 // More principled and reproducible than visual elbow method
 ```
 
+## Soft K-Means (Fuzzy C-Means)
+
+Soft K-Means provides probabilistic cluster memberships instead of hard assignments. Each point belongs to multiple clusters with varying probabilities, making it ideal for overlapping clusters and mixture model estimation.
+
+### Basic Soft K-Means - Probabilistic Memberships
+
+```scala
+import com.massivedatascience.clusterer.ml.SoftKMeans
+import org.apache.spark.ml.linalg.Vectors
+
+// Create sample data with some overlap between clusters
+val data = Seq(
+  Vectors.dense(1.0, 1.0),
+  Vectors.dense(1.2, 0.9),
+  Vectors.dense(2.0, 2.0),  // Ambiguous point between clusters
+  Vectors.dense(5.0, 5.0),
+  Vectors.dense(5.1, 4.9)
+)
+
+val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+val softKMeans = new SoftKMeans()
+  .setK(2)
+  .setBeta(2.0)          // Control assignment sharpness
+  .setMaxIter(50)
+  .setSeed(42)
+
+val model = softKMeans.fit(df)
+
+// Transform adds both hard prediction and soft probabilities
+val result = model.transform(df)
+result.select("features", "prediction", "probabilities").show(false)
+
+// Output:
+// +----------+----------+----------------------------------------+
+// |features  |prediction|probabilities                           |
+// +----------+----------+----------------------------------------+
+// |[1.0,1.0] |0         |[0.9523,0.0477]   # Strongly cluster 0 |
+// |[1.2,0.9] |0         |[0.9312,0.0688]   # Strongly cluster 0 |
+// |[2.0,2.0] |0         |[0.6234,0.3766]   # Mixed membership!   |
+// |[5.0,5.0] |1         |[0.0412,0.9588]   # Strongly cluster 1 |
+// |[5.1,4.9] |1         |[0.0389,0.9611]   # Strongly cluster 1 |
+// +----------+----------+----------------------------------------+
+```
+
+### Controlling Soft vs Sharp Assignments with Beta
+
+The `beta` parameter controls how "fuzzy" the clustering is:
+- **Low beta (0.1-1.0)**: Very soft, fuzzy assignments
+- **Medium beta (1.0-5.0)**: Balanced soft clustering
+- **High beta (5.0-100.0)**: Sharp assignments (approaches hard clustering)
+
+```scala
+// Very Soft Clustering (high uncertainty)
+val verySoftKMeans = new SoftKMeans()
+  .setK(2)
+  .setBeta(0.5)  // Low beta = very soft
+  .setMaxIter(50)
+
+val softModel = verySoftKMeans.fit(df)
+val softPreds = softModel.transform(df)
+
+// Check entropy (higher = more uncertainty)
+import org.apache.spark.sql.functions._
+
+val avgEntropy = softPreds.select(
+  avg(
+    expr("aggregate(probabilities.values, 0.0, (acc, p) -> acc - p * ln(p))")
+  ).as("avgEntropy")
+).head().getDouble(0)
+
+println(s"Soft clustering average entropy: $avgEntropy")
+// Output: ~0.45 (higher uncertainty)
+
+// Sharp Clustering (low uncertainty)
+val sharpKMeans = new SoftKMeans()
+  .setK(2)
+  .setBeta(10.0)  // High beta = sharp
+  .setMaxIter(50)
+
+val sharpModel = sharpKMeans.fit(df)
+val sharpPreds = sharpModel.transform(df)
+
+val sharpEntropy = sharpPreds.select(
+  avg(
+    expr("aggregate(probabilities.values, 0.0, (acc, p) -> acc - p * ln(p))")
+  ).as("avgEntropy")
+).head().getDouble(0)
+
+println(s"Sharp clustering average entropy: $sharpEntropy")
+// Output: ~0.12 (lower uncertainty, more decisive)
+```
+
+### Soft K-Means with Different Divergences
+
+Like other clustering algorithms, Soft K-Means supports all Bregman divergences:
+
+```scala
+// L1 divergence (Manhattan distance) - robust to outliers
+val l1SoftKMeans = new SoftKMeans()
+  .setK(3)
+  .setDivergence("l1")
+  .setBeta(2.0)
+  .setMaxIter(50)
+
+val l1Model = l1SoftKMeans.fit(df)
+
+// KL divergence - for probability distributions
+val klSoftKMeans = new SoftKMeans()
+  .setK(3)
+  .setDivergence("kl")
+  .setSmoothing(1e-5)
+  .setBeta(1.5)
+  .setMaxIter(50)
+
+val klModel = klSoftKMeans.fit(df)
+```
+
+### Soft K-Means with Weighted Data
+
+Weight important points more heavily during clustering:
+
+```scala
+val weightedData = Seq(
+  (Vectors.dense(1.0, 1.0), 10.0),  // High weight
+  (Vectors.dense(1.1, 0.9), 10.0),
+  (Vectors.dense(5.0, 5.0), 1.0),   // Low weight
+  (Vectors.dense(5.1, 4.9), 1.0)
+)
+
+val weightedDF = spark.createDataFrame(weightedData).toDF("features", "weight")
+
+val weightedSoftKMeans = new SoftKMeans()
+  .setK(2)
+  .setWeightCol("weight")
+  .setBeta(2.0)
+  .setMaxIter(50)
+
+val weightedModel = weightedSoftKMeans.fit(weightedDF)
+
+// Centers will be pulled toward high-weight points
+println("Cluster centers:")
+weightedModel.clusterCenters.foreach(c => println(s"  $c"))
+```
+
+### Single Point Predictions
+
+Get soft probabilities for individual points:
+
+```scala
+// Hard prediction (most likely cluster)
+val testPoint = Vectors.dense(2.5, 2.5)
+val hardPrediction = model.predict(testPoint)
+println(s"Hard prediction: $hardPrediction")
+
+// Soft prediction (probability distribution)
+val softPrediction = model.predictSoft(testPoint)
+println(s"Soft probabilities: ${softPrediction.toArray.mkString("[", ", ", "]")}")
+// Output: [0.4123, 0.5877] - point has mixed membership
+```
+
+### Mixture Model Estimation
+
+Soft K-Means can estimate mixture model parameters:
+
+```scala
+// Generate data from a mixture of Gaussians
+import breeze.stats.distributions.Gaussian
+
+val mixture1 = Gaussian(0.0, 1.0)
+val mixture2 = Gaussian(5.0, 1.0)
+
+val mixtureData = (1 to 100).map { i =>
+  val value = if (i % 2 == 0) mixture1.sample() else mixture2.sample()
+  Vectors.dense(value, value)
+}
+
+val mixtureDF = spark.createDataFrame(mixtureData.map(Tuple1.apply)).toDF("features")
+
+val mixtureKMeans = new SoftKMeans()
+  .setK(2)
+  .setBeta(1.0)  // Moderate softness for mixture models
+  .setMaxIter(100)
+
+val mixtureModel = mixtureKMeans.fit(mixtureDF)
+
+// Cluster centers approximate mixture means
+println("Estimated mixture centers:")
+mixtureModel.clusterCenters.foreach(c => println(s"  $c"))
+
+// Probabilities represent mixture weights
+val result = mixtureModel.transform(mixtureDF)
+result.select("probabilities").show(5, false)
+```
+
+### Cost Functions
+
+Soft K-Means provides both hard and soft cost functions:
+
+```scala
+// Hard cost (traditional K-means objective)
+val hardCost = model.computeCost(df)
+println(s"Hard clustering cost: $hardCost")
+
+// Soft cost (weighted by membership probabilities)
+val softCost = model.computeSoftCost(df)
+println(s"Soft clustering cost: $softCost")
+
+// Soft cost is always <= hard cost
+assert(softCost <= hardCost)
+```
+
+### Effective Number of Clusters
+
+Measure the "effective" number of clusters based on entropy:
+
+```scala
+val effectiveClusters = model.effectiveNumberOfClusters(df)
+println(s"Effective number of clusters: $effectiveClusters")
+
+// With k=3 and soft assignments:
+// - If all points are evenly distributed: ~3.0
+// - If assignments are very sharp: ~1.0-2.0
+// - With mixed memberships: somewhere in between
+
+// This metric helps you understand if you're over/under-clustering
+```
+
+### When to Use Soft K-Means
+
+**Use Soft K-Means when:**
+- Clusters naturally overlap
+- You need uncertainty estimates (e.g., "this customer is 70% segment A, 30% segment B")
+- Building mixture models or generative models
+- Outliers shouldn't be forced into a single cluster
+- Modeling fuzzy categories (e.g., "somewhat happy", "very happy")
+
+**Use Hard K-Means when:**
+- Clusters are well-separated
+- You need deterministic, crisp assignments
+- Performance is critical (soft clustering is slower)
+- Downstream tasks require single cluster labels
+
+### Soft K-Means vs Hard K-Means Comparison
+
+```scala
+// Same data, both algorithms
+val hardKMeans = new GeneralizedKMeans()
+  .setK(2)
+  .setMaxIter(50)
+  .setSeed(42)
+
+val hardModel = hardKMeans.fit(df)
+val hardResult = hardModel.transform(df)
+
+val softKMeans = new SoftKMeans()
+  .setK(2)
+  .setBeta(2.0)
+  .setMaxIter(50)
+  .setSeed(42)
+
+val softModel = softKMeans.fit(df)
+val softResult = softModel.transform(df)
+
+// Compare assignments for ambiguous points
+val comparison = hardResult.select("features", "prediction")
+  .join(softResult.select("features", "probabilities"), "features")
+
+comparison.show(false)
+
+// Hard K-Means: Forces every point into exactly one cluster
+// Soft K-Means: Allows mixed membership - more informative for borderline cases
+```
+
+### Model Persistence
+
+Save and load Soft K-Means models:
+
+```scala
+// Save model
+model.write.overwrite().save("path/to/soft-kmeans-model")
+
+// Load model
+import com.massivedatascience.clusterer.ml.SoftKMeansModel
+
+val loadedModel = SoftKMeansModel.load("path/to/soft-kmeans-model")
+
+// Use loaded model
+val predictions = loadedModel.transform(df)
+```
+
+### Advanced: Annealing Schedule
+
+Start with soft clustering and gradually sharpen assignments:
+
+```scala
+var beta = 0.5  // Start soft
+val betaMax = 10.0
+val annealingSteps = 5
+
+var currentModel = new SoftKMeans()
+  .setK(3)
+  .setBeta(beta)
+  .setMaxIter(20)
+  .fit(df)
+
+(1 to annealingSteps).foreach { step =>
+  beta = beta * 2.0
+  if (beta > betaMax) beta = betaMax
+
+  println(s"Step $step: beta = $beta")
+
+  currentModel = new SoftKMeans()
+    .setK(3)
+    .setBeta(beta)
+    .setMaxIter(20)
+    .fit(df)
+
+  val effectiveClusters = currentModel.effectiveNumberOfClusters(df)
+  println(s"  Effective clusters: $effectiveClusters")
+}
+
+// Gradual sharpening can help avoid poor local optima
+```
+
 ## Next Steps
 
 - **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
@@ -902,4 +1227,5 @@ println(s"X-Means automatically selected k=${model.numClusters}")
   - `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala`
 - **Legacy RDD API**: Still available for backward compatibility
