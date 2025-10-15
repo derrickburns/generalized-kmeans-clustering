@@ -6,10 +6,17 @@ Generalized K-Means Clustering
 This project generalizes the Spark MLLIB K-Means clusterer to support multiple Bregman divergences and advanced clustering variants. It provides both a legacy RDD-based API and a new DataFrame API with full Spark ML Pipeline integration.
 
 **Key Features:**
-* **DataFrame API (Recommended):** Native Spark ML Estimator/Model pattern with 5 Bregman divergences
-* **Multiple Distance Functions:** Squared Euclidean, KL Divergence, Itakura-Saito, Generalized I, Logistic Loss
-* **Advanced Variants:** Bisecting K-Means, X-means, Constrained K-Means, Soft K-Means, Online/Streaming K-Means
+* **DataFrame API (Recommended):** Native Spark ML Estimator/Model pattern with 5+ Bregman divergences
+* **Multiple Distance Functions:** Squared Euclidean, KL Divergence, Itakura-Saito, L1/Manhattan, Generalized I, Logistic Loss
+* **Advanced Variants:**
+  - **Bisecting K-Means:** Hierarchical divisive clustering
+  - **X-Means:** Automatic k selection using BIC/AIC
+  - **Soft K-Means:** Fuzzy clustering with probabilistic memberships
+  - **Streaming K-Means:** Real-time clustering with concept drift handling
+  - **K-Medoids (PAM/CLARA):** Robust clustering using actual data points
+  - **Constrained K-Means:** Balance and capacity constraints
 * **Production Ready:** Tested on datasets with tens of millions of points in 700+ dimensional spaces
+* **Scala 2.13 Native:** Built for modern Scala with Spark 3.5+
 
 Most practical variants of K-means clustering are implemented or can be implemented with this package, including:
 
@@ -86,6 +93,22 @@ predictions.show()
 
 **See [DataFrame API Examples](DATAFRAME_API_EXAMPLES.md) for complete documentation.**
 
+### Feature Matrix
+
+| Algorithm | DataFrame API | Use Case | Key Benefit |
+|-----------|--------------|----------|-------------|
+| **GeneralizedKMeans** | ✅ | General clustering | 5+ Bregman divergences |
+| **Bisecting K-Means** | ✅ | Hierarchical clustering | Tree structure, no k tuning |
+| **X-Means** | ✅ | Unknown k | Automatic k selection (BIC/AIC) |
+| **Soft K-Means** | ✅ | Fuzzy clustering | Probabilistic memberships |
+| **Streaming K-Means** | ✅ | Real-time data | Concept drift handling |
+| **K-Medoids (PAM)** | ✅ | Outlier-robust | Uses actual data points |
+| **CLARA** | ✅ | Large datasets (>10K) | 10-100x faster than PAM |
+| **K-Medians** | ✅ | Robust clustering | L1 distance, outlier-resistant |
+| **Constrained K-Means** | ⚠️ RDD only | Balance/capacity | Size constraints |
+| **Mini-Batch K-Means** | ⚠️ RDD only | Massive datasets | Sampling-based |
+| **Coreset K-Means** | ⚠️ RDD only | Massive datasets | 10-100x speedup |
+
 ### Quick Start (Legacy RDD API)
 
 **For existing projects.** The RDD API remains fully supported for backward compatibility.
@@ -113,13 +136,21 @@ val model = KMeans.train(
 
 The massivedatascience-clusterer project is built for:
 - **Spark 3.5.1** (overridable via `-Dspark.version`)
-- **Scala 2.12.18 / 2.13.14** (cross-compiled)
+- **Scala 2.13.14** (primary) / **2.12.18** (cross-compiled)
 - **Java 17**
 
 **Dependencies:**
 ```scala
 libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.6.0"
 ```
+
+**What's New in 0.6.0:**
+- ✅ Scala 2.13 as primary version with full migration
+- ✅ 5 new DataFrame API algorithms: Bisecting K-Means, X-Means, Soft K-Means, Streaming K-Means, K-Medoids
+- ✅ K-Medians (L1/Manhattan distance) for robust clustering
+- ✅ CLARA (Clustering Large Applications) for datasets > 10K points
+- ✅ PySpark wrapper for Python integration
+- ✅ 2,000+ lines of comprehensive examples and documentation
 
 ### Introduction
 
