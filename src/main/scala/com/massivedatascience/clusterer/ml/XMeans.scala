@@ -238,23 +238,25 @@ class XMeans(override val uid: String)
     * For k-means with squared Euclidean distance: log-likelihood ≈ -cost/(2*variance) - n*log(sigma) - n*log(2π)/2
     */
   private def computeScore(cost: Double, k: Int, n: Long, d: Int): Double = {
+    val nDouble = n.toDouble
+
     // Estimate variance from average cost
-    val variance = math.max(cost / n, 1e-10) // Avoid division by zero
+    val variance = math.max(cost / nDouble, 1e-10) // Avoid division by zero
     val sigma = math.sqrt(variance)
 
     // Log-likelihood (simplified Gaussian assumption)
     val logLikelihood = -cost / (2 * variance) -
-      n * math.log(sigma) -
-      n * math.log(2 * math.Pi) / 2
+      nDouble * math.log(sigma) -
+      nDouble * math.log(2 * math.Pi) / 2
 
     // Number of parameters: k centers * d dimensions + 1 variance parameter
     val numParams = k * d + 1
 
     // Compute criterion
     $(criterion) match {
-      case "bic" => -2 * logLikelihood + numParams * math.log(n)
+      case "bic" => -2 * logLikelihood + numParams * math.log(nDouble)
       case "aic" => -2 * logLikelihood + 2 * numParams
-      case _     => -2 * logLikelihood + numParams * math.log(n) // Default to BIC
+      case _     => -2 * logLikelihood + numParams * math.log(nDouble) // Default to BIC
     }
   }
 
