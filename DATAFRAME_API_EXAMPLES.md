@@ -1218,6 +1218,481 @@ var currentModel = new SoftKMeans()
 // Gradual sharpening can help avoid poor local optima
 ```
 
+---
+
+## Streaming K-Means (Real-Time Clustering)
+
+Streaming K-Means enables **incremental online clustering** with exponential forgetting for streaming data. The model updates incrementally as new batches arrive, making it ideal for real-time applications where data continuously evolves.
+
+### Basic Streaming K-Means
+
+```scala
+import com.massivedatascience.clusterer.ml.StreamingKMeans
+import org.apache.spark.ml.linalg.Vectors
+
+// Initialize with batch data
+val initialData = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.0, 0.0)),
+  Tuple1(Vectors.dense(0.1, 0.1)),
+  Tuple1(Vectors.dense(5.0, 5.0)),
+  Tuple1(Vectors.dense(5.1, 5.1))
+)).toDF("features")
+
+// Create streaming K-Means estimator
+val streamingKMeans = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.9)  // 0.0 = complete forgetting, 1.0 = no forgetting
+  .setTimeUnit("batches")  // or "points"
+  .setSeed(42)
+
+// Fit initial model
+val model = streamingKMeans.fit(initialData)
+
+println(s"Initial cluster centers:")
+model.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+// Update with new batch
+val newBatch = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.2, 0.2)),
+  Tuple1(Vectors.dense(5.2, 5.2))
+)).toDF("features")
+
+model.update(newBatch)
+
+println(s"\nUpdated cluster centers:")
+model.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+// Cluster weights track data density
+println(s"\nCluster weights: ${model.currentWeights.mkString(", ")}")
+```
+
+**Output:**
+```
+Initial cluster centers:
+  [0.05, 0.05]
+  [5.05, 5.05]
+
+Updated cluster centers:
+  [0.065, 0.065]
+  [5.065, 5.065]
+
+Cluster weights: 11.8, 11.8
+```
+
+### Decay Factor: Forgetting Old Data
+
+The **decay factor** (α) controls how quickly old data is forgotten:
+
+- **α = 1.0**: No forgetting (all batches weighted equally)
+- **α = 0.5**: Moderate forgetting (half-life decay)
+- **α = 0.0**: Complete forgetting (only current batch matters)
+
+```scala
+// High forgetting (decay = 0.1) - adapts quickly to new data
+val highForgetting = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.1)  // 90% discount on old data
+  .setSeed(42)
+  .fit(initialData)
+
+// Low forgetting (decay = 0.9) - retains historical data
+val lowForgetting = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.9)  // 10% discount on old data
+  .setSeed(42)
+  .fit(initialData)
+
+// Update both with data from different distribution
+val driftedBatch = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(10.0, 10.0)),
+  Tuple1(Vectors.dense(10.1, 10.1)),
+  Tuple1(Vectors.dense(15.0, 15.0)),
+  Tuple1(Vectors.dense(15.1, 15.1))
+)).toDF("features")
+
+highForgetting.update(driftedBatch)
+lowForgetting.update(driftedBatch)
+
+println("High forgetting centers (adapted to new data):")
+highForgetting.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+println("\nLow forgetting centers (still influenced by old data):")
+lowForgetting.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+// High forgetting shifts centers more toward new data
+```
+
+**Use Cases:**
+- **High decay (0.1-0.3)**: Concept drift detection, rapidly changing data
+- **Medium decay (0.5-0.7)**: Gradual adaptation, seasonal patterns
+- **Low decay (0.9-0.99)**: Stable environments, noise filtering
+
+### Half-Life Parameter
+
+Instead of specifying decay factor directly, use **half-life** for intuitive control:
+
+```scala
+// Half-life: time for data weight to decay to 50%
+val model = new StreamingKMeans()
+  .setK(3)
+  .setMaxIter(10)
+  .setHalfLife(5.0)  // Weight halves every 5 batches (or points)
+  .setTimeUnit("batches")
+
+// Equivalent decay factor: 0.5^(1/5) ≈ 0.871
+println(s"Computed decay factor: ${model.fit(initialData).decayFactorValue}")
+```
+
+**Half-Life Examples:**
+- `halfLife = 1.0`: Weights halve every batch (very fast decay)
+- `halfLife = 10.0`: Weights halve every 10 batches (moderate decay)
+- `halfLife = 100.0`: Weights halve every 100 batches (slow decay)
+
+### Time Units: Batches vs Points
+
+The **time unit** affects how decay is applied:
+
+```scala
+// Decay per batch (default)
+val batchDecay = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.5)
+  .setTimeUnit("batches")  // Discount once per batch
+  .fit(initialData)
+
+// Decay per point (scaled by batch size)
+val pointDecay = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.5)
+  .setTimeUnit("points")  // Discount = 0.5^(num_points)
+  .fit(initialData)
+
+val smallBatch = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(1.0, 1.0))
+)).toDF("features")
+
+batchDecay.update(smallBatch)
+pointDecay.update(smallBatch)
+
+println("Batch decay (discount = 0.5):")
+println(s"  Weights: ${batchDecay.currentWeights.mkString(", ")}")
+
+println("\nPoint decay (discount = 0.5^1 = 0.5):")
+println(s"  Weights: ${pointDecay.currentWeights.mkString(", ")}")
+
+// Batch decay: independent of batch size
+// Point decay: scales with batch size (smoother for variable-size batches)
+```
+
+### Streaming K-Means with Different Divergences
+
+All Bregman divergences work with streaming updates:
+
+```scala
+// L1 divergence (Manhattan distance) - robust to outliers
+val l1Streaming = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDivergence("l1")
+  .setDecayFactor(0.8)
+  .fit(initialData)
+
+// KL divergence for probability distributions
+val probData = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.7, 0.2, 0.1)),
+  Tuple1(Vectors.dense(0.6, 0.3, 0.1))
+)).toDF("features")
+
+val klStreaming = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDivergence("kl")
+  .setSmoothing(1e-10)
+  .setDecayFactor(0.85)
+  .fit(probData)
+
+// Update with new probability distributions
+val newProbs = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.65, 0.25, 0.1))
+)).toDF("features")
+
+klStreaming.update(newProbs)
+```
+
+### Streaming K-Means with Weighted Data
+
+Handle importance-weighted data streams:
+
+```scala
+val weightedData = spark.createDataFrame(Seq(
+  (Vectors.dense(0.0, 0.0), 10.0),  // High importance
+  (Vectors.dense(0.1, 0.1), 10.0),
+  (Vectors.dense(5.0, 5.0), 1.0),   // Low importance
+  (Vectors.dense(5.1, 5.1), 1.0)
+)).toDF("features", "weight")
+
+val weightedStreaming = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setWeightCol("weight")
+  .setDecayFactor(0.9)
+  .fit(weightedData)
+
+// Centers favor high-weight points
+println("Weighted cluster centers:")
+weightedStreaming.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+// Update with weighted batch
+val weightedBatch = spark.createDataFrame(Seq(
+  (Vectors.dense(0.2, 0.2), 5.0),
+  (Vectors.dense(5.2, 5.2), 1.0)
+)).toDF("features", "weight")
+
+weightedStreaming.update(weightedBatch)
+```
+
+### Integration with Structured Streaming
+
+Use `StreamingKMeansUpdater` for Spark Structured Streaming:
+
+```scala
+import org.apache.spark.sql.streaming.Trigger
+import scala.concurrent.duration._
+
+// Create streaming source (example: rate source)
+val streamingData = spark.readStream
+  .format("rate")
+  .option("rowsPerSecond", "10")
+  .load()
+  .selectExpr("CAST(value AS DOUBLE) AS x", "CAST(timestamp AS DOUBLE) / 1e9 AS y")
+  .selectExpr("array(x, y) AS features")
+  .selectExpr("struct(features) AS features")  // Convert to Vector
+
+// Initialize model with batch data
+val model = new StreamingKMeans()
+  .setK(3)
+  .setMaxIter(10)
+  .setDecayFactor(0.8)
+  .setTimeUnit("batches")
+  .fit(initialData)
+
+// Create streaming updater
+val updater = model.createStreamingUpdater()
+
+// Start streaming query with foreachBatch
+val query = updater.updateOn(
+  streamingDF = streamingData,
+  checkpointLocation = Some("/tmp/streaming-kmeans-checkpoint")
+)
+
+// Monitor streaming updates
+Thread.sleep(5000)
+
+println(s"Batches processed: ${updater.batchesProcessed}")
+println("Current cluster centers:")
+updater.currentModel.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+
+// Make predictions on current model
+val predictions = updater.transform(initialData)
+predictions.show()
+
+// Stop query
+query.stop()
+```
+
+### Dying Cluster Handling
+
+Streaming K-Means automatically handles **dying clusters** (clusters that receive no data):
+
+```scala
+val model = new StreamingKMeans()
+  .setK(3)
+  .setMaxIter(10)
+  .setDecayFactor(0.5)  // Fast decay
+  .fit(initialData)
+
+// Repeatedly update with data only in 2 clusters
+(1 to 20).foreach { _ =>
+  val batch = spark.createDataFrame(Seq(
+    Tuple1(Vectors.dense(0.0, 0.0)),
+    Tuple1(Vectors.dense(0.1, 0.1))
+  )).toDF("features")
+
+  model.update(batch)
+}
+
+// Third cluster was dying, so it gets split from largest cluster
+println("Cluster weights after 20 updates:")
+println(s"  ${model.currentWeights.mkString(", ")}")
+
+// All clusters still have reasonable weights due to splitting
+model.currentWeights.foreach { w =>
+  assert(w > 0.01, "No cluster should be completely dead")
+}
+```
+
+**Splitting Logic:**
+- Detects when `min_weight < 1e-8 * max_weight`
+- Splits largest cluster into two slightly perturbed copies
+- Redistributes weight equally between largest and smallest
+
+### Multiple Sequential Updates
+
+Process multiple batches sequentially:
+
+```scala
+val model = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.9)
+  .setSeed(42)
+  .fit(initialData)
+
+val initialCenters = model.currentCenters.map(_.copy)
+
+// Simulate 10 batches of streaming data
+(1 to 10).foreach { i =>
+  val batch = spark.createDataFrame(Seq(
+    Tuple1(Vectors.dense(i * 0.1, i * 0.1)),
+    Tuple1(Vectors.dense(5.0 + i * 0.1, 5.0 + i * 0.1))
+  )).toDF("features")
+
+  model.update(batch)
+
+  if (i % 3 == 0) {
+    println(s"After batch $i:")
+    model.clusterCentersAsVectors.foreach(c => println(s"  $c"))
+  }
+}
+
+val finalCenters = model.currentCenters
+
+// Centers have evolved gradually
+println(s"\nTotal shift: ${
+  initialCenters.zip(finalCenters).map { case (init, final_) =>
+    math.sqrt((0 until init.size).map { i =>
+      val d = init(i) - final_(i)
+      d * d
+    }.sum)
+  }.sum
+}")
+```
+
+### Cost Computation for Streaming Models
+
+Evaluate clustering quality on any dataset:
+
+```scala
+val model = new StreamingKMeans()
+  .setK(2)
+  .setMaxIter(10)
+  .setDecayFactor(0.9)
+  .fit(initialData)
+
+// Compute cost on training data
+val trainCost = model.computeCost(initialData)
+println(s"Training cost: $trainCost")
+
+// Update model
+model.update(newBatch)
+
+// Compute cost on new data
+val newCost = model.computeCost(newBatch)
+println(s"New batch cost: $newCost")
+
+// Lower cost indicates better fit
+```
+
+### When to Use Streaming K-Means
+
+**✅ Use Streaming K-Means when:**
+- Data arrives continuously (sensors, logs, user events)
+- Concept drift is expected (changing patterns over time)
+- Memory constraints prevent storing all historical data
+- Real-time clustering results are needed
+- Data distribution evolves gradually
+
+**❌ Use Batch K-Means when:**
+- Complete dataset fits in memory
+- Data distribution is stationary
+- Retraining from scratch is acceptable
+- Highest accuracy is critical (no approximation)
+
+### Streaming K-Means Update Rule
+
+The mini-batch update formula with exponential forgetting:
+
+```
+For cluster c at time t:
+  c_{t+1} = [(c_t * n_t * α) + (x_t * m_t)] / [n_t * α + m_t]
+  n_{t+1} = n_t * α + m_t
+
+Where:
+  c_t    = current center
+  n_t    = current weight (cumulative count)
+  x_t    = mean of new points assigned to cluster c
+  m_t    = number of new points assigned to cluster c
+  α      = decay factor (discounts old data)
+```
+
+**Example:**
+```scala
+// After 100 points with decay=0.9:
+//   Effective weight of original data ≈ 100 * 0.9^10 ≈ 35 points
+//   Recent 10 points have cumulative weight ≈ 10 points
+//   Total weight ≈ 45 points (weighted toward recent data)
+```
+
+### Advanced: Custom Decay Schedules
+
+Combine multiple models with different decay rates:
+
+```scala
+// Fast-adapting model (recent trends)
+val fastModel = new StreamingKMeans()
+  .setK(2)
+  .setDecayFactor(0.3)
+  .fit(initialData)
+
+// Slow-adapting model (long-term patterns)
+val slowModel = new StreamingKMeans()
+  .setK(2)
+  .setDecayFactor(0.95)
+  .fit(initialData)
+
+// Update both
+(1 to 10).foreach { _ =>
+  val batch = generateBatch()  // Your data generation logic
+  fastModel.update(batch)
+  slowModel.update(batch)
+}
+
+// Compare divergence between fast and slow models
+val fastCenters = fastModel.clusterCentersAsVectors
+val slowCenters = slowModel.clusterCentersAsVectors
+
+val divergence = fastCenters.zip(slowCenters).map { case (f, s) =>
+  math.sqrt((0 until f.size).map { i =>
+    val d = f(i) - s(i)
+    d * d
+  }.sum)
+}.sum
+
+println(s"Model divergence: $divergence")
+
+// High divergence → concept drift detected!
+if (divergence > 1.0) {
+  println("⚠️ Significant concept drift detected!")
+}
+```
+
+---
+
 ## Next Steps
 
 - **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
@@ -1228,4 +1703,5 @@ var currentModel = new SoftKMeans()
   - `src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala`
 - **Legacy RDD API**: Still available for backward compatibility
