@@ -5,7 +5,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Model
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
-import org.apache.spark.ml.util.{DefaultParamsReadable, DefaultParamsWritable, Identifiable}
+import org.apache.spark.ml.util._
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
@@ -43,7 +43,7 @@ class GeneralizedKMeansModel(
     val kernelName: String)
     extends Model[GeneralizedKMeansModel]
     with GeneralizedKMeansParams
-    with DefaultParamsWritable
+    with MLWritable
     with Logging {
 
   /**
@@ -230,13 +230,82 @@ class GeneralizedKMeansModel(
     }
   }
 
+  override def write: MLWriter = new GeneralizedKMeansModel.GeneralizedKMeansModelWriter(this)
+
   override def toString: String = {
     s"GeneralizedKMeansModel: uid=$uid, k=$numClusters, features=$numFeatures, kernel=$kernelName"
   }
 }
 
-object GeneralizedKMeansModel extends DefaultParamsReadable[GeneralizedKMeansModel] {
+object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
+
+  override def read: MLReader[GeneralizedKMeansModel] = new GeneralizedKMeansModelReader
+
   override def load(path: String): GeneralizedKMeansModel = super.load(path)
+
+  private[GeneralizedKMeansModel] class GeneralizedKMeansModelWriter(instance: GeneralizedKMeansModel)
+      extends MLWriter {
+
+    override protected def saveImpl(path: String): Unit = {
+      val spark = sparkSession
+      import spark.implicits._
+
+      // Save cluster centers as Parquet
+      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
+      val centersDF = sc.parallelize(instance.clusterCenters.zipWithIndex).map { case (center, idx) =>
+        (idx, Vectors.dense(center))
+      }.toDF("clusterId", "center")
+      centersDF.write.mode("overwrite").parquet(centersPath)
+
+      // Save kernel name and model info in metadata
+      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
+      val metadataDF = Seq((
+        instance.uid,
+        instance.kernelName,
+        instance.numClusters,
+        instance.numFeatures,
+        instance.getFeaturesCol,
+        instance.getPredictionCol
+      )).toDF("uid", "kernelName", "numClusters", "numFeatures", "featuresCol", "predictionCol")
+      metadataDF.write.mode("overwrite").parquet(metadataPath)
+    }
+  }
+
+  private class GeneralizedKMeansModelReader extends MLReader[GeneralizedKMeansModel] {
+
+    override def load(path: String): GeneralizedKMeansModel = {
+      // Load cluster centers from Parquet
+      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
+      val centersDF = sparkSession.read.parquet(centersPath)
+
+      val centers = centersDF
+        .orderBy("clusterId")
+        .select("center")
+        .collect()
+        .map { row =>
+          row.getAs[Vector](0).toArray
+        }
+
+      // Load metadata
+      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
+      val metadataDF = sparkSession.read.parquet(metadataPath)
+      val metadataRow = metadataDF.first()
+
+      val uid = metadataRow.getAs[String]("uid")
+      val kernelName = metadataRow.getAs[String]("kernelName")
+      val featuresCol = metadataRow.getAs[String]("featuresCol")
+      val predictionCol = metadataRow.getAs[String]("predictionCol")
+
+      // Create model instance
+      val model = new GeneralizedKMeansModel(uid, centers, kernelName)
+
+      // Set parameters
+      model.set(model.featuresCol, featuresCol)
+      model.set(model.predictionCol, predictionCol)
+
+      model
+    }
+  }
 }
 
 /**

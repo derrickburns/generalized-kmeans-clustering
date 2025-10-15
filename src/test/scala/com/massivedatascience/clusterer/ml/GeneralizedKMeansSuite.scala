@@ -280,4 +280,78 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(str.contains("k=3"))
     assert(str.contains("features=2"))
   }
+
+  test("model persistence - save and load") {
+    val df = createSimpleDataset()
+
+    val kmeans = new GeneralizedKMeans()
+      .setK(3)
+      .setDivergence("squaredEuclidean")
+      .setMaxIter(10)
+      .setSeed(42)
+      .setFeaturesCol("features")
+      .setPredictionCol("prediction")
+
+    val originalModel = kmeans.fit(df)
+    val originalPredictions = originalModel.transform(df).select("prediction").collect()
+
+    // Save model
+    val tempDir = java.nio.file.Files.createTempDirectory("kmeans-model-test").toString
+    try {
+      originalModel.write.overwrite().save(tempDir)
+
+      // Load model
+      val loadedModel = GeneralizedKMeansModel.load(tempDir)
+
+      // Verify loaded model properties
+      assert(loadedModel.numClusters === originalModel.numClusters)
+      assert(loadedModel.numFeatures === originalModel.numFeatures)
+      assert(loadedModel.kernelName === originalModel.kernelName)
+      assert(loadedModel.getFeaturesCol === originalModel.getFeaturesCol)
+      assert(loadedModel.getPredictionCol === originalModel.getPredictionCol)
+
+      // Verify cluster centers match
+      originalModel.clusterCenters.zip(loadedModel.clusterCenters).foreach { case (orig, loaded) =>
+        assert(orig.sameElements(loaded))
+      }
+
+      // Verify predictions match
+      val loadedPredictions = loadedModel.transform(df).select("prediction").collect()
+      assert(originalPredictions.sameElements(loadedPredictions))
+
+    } finally {
+      // Cleanup
+      import scala.reflect.io.Directory
+      val dir = new Directory(new java.io.File(tempDir))
+      dir.deleteRecursively()
+    }
+  }
+
+  test("model persistence - different kernels") {
+    val df = createSimpleDataset()
+
+    Seq("squaredEuclidean", "kl").foreach { divergence =>
+      val kmeans = new GeneralizedKMeans()
+        .setK(2)
+        .setDivergence(divergence)
+        .setMaxIter(5)
+        .setSeed(42)
+
+      val originalModel = kmeans.fit(df)
+
+      val tempDir = java.nio.file.Files.createTempDirectory(s"kmeans-$divergence-test").toString
+      try {
+        originalModel.write.overwrite().save(tempDir)
+        val loadedModel = GeneralizedKMeansModel.load(tempDir)
+
+        assert(loadedModel.kernelName === originalModel.kernelName)
+        assert(loadedModel.numClusters === originalModel.numClusters)
+
+      } finally {
+        import scala.reflect.io.Directory
+        val dir = new Directory(new java.io.File(tempDir))
+        dir.deleteRecursively()
+      }
+    }
+  }
 }
