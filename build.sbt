@@ -64,5 +64,18 @@ libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2"
 )
 
+// Enable Scaladoc generation with sbt-unidoc
+enablePlugins(ScalaUnidocPlugin)
 
+// Scaladoc settings
+Compile / doc / scalacOptions ++= Seq(
+  "-doc-title", "Generalized K-Means Clustering API",
+  "-doc-version", version.value,
+  "-groups",
+  "-implicits",
+  "-diagrams"
+)
 
+// Unidoc settings
+ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(ThisProject)
+ScalaUnidoc / unidoc / target := baseDirectory.value / "docs" / "api"
