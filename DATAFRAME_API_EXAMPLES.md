@@ -507,10 +507,188 @@ batches.foreach { batch =>
 }
 ```
 
+## Bisecting K-Means (Hierarchical Divisive Clustering)
+
+Bisecting K-Means is a hierarchical divisive clustering algorithm that offers several advantages over standard k-means:
+
+- **More deterministic**: Less sensitive to initialization than random k-means
+- **Better for imbalanced clusters**: Naturally adapts to varying cluster sizes
+- **Often faster for large k**: Only splits locally, avoiding global recomputation
+- **Higher quality**: Generally produces better clusters than random initialization
+
+### Basic Bisecting K-Means
+
+```scala
+import com.massivedatascience.clusterer.ml.BisectingKMeans
+import org.apache.spark.ml.linalg.Vectors
+
+// Create data with natural hierarchical structure
+val data = spark.createDataFrame(Seq(
+  // Group A
+  Vectors.dense(0.0, 0.0),
+  Vectors.dense(0.1, 0.1),
+  Vectors.dense(0.2, 0.2),
+  // Group B
+  Vectors.dense(5.0, 5.0),
+  Vectors.dense(5.1, 5.1),
+  Vectors.dense(5.2, 5.2),
+  // Group C
+  Vectors.dense(10.0, 10.0),
+  Vectors.dense(10.1, 10.1),
+  Vectors.dense(10.2, 10.2)
+).map(Tuple1.apply)).toDF("features")
+
+// Configure bisecting k-means
+val bisecting = new BisectingKMeans()
+  .setK(3)
+  .setDivergence("squaredEuclidean")
+  .setMaxIter(20)
+  .setMinDivisibleClusterSize(1) // Minimum cluster size to allow splitting
+  .setSeed(42)
+
+val model = bisecting.fit(data)
+val predictions = model.transform(data)
+
+println(s"Number of clusters: ${model.numClusters}")
+predictions.groupBy("prediction").count().show()
+```
+
+### Bisecting K-Means with KL Divergence
+
+Works with all Bregman divergences, not just Euclidean:
+
+```scala
+// Probability distribution data
+val probData = spark.createDataFrame(Seq(
+  Vectors.dense(0.7, 0.2, 0.1),
+  Vectors.dense(0.6, 0.3, 0.1),
+  Vectors.dense(0.1, 0.2, 0.7),
+  Vectors.dense(0.1, 0.3, 0.6),
+  Vectors.dense(0.3, 0.4, 0.3),
+  Vectors.dense(0.3, 0.5, 0.2)
+).map(Tuple1.apply)).toDF("features")
+
+val bisectingKL = new BisectingKMeans()
+  .setK(3)
+  .setDivergence("kl")
+  .setSmoothing(1e-10)
+  .setMaxIter(20)
+
+val klModel = bisectingKL.fit(probData)
+```
+
+### Bisecting K-Means for Outlier-Robust Clustering
+
+Using L1 (Manhattan) distance for robustness:
+
+```scala
+// Data with outliers
+val dataWithOutliers = spark.createDataFrame(Seq(
+  Vectors.dense(1.0, 1.0),
+  Vectors.dense(1.1, 0.9),
+  Vectors.dense(0.9, 1.1),
+  Vectors.dense(100.0, 100.0), // Outlier
+  Vectors.dense(10.0, 10.0),
+  Vectors.dense(10.1, 9.9),
+  Vectors.dense(9.9, 10.1)
+).map(Tuple1.apply)).toDF("features")
+
+val bisectingL1 = new BisectingKMeans()
+  .setK(2)
+  .setDivergence("l1") // or "manhattan"
+  .setMaxIter(20)
+
+val robustModel = bisectingL1.fit(dataWithOutliers)
+// Centers are less affected by the outlier than standard k-means
+```
+
+### Weighted Bisecting K-Means
+
+```scala
+// Data with importance weights
+val weightedData = spark.createDataFrame(Seq(
+  (Vectors.dense(1.0, 1.0), 10.0),  // High importance
+  (Vectors.dense(2.0, 2.0), 10.0),
+  (Vectors.dense(10.0, 10.0), 1.0), // Low importance outlier
+  (Vectors.dense(3.0, 3.0), 10.0),
+  (Vectors.dense(4.0, 4.0), 10.0)
+)).toDF("features", "weight")
+
+val weightedBisecting = new BisectingKMeans()
+  .setK(2)
+  .setDivergence("squaredEuclidean")
+  .setWeightCol("weight")
+  .setMaxIter(20)
+
+val weightedModel = weightedBisecting.fit(weightedData)
+// Centers favor high-weight points
+```
+
+### Controlling Cluster Splits
+
+The `minDivisibleClusterSize` parameter controls when clusters can be split:
+
+```scala
+// Only split clusters with at least 10 points
+val bisecting = new BisectingKMeans()
+  .setK(10)
+  .setMinDivisibleClusterSize(10) // Won't split clusters smaller than this
+  .setMaxIter(20)
+
+val model = bisecting.fit(data)
+// May produce fewer than 10 clusters if small clusters can't be split
+println(s"Actual clusters: ${model.numClusters} (requested ${bisecting.getK})")
+```
+
+### When to Use Bisecting K-Means
+
+**Use Bisecting K-Means when:**
+- You want more deterministic results (less variation across runs)
+- Your clusters have varying sizes (not all equal-sized)
+- You need hierarchical structure (dendrogram-like splitting)
+- You have a large value of k (> 10)
+- Initialization quality matters more than per-iteration speed
+
+**Use Standard K-Means when:**
+- Clusters are roughly equal-sized
+- You have very large datasets (billions of points)
+- You need the absolute fastest iterations
+- You're using mini-batch or streaming variants
+
+### Comparing with Standard K-Means
+
+```scala
+// Same data, different algorithms
+val testData = generateTestData()
+
+// Standard k-means (random initialization)
+val standardKM = new GeneralizedKMeans()
+  .setK(5)
+  .setMaxIter(20)
+  .setSeed(42)
+
+val standardModel = standardKM.fit(testData)
+val standardCost = standardModel.computeCost(testData)
+
+// Bisecting k-means
+val bisectingKM = new BisectingKMeans()
+  .setK(5)
+  .setMaxIter(20)
+  .setSeed(42)
+
+val bisectingModel = bisectingKM.fit(testData)
+val bisectingCost = bisectingModel.computeCost(testData)
+
+println(s"Standard K-Means cost: $standardCost")
+println(s"Bisecting K-Means cost: $bisectingCost")
+// Bisecting often has lower cost due to better initialization
+```
+
 ## Next Steps
 
 - **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
 - **Migration Guide**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Migrate from RDD API
 - **Performance Tuning**: [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) - Optimization tips
 - **Test Suite**: `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
+- **Bisecting K-Means Tests**: `src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala`
 - **Legacy RDD API**: Still available for backward compatibility
