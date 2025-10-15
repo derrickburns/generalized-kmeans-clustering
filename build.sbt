@@ -67,15 +67,29 @@ libraryDependencies ++= Seq(
 // Enable Scaladoc generation with sbt-unidoc
 enablePlugins(ScalaUnidocPlugin)
 
-// Scaladoc settings
+// Scaladoc settings (disable -diagrams to avoid compiler bugs)
 Compile / doc / scalacOptions ++= Seq(
   "-doc-title", "Generalized K-Means Clustering API",
   "-doc-version", version.value,
   "-groups",
   "-implicits",
-  "-diagrams"
+  "-no-link-warnings"
 )
+
+// Exclude XORShiftRandom.scala from scaladoc due to Scala 2.12 compiler bug
+Compile / doc / sources := {
+  val orig = (Compile / doc / sources).value
+  orig.filterNot(_.getName == "XORShiftRandom.scala")
+}
 
 // Unidoc settings
 ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(ThisProject)
 ScalaUnidoc / unidoc / target := baseDirectory.value / "docs" / "api"
+
+ScalaUnidoc / unidoc / scalacOptions ++= Seq(
+  "-doc-title", "Generalized K-Means Clustering API",
+  "-doc-version", version.value,
+  "-groups",
+  "-implicits",
+  "-no-link-warnings"
+)
