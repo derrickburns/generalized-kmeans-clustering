@@ -12,7 +12,8 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    spark = SparkSession.builder()
+    spark = SparkSession
+      .builder()
       .master("local[2]")
       .appName("KMediansSuite")
       .config("spark.ui.enabled", "false")
@@ -38,7 +39,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       Vectors.dense(1.1, 0.9),
       Vectors.dense(0.9, 1.1),
       Vectors.dense(1.0, 1.05),
-      Vectors.dense(100.0, 100.0),  // Extreme outlier
+      Vectors.dense(100.0, 100.0), // Extreme outlier
       Vectors.dense(10.0, 10.0),
       Vectors.dense(10.1, 9.9),
       Vectors.dense(9.9, 10.1),
@@ -54,7 +55,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val medianModel = kmedians.fit(df)
+    val medianModel   = kmedians.fit(df)
     val medianCenters = medianModel.clusterCenters
 
     // Centers should be close to (1, 1) and (10, 10), not pulled much by the outlier
@@ -68,8 +69,14 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       math.abs(c(0) - 10.0) < 2.0 && math.abs(c(1) - 10.0) < 2.0
     }
 
-    assert(hasClusterNear1, s"Should have cluster near (1,1), got centers: ${medianCenters.mkString(", ")}")
-    assert(hasClusterNear10, s"Should have cluster near (10,10), got centers: ${medianCenters.mkString(", ")}")
+    assert(
+      hasClusterNear1,
+      s"Should have cluster near (1,1), got centers: ${medianCenters.mkString(", ")}"
+    )
+    assert(
+      hasClusterNear10,
+      s"Should have cluster near (10,10), got centers: ${medianCenters.mkString(", ")}"
+    )
 
     // Compare with K-Means (Euclidean)
     val kmeans = new GeneralizedKMeans()
@@ -78,7 +85,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val meansModel = kmeans.fit(df)
+    val meansModel   = kmeans.fit(df)
     val meansCenters = meansModel.clusterCenters
 
     // K-Means centers might be more affected by the outlier
@@ -89,12 +96,12 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("K-Medians should handle weighted points correctly") {
     // Weighted median should favor high-weight points
     val data = Seq(
-      (Vectors.dense(1.0, 1.0), 10.0),   // High weight
-      (Vectors.dense(2.0, 2.0), 10.0),   // High weight
-      (Vectors.dense(10.0, 10.0), 1.0),  // Low weight outlier
-      (Vectors.dense(3.0, 3.0), 10.0),   // High weight
-      (Vectors.dense(4.0, 4.0), 10.0),   // High weight
-      (Vectors.dense(11.0, 11.0), 1.0)   // Another low weight outlier
+      (Vectors.dense(1.0, 1.0), 10.0),  // High weight
+      (Vectors.dense(2.0, 2.0), 10.0),  // High weight
+      (Vectors.dense(10.0, 10.0), 1.0), // Low weight outlier
+      (Vectors.dense(3.0, 3.0), 10.0),  // High weight
+      (Vectors.dense(4.0, 4.0), 10.0),  // High weight
+      (Vectors.dense(11.0, 11.0), 1.0)  // Another low weight outlier
     )
 
     val df = spark.createDataFrame(data).toDF("features", "weight")
@@ -106,7 +113,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val model = kmedians.fit(df)
+    val model   = kmedians.fit(df)
     val centers = model.clusterCenters
 
     assert(centers.length === 2)
@@ -116,7 +123,10 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val hasClusterNear2 = centers.exists { c =>
       c(0) < 6.0 && c(1) < 6.0
     }
-    assert(hasClusterNear2, s"Should have cluster near high-weight points, got centers: ${centers.mkString(", ")}")
+    assert(
+      hasClusterNear2,
+      s"Should have cluster near high-weight points, got centers: ${centers.mkString(", ")}"
+    )
   }
 
   test("K-Medians should converge") {
@@ -166,7 +176,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val model = kmedians.fit(df)
+    val model       = kmedians.fit(df)
     val predictions = model.transform(df)
 
     assert(predictions.columns.contains("l1_distance"))
@@ -212,7 +222,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val model = kmedians.fit(df)
+    val model         = kmedians.fit(df)
     val originalPreds = model.transform(df).select("prediction").collect().map(_.getInt(0))
 
     // Save and load model

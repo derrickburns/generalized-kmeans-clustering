@@ -5,16 +5,16 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
 
-/**
- * Integration tests for DataFrame-based GeneralizedKMeans.
- */
+/** Integration tests for DataFrame-based GeneralizedKMeans.
+  */
 class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   @transient var spark: SparkSession = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    spark = SparkSession.builder()
+    spark = SparkSession
+      .builder()
       .master("local[2]")
       .appName("GeneralizedKMeansSuite")
       .config("spark.ui.enabled", "false")
@@ -33,9 +33,8 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  /**
-   * Create a simple 2D dataset with 3 well-separated clusters.
-   */
+  /** Create a simple 2D dataset with 3 well-separated clusters.
+    */
   def createSimpleDataset(): DataFrame = {
     val sparkSession = spark
     import sparkSession.implicits._
@@ -117,7 +116,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(model.numClusters === 2)
     assert(model.kernelName.startsWith("KL"))
 
-    val predictions = model.transform(probData)
+    val predictions      = model.transform(probData)
     val distinctClusters = predictions.select("prediction").distinct().count()
     assert(distinctClusters === 2)
   }
@@ -131,7 +130,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setSeed(42)
       .setDistanceCol("distance")
 
-    val model = kmeans.fit(df)
+    val model       = kmeans.fit(df)
     val predictions = model.transform(df)
 
     assert(predictions.columns.contains("distance"))
@@ -154,12 +153,12 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val model = kmeans.fit(df)
 
     // Point close to cluster 0 (around 0,0)
-    val point1 = Vectors.dense(0.05, 0.05)
+    val point1      = Vectors.dense(0.05, 0.05)
     val prediction1 = model.predict(point1)
     assert(prediction1 >= 0 && prediction1 < 3)
 
     // Point close to cluster 1 (around 5,5)
-    val point2 = Vectors.dense(5.05, 5.05)
+    val point2      = Vectors.dense(5.05, 5.05)
     val prediction2 = model.predict(point2)
     assert(prediction2 >= 0 && prediction2 < 3)
 
@@ -178,7 +177,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setSeed(42)
 
     val model = kmeans.fit(df)
-    val cost = model.computeCost(df)
+    val cost  = model.computeCost(df)
 
     // Cost should be non-negative and finite
     assert(cost >= 0.0)
@@ -248,7 +247,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val weightedData = Seq(
       (Vectors.dense(0.0, 0.0), 1.0),
       (Vectors.dense(0.1, 0.1), 1.0),
-      (Vectors.dense(5.0, 5.0), 10.0),  // High weight
+      (Vectors.dense(5.0, 5.0), 10.0), // High weight
       (Vectors.dense(5.1, 5.1), 10.0)
     ).toDF("features", "weight")
 
@@ -274,7 +273,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setSeed(42)
 
     val model = kmeans.fit(df)
-    val str = model.toString
+    val str   = model.toString
 
     assert(str.contains("GeneralizedKMeansModel"))
     assert(str.contains("k=3"))
@@ -292,7 +291,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setFeaturesCol("features")
       .setPredictionCol("prediction")
 
-    val originalModel = kmeans.fit(df)
+    val originalModel       = kmeans.fit(df)
     val originalPredictions = originalModel.transform(df).select("prediction").collect()
 
     // Save model

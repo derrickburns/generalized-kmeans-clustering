@@ -17,116 +17,96 @@
 
 package com.massivedatascience.clusterer
 
-/**
- * Trait providing standardized configuration validation methods.
- *
- * This trait eliminates duplicate validation logic across configuration case classes
- * and provides consistent error messages.
- */
+/** Trait providing standardized configuration validation methods.
+  *
+  * This trait eliminates duplicate validation logic across configuration case classes and provides
+  * consistent error messages.
+  */
 trait ConfigValidator {
 
-  /**
-   * Require that a value is positive (> 0).
-   */
+  /** Require that a value is positive (> 0).
+    */
   protected def requirePositive(value: Double, name: String): Unit = {
     require(value > 0.0, s"$name must be positive, got: $value")
   }
 
-  /**
-   * Require that an integer value is positive (> 0).
-   */
+  /** Require that an integer value is positive (> 0).
+    */
   protected def requirePositive(value: Int, name: String): Unit = {
     require(value > 0, s"$name must be positive, got: $value")
   }
 
-  /**
-   * Require that a value is non-negative (>= 0).
-   */
+  /** Require that a value is non-negative (>= 0).
+    */
   protected def requireNonNegative(value: Double, name: String): Unit = {
     require(value >= 0.0, s"$name must be non-negative, got: $value")
   }
 
-  /**
-   * Require that an integer value is non-negative (>= 0).
-   */
+  /** Require that an integer value is non-negative (>= 0).
+    */
   protected def requireNonNegative(value: Int, name: String): Unit = {
     require(value >= 0, s"$name must be non-negative, got: $value")
   }
 
-  /**
-   * Require that a value is in a specified range [min, max].
-   */
+  /** Require that a value is in a specified range [min, max].
+    */
   protected def requireInRange(value: Double, min: Double, max: Double, name: String): Unit = {
-    require(value >= min && value <= max,
-      s"$name must be in [$min, $max], got: $value")
+    require(value >= min && value <= max, s"$name must be in [$min, $max], got: $value")
   }
 
-  /**
-   * Require that an integer value is in a specified range [min, max].
-   */
+  /** Require that an integer value is in a specified range [min, max].
+    */
   protected def requireInRange(value: Int, min: Int, max: Int, name: String): Unit = {
-    require(value >= min && value <= max,
-      s"$name must be in [$min, $max], got: $value")
+    require(value >= min && value <= max, s"$name must be in [$min, $max], got: $value")
   }
 
-  /**
-   * Require that a value is one of a specified set of options.
-   */
+  /** Require that a value is one of a specified set of options.
+    */
   protected def requireOneOf[T](value: T, options: Seq[T], name: String): Unit = {
-    require(options.contains(value),
-      s"$name must be one of ${options.mkString("[", ", ", "]")}, got: $value")
+    require(
+      options.contains(value),
+      s"$name must be one of ${options.mkString("[", ", ", "]")}, got: $value"
+    )
   }
 
-  /**
-   * Require that a value is greater than another value.
-   */
+  /** Require that a value is greater than another value.
+    */
   protected def requireGreaterThan(value: Double, threshold: Double, name: String): Unit = {
-    require(value > threshold,
-      s"$name must be > $threshold, got: $value")
+    require(value > threshold, s"$name must be > $threshold, got: $value")
   }
 
-  /**
-   * Require that an integer value is greater than another value.
-   */
+  /** Require that an integer value is greater than another value.
+    */
   protected def requireGreaterThan(value: Int, threshold: Int, name: String): Unit = {
-    require(value > threshold,
-      s"$name must be > $threshold, got: $value")
+    require(value > threshold, s"$name must be > $threshold, got: $value")
   }
 
-  /**
-   * Require that a value is less than another value.
-   */
+  /** Require that a value is less than another value.
+    */
   protected def requireLessThan(value: Double, threshold: Double, name: String): Unit = {
-    require(value < threshold,
-      s"$name must be < $threshold, got: $value")
+    require(value < threshold, s"$name must be < $threshold, got: $value")
   }
 
-  /**
-   * Require that a value is at least a certain amount.
-   */
+  /** Require that a value is at least a certain amount.
+    */
   protected def requireAtLeast(value: Double, minimum: Double, name: String): Unit = {
-    require(value >= minimum,
-      s"$name must be >= $minimum, got: $value")
+    require(value >= minimum, s"$name must be >= $minimum, got: $value")
   }
 
-  /**
-   * Require that an integer value is at least a certain amount.
-   */
+  /** Require that an integer value is at least a certain amount.
+    */
   protected def requireAtLeast(value: Int, minimum: Int, name: String): Unit = {
-    require(value >= minimum,
-      s"$name must be >= $minimum, got: $value")
+    require(value >= minimum, s"$name must be >= $minimum, got: $value")
   }
 
-  /**
-   * Require a probability value (in [0, 1]).
-   */
+  /** Require a probability value (in [0, 1]).
+    */
   protected def requireProbability(value: Double, name: String): Unit = {
     requireInRange(value, 0.0, 1.0, name)
   }
 
-  /**
-   * Require a valid percentage (in [0, 100]).
-   */
+  /** Require a valid percentage (in [0, 100]).
+    */
   protected def requirePercentage(value: Double, name: String): Unit = {
     requireInRange(value, 0.0, 100.0, name)
   }

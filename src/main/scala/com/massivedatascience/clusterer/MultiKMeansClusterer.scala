@@ -26,87 +26,92 @@ trait MultiKMeansClusterer extends Serializable {
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): Seq[ClusteringWithDistortion]
+    centers: Seq[IndexedSeq[BregmanCenter]]
+  ): Seq[ClusteringWithDistortion]
 
   def best(
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]): ClusteringWithDistortion = {
+    centers: Seq[IndexedSeq[BregmanCenter]]
+  ): ClusteringWithDistortion = {
     cluster(maxIterations, pointOps, data, centers).minBy(_.distortion)
   }
 }
 
 object MultiKMeansClusterer {
 
-  val TRACKING = "TRACKING"
-  val SIMPLE = "SIMPLE"
+  val TRACKING        = "TRACKING"
+  val SIMPLE          = "SIMPLE"
   val COLUMN_TRACKING = "COLUMN_TRACKING"
-  val MINI_BATCH_10 = "MINI_BATCH_10"
+  val MINI_BATCH_10   = "MINI_BATCH_10"
   val CHANGE_TRACKING = "CHANGE_TRACKING"
-  val RESEED = "RESEED"
+  val RESEED          = "RESEED"
 
   // Coreset-based clusterers
-  val CORESET = "CORESET"
-  val CORESET_FAST = "CORESET_FAST"
+  val CORESET              = "CORESET"
+  val CORESET_FAST         = "CORESET_FAST"
   val CORESET_HIGH_QUALITY = "CORESET_HIGH_QUALITY"
 
   // Online (sequential) clusterers
-  val ONLINE = "ONLINE"
-  val ONLINE_FAST = "ONLINE_FAST"
+  val ONLINE              = "ONLINE"
+  val ONLINE_FAST         = "ONLINE_FAST"
   val ONLINE_CONSERVATIVE = "ONLINE_CONSERVATIVE"
 
   // Annealed (deterministic annealing) clusterers
-  val ANNEALED = "ANNEALED"
-  val ANNEALED_FAST = "ANNEALED_FAST"
+  val ANNEALED              = "ANNEALED"
+  val ANNEALED_FAST         = "ANNEALED_FAST"
   val ANNEALED_HIGH_QUALITY = "ANNEALED_HIGH_QUALITY"
-  val ANNEALED_ROBUST = "ANNEALED_ROBUST"
+  val ANNEALED_ROBUST       = "ANNEALED_ROBUST"
 
   // Bisecting (hierarchical divisive) clusterers
-  val BISECTING = "BISECTING"
+  val BISECTING         = "BISECTING"
   val BISECTING_BY_COST = "BISECTING_BY_COST"
-  val BISECTING_FAST = "BISECTING_FAST"
+  val BISECTING_FAST    = "BISECTING_FAST"
 
   // X-means (automatic k selection) clusterers
-  val XMEANS = "XMEANS"
-  val XMEANS_AIC = "XMEANS_AIC"
+  val XMEANS      = "XMEANS"
+  val XMEANS_AIC  = "XMEANS_AIC"
   val XMEANS_FAST = "XMEANS_FAST"
 
   case class ClusteringWithDistortion(distortion: Double, centers: IndexedSeq[BregmanCenter])
 
   def apply(clustererName: String): MultiKMeansClusterer = {
     clustererName match {
-      case SIMPLE => new ColumnTrackingKMeans
-      case TRACKING => new ColumnTrackingKMeans
+      case SIMPLE          => new ColumnTrackingKMeans
+      case TRACKING        => new ColumnTrackingKMeans
       case COLUMN_TRACKING => new ColumnTrackingKMeans
-      case CHANGE_TRACKING => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
-      case MINI_BATCH_10 => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
-      case RESEED => new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(maxRoundsToBackfill = 5))
+      case CHANGE_TRACKING =>
+        new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
+      case MINI_BATCH_10 =>
+        new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
+      case RESEED =>
+        new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(maxRoundsToBackfill = 5))
 
       // Coreset variants
-      case CORESET => CoresetKMeans(CoresetKMeans.defaultConfig)
-      case CORESET_FAST => CoresetKMeans.fast()
+      case CORESET              => CoresetKMeans(CoresetKMeans.defaultConfig)
+      case CORESET_FAST         => CoresetKMeans.fast()
       case CORESET_HIGH_QUALITY => CoresetKMeans.highQuality()
 
       // Online variants
-      case ONLINE => OnlineKMeans()
-      case ONLINE_FAST => OnlineKMeans.fast()
+      case ONLINE              => OnlineKMeans()
+      case ONLINE_FAST         => OnlineKMeans.fast()
       case ONLINE_CONSERVATIVE => OnlineKMeans.conservative()
 
       // Annealed variants
-      case ANNEALED => AnnealedKMeans()
-      case ANNEALED_FAST => AnnealedKMeans.fast()
+      case ANNEALED              => AnnealedKMeans()
+      case ANNEALED_FAST         => AnnealedKMeans.fast()
       case ANNEALED_HIGH_QUALITY => AnnealedKMeans.highQuality()
-      case ANNEALED_ROBUST => AnnealedKMeans.robustInit()
+      case ANNEALED_ROBUST       => AnnealedKMeans.robustInit()
 
       // Bisecting variants
-      case BISECTING => BisectingKMeans()
+      case BISECTING         => BisectingKMeans()
       case BISECTING_BY_COST => BisectingKMeans.byCost()
-      case BISECTING_FAST => BisectingKMeans.fast()
+      case BISECTING_FAST    => BisectingKMeans.fast()
 
       // X-means variants
-      case XMEANS => XMeans()
-      case XMEANS_AIC => XMeans.withAIC()
+      case XMEANS      => XMeans()
+      case XMEANS_AIC  => XMeans.withAIC()
       case XMEANS_FAST => XMeans.fast()
 
       case _ => throw new RuntimeException(s"unknown clusterer $clustererName")

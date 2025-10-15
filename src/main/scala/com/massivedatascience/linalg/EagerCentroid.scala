@@ -17,13 +17,12 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.ml.linalg.{ DenseVector, Vector }
+import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import com.massivedatascience.linalg.EagerCentroid._
 
-/**
- * A mutable weighted vector that eagerly adds new vectors or subtracts vectors
- * to a form centroid. Consequently, it is appropriate for use with dense vectors.
- */
+/** A mutable weighted vector that eagerly adds new vectors or subtracts vectors to a form centroid.
+  * Consequently, it is appropriate for use with dense vectors.
+  */
 class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializable {
 
   override def toString = s"EagerCentroid(index=$index weight=$weight homogeneous=$homogeneous)"
@@ -40,39 +39,44 @@ class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializa
 
   var weight: Double = 0.0
 
-  /**
-   * Add a weighted vector to a centroid
-   * @param p weighted vector to add
-   * @return resulting centroid
-   */
+  /** Add a weighted vector to a centroid
+    * @param p
+    *   weighted vector to add
+    * @return
+    *   resulting centroid
+    */
   def add(p: WeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
-  /**
-   * Subtract a weighted vector from a centroid
-   * @param p  weighted vector to subtract
-   * @return resulting centroid
-   */
+  /** Subtract a weighted vector from a centroid
+    * @param p
+    *   weighted vector to subtract
+    * @return
+    *   resulting centroid
+    */
   def sub(p: WeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
-  /**
-   * Add a mutable weighted vector to a centroid
-   * @param p mutable weighted vector to add
-   * @return resulting centroid
-   */
+  /** Add a mutable weighted vector to a centroid
+    * @param p
+    *   mutable weighted vector to add
+    * @return
+    *   resulting centroid
+    */
   def add(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, 1.0)
 
-  /**
-   * Subtract a mutable weighted vector from a centroid
-   * @param p mutable weighted vector to subtract
-   * @return resulting centroid
-   */
+  /** Subtract a mutable weighted vector from a centroid
+    * @param p
+    *   mutable weighted vector to subtract
+    * @return
+    *   resulting centroid
+    */
   def sub(p: MutableWeightedVector): this.type = add(p.homogeneous, p.weight, -1.0)
 
-  /**
-   * Scale the vector by a constant in all directions
-   * @param alpha scaling factor
-   * @return resulting centroid
-   */
+  /** Scale the vector by a constant in all directions
+    * @param alpha
+    *   scaling factor
+    * @return
+    *   resulting centroid
+    */
   def scale(alpha: Double): this.type = {
     if (nonEmpty) {
       BLAS.scal(alpha, raw)
@@ -81,13 +85,15 @@ class EagerCentroid(val index: Int) extends MutableWeightedVector with Serializa
     this
   }
 
-  /**
-   * Add in a vector, preserving the sparsity of the original/first vector.
-   * @param r   vector to add
-   * @param w   weight of vector to add
-   * @param direction whether to add or subtract
-   * @return
-   */
+  /** Add in a vector, preserving the sparsity of the original/first vector.
+    * @param r
+    *   vector to add
+    * @param w
+    *   weight of vector to add
+    * @param direction
+    *   whether to add or subtract
+    * @return
+    */
   private[this] def add(r: Vector, w: Double, direction: Double): this.type = {
     if (w > 0.0) {
       if (isEmpty) {

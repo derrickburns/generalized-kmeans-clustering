@@ -26,30 +26,30 @@ trait KMeansSelector extends Serializable {
     numClusters: Int,
     initialInfo: Option[KMeansSelector.InitialCondition] = None,
     runs: Int,
-    seed: Long): Seq[IndexedSeq[BregmanCenter]]
+    seed: Long
+  ): Seq[IndexedSeq[BregmanCenter]]
 }
 
 object KMeansSelector {
 
   case class InitialCondition(centers: Seq[IndexedSeq[BregmanCenter]], distances: Seq[RDD[Double]])
 
-  val RANDOM = "random"
-  val K_MEANS_PARALLEL = "k-means||" // a 5 step K-Means parallel initializer
-  val CORESET_INIT = "coreset-init" // coreset-based initialization
-  val CORESET_INIT_FAST = "coreset-init-fast"
+  val RANDOM                    = "random"
+  val K_MEANS_PARALLEL          = "k-means||"    // a 5 step K-Means parallel initializer
+  val CORESET_INIT              = "coreset-init" // coreset-based initialization
+  val CORESET_INIT_FAST         = "coreset-init-fast"
   val CORESET_INIT_HIGH_QUALITY = "coreset-init-high-quality"
 
   private[this] val standardSteps = 5
 
   def apply(name: String): KMeansSelector = {
     name match {
-      case RANDOM => KMeansRandom
-      case K_MEANS_PARALLEL => new KMeansParallel(standardSteps)
-      case CORESET_INIT => CoresetInitializer()
-      case CORESET_INIT_FAST => CoresetInitializer.fast()
+      case RANDOM                    => KMeansRandom
+      case K_MEANS_PARALLEL          => new KMeansParallel(standardSteps)
+      case CORESET_INIT              => CoresetInitializer()
+      case CORESET_INIT_FAST         => CoresetInitializer.fast()
       case CORESET_INIT_HIGH_QUALITY => CoresetInitializer.highQuality()
-      case _ => throw new RuntimeException(s"unknown initializer $name")
+      case _                         => throw new RuntimeException(s"unknown initializer $name")
     }
   }
 }
-

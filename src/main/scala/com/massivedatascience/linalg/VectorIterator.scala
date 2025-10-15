@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.ml.linalg.{ Vectors, DenseVector, SparseVector, Vector }
+import org.apache.spark.ml.linalg.{Vectors, DenseVector, SparseVector, Vector}
 
 sealed trait VectorIterator extends Serializable {
   def hasNext: Boolean
@@ -29,20 +29,20 @@ sealed trait VectorIterator extends Serializable {
 
 abstract class BaseSparseVectorIterator(val underlying: SparseVector) extends VectorIterator {
   override def toString: String = s"$i, $underlying"
-  protected var i = 0
-  def hasNext: Boolean = i < underlying.values.length
-  def advance(): Unit = i = i + 1
-  def index: Int = underlying.indices(i)
-  def toVector: SparseVector = underlying
+  protected var i               = 0
+  def hasNext: Boolean          = i < underlying.values.length
+  def advance(): Unit           = i = i + 1
+  def index: Int                = underlying.indices(i)
+  def toVector: SparseVector    = underlying
 }
 
 abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends VectorIterator {
   override def toString: String = s"$i, $underlying"
-  protected var i = 0
-  def hasNext: Boolean = i < underlying.values.length
-  def advance(): Unit = i = i + 1
-  def index: Int = i
-  def toVector: DenseVector = underlying
+  protected var i               = 0
+  def hasNext: Boolean          = i < underlying.values.length
+  def advance(): Unit           = i = i + 1
+  def index: Int                = i
+  def toVector: DenseVector     = underlying
 }
 
 @inline final class SparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
@@ -53,7 +53,8 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
   def value: Double = underlying.values(i)
 }
 
-@inline final class NegativeSparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
+@inline final class NegativeSparseVectorIterator(u: SparseVector)
+    extends BaseSparseVectorIterator(u) {
   def value: Double = -underlying.values(i)
 }
 
@@ -63,10 +64,10 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
 
 @inline final class SparseSeqIterator(u: IndexedSeq[(Int, Double)]) extends VectorIterator {
   override def toString: String = s"$i, $u"
-  protected var i = 0
-  def hasNext: Boolean = i < u.length
-  def advance(): Unit = i = i + 1
-  def index: Int = u(i)._1
-  def value: Double = u(i)._2
-  def toVector: Vector = Vectors.sparse(Int.MaxValue, u)
+  protected var i               = 0
+  def hasNext: Boolean          = i < u.length
+  def advance(): Unit           = i = i + 1
+  def index: Int                = u(i)._1
+  def value: Double             = u(i)._2
+  def toVector: Vector          = Vectors.sparse(Int.MaxValue, u)
 }

@@ -188,11 +188,11 @@ class ValidationUtilsSuite extends AnyFunSuite {
   test("requireSameDimensions with matching vectors") {
     // Should pass without exception
     ValidationUtils.requireSameDimensions(
-      Vectors.dense(1.0, 2.0), 
+      Vectors.dense(1.0, 2.0),
       Vectors.dense(3.0, 4.0)
     )
     ValidationUtils.requireSameDimensions(
-      Vectors.sparse(5, Seq((1, 2.0))), 
+      Vectors.sparse(5, Seq((1, 2.0))),
       Vectors.sparse(5, Seq((3, 4.0)))
     )
   }
@@ -200,7 +200,7 @@ class ValidationUtilsSuite extends AnyFunSuite {
   test("requireSameDimensions with mismatched vectors") {
     val exception1 = intercept[IllegalArgumentException] {
       ValidationUtils.requireSameDimensions(
-        Vectors.dense(1.0, 2.0), 
+        Vectors.dense(1.0, 2.0),
         Vectors.dense(1.0, 2.0, 3.0)
       )
     }
@@ -209,7 +209,7 @@ class ValidationUtilsSuite extends AnyFunSuite {
 
     val exception2 = intercept[IllegalArgumentException] {
       ValidationUtils.requireSameDimensions(
-        Vectors.sparse(3, Seq((1, 2.0))), 
+        Vectors.sparse(3, Seq((1, 2.0))),
         Vectors.sparse(5, Seq((3, 4.0)))
       )
     }
@@ -310,7 +310,7 @@ class ValidationUtilsSuite extends AnyFunSuite {
     val result1 = ValidationUtils.requireNotNull("test")
     assert(result1 == "test")
 
-    val list = List(1, 2, 3)
+    val list    = List(1, 2, 3)
     val result2 = ValidationUtils.requireNotNull(list)
     assert(result2 == list)
   }

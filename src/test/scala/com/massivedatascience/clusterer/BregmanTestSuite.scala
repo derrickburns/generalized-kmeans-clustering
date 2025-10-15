@@ -9,7 +9,7 @@ import org.scalatest._
 import funsuite._
 import scala.annotation.tailrec
 
-class BregmanTestSuite extends AnyFunSuite  {
+class BregmanTestSuite extends AnyFunSuite {
 
   test("custom Bregman divergence") {
     def f(d: Vector): Double = {
@@ -43,19 +43,20 @@ class BregmanTestSuite extends AnyFunSuite  {
 
   test("DenseSquaredEuclideanPointOps") {
 
-    val ops = SquaredEuclideanPointOps
-    val v1 = WeightedVector(Vectors.dense(1.0, 2.0, 4.0))
-    val v2 = WeightedVector(Vectors.dense(2.0, 2.0, 8.0))
-    val p1 = ops.toPoint(v1)
-    val p2 = ops.toPoint(v2)
-    val c1 = ops.toCenter(p1)
-    val c2 = ops.toCenter(p2)
+    val ops        = SquaredEuclideanPointOps
+    val v1         = WeightedVector(Vectors.dense(1.0, 2.0, 4.0))
+    val v2         = WeightedVector(Vectors.dense(2.0, 2.0, 8.0))
+    val p1         = ops.toPoint(v1)
+    val p2         = ops.toPoint(v2)
+    val c1         = ops.toCenter(p1)
+    val c2         = ops.toCenter(p2)
     val distance11 = ops.distance(p1, c1)
     assert(distance11 ~= 0.0 absTol 1.0e-8)
     val distance12 = ops.distance(p1, c2)
     assert(distance12 ~= 17.0 absTol 1.0e-8)
 
-    val euclideanDistanceSquared = divergence(v1.inhomogeneous.toArray, v2.inhomogeneous.toArray, x => x * x)
+    val euclideanDistanceSquared =
+      divergence(v1.inhomogeneous.toArray, v2.inhomogeneous.toArray, x => x * x)
     assert(euclideanDistanceSquared ~= 17.0 absTol 1.0e-8)
   }
 
@@ -186,9 +187,8 @@ class BregmanTestSuite extends AnyFunSuite  {
   def klf(x: Double): Double = x * Math.log(x) - x
 
   def kl(v: Vector, w: Vector): Double = {
-    v.toArray.zip(w.toArray).foldLeft(0.0) {
-      case (agg, (x, y)) =>
-        agg + x * Math.log(x / y) - x + y
+    v.toArray.zip(w.toArray).foldLeft(0.0) { case (agg, (x, y)) =>
+      agg + x * Math.log(x / y) - x + y
     }
   }
 

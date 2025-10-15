@@ -17,12 +17,10 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 
-/**
- * An IMMUTABLE weighted vector.
- *
- */
+/** An IMMUTABLE weighted vector.
+  */
 trait WeightedVector extends Serializable {
   def weight: Double
 
@@ -35,28 +33,33 @@ trait WeightedVector extends Serializable {
 
 object WeightedVector {
 
-  private[this] class ImmutableInhomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
-    override def toString: String = s"InhomogeneousVector($weight, $v)"
-    override val inhomogeneous: Vector = v
+  private[this] class ImmutableInhomogeneousVector(val weight: Double, v: Vector)
+      extends WeightedVector {
+    override def toString: String         = s"InhomogeneousVector($weight, $v)"
+    override val inhomogeneous: Vector    = v
     override lazy val homogeneous: Vector = asHomogeneous(v, weight)
   }
 
-  private[this] class ImmutableHomogeneousVector(val weight: Double, v: Vector) extends WeightedVector {
-    override def toString: String = s"HomogeneousVector($weight, $v)"
+  private[this] class ImmutableHomogeneousVector(val weight: Double, v: Vector)
+      extends WeightedVector {
+    override def toString: String           = s"HomogeneousVector($weight, $v)"
     override lazy val inhomogeneous: Vector = asInhomogeneous(v, weight)
-    override val homogeneous: Vector = v
+    override val homogeneous: Vector        = v
   }
 
   def apply(v: Vector): WeightedVector = new ImmutableInhomogeneousVector(1.0, v)
 
-  def apply(v: Array[Double]): WeightedVector = new ImmutableInhomogeneousVector(1.0, Vectors.dense(v))
+  def apply(v: Array[Double]): WeightedVector =
+    new ImmutableInhomogeneousVector(1.0, Vectors.dense(v))
 
   def apply(v: Vector, weight: Double): WeightedVector = new ImmutableHomogeneousVector(weight, v)
 
-  def apply(v: Array[Double], weight: Double): WeightedVector = new ImmutableHomogeneousVector(weight, Vectors.dense(v))
+  def apply(v: Array[Double], weight: Double): WeightedVector =
+    new ImmutableHomogeneousVector(weight, Vectors.dense(v))
 
-  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, Vectors.dense(v))
+  def fromInhomogeneousWeighted(v: Array[Double], weight: Double): WeightedVector =
+    new ImmutableInhomogeneousVector(weight, Vectors.dense(v))
 
-  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector = new ImmutableInhomogeneousVector(weight, v)
+  def fromInhomogeneousWeighted(v: Vector, weight: Double): WeightedVector =
+    new ImmutableInhomogeneousVector(weight, v)
 }
-

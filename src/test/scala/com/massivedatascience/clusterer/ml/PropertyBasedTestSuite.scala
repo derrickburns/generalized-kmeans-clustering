@@ -9,13 +9,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalacheck.Gen
 
-/**
- * Property-based tests for DataFrame API using ScalaCheck.
- *
- * These tests verify invariants and properties that should hold for all inputs,
- * helping to catch edge cases and ensure correctness across a wide range of scenarios.
- */
-class PropertyBasedTestSuite extends AnyFunSuite
+/** Property-based tests for DataFrame API using ScalaCheck.
+  *
+  * These tests verify invariants and properties that should hold for all inputs, helping to catch
+  * edge cases and ensure correctness across a wide range of scenarios.
+  */
+class PropertyBasedTestSuite
+    extends AnyFunSuite
     with ScalaCheckPropertyChecks
     with Matchers
     with BeforeAndAfterAll {
@@ -28,7 +28,8 @@ class PropertyBasedTestSuite extends AnyFunSuite
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    spark = SparkSession.builder()
+    spark = SparkSession
+      .builder()
       .master("local[2]")
       .appName("PropertyBasedTestSuite")
       .config("spark.ui.enabled", "false")
@@ -71,7 +72,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
   /** Generate a probability vector (non-negative, sums to 1) */
   def probabilityVectorGen(dim: Int): Gen[Vector] = {
     Gen.listOfN(dim, Gen.choose(0.1, 10.0)).map { values =>
-      val sum = values.sum
+      val sum        = values.sum
       val normalized = values.map(_ / sum)
       Vectors.dense(normalized.toArray)
     }
@@ -88,13 +89,13 @@ class PropertyBasedTestSuite extends AnyFunSuite
 
   test("Property: number of predictions equals number of input points") {
     forAll(dimGen, kGen, Gen.choose(20, 50)) { (dim: Int, k: Int, numPoints: Int) =>
-      whenever(numPoints >= k * 5) {  // Ensure at least 5 points per cluster
+      whenever(numPoints >= k * 5) { // Ensure at least 5 points per cluster
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -102,7 +103,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setMaxIter(5)
           .setSeed(42)
 
-        val model = kmeans.fit(data)
+        val model       = kmeans.fit(data)
         val predictions = model.transform(data)
 
         predictions.count() shouldBe numPoints
@@ -118,9 +119,9 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -128,7 +129,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setMaxIter(5)
           .setSeed(42)
 
-        val model = kmeans.fit(data)
+        val model       = kmeans.fit(data)
         val predictions = model.transform(data)
 
         val clusterIds = predictions.select("prediction").collect().map(_.getInt(0))
@@ -149,9 +150,10 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features").cache()
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
+          .cache()
 
         val kmeans1 = new GeneralizedKMeans()
           .setK(k)
@@ -188,9 +190,9 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -199,7 +201,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setSeed(42)
 
         val model = kmeans.fit(data)
-        val cost = model.computeCost(data)
+        val cost  = model.computeCost(data)
 
         cost should be >= 0.0
         cost.isNaN shouldBe false
@@ -216,9 +218,9 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -227,7 +229,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setSeed(42)
           .setDistanceCol("distance")
 
-        val model = kmeans.fit(data)
+        val model       = kmeans.fit(data)
         val predictions = model.transform(data)
 
         val distances = predictions.select("distance").collect().map(_.getDouble(0))
@@ -251,9 +253,9 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -280,9 +282,9 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map(_ =>
-          Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5)))
-        ).toDF("features")
+        val data = (1 to numPoints)
+          .map(_ => Tuple1(Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))))
+          .toDF("features")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -320,7 +322,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setMaxIter(5)
           .setSeed(42)
 
-        val model = kmeans.fit(data)
+        val model       = kmeans.fit(data)
         val predictions = model.transform(data).select("prediction").collect().map(_.getInt(0))
 
         vectors.zip(predictions).foreach { case (vec, transformPrediction) =>
@@ -336,33 +338,35 @@ class PropertyBasedTestSuite extends AnyFunSuite
   test("Property: KL divergence handles probability distributions") {
     forAll(Gen.choose(3, 10), Gen.choose(2, 5), Gen.choose(20, 30)) {
       (dim: Int, k: Int, numPoints: Int) =>
-      whenever(numPoints >= k * 5) {
-        val sparkSession = spark
-        import sparkSession.implicits._
+        whenever(numPoints >= k * 5) {
+          val sparkSession = spark
+          import sparkSession.implicits._
 
-        // Generate probability distributions (sum to 1)
-        val data = (1 to numPoints).map { _ =>
-          val values = Array.fill(dim)(scala.util.Random.nextDouble() + 0.1)
-          val sum = values.sum
-          val prob = values.map(_ / sum)
-          Tuple1(Vectors.dense(prob))
-        }.toDF("features")
+          // Generate probability distributions (sum to 1)
+          val data = (1 to numPoints)
+            .map { _ =>
+              val values = Array.fill(dim)(scala.util.Random.nextDouble() + 0.1)
+              val sum    = values.sum
+              val prob   = values.map(_ / sum)
+              Tuple1(Vectors.dense(prob))
+            }
+            .toDF("features")
 
-        val kmeans = new GeneralizedKMeans()
-          .setK(k)
-          .setDivergence("kl")
-          .setSmoothing(1e-10)
-          .setMaxIter(5)
-          .setSeed(42)
+          val kmeans = new GeneralizedKMeans()
+            .setK(k)
+            .setDivergence("kl")
+            .setSmoothing(1e-10)
+            .setMaxIter(5)
+            .setSeed(42)
 
-        val model = kmeans.fit(data)
-        val cost = model.computeCost(data)
+          val model = kmeans.fit(data)
+          val cost  = model.computeCost(data)
 
-        model.numClusters should be >= 1
-        model.numClusters should be <= k
-        cost should be >= 0.0
-        cost.isNaN shouldBe false
-      }
+          model.numClusters should be >= 1
+          model.numClusters should be <= k
+          cost should be >= 0.0
+          cost.isNaN shouldBe false
+        }
     }
   }
 
@@ -374,11 +378,13 @@ class PropertyBasedTestSuite extends AnyFunSuite
         val sparkSession = spark
         import sparkSession.implicits._
 
-        val data = (1 to numPoints).map { _ =>
-          val features = Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))
-          val weight = scala.util.Random.nextDouble() * 10 + 1.0
-          (features, weight)
-        }.toDF("features", "weight")
+        val data = (1 to numPoints)
+          .map { _ =>
+            val features = Vectors.dense(Array.fill(dim)(scala.util.Random.nextDouble() * 10 - 5))
+            val weight   = scala.util.Random.nextDouble() * 10 + 1.0
+            (features, weight)
+          }
+          .toDF("features", "weight")
 
         val kmeans = new GeneralizedKMeans()
           .setK(k)
@@ -387,7 +393,7 @@ class PropertyBasedTestSuite extends AnyFunSuite
           .setMaxIter(5)
           .setSeed(42)
 
-        val model = kmeans.fit(data)
+        val model       = kmeans.fit(data)
         val predictions = model.transform(data)
 
         // Should successfully fit and transform

@@ -18,7 +18,7 @@
 package com.massivedatascience
 
 import com.massivedatascience.linalg.BLAS._
-import org.apache.spark.ml.linalg.{ DenseVector, SparseVector, Vector }
+import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector}
 
 package object linalg {
   def asInhomogeneous(homogeneous: Vector, weight: Double): Vector = {
@@ -43,14 +43,14 @@ package object linalg {
     def iterator: VectorIterator = {
       v match {
         case s: SparseVector => new SparseVectorIterator(s)
-        case d: DenseVector => new DenseVectorIterator(d)
+        case d: DenseVector  => new DenseVectorIterator(d)
       }
     }
 
     def negativeIterator: VectorIterator = {
       v match {
         case s: SparseVector => new NegativeSparseVectorIterator(s)
-        case d: DenseVector => new NegativeDenseVectorIterator(d)
+        case d: DenseVector  => new NegativeDenseVectorIterator(d)
       }
     }
   }

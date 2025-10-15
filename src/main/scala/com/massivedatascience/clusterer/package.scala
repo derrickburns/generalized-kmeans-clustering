@@ -20,8 +20,8 @@ package com.massivedatascience
 import org.apache.spark.ml.linalg.DenseVector
 
 package object clusterer {
-  val Infinity = Double.MaxValue
-  val Unknown = -1.0
+  val Infinity           = Double.MaxValue
+  val Unknown            = -1.0
   val empty: DenseVector = new DenseVector(Array[Double]())
 
   type Centers = IndexedSeq[BregmanCenter]

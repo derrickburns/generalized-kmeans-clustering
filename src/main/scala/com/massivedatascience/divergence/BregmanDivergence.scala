@@ -18,67 +18,76 @@
 package com.massivedatascience.divergence
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog, ValidationUtils }
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog, ValidationUtils}
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 
-/**
- * Bregman Divergence defines a convex function F and its gradient.
- *
- * For convenience, we also provide methods for evaluating F and its
- * gradient when points are provided using homogeneous coordinates.  Evaluating F and
- * gradient of F on homogeneous coordinates is often more efficient that mapping
- * the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
- *
- * @see <a href="http://en.wikipedia.org/wiki/Bregman_divergence">Definition</a>
- * @see <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle introduction</a>
- * @see <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with Bregman Divergences</a>
- */
+/** Bregman Divergence defines a convex function F and its gradient.
+  *
+  * For convenience, we also provide methods for evaluating F and its gradient when points are
+  * provided using homogeneous coordinates. Evaluating F and gradient of F on homogeneous
+  * coordinates is often more efficient that mapping the homogeneous coordinates to inhomogeneous
+  * coordinates and then evaluating F and gradient F.
+  *
+  * @see
+  *   <a href="http://en.wikipedia.org/wiki/Bregman_divergence">Definition</a>
+  * @see
+  *   <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle
+  *   introduction</a>
+  * @see
+  *   <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with
+  *   Bregman Divergences</a>
+  */
 
 trait BregmanDivergence extends Serializable {
 
-  /**
-   * F is any convex function.
-   *
-   * @param v input
-   * @return F(v)
-   */
+  /** F is any convex function.
+    *
+    * @param v
+    *   input
+    * @return
+    *   F(v)
+    */
   def convex(v: Vector): Double
 
-  /**
-   * Gradient of F
-   *
-   * @param v input
-   * @return  gradient of F when at v
-   */
+  /** Gradient of F
+    *
+    * @param v
+    *   input
+    * @return
+    *   gradient of F when at v
+    */
   def gradientOfConvex(v: Vector): Vector
 
-  /**
-   * F applied to homogeneous coordinates.
-   *
-   * @param v input
-   * @param w weight
-   * @return  F(v/w)
-   */
+  /** F applied to homogeneous coordinates.
+    *
+    * @param v
+    *   input
+    * @param w
+    *   weight
+    * @return
+    *   F(v/w)
+    */
   def convexHomogeneous(v: Vector, w: Double): Double
 
-  /**
-   * Gradient of F, applied to homogeneous coordinates
-   * @param v input
-   * @param w weight
-   * @return  gradient(v/w)
-   */
+  /** Gradient of F, applied to homogeneous coordinates
+    * @param v
+    *   input
+    * @param w
+    *   weight
+    * @return
+    *   gradient(v/w)
+    */
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector
 }
 
-/**
- * The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
- *
- * If we know that the points are on the simplex, then we may simplify the implementation of KL
- * divergence. This trait implements that simplification.
- *
- * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
- *
- */
+/** The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
+  *
+  * If we know that the points are on the simplex, then we may simplify the implementation of KL
+  * divergence. This trait implements that simplification.
+  *
+  * @see
+  *   <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
+  */
 trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog
@@ -102,12 +111,11 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
   }
 }
 
-/**
- * The generalized Kullback-Leibler divergence is defined on points on R+ ** n
- *
- * @see <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
- *
- */
+/** The generalized Kullback-Leibler divergence is defined on points on R+ ** n
+  *
+  * @see
+  *   <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
+  */
 trait KullbackLeiblerDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog
@@ -133,23 +141,24 @@ trait KullbackLeiblerDivergence extends BregmanDivergence {
   }
 }
 
-/**
- * The squared Euclidean distance function is defined on points in R**n
- *
- * @see <a href="http://en.wikipedia.org/wiki/Euclidean_distance">Definition</a>
- */
+/** The squared Euclidean distance function is defined on points in R**n
+  *
+  * @see
+  *   <a href="http://en.wikipedia.org/wiki/Euclidean_distance">Definition</a>
+  */
 case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
 
-  /**
-   * Squared L ** 2 norm
-   * @param v input
-   * @return F(v)
-   */
+  /** Squared L ** 2 norm
+    * @param v
+    *   input
+    * @return
+    *   F(v)
+    */
   def convex(v: Vector): Double = dot(v, v)
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
     if (w == 0.0) {
-      0.0  // For Euclidean distance, allow zero weight and return 0
+      0.0 // For Euclidean distance, allow zero weight and return 0
     } else {
       dot(v, v) / (w * w)
     }
@@ -191,9 +200,8 @@ case object NaturalKLDivergence extends KullbackLeiblerDivergence {
   protected val logFunc: MathLog = DiscreteLog
 }
 
-/**
- * The generalized I-Divergence is defined on points in R**n
- */
+/** The generalized I-Divergence is defined on points in R**n
+  */
 case object GeneralizedIDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog = GeneralLog
@@ -216,13 +224,12 @@ case object GeneralizedIDivergence extends BregmanDivergence {
   }
 }
 
-/**
- * The Logistic loss divergence is defined on points in (0.0,1.0)
- *
- * Logistic loss is the same as KL Divergence with the embedding into R**2
- *
- * x => (x, 1.0 - x)
- */
+/** The Logistic loss divergence is defined on points in (0.0,1.0)
+  *
+  * Logistic loss is the same as KL Divergence with the embedding into R**2
+  *
+  * x => (x, 1.0 - x)
+  */
 case object LogisticLossDivergence extends BregmanDivergence {
 
   protected val log = GeneralLog.log _
@@ -258,21 +265,22 @@ case object LogisticLossDivergence extends BregmanDivergence {
   }
 }
 
-/**
- * The Itakura-Saito Divergence is defined on points in R+ ** n
- *
- * @see <a href="http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance">Definition</a>
- */
+/** The Itakura-Saito Divergence is defined on points in R+ ** n
+  *
+  * @see
+  *   <a href="http://en.wikipedia.org/wiki/Itakura%E2%80%93Saito_distance">Definition</a>
+  */
 case object ItakuraSaitoDivergence extends BregmanDivergence {
 
   protected val logFunc: MathLog = GeneralLog
 
-  /**
-   * Burg entropy
-   *
-   * @param v input
-   * @return F(v)
-   */
+  /** Burg entropy
+    *
+    * @param v
+    *   input
+    * @return
+    *   F(v)
+    */
   def convex(v: Vector): Double = {
     -sum(trans(v, logFunc.log))
   }
@@ -296,24 +304,26 @@ object BregmanDivergence {
 
   def apply(name: String): BregmanDivergence = {
     name match {
-      case "SquaredEuclideanDistanceDivergence" => SquaredEuclideanDistanceDivergence
+      case "SquaredEuclideanDistanceDivergence"   => SquaredEuclideanDistanceDivergence
       case "RealKullbackLeiblerSimplexDivergence" => RealKullbackLeiblerSimplexDivergence
-      case "NaturalKLSimplexDivergence" => NaturalKLSimplexDivergence
-      case "RealKLDivergence" => RealKLDivergence
-      case "NaturalKLDivergence" => NaturalKLDivergence
-      case "LogisticLossDivergence" => LogisticLossDivergence
-      case "ItakuraSaitoDivergence" => ItakuraSaitoDivergence
-      case "GeneralizedIDivergence" => GeneralizedIDivergence
+      case "NaturalKLSimplexDivergence"           => NaturalKLSimplexDivergence
+      case "RealKLDivergence"                     => RealKLDivergence
+      case "NaturalKLDivergence"                  => NaturalKLDivergence
+      case "LogisticLossDivergence"               => LogisticLossDivergence
+      case "ItakuraSaitoDivergence"               => ItakuraSaitoDivergence
+      case "GeneralizedIDivergence"               => GeneralizedIDivergence
     }
   }
 
-  /**
-   * Create a Bregman Divergence from
-   * @param f any continuously-differentiable real-valued and strictly
-   *          convex function defined on a closed convex set in R^^N
-   * @param gradientF the gradient of f
-   * @return a Bregman Divergence on that function
-   */
+  /** Create a Bregman Divergence from
+    * @param f
+    *   any continuously-differentiable real-valued and strictly convex function defined on a closed
+    *   convex set in R^^N
+    * @param gradientF
+    *   the gradient of f
+    * @return
+    *   a Bregman Divergence on that function
+    */
   def apply(f: (Vector) => Double, gradientF: (Vector) => Vector): BregmanDivergence =
     new BregmanDivergence {
       def convex(v: Vector): Double = f(v)
@@ -335,4 +345,3 @@ object BregmanDivergence {
       }
     }
 }
-

@@ -24,13 +24,12 @@ import scala.collection.Map
 
 import org.slf4j.LoggerFactory
 
-
-/**
- * A simple k-means implementation that re-computes the closest cluster centers on each iteration
- * and that recomputes each cluster on each iteration.
- * @deprecated
- * @param pointOps distance function
- */
+/** A simple k-means implementation that re-computes the closest cluster centers on each iteration
+  * and that recomputes each cluster on each iteration.
+  * @deprecated
+  * @param pointOps
+  *   distance function
+  */
 
 class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
 
@@ -39,10 +38,11 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
   def cluster(
     data: RDD[BregmanPoint],
     centers: Array[BregmanCenter],
-    maxIterations: Int = 20): (Double, KMeansModel) = {
+    maxIterations: Int = 20
+  ): (Double, KMeansModel) = {
 
-    var active = true
-    var iteration = 0
+    var active        = true
+    var iteration     = 0
     var activeCenters = centers
 
     while (active && iteration < maxIterations) {
@@ -54,9 +54,12 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
           active = true
           // Mark center for removal instead of setting to null
           activeCenters(clusterIndex) = null.asInstanceOf[BregmanCenter]
-          logger.warn(s"Cluster $clusterIndex has insufficient weight (${centroid.weight}), marking for removal")
+          logger.warn(
+            s"Cluster $clusterIndex has insufficient weight (${centroid.weight}), marking for removal"
+          )
         } else {
-          active = active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
+          active =
+            active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
           activeCenters(clusterIndex) = pointOps.toCenter(centroid)
         }
       }
@@ -68,15 +71,18 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
 
   private[this] def centroids(
     data: RDD[BregmanPoint],
-    activeCenters: Array[BregmanCenter]): Map[Int, MutableWeightedVector] = {
+    activeCenters: Array[BregmanCenter]
+  ): Map[Int, MutableWeightedVector] = {
 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
-    val result = data.mapPartitions[(Int, MutableWeightedVector)] { points =>
-      val bcCenters = bcActiveCenters.value
-      val centers = IndexedSeq.fill(bcCenters.length)(pointOps.make())
-      for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
-      centers.zipWithIndex.map(_.swap).iterator
-    }.reduceByKeyLocally { case (x, y) => x.add(y) }
+    val result = data
+      .mapPartitions[(Int, MutableWeightedVector)] { points =>
+        val bcCenters = bcActiveCenters.value
+        val centers   = IndexedSeq.fill(bcCenters.length)(pointOps.make())
+        for (point <- points) centers(pointOps.findClosestCluster(bcCenters, point)).add(point)
+        centers.zipWithIndex.map(_.swap).iterator
+      }
+      .reduceByKeyLocally { case (x, y) => x.add(y) }
     bcActiveCenters.unpersist()
     result
   }

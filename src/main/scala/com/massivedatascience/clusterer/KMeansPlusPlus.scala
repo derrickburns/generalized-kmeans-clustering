@@ -25,121 +25,153 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
-
-/**
- * This implements the
- * <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization algorithm</a>
- *
- * @param ops distance function
- */
+/** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++
+  * initialization algorithm</a>
+  *
+  * @param ops
+  *   distance function
+  */
 class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
-  /**
-   * Select centers in rounds.  On each round, select 'perRound' centers, with probability of
-   * selection equal to the product of the given weights and distance to the closest cluster center
-   * of the previous round.
-   *
-   * This version allows some centers to be pre-selected.
-   *
-   * @param seed a random number seed
-   * @param candidateCenters  the candidate centers
-   * @param weights  the weights on the candidate centers
-   * @param totalRequested  the total number of centers to select
-   * @param perRound the number of centers to add per round
-   * @param numPreselected the number of pre-selected centers
-   * @return   an array of at most k cluster centers
-   */
+  /** Select centers in rounds. On each round, select 'perRound' centers, with probability of
+    * selection equal to the product of the given weights and distance to the closest cluster center
+    * of the previous round.
+    *
+    * This version allows some centers to be pre-selected.
+    *
+    * @param seed
+    *   a random number seed
+    * @param candidateCenters
+    *   the candidate centers
+    * @param weights
+    *   the weights on the candidate centers
+    * @param totalRequested
+    *   the total number of centers to select
+    * @param perRound
+    *   the number of centers to add per round
+    * @param numPreselected
+    *   the number of pre-selected centers
+    * @return
+    *   an array of at most k cluster centers
+    */
 
-  /**
-   * Select high-quality initial centers using the K-Means++ algorithm with improved numerical stability.
-   *
-   * @param seed random number generator seed
-   * @param candidateCenters sequence of candidate centers
-   * @param weights weights for each candidate center (must be non-negative)
-   * @param totalRequested total number of centers to select
-   * @param perRound number of centers to add in each round
-   * @param numPreselected number of centers that are pre-selected (must be at the start of candidateCenters)
-   * @return sequence of selected centers
-   * @throws IllegalArgumentException if inputs are invalid
-   */
+  /** Select high-quality initial centers using the K-Means++ algorithm with improved numerical
+    * stability.
+    *
+    * @param seed
+    *   random number generator seed
+    * @param candidateCenters
+    *   sequence of candidate centers
+    * @param weights
+    *   weights for each candidate center (must be non-negative)
+    * @param totalRequested
+    *   total number of centers to select
+    * @param perRound
+    *   number of centers to add in each round
+    * @param numPreselected
+    *   number of centers that are pre-selected (must be at the start of candidateCenters)
+    * @return
+    *   sequence of selected centers
+    * @throws IllegalArgumentException
+    *   if inputs are invalid
+    */
   def goodCenters(
     seed: Long,
     candidateCenters: IndexedSeq[BregmanCenter],
     weights: IndexedSeq[Double],
     totalRequested: Int,
     perRound: Int,
-    numPreselected: Int): IndexedSeq[BregmanCenter] = {
+    numPreselected: Int
+  ): IndexedSeq[BregmanCenter] = {
 
     // Input validation
     require(candidateCenters.nonEmpty, "Candidate centers cannot be empty")
-    require(candidateCenters.length == weights.length, 
-      s"Number of candidate centers (${candidateCenters.length}) must match number of weights (${weights.length})")
+    require(
+      candidateCenters.length == weights.length,
+      s"Number of candidate centers (${candidateCenters.length}) must match number of weights (${weights.length})"
+    )
     require(weights.forall(_ >= 0.0), "Weights must be non-negative")
-    require(totalRequested > 0 && totalRequested <= candidateCenters.length,
-      s"Total requested centers ($totalRequested) must be positive and <= number of candidates (${candidateCenters.length})")
-    require(numPreselected >= 0 && numPreselected <= totalRequested,
-      s"Number of preselected centers ($numPreselected) must be between 0 and total requested ($totalRequested)")
-    require(perRound > 0 && perRound <= totalRequested,
-      s"Centers per round ($perRound) must be positive and <= total requested ($totalRequested)")
+    require(
+      totalRequested > 0 && totalRequested <= candidateCenters.length,
+      s"Total requested centers ($totalRequested) must be positive and <= number of candidates (${candidateCenters.length})"
+    )
+    require(
+      numPreselected >= 0 && numPreselected <= totalRequested,
+      s"Number of preselected centers ($numPreselected) must be between 0 and total requested ($totalRequested)"
+    )
+    require(
+      perRound > 0 && perRound <= totalRequested,
+      s"Centers per round ($perRound) must be positive and <= total requested ($totalRequested)"
+    )
 
     if (candidateCenters.length < totalRequested) {
-      logger.warn(s"Requested $totalRequested centers but only ${candidateCenters.length} candidates available")
+      logger.warn(
+        s"Requested $totalRequested centers but only ${candidateCenters.length} candidates available"
+      )
     }
-    
-    logger.info(s"Starting KMeans++ with ${candidateCenters.length} candidates, " +
-      s"requesting $totalRequested centers, $numPreselected preselected")
+
+    logger.info(
+      s"Starting KMeans++ with ${candidateCenters.length} candidates, " +
+        s"requesting $totalRequested centers, $numPreselected preselected"
+    )
 
     // Log weight statistics for debugging
     val totalWeight = weights.sum
-    val minWeight = if (weights.nonEmpty) weights.min else 0.0
-    val maxWeight = if (weights.nonEmpty) weights.max else 0.0
-    logger.debug(f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f")
-    
+    val minWeight   = if (weights.nonEmpty) weights.min else 0.0
+    val maxWeight   = if (weights.nonEmpty) weights.max else 0.0
+    logger.debug(
+      f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f"
+    )
+
     // Pre-compute log-weights for numerical stability (if needed for future use)
     // val logWeights = weights.map { w =>
     //   if (w > 0.0) math.log(w) else Double.NegativeInfinity
     // }
-    
-    val points = reWeightedPoints(candidateCenters, weights)
-    val rand = new XORShiftRandom(seed)
+
+    val points  = reWeightedPoints(candidateCenters, weights)
+    val rand    = new XORShiftRandom(seed)
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
     @tailrec
     def moreCenters(distances: IndexedSeq[Double], iteration: Int = 0): Unit = {
       val needed = totalRequested - centers.length
       if (needed > 0) {
-        logger.debug(s"Round $iteration: selecting up to $perRound centers from ${distances.length} candidates")
-        
+        logger.debug(
+          s"Round $iteration: selecting up to $perRound centers from ${distances.length} candidates"
+        )
+
         // Use log-sum-exp trick for numerical stability when computing probabilities
         val logDistances = distances.map(d => if (d > 0.0) math.log(d) else Double.NegativeInfinity)
-        val maxLogDist = if (logDistances.nonEmpty) logDistances.max else 0.0
-        val logProbs = logDistances.map(_ - maxLogDist) // Subtract max for numerical stability
-        
+        val maxLogDist   = if (logDistances.nonEmpty) logDistances.max else 0.0
+        val logProbs     = logDistances.map(_ - maxLogDist) // Subtract max for numerical stability
+
         // Convert back to linear scale with log-sum-exp trick
         val probs = logProbs.map(lp => {
           val expTerm = math.exp(lp)
           if (expTerm.isInfinite || expTerm.isNaN) 0.0 else expTerm
         })
-        
+
         val totalProb = probs.sum
         if (totalProb <= 0.0) {
           logger.warn("No valid probabilities, falling back to uniform sampling")
-          val uniformSample = (0 until math.min(perRound, needed)).map(_ => 
-            rand.nextInt(candidateCenters.length))
+          val uniformSample =
+            (0 until math.min(perRound, needed)).map(_ => rand.nextInt(candidateCenters.length))
           centers ++= uniformSample.distinct.map(candidateCenters)
         } else {
           val cumulative = cumulativeWeights(probs)
           val selected = (0 until perRound).par.flatMap { _ =>
             pickWeighted(rand, cumulative).iterator
           }
-          
+
           val uniqueSelected = selected.distinct
-          logger.debug(s"Selected ${uniqueSelected.size} unique centers from ${selected.size} samples")
-          
+          logger.debug(
+            s"Selected ${uniqueSelected.size} unique centers from ${selected.size} samples"
+          )
+
           val additionalCenters = uniqueSelected.map(candidateCenters).toIndexedSeq
-          val newDistances = updateDistances(points, distances, additionalCenters)
+          val newDistances      = updateDistances(points, distances, additionalCenters)
           centers ++= additionalCenters.take(needed)
-          
+
           if (additionalCenters.nonEmpty) {
             moreCenters(newDistances, iteration + 1)
           } else {
@@ -168,52 +200,60 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     }
 
     // Initialize distances for remaining points
-    val maxDistances = IndexedSeq.fill(points.length)(Double.MaxValue)
+    val maxDistances     = IndexedSeq.fill(points.length)(Double.MaxValue)
     val initialDistances = updateDistances(points, maxDistances, centers)
-    
+
     // Run the main algorithm to select remaining centers
     moreCenters(initialDistances)
-    
+
     val finalCenters = centers.take(totalRequested)
-    logger.info(s"Selected ${finalCenters.length} centers out of ${candidateCenters.length} candidates")
-    
+    logger.info(
+      s"Selected ${finalCenters.length} centers out of ${candidateCenters.length} candidates"
+    )
+
     // Log some statistics about the selected centers
     if (finalCenters.nonEmpty) {
       val centerIndices = finalCenters.map(c => candidateCenters.indexOf(c))
-      val centerWeights = centerIndices.map(i => if (i >= 0 && i < weights.length) weights(i) else 0.0)
+      val centerWeights =
+        centerIndices.map(i => if (i >= 0 && i < weights.length) weights(i) else 0.0)
       logger.debug(s"Selected center weights: ${centerWeights.mkString(", ")}")
     }
-    
+
     finalCenters
   }
 
   private[this] def reWeightedPoints(
     candidateCenters: IndexedSeq[BregmanCenter],
-    weights: IndexedSeq[Double]): IndexedSeq[KMeansPlusPlus.this.ops.P] = {
+    weights: IndexedSeq[Double]
+  ): IndexedSeq[KMeansPlusPlus.this.ops.P] = {
 
-    candidateCenters.zip(weights).map {
-      case (c, w) =>
+    candidateCenters
+      .zip(weights)
+      .map { case (c, w) =>
         WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, w)
-    }.map(ops.toPoint)
+      }
+      .map(ops.toPoint)
   }
 
-  /**
-   * Update the distance of each point to its closest cluster center, given the cluster
-   * centers that were added.
-   *
-   * @param points set of candidate initial cluster centers
-   * @param centers new cluster centers
-   * @return  points with their distance to closest to cluster center updated
-   */
+  /** Update the distance of each point to its closest cluster center, given the cluster centers
+    * that were added.
+    *
+    * @param points
+    *   set of candidate initial cluster centers
+    * @param centers
+    *   new cluster centers
+    * @return
+    *   points with their distance to closest to cluster center updated
+    */
 
   private[this] def updateDistances(
     points: IndexedSeq[BregmanPoint],
     distances: IndexedSeq[Double],
-    centers: IndexedSeq[BregmanCenter]): IndexedSeq[Double] = {
+    centers: IndexedSeq[BregmanCenter]
+  ): IndexedSeq[Double] = {
 
-    val newDistances = points.zip(distances).par.map {
-      case (p, d) =>
-        Math.min(ops.pointCost(centers, p), d)
+    val newDistances = points.zip(distances).par.map { case (p, d) =>
+      Math.min(ops.pointCost(centers, p), d)
     }
     newDistances.toIndexedSeq
   }
@@ -221,64 +261,70 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =
     weights.scanLeft(0.0)(_ + _).tail
 
-  /**
-   * Pick a point at random using the alias method for O(1) sampling.
-   * 
-   * The alias method provides constant-time sampling from discrete distributions
-   * by pre-computing alias and probability tables. This is more efficient than
-   * binary search for repeated sampling from the same distribution.
-   *
-   * @param rand random number generator
-   * @param weights the original weights (not cumulative)
-   * @return the index of the chosen point
-   */
-  private[this] def pickWeightedAlias(rand: XORShiftRandom, weights: IndexedSeq[Double]): Seq[Int] = {
+  /** Pick a point at random using the alias method for O(1) sampling.
+    *
+    * The alias method provides constant-time sampling from discrete distributions by pre-computing
+    * alias and probability tables. This is more efficient than binary search for repeated sampling
+    * from the same distribution.
+    *
+    * @param rand
+    *   random number generator
+    * @param weights
+    *   the original weights (not cumulative)
+    * @return
+    *   the index of the chosen point
+    */
+  private[this] def pickWeightedAlias(
+    rand: XORShiftRandom,
+    weights: IndexedSeq[Double]
+  ): Seq[Int] = {
     require(weights.nonEmpty, "Weights cannot be empty")
     require(weights.exists(_ > 0.0), "At least one weight must be positive")
-    
-    val n = weights.length
+
+    val n           = weights.length
     val totalWeight = weights.sum
-    
+
     if (totalWeight <= 0.0) {
       return Seq(rand.nextInt(n))
     }
-    
+
     // Build alias table using Vose's algorithm
     val (alias, prob) = buildAliasTable(weights)
-    
+
     // Sample using alias method
     val uniformIndex = rand.nextInt(n)
-    val uniformProb = rand.nextDouble()
-    
+    val uniformProb  = rand.nextDouble()
+
     val selectedIndex = if (uniformProb < prob(uniformIndex)) {
       uniformIndex
     } else {
       alias(uniformIndex)
     }
-    
+
     Seq(selectedIndex)
   }
-  
-  /**
-   * Build alias table for O(1) sampling using Vose's algorithm.
-   * 
-   * @param weights the probability weights
-   * @return tuple of (alias table, probability table)
-   */
+
+  /** Build alias table for O(1) sampling using Vose's algorithm.
+    *
+    * @param weights
+    *   the probability weights
+    * @return
+    *   tuple of (alias table, probability table)
+    */
   private[this] def buildAliasTable(weights: IndexedSeq[Double]): (Array[Int], Array[Double]) = {
-    val n = weights.length
+    val n           = weights.length
     val totalWeight = weights.sum
-    
+
     // Normalize weights to sum to n (required for alias method)
     val normalizedWeights = weights.map(w => n * w / totalWeight)
-    
+
     val alias = Array.fill(n)(0)
-    val prob = Array.fill(n)(0.0)
-    
+    val prob  = Array.fill(n)(0.0)
+
     // Separate into small and large probability buckets
     val small = scala.collection.mutable.Queue[Int]()
     val large = scala.collection.mutable.Queue[Int]()
-    
+
     for (i <- normalizedWeights.indices) {
       prob(i) = normalizedWeights(i)
       if (normalizedWeights(i) < 1.0) {
@@ -287,49 +333,52 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
         large.enqueue(i)
       }
     }
-    
+
     // Build alias table
     while (small.nonEmpty && large.nonEmpty) {
       val smallIdx = small.dequeue()
       val largeIdx = large.dequeue()
-      
+
       alias(smallIdx) = largeIdx
       prob(largeIdx) = prob(largeIdx) + prob(smallIdx) - 1.0
-      
+
       if (prob(largeIdx) < 1.0) {
         small.enqueue(largeIdx)
       } else {
         large.enqueue(largeIdx)
       }
     }
-    
+
     // Handle remaining items (should all have probability 1.0)
     while (large.nonEmpty) {
       val idx = large.dequeue()
       prob(idx) = 1.0
     }
-    
+
     while (small.nonEmpty) {
       val idx = small.dequeue()
       prob(idx) = 1.0
     }
-    
+
     (alias, prob)
   }
 
-  /**
-   * Pick a point at random, weighing the choices by the given cumulative weight vector.
-   * This is the legacy method maintained for backward compatibility.
-   *
-   * @param rand  random number generator
-   * @param cumulative  the cumulative weights of the points (must be non-decreasing)
-   * @return the index of the chosen point (always returns a valid index)
-   * @throws IllegalArgumentException if cumulative is empty or has non-positive sum
-   */
+  /** Pick a point at random, weighing the choices by the given cumulative weight vector. This is
+    * the legacy method maintained for backward compatibility.
+    *
+    * @param rand
+    *   random number generator
+    * @param cumulative
+    *   the cumulative weights of the points (must be non-decreasing)
+    * @return
+    *   the index of the chosen point (always returns a valid index)
+    * @throws IllegalArgumentException
+    *   if cumulative is empty or has non-positive sum
+    */
   private[this] def pickWeighted(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
     require(cumulative.nonEmpty, "Cumulative weights cannot be empty")
     require(cumulative.last > 0.0, "Sum of weights must be positive")
-    
+
     // For small distributions, use binary search; for large ones, use alias method
     if (cumulative.length <= 32) {
       pickWeightedBinarySearch(rand, cumulative)
@@ -341,22 +390,24 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       pickWeightedAlias(rand, weights)
     }
   }
-  
-  /**
-   * Binary search implementation for small distributions.
-   */
-  private[this] def pickWeightedBinarySearch(rand: XORShiftRandom, cumulative: IndexedSeq[Double]): Seq[Int] = {
+
+  /** Binary search implementation for small distributions.
+    */
+  private[this] def pickWeightedBinarySearch(
+    rand: XORShiftRandom,
+    cumulative: IndexedSeq[Double]
+  ): Seq[Int] = {
     val totalWeight = cumulative.last
-    val r = rand.nextDouble() * totalWeight
-    
+    val r           = rand.nextDouble() * totalWeight
+
     @scala.annotation.tailrec
     def binarySearch(left: Int, right: Int): Int = {
       if (left >= right) {
         left
       } else {
-        val mid = left + (right - left) / 2
+        val mid    = left + (right - left) / 2
         val midVal = cumulative(mid)
-        
+
         val relTol = 1e-10 * Math.max(Math.abs(r), Math.abs(midVal))
         if (Math.abs(midVal - r) < relTol) {
           (mid + 1).min(cumulative.length - 1)
@@ -367,18 +418,20 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
         }
       }
     }
-    
+
     if (r <= 0.0) {
       Seq(0)
     } else if (r >= totalWeight) {
       logger.warn(s"Random value $r exceeds total weight $totalWeight, using last index")
       Seq(cumulative.length - 1)
     } else {
-      val idx = binarySearch(0, cumulative.length - 1)
+      val idx     = binarySearch(0, cumulative.length - 1)
       val safeIdx = Math.max(0, Math.min(idx, cumulative.length - 1))
-      
+
       if (safeIdx < 0 || safeIdx >= cumulative.length) {
-        logger.error(s"Invalid index $safeIdx generated for cumulative weights length ${cumulative.length}")
+        logger.error(
+          s"Invalid index $safeIdx generated for cumulative weights length ${cumulative.length}"
+        )
         Seq(rand.nextInt(cumulative.length))
       } else {
         Seq(safeIdx)

@@ -17,33 +17,31 @@
 
 package com.massivedatascience.util
 
-/**
- * A function that implements a variant of the natural logarithm
- */
+/** A function that implements a variant of the natural logarithm
+  */
 sealed trait MathLog extends Serializable {
 
-  /**
-   *  The natural logarithm extended to be defined on 0.0.
-   *
-   * @param x  input
-   * @return natural logarithm of x, or 0.0 if x == 0
-   */
+  /** The natural logarithm extended to be defined on 0.0.
+    *
+    * @param x
+    *   input
+    * @return
+    *   natural logarithm of x, or 0.0 if x == 0
+    */
   def log(x: Double): Double
 }
 
-/**
- * The natural logarithm function implemented using that Math.log function.
- */
+/** The natural logarithm function implemented using that Math.log function.
+  */
 case object GeneralLog extends MathLog {
   @inline
   override def log(x: Double): Double = if (x == 0.0 || x == 1.0) 0.0 else Math.log(x)
 }
 
-/**
- * The natural logarithm, but defined as 0.0 on input 0.0 logarithm function implemented
- * using a table lookup on integral arguments,
- * and the Math.log function when entries are non-integral or not found.
- */
+/** The natural logarithm, but defined as 0.0 on input 0.0 logarithm function implemented using a
+  * table lookup on integral arguments, and the Math.log function when entries are non-integral or
+  * not found.
+  */
 case object DiscreteLog extends MathLog {
   private[this] val cacheSize = 1000
 

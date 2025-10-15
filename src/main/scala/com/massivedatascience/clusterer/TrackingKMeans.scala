@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -30,19 +30,19 @@ import org.slf4j.LoggerFactory
 
 class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats with Serializable {
   val newlyAssignedPoints = sc.longAccumulator(s"Newly Assigned Points $round")
-  val reassignedPoints = sc.longAccumulator(s"Reassigned Points $round")
-  val unassignedPoints = sc.longAccumulator(s"Unassigned Points $round")
-  val improvement = sc.doubleAccumulator(s"Improvement $round")
-  val relocatedCenters = sc.longAccumulator(s"Relocated Centers $round")
-  val dirtyOther = sc.longAccumulator(s"=> Other Moving $round")
-  val dirtySame = sc.longAccumulator(s"=> Same Moving $round")
-  val stationary = sc.longAccumulator(s"Stationary $round")
-  val closestClean = sc.longAccumulator(s"Moving => Other Stationary $round")
-  val closestDirty = sc.longAccumulator(s"Stationary => Other Moving $round")
-  val movement = sc.doubleAccumulator(s"Center Movement $round")
-  val nonemptyClusters = sc.longAccumulator(s"Non-Empty Clusters $round")
-  val emptyClusters = sc.longAccumulator(s"Empty Clusters $round")
-  val largestCluster = sc.longAccumulator(s"Largest Cluster $round")
+  val reassignedPoints    = sc.longAccumulator(s"Reassigned Points $round")
+  val unassignedPoints    = sc.longAccumulator(s"Unassigned Points $round")
+  val improvement         = sc.doubleAccumulator(s"Improvement $round")
+  val relocatedCenters    = sc.longAccumulator(s"Relocated Centers $round")
+  val dirtyOther          = sc.longAccumulator(s"=> Other Moving $round")
+  val dirtySame           = sc.longAccumulator(s"=> Same Moving $round")
+  val stationary          = sc.longAccumulator(s"Stationary $round")
+  val closestClean        = sc.longAccumulator(s"Moving => Other Stationary $round")
+  val closestDirty        = sc.longAccumulator(s"Stationary => Other Moving $round")
+  val movement            = sc.doubleAccumulator(s"Center Movement $round")
+  val nonemptyClusters    = sc.longAccumulator(s"Non-Empty Clusters $round")
+  val emptyClusters       = sc.longAccumulator(s"Empty Clusters $round")
+  val largestCluster      = sc.longAccumulator(s"Largest Cluster $round")
 
   val logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -68,7 +68,9 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
     logger.info(s"my cluster moved closest = ${dirtySame.value}")
 
     logger.info(s"my stationary cluster is closest = ${stationary.value}")
-    logger.info(s"my cluster moved away and a stationary cluster is now closest = ${closestClean.value}")
+    logger.info(
+      s"my cluster moved away and a stationary cluster is now closest = ${closestClean.value}"
+    )
     logger.info(s"my cluster didn't move, but a moving cluster is closest = ${closestDirty.value}")
     logger.info(s"largest cluster size ${largestCluster.value}")
   }
@@ -76,12 +78,13 @@ class DetailedTrackingStats(sc: SparkContext, val round: Int) extends BasicStats
 
 object TrackingKMeans {
 
-  /**
-   *
-   * @param dist the distance to the closest cluster
-   * @param index the index of the closest cluster, or -1 if no cluster is assigned
-   * @param round the round that this assignment was made
-   */
+  /** @param dist
+    *   the distance to the closest cluster
+    * @param index
+    *   the index of the closest cluster, or -1 if no cluster is assigned
+    * @param round
+    *   the round that this assignment was made
+    */
   case class Assignment(dist: Double, index: Int, round: Int) {
     def isAssigned = index != noCluster
 
@@ -89,31 +92,35 @@ object TrackingKMeans {
   }
 
   type FatCenters = Array[FatCenter]
-  val noCluster = -1
+  val noCluster  = -1
   val unassigned = Assignment(Infinity, noCluster, -2)
-  /**
-   *
-   * @param center  the centroid of the cluster
-   * @param round the round in which his cluster was last moved
-   */
+
+  /** @param center
+    *   the centroid of the cluster
+    * @param round
+    *   the round in which his cluster was last moved
+    */
   case class FatCenter(center: BregmanCenter, round: Int = -1) {
-    /**
-   * Check if this center has moved since a specific round
-   * 
-   * @param r the round to check against
-   * @return true if the center has moved in round r or later
-   */
-  def movedSince(r: Int): Boolean = round >= r
+
+    /** Check if this center has moved since a specific round
+      *
+      * @param r
+      *   the round to check against
+      * @return
+      *   true if the center has moved in round r or later
+      */
+    def movedSince(r: Int): Boolean = round >= r
 
     def initialized: Boolean = round >= 0
   }
 
-  /**
-   *
-   * @param location the location of the point
-   * @param current  the current cluster (and distance to that cluster) that this point belongs to
-   * @param previous the previous cluster (and distance to that cluster) that this point belongs to
-   */
+  /** @param location
+    *   the location of the point
+    * @param current
+    *   the current cluster (and distance to that cluster) that this point belongs to
+    * @param previous
+    *   the previous cluster (and distance to that cluster) that this point belongs to
+    */
   case class FatPoint(location: BregmanPoint, current: Assignment, previous: Assignment) {
     def cluster: Int = current.index
 
@@ -135,12 +142,12 @@ object TrackingKMeans {
   }
 }
 
-/**
- * A KMeans implementation that tracks which clusters moved and which points are assigned to which
- * clusters and the distance to the closest cluster.
- *
- * @param updateRate  percentage of points that are updated on each round
- */
+/** A KMeans implementation that tracks which clusters moved and which points are assigned to which
+  * clusters and the distance to the closest cluster.
+  *
+  * @param updateRate
+  *   percentage of points that are updated on each round
+  */
 
 //scalastyle:off
 @deprecated("use ColumnTrackingKMeans", "1.0.2")
@@ -160,7 +167,8 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    centerArrays: Seq[IndexedSeq[BregmanCenter]]) = {
+    centerArrays: Seq[IndexedSeq[BregmanCenter]]
+  ) = {
 
     assert(updateRate <= 1.0 && updateRate >= 0.0)
 
@@ -171,28 +179,29 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       logger.info(s"update rate = $updateRate")
       logger.info(s"runs = ${centerArrays.size}")
 
-      val results: Seq[(Double, Array[BregmanCenter], RDD[FatPoint])] = for (centers <- centerArrays) yield {
-        var fatCenters = centers.map(FatCenter(_)).toArray
-        var fatPoints = initialFatPoints(data, fatCenters)
-        fatPoints.setName("fatPoints 0")
-        var terminate = false
-        var round = 1
-        do {
-          val stats = new DetailedTrackingStats(data.sparkContext, round)
-          fatCenters = updatedCenters(round, stats, fatPoints, fatCenters, updateRate)
-          fatPoints = reassignedPoints(round, stats, fatCenters, fatPoints, updateRate)
-          fatPoints.setName(s"fatPoint $round")
-          updateRoundStats(round, stats, fatCenters, fatPoints)
-          stats.report()
-          terminate = (round >= maxIterations) ||
-            (stats.numNonEmptyClusters == 0) ||
-            (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
+      val results: Seq[(Double, Array[BregmanCenter], RDD[FatPoint])] =
+        for (centers <- centerArrays) yield {
+          var fatCenters = centers.map(FatCenter(_)).toArray
+          var fatPoints  = initialFatPoints(data, fatCenters)
+          fatPoints.setName("fatPoints 0")
+          var terminate = false
+          var round     = 1
+          do {
+            val stats = new DetailedTrackingStats(data.sparkContext, round)
+            fatCenters = updatedCenters(round, stats, fatPoints, fatCenters, updateRate)
+            fatPoints = reassignedPoints(round, stats, fatCenters, fatPoints, updateRate)
+            fatPoints.setName(s"fatPoint $round")
+            updateRoundStats(round, stats, fatCenters, fatPoints)
+            stats.report()
+            terminate = (round >= maxIterations) ||
+              (stats.numNonEmptyClusters == 0) ||
+              (stats.movement.value / stats.numNonEmptyClusters < 1e-05)
 
-          round = round + 1
-        } while (!terminate)
+            round = round + 1
+          } while (!terminate)
 
-        (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
-      }
+          (distortion(fatPoints), fatCenters.map(_.center), fatPoints)
+        }
       results.map(_._3).map(_.unpersist(blocking = false))
       results.map(x => ClusteringWithDistortion(x._1, x._2.toIndexedSeq))
     }
@@ -205,10 +214,10 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return the fat points (points with two most recent cluster assignments)
      */
     def initialFatPoints(data: RDD[BregmanPoint], fatCenters: FatCenters) = {
-      val un = unassigned
+      val un  = unassigned
       val ops = pointOps
-      val result = data.map(FatPoint(_, un, un)).map {
-        fp => fp.copy(current = closestOf(ops, 0, fatCenters, fp, (_, _) => true))
+      val result = data.map(FatPoint(_, un, un)).map { fp =>
+        fp.copy(current = closestOf(ops, 0, fatCenters, fp, (_, _) => true))
       }
       result.persist()
       data.unpersist()
@@ -227,9 +236,10 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       round: Int,
       stats: DetailedTrackingStats,
       fatCenters: FatCenters,
-      fatPoints: RDD[FatPoint]) {
+      fatPoints: RDD[FatPoint]
+    ) {
 
-      val clusterCounts = countByCluster(fatPoints)
+      val clusterCounts        = countByCluster(fatPoints)
       val biggest: (Int, Long) = clusterCounts.maxBy(_._2)
       stats.largestCluster.reset()
       stats.largestCluster.add(biggest._2)
@@ -266,15 +276,18 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       stats: DetailedTrackingStats,
       fatCenters: FatCenters,
       fatPoints: RDD[FatPoint],
-      rate: Double): RDD[FatPoint] = {
+      rate: Double
+    ): RDD[FatPoint] = {
 
-      val ops = pointOps
+      val ops       = pointOps
       val bcCenters = fatPoints.sparkContext.broadcast(fatCenters)
       val result = fatPoints.mapPartitionsWithIndex[FatPoint] { (index, points) =>
-        val rand = new XORShiftRandom(round ^ (index << 16))
+        val rand    = new XORShiftRandom(round ^ (index << 16))
         val centers = bcCenters.value
         points.map { p =>
-          p.assign(if (rand.nextDouble() > rate) unassigned else assignment(ops, round, stats, centers, p))
+          p.assign(
+            if (rand.nextDouble() > rate) unassigned else assignment(ops, round, stats, centers, p)
+          )
         }
       }
 
@@ -300,21 +313,22 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       stats: DetailedTrackingStats,
       fatPoints: RDD[FatPoint],
       fatCenters: FatCenters,
-      rate: Double): FatCenters = {
+      rate: Double
+    ): FatCenters = {
 
-      val changes = if (rate < 1.0)
-        getStochasticCentroidChanges(fatPoints)
-      else
-        getExactCentroidChanges(fatPoints)
+      val changes =
+        if (rate < 1.0)
+          getStochasticCentroidChanges(fatPoints)
+        else
+          getExactCentroidChanges(fatPoints)
 
-      changes.foreach {
-        case (index, delta) =>
-          val c = fatCenters(index)
-          val oldPosition = pointOps.toPoint(c.center)
-          val x = if (c.initialized) delta.add(oldPosition) else delta
-          val centroid = x.asImmutable
-          fatCenters(index) = FatCenter(pointOps.toCenter(centroid), round)
-          stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
+      changes.foreach { case (index, delta) =>
+        val c           = fatCenters(index)
+        val oldPosition = pointOps.toPoint(c.center)
+        val x           = if (c.initialized) delta.add(oldPosition) else delta
+        val centroid    = x.asImmutable
+        fatCenters(index) = FatCenter(pointOps.toCenter(centroid), round)
+        stats.movement.add(pointOps.distance(oldPosition, fatCenters(index).center))
       }
       fatCenters
     }
@@ -331,27 +345,34 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
      * @return changes to cluster position
      */
     def getExactCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] = {
-      points.mapPartitions[(Int, (WeightedVector, Boolean))] { pts =>
-        val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
-        for (p <- pts if p.wasReassigned) {
-          assert(p.isAssigned)
-          if (p.isAssigned)
-            buffer.append((p.cluster, (p.location, true)))
+      points
+        .mapPartitions[(Int, (WeightedVector, Boolean))] { pts =>
+          val buffer = new ArrayBuffer[(Int, (WeightedVector, Boolean))]
+          for (p <- pts if p.wasReassigned) {
+            assert(p.isAssigned)
+            if (p.isAssigned)
+              buffer.append((p.cluster, (p.location, true)))
 
-          if (p.wasPreviouslyAssigned)
-            buffer.append((p.previousCluster, (p.location, false)))
+            if (p.wasPreviouslyAssigned)
+              buffer.append((p.previousCluster, (p.location, false)))
+          }
+          buffer.iterator
         }
-        buffer.iterator
-      }.aggregateByKey(pointOps.make())(
-        (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
-        (x, y) => x.add(y)
-      ).collect()
+        .aggregateByKey(pointOps.make())(
+          (x, y) => if (y._2) x.add(y._1) else x.sub(y._1),
+          (x, y) => x.add(y)
+        )
+        .collect()
     }
 
     def getStochasticCentroidChanges(points: RDD[FatPoint]): Array[(Int, MutableWeightedVector)] =
-      points.filter(_.isAssigned).map { p =>
-        (p.cluster, p.location)
-      }.aggregateByKey(pointOps.make())(_.add(_), _.add(_)).collect()
+      points
+        .filter(_.isAssigned)
+        .map { p =>
+          (p.cluster, p.location)
+        }
+        .aggregateByKey(pointOps.make())(_.add(_), _.add(_))
+        .collect()
 
     /*
      * count number of points assigned to each cluster
@@ -375,12 +396,14 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       pointOps: BregmanPointOps,
       round: Int,
       centers: FatCenters,
-      p: FatPoint, f: (FatCenter, FatPoint) => Boolean) = {
+      p: FatPoint,
+      f: (FatCenter, FatPoint) => Boolean
+    ) = {
 
-      var bestDist = Double.MaxValue
+      var bestDist  = Double.MaxValue
       var bestIndex = -1
-      var i = 0
-      val end = centers.length
+      var i         = 0
+      val end       = centers.length
       while (i < end) {
         val center = centers(i)
         if (f(center, p)) {
@@ -392,7 +415,8 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
         }
         i = i + 1
       }
-      if (bestIndex != -1) Assignment(bestDist, bestIndex, round) else Assignment(Double.MaxValue, -1, -2)
+      if (bestIndex != -1) Assignment(bestDist, bestIndex, round)
+      else Assignment(Double.MaxValue, -1, -2)
     }
 
     /*
@@ -408,7 +432,8 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       round: Int,
       stats: DetailedTrackingStats,
       centers: FatCenters,
-      p: FatPoint): Assignment = {
+      p: FatPoint
+    ): Assignment = {
 
       val closestDirty = closestOf(ops, round, centers, p, (x, y) => x.movedSince(y.round))
       val assignment = if (p.isAssigned) {
@@ -441,11 +466,14 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
       stats: DetailedTrackingStats,
       centers: FatCenters,
       p: FatPoint,
-      closestDirty: Assignment): Assignment = {
+      closestDirty: Assignment
+    ): Assignment = {
 
       val closestClean = closestOf(ops, round, centers, p, (x, y) => !x.movedSince(y.round))
-      if (closestDirty.isUnassigned ||
-        (closestClean.isAssigned && closestClean.dist < closestDirty.dist)) {
+      if (
+        closestDirty.isUnassigned ||
+        (closestClean.isAssigned && closestClean.dist < closestDirty.dist)
+      ) {
         stats.closestClean.add(1)
         closestClean
       } else {
@@ -458,4 +486,3 @@ class TrackingKMeans(updateRate: Double = 1.0) extends MultiKMeansClusterer {
   }
 }
 //scalastyle:on
-

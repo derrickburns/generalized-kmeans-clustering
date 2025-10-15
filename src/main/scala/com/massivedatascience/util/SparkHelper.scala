@@ -26,13 +26,16 @@ import scala.reflect.ClassTag
 
 trait SparkHelper {
 
-  /**
-   * Names and RDD, caches data in memory, and ensures that it is in computed synchronously
-   * @param name name to apply to RDD
-   * @param data rdd
-   * @tparam T type of data in RDD
-   * @return the input RDD
-   */
+  /** Names and RDD, caches data in memory, and ensures that it is in computed synchronously
+    * @param name
+    *   name to apply to RDD
+    * @param data
+    *   rdd
+    * @tparam T
+    *   type of data in RDD
+    * @return
+    *   the input RDD
+    */
   protected def sync[T](name: String, data: RDD[T], synchronous: Boolean = true): RDD[T] = {
     data.setName(name).cache()
     if (synchronous) {
@@ -47,9 +50,7 @@ trait SparkHelper {
     to: RDD[T]
   }
 
-  protected def withCached[T, Q](
-    names: Seq[String],
-    rdds: Seq[RDD[T]])(f: Seq[RDD[T]] => Q): Q = {
+  protected def withCached[T, Q](names: Seq[String], rdds: Seq[RDD[T]])(f: Seq[RDD[T]] => Q): Q = {
 
     rdds.zip(names).foreach { case (r, n) => sync[T](n, r) }
     val result = f(rdds)
@@ -63,9 +64,11 @@ trait SparkHelper {
   }
 
   protected def withCached[T, Q](
-    name: String, v: RDD[T],
+    name: String,
+    v: RDD[T],
     blocking: Boolean = false,
-    synchronous: Boolean = true)(f: RDD[T] => Q): Q = {
+    synchronous: Boolean = true
+  )(f: RDD[T] => Q): Q = {
 
     sync(name, v, synchronous)
     val result = f(v)
@@ -78,13 +81,14 @@ trait SparkHelper {
     f(v)
   }
 
-  protected def withBroadcast[T: ClassTag, Q](v: T)(f: Broadcast[T] => Q)(implicit sc: SparkContext): Q = {
+  protected def withBroadcast[T: ClassTag, Q](
+    v: T
+  )(f: Broadcast[T] => Q)(implicit sc: SparkContext): Q = {
     val broadcast = sc.broadcast(v)
-    val result = f(broadcast)
+    val result    = f(broadcast)
     broadcast.unpersist()
     result
   }
 
   protected def noSync[T](name: String, data: RDD[T]): RDD[T] = data.setName(name)
 }
-

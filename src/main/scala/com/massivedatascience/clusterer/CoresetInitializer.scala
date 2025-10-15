@@ -21,34 +21,37 @@ import com.massivedatascience.clusterer.coreset.{BregmanCoreset, CoresetConfig}
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
-/**
- * Initialize cluster centers using coreset-based approximation.
- *
- * This is much faster than K-Means|| for large datasets because it:
- * 1. Builds a small coreset (e.g., 1000 points)
- * 2. Runs initialization on the coreset instead of full data
- *
- * Achieves 10-100x speedup for initialization with minimal quality loss.
- *
- * @param coresetSize Target size of coreset for initialization
- * @param baseInitializer Initialization algorithm to run on coreset (default: K-Means||)
- * @param epsilon Approximation quality parameter
- */
+/** Initialize cluster centers using coreset-based approximation.
+  *
+  * This is much faster than K-Means|| for large datasets because it:
+  *   1. Builds a small coreset (e.g., 1000 points) 2. Runs initialization on the coreset instead of
+  *      full data
+  *
+  * Achieves 10-100x speedup for initialization with minimal quality loss.
+  *
+  * @param coresetSize
+  *   Target size of coreset for initialization
+  * @param baseInitializer
+  *   Initialization algorithm to run on coreset (default: K-Means||)
+  * @param epsilon
+  *   Approximation quality parameter
+  */
 class CoresetInitializer(
-    coresetSize: Int = 1000,
-    baseInitializer: KMeansSelector = new KMeansParallel(5),
-    epsilon: Double = 0.1
+  coresetSize: Int = 1000,
+  baseInitializer: KMeansSelector = new KMeansParallel(5),
+  epsilon: Double = 0.1
 ) extends KMeansSelector {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
   def init(
-      ops: BregmanPointOps,
-      data: RDD[BregmanPoint],
-      numClusters: Int,
-      initialInfo: Option[KMeansSelector.InitialCondition],
-      runs: Int,
-      seed: Long): Seq[IndexedSeq[BregmanCenter]] = {
+    ops: BregmanPointOps,
+    data: RDD[BregmanPoint],
+    numClusters: Int,
+    initialInfo: Option[KMeansSelector.InitialCondition],
+    runs: Int,
+    seed: Long
+  ): Seq[IndexedSeq[BregmanCenter]] = {
 
     val dataSize = data.count()
 
@@ -58,7 +61,9 @@ class CoresetInitializer(
       return baseInitializer.init(ops, data, numClusters, initialInfo, runs, seed)
     }
 
-    logger.info(s"Initializing using coreset approximation (data size: $dataSize, coreset size: $coresetSize)")
+    logger.info(
+      s"Initializing using coreset approximation (data size: $dataSize, coreset size: $coresetSize)"
+    )
 
     val startTime = System.currentTimeMillis()
 
@@ -69,22 +74,28 @@ class CoresetInitializer(
       seed = seed
     )
     val coresetBuilder = new BregmanCoreset(coresetConfig)
-    val coresetResult = coresetBuilder.buildCoreset(data, numClusters, ops)
+    val coresetResult  = coresetBuilder.buildCoreset(data, numClusters, ops)
 
-    logger.info(f"Coreset built in ${System.currentTimeMillis() - startTime}ms " +
-      f"(compression: ${coresetResult.compressionRatio * 100}%.2f%%)")
+    logger.info(
+      f"Coreset built in ${System.currentTimeMillis() - startTime}ms " +
+        f"(compression: ${coresetResult.compressionRatio * 100}%.2f%%)"
+    )
 
     // Step 2: Convert coreset to RDD and cache
-    val coresetRDD = data.sparkContext.parallelize(
-      coresetResult.coreset.map(_.point)
-    ).cache()
+    val coresetRDD = data.sparkContext
+      .parallelize(
+        coresetResult.coreset.map(_.point)
+      )
+      .cache()
 
     try {
       // Step 3: Run base initializer on small coreset
       val initStartTime = System.currentTimeMillis()
-      val centers = baseInitializer.init(ops, coresetRDD, numClusters, None, runs, seed)
+      val centers       = baseInitializer.init(ops, coresetRDD, numClusters, None, runs, seed)
 
-      logger.info(s"Initialization on coreset completed in ${System.currentTimeMillis() - initStartTime}ms")
+      logger.info(
+        s"Initialization on coreset completed in ${System.currentTimeMillis() - initStartTime}ms"
+      )
       logger.info(s"Total coreset initialization time: ${System.currentTimeMillis() - startTime}ms")
 
       centers
@@ -96,21 +107,18 @@ class CoresetInitializer(
 
 object CoresetInitializer {
 
-  /**
-   * Create a CoresetInitializer with default parameters.
-   */
+  /** Create a CoresetInitializer with default parameters.
+    */
   def apply(): CoresetInitializer = new CoresetInitializer()
 
-  /**
-   * Create a CoresetInitializer with specified coreset size.
-   */
+  /** Create a CoresetInitializer with specified coreset size.
+    */
   def apply(coresetSize: Int): CoresetInitializer = {
     new CoresetInitializer(coresetSize = coresetSize)
   }
 
-  /**
-   * Create a high-quality CoresetInitializer with larger coreset.
-   */
+  /** Create a high-quality CoresetInitializer with larger coreset.
+    */
   def highQuality(): CoresetInitializer = {
     new CoresetInitializer(
       coresetSize = 5000,
@@ -118,9 +126,8 @@ object CoresetInitializer {
     )
   }
 
-  /**
-   * Create a fast CoresetInitializer with smaller coreset.
-   */
+  /** Create a fast CoresetInitializer with smaller coreset.
+    */
   def fast(): CoresetInitializer = {
     new CoresetInitializer(
       coresetSize = 500,

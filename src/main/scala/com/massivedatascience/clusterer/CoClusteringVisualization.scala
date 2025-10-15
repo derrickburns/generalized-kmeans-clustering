@@ -22,48 +22,51 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 
-/**
- * Specialized visualization utilities for co-clustering results.
- * 
- * This object provides methods to generate data in formats suitable for
- * popular visualization libraries and tools including:
- * - Heatmaps for block structure visualization
- * - Network graphs for cluster relationships
- * - Statistical plots for convergence and quality metrics
- * - Interactive web-based visualizations
- */
+/** Specialized visualization utilities for co-clustering results.
+  *
+  * This object provides methods to generate data in formats suitable for popular visualization
+  * libraries and tools including:
+  *   - Heatmaps for block structure visualization
+  *   - Network graphs for cluster relationships
+  *   - Statistical plots for convergence and quality metrics
+  *   - Interactive web-based visualizations
+  */
 object CoClusteringVisualization {
-  
+
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
-  
-  /**
-   * Generate heatmap data for block structure visualization.
-   * 
-   * This creates a matrix representation suitable for heatmap visualization
-   * tools like seaborn, matplotlib, or D3.js.
-   * 
-   * @param model Trained co-clustering model
-   * @param entries Original matrix entries
-   * @param normalizeValues Whether to normalize values for better visualization
-   * @return Heatmap data with coordinates and values
-   */
+
+  /** Generate heatmap data for block structure visualization.
+    *
+    * This creates a matrix representation suitable for heatmap visualization tools like seaborn,
+    * matplotlib, or D3.js.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @param entries
+    *   Original matrix entries
+    * @param normalizeValues
+    *   Whether to normalize values for better visualization
+    * @return
+    *   Heatmap data with coordinates and values
+    */
   def generateHeatmapData(
-      model: BregmanCoClusteringModel,
-      entries: RDD[MatrixEntry],
-      normalizeValues: Boolean = true): HeatmapData = {
-    
+    model: BregmanCoClusteringModel,
+    entries: RDD[MatrixEntry],
+    normalizeValues: Boolean = true
+  ): HeatmapData = {
+
     logger.info("Generating heatmap data for block structure visualization")
-    
-    val blockStats = model.getBlockStats(entries)
+
+    val blockStats     = model.getBlockStats(entries)
     val numRowClusters = model.result.numRowClusters
     val numColClusters = model.result.numColClusters
-    
+
     val values = mutable.ArrayBuffer[(Int, Int, Double)]()
     val labels = mutable.ArrayBuffer[(Int, Int, String)]()
-    
+
     var globalMin = Double.MaxValue
     var globalMax = Double.MinValue
-    
+
     // Extract values and find global min/max for normalization
     for (r <- 0 until numRowClusters; c <- 0 until numColClusters) {
       val stats = blockStats(r)(c)
@@ -77,7 +80,7 @@ object CoClusteringVisualization {
         globalMax = math.max(globalMax, value)
       }
     }
-    
+
     // Normalize values if requested
     val normalizedValues = if (normalizeValues && globalMax != globalMin) {
       values.map { case (r, c, value) =>
@@ -87,7 +90,7 @@ object CoClusteringVisualization {
     } else {
       values
     }
-    
+
     HeatmapData(
       values = normalizedValues.toSeq,
       labels = labels.toSeq,
@@ -96,29 +99,33 @@ object CoClusteringVisualization {
       valueRange = (globalMin, globalMax)
     )
   }
-  
-  /**
-   * Generate network graph data showing relationships between clusters.
-   * 
-   * Creates nodes and edges for visualization in network graph libraries
-   * like NetworkX, vis.js, or D3.js force-directed layouts.
-   * 
-   * @param model Trained co-clustering model
-   * @param entries Original matrix entries
-   * @param minWeight Minimum edge weight to include in the graph
-   * @return Network graph data with nodes and edges
-   */
+
+  /** Generate network graph data showing relationships between clusters.
+    *
+    * Creates nodes and edges for visualization in network graph libraries like NetworkX, vis.js, or
+    * D3.js force-directed layouts.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @param entries
+    *   Original matrix entries
+    * @param minWeight
+    *   Minimum edge weight to include in the graph
+    * @return
+    *   Network graph data with nodes and edges
+    */
   def generateNetworkGraphData(
-      model: BregmanCoClusteringModel,
-      entries: RDD[MatrixEntry],
-      minWeight: Double = 0.01): NetworkGraphData = {
-    
+    model: BregmanCoClusteringModel,
+    entries: RDD[MatrixEntry],
+    minWeight: Double = 0.01
+  ): NetworkGraphData = {
+
     logger.info("Generating network graph data for cluster relationships")
-    
+
     val blockStats = model.getBlockStats(entries)
-    val nodes = mutable.ArrayBuffer[GraphNode]()
-    val edges = mutable.ArrayBuffer[GraphEdge]()
-    
+    val nodes      = mutable.ArrayBuffer[GraphNode]()
+    val edges      = mutable.ArrayBuffer[GraphEdge]()
+
     // Create row cluster nodes
     val rowStats = model.getRowClusterStats(entries)
     rowStats.zipWithIndex.foreach { case (stats, idx) =>
@@ -129,13 +136,13 @@ object CoClusteringVisualization {
         size = math.sqrt(stats.totalEntries).toInt,
         weight = stats.totalEntries,
         metadata = Map(
-          "uniqueRows" -> stats.uniqueIndices.toString,
+          "uniqueRows"   -> stats.uniqueIndices.toString,
           "totalEntries" -> stats.totalEntries.toString,
-          "mean" -> f"${stats.mean}%.3f"
+          "mean"         -> f"${stats.mean}%.3f"
         )
       )
     }
-    
+
     // Create column cluster nodes
     val colStats = model.getColClusterStats(entries)
     colStats.zipWithIndex.foreach { case (stats, idx) =>
@@ -146,54 +153,55 @@ object CoClusteringVisualization {
         size = math.sqrt(stats.totalEntries).toInt,
         weight = stats.totalEntries,
         metadata = Map(
-          "uniqueCols" -> stats.uniqueIndices.toString,
+          "uniqueCols"   -> stats.uniqueIndices.toString,
           "totalEntries" -> stats.totalEntries.toString,
-          "mean" -> f"${stats.mean}%.3f"
+          "mean"         -> f"${stats.mean}%.3f"
         )
       )
     }
-    
+
     // Create edges between row and column clusters based on block strength
     for (r <- blockStats.indices; c <- blockStats(r).indices) {
       val stats = blockStats(r)(c)
       if (stats.totalWeight >= minWeight && stats.count > 0) {
         val strength = stats.totalWeight / stats.variance.max(1.0)
-        
+
         edges += GraphEdge(
           source = s"row_$r",
           target = s"col_$c",
           weight = strength,
           label = s"Block($r,$c)",
           metadata = Map(
-            "blockCount" -> stats.count.toString,
-            "blockMean" -> f"${stats.mean}%.3f",
+            "blockCount"  -> stats.count.toString,
+            "blockMean"   -> f"${stats.mean}%.3f",
             "blockWeight" -> f"${stats.totalWeight}%.3f"
           )
         )
       }
     }
-    
+
     NetworkGraphData(nodes.toSeq, edges.toSeq)
   }
-  
-  /**
-   * Generate convergence plot data for training visualization.
-   * 
-   * @param model Trained co-clustering model
-   * @return Data for plotting convergence curves
-   */
+
+  /** Generate convergence plot data for training visualization.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @return
+    *   Data for plotting convergence curves
+    */
   def generateConvergencePlotData(model: BregmanCoClusteringModel): ConvergencePlotData = {
-    val history = model.result.convergenceHistory
+    val history    = model.result.convergenceHistory
     val iterations = history.indices
     val objectives = history
-    
+
     // Compute convergence rate
     val rates = if (history.length > 1) {
       history.zip(history.tail).map { case (prev, current) =>
         if (prev != 0.0) math.abs(current - prev) / math.abs(prev) else 0.0
       }
     } else Seq.empty
-    
+
     ConvergencePlotData(
       iterations = iterations,
       objectives = objectives,
@@ -202,45 +210,48 @@ object CoClusteringVisualization {
       totalIterations = history.length
     )
   }
-  
-  /**
-   * Generate cluster distribution data for statistical visualization.
-   * 
-   * @param model Trained co-clustering model
-   * @param entries Original matrix entries
-   * @return Distribution data for various statistical plots
-   */
+
+  /** Generate cluster distribution data for statistical visualization.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @param entries
+    *   Original matrix entries
+    * @return
+    *   Distribution data for various statistical plots
+    */
   def generateDistributionData(
-      model: BregmanCoClusteringModel,
-      entries: RDD[MatrixEntry]): DistributionData = {
-    
+    model: BregmanCoClusteringModel,
+    entries: RDD[MatrixEntry]
+  ): DistributionData = {
+
     logger.info("Generating distribution data for statistical visualization")
-    
-    val rowStats = model.getRowClusterStats(entries)
-    val colStats = model.getColClusterStats(entries)
+
+    val rowStats   = model.getRowClusterStats(entries)
+    val colStats   = model.getColClusterStats(entries)
     val blockStats = model.getBlockStats(entries)
-    
+
     // Row cluster size distribution
-    val rowSizes = rowStats.map(_.totalEntries)
+    val rowSizes    = rowStats.map(_.totalEntries)
     val rowSizeHist = createHistogramInt(rowSizes, 10)
 
     // Column cluster size distribution
-    val colSizes = colStats.map(_.totalEntries)
+    val colSizes    = colStats.map(_.totalEntries)
     val colSizeHist = createHistogramInt(colSizes, 10)
-    
+
     // Block density distribution
     val blockDensities = blockStats.flatten.filter(_.count > 0).map(_.totalWeight)
-    val densityHist = createHistogram(blockDensities, 15)
-    
+    val densityHist    = createHistogram(blockDensities, 15)
+
     // Value distribution by cluster
     val valuesByRowCluster = rowStats.zipWithIndex.map { case (stats, idx) =>
       (s"RC$idx", Seq(stats.mean, stats.variance, stats.min, stats.max))
     }.toMap
-    
+
     val valuesByColCluster = colStats.zipWithIndex.map { case (stats, idx) =>
       (s"CC$idx", Seq(stats.mean, stats.variance, stats.min, stats.max))
     }.toMap
-    
+
     DistributionData(
       rowSizeDistribution = rowSizeHist,
       colSizeDistribution = colSizeHist,
@@ -250,30 +261,34 @@ object CoClusteringVisualization {
       overallStats = Map(
         "totalRowClusters" -> rowStats.length,
         "totalColClusters" -> colStats.length,
-        "nonEmptyBlocks" -> blockStats.flatten.count(_.count > 0),
-        "averageBlockSize" -> blockStats.flatten.filter(_.count > 0).map(_.count).sum.toDouble / blockStats.flatten.count(_.count > 0)
+        "nonEmptyBlocks"   -> blockStats.flatten.count(_.count > 0),
+        "averageBlockSize" -> blockStats.flatten
+          .filter(_.count > 0)
+          .map(_.count)
+          .sum
+          .toDouble / blockStats.flatten.count(_.count > 0)
       )
     )
   }
-  
-  /**
-   * Export data in D3.js compatible JSON format.
-   * 
-   * @param model Trained co-clustering model
-   * @param entries Original matrix entries
-   * @return JSON string for D3.js visualizations
-   */
-  def exportD3JSON(
-      model: BregmanCoClusteringModel,
-      entries: RDD[MatrixEntry]): String = {
 
-    val heatmap = generateHeatmapData(model, entries)
-    val network = generateNetworkGraphData(model, entries)
+  /** Export data in D3.js compatible JSON format.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @param entries
+    *   Original matrix entries
+    * @return
+    *   JSON string for D3.js visualizations
+    */
+  def exportD3JSON(model: BregmanCoClusteringModel, entries: RDD[MatrixEntry]): String = {
+
+    val heatmap     = generateHeatmapData(model, entries)
+    val network     = generateNetworkGraphData(model, entries)
     val convergence = generateConvergencePlotData(model)
 
     val json = new mutable.StringBuilder()
     json.append("{\n")
-    
+
     // Heatmap data
     json.append("""  "heatmap": {""").append("\n")
     json.append(s"""    "numRows": ${heatmap.rowClusterNames.length},""").append("\n")
@@ -285,58 +300,69 @@ object CoClusteringVisualization {
       json.append("\n")
     }
     json.append("""    ],""").append("\n")
-    json.append(s"""    "valueRange": [${heatmap.valueRange._1}, ${heatmap.valueRange._2}]""").append("\n")
+    json
+      .append(s"""    "valueRange": [${heatmap.valueRange._1}, ${heatmap.valueRange._2}]""")
+      .append("\n")
     json.append("""  },""").append("\n")
-    
+
     // Network data
     json.append("""  "network": {""").append("\n")
     json.append("""    "nodes": [""").append("\n")
     network.nodes.zipWithIndex.foreach { case (node, idx) =>
-      json.append(s"""      {"id": "${node.id}", "label": "${node.label}", "type": "${node.nodeType}", "size": ${node.size}}""")
+      json.append(
+        s"""      {"id": "${node.id}", "label": "${node.label}", "type": "${node.nodeType}", "size": ${node.size}}"""
+      )
       if (idx < network.nodes.length - 1) json.append(",")
       json.append("\n")
     }
     json.append("""    ],""").append("\n")
     json.append("""    "edges": [""").append("\n")
     network.edges.zipWithIndex.foreach { case (edge, idx) =>
-      json.append(s"""      {"source": "${edge.source}", "target": "${edge.target}", "weight": ${edge.weight}}""")
+      json.append(
+        s"""      {"source": "${edge.source}", "target": "${edge.target}", "weight": ${edge.weight}}"""
+      )
       if (idx < network.edges.length - 1) json.append(",")
       json.append("\n")
     }
     json.append("""    ]""").append("\n")
     json.append("""  },""").append("\n")
-    
+
     // Convergence data
     json.append("""  "convergence": {""").append("\n")
     json.append("""    "data": [""").append("\n")
-    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach { case ((iter, obj), idx) =>
-      json.append(s"""      {"iteration": $iter, "objective": $obj}""")
-      if (idx < convergence.iterations.length - 1) json.append(",")
-      json.append("\n")
+    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach {
+      case ((iter, obj), idx) =>
+        json.append(s"""      {"iteration": $iter, "objective": $obj}""")
+        if (idx < convergence.iterations.length - 1) json.append(",")
+        json.append("\n")
     }
     json.append("""    ]""").append("\n")
     json.append("""  }""").append("\n")
-    
+
     json.append("}")
     json.toString()
   }
-  
-  /**
-   * Generate interactive HTML visualization with embedded D3.js.
-   * 
-   * @param model Trained co-clustering model
-   * @param entries Original matrix entries
-   * @param title Title for the visualization
-   * @return Complete HTML page with interactive visualizations
-   */
+
+  /** Generate interactive HTML visualization with embedded D3.js.
+    *
+    * @param model
+    *   Trained co-clustering model
+    * @param entries
+    *   Original matrix entries
+    * @param title
+    *   Title for the visualization
+    * @return
+    *   Complete HTML page with interactive visualizations
+    */
   def generateInteractiveHTML(
-      model: BregmanCoClusteringModel,
-      entries: RDD[MatrixEntry],
-      title: String = "Co-clustering Results"): String = {
-    
+    model: BregmanCoClusteringModel,
+    entries: RDD[MatrixEntry],
+    title: String = "Co-clustering Results"
+  ): String = {
+
     val jsonData = exportD3JSON(model, entries)
-    val summary = model.summary(entries)
-    
+    val summary  = model.summary(entries)
+
     s"""<!DOCTYPE html>
        |<html>
        |<head>
@@ -562,14 +588,14 @@ object CoClusteringVisualization {
        |</body>
        |</html>""".stripMargin
   }
-  
+
   // Helper methods
 
   private def createHistogramInt(values: Seq[Int], numBins: Int): Seq[(Double, Int)] = {
     if (values.isEmpty) return Seq.empty
 
-    val min = values.min.toDouble
-    val max = values.max.toDouble
+    val min      = values.min.toDouble
+    val max      = values.max.toDouble
     val binWidth = (max - min) / numBins
 
     val bins = Array.fill(numBins)(0)
@@ -588,8 +614,8 @@ object CoClusteringVisualization {
   private def createHistogram(values: Seq[Double], numBins: Int): Seq[(Double, Int)] = {
     if (values.isEmpty) return Seq.empty
 
-    val min = values.min
-    val max = values.max
+    val min      = values.min
+    val max      = values.max
     val binWidth = (max - min) / numBins
 
     val bins = Array.fill(numBins)(0)
@@ -606,55 +632,54 @@ object CoClusteringVisualization {
   }
 }
 
-/**
- * Data structure for heatmap visualization.
- */
+/** Data structure for heatmap visualization.
+  */
 case class HeatmapData(
-    values: Seq[(Int, Int, Double)],
-    labels: Seq[(Int, Int, String)],
-    rowClusterNames: Seq[String],
-    colClusterNames: Seq[String],
-    valueRange: (Double, Double))
+  values: Seq[(Int, Int, Double)],
+  labels: Seq[(Int, Int, String)],
+  rowClusterNames: Seq[String],
+  colClusterNames: Seq[String],
+  valueRange: (Double, Double)
+)
 
-/**
- * Data structure for network graph visualization.
- */
-case class NetworkGraphData(
-    nodes: Seq[GraphNode],
-    edges: Seq[GraphEdge])
+/** Data structure for network graph visualization.
+  */
+case class NetworkGraphData(nodes: Seq[GraphNode], edges: Seq[GraphEdge])
 
 case class GraphNode(
-    id: String,
-    label: String,
-    nodeType: String,
-    size: Int,
-    weight: Int,
-    metadata: Map[String, String])
+  id: String,
+  label: String,
+  nodeType: String,
+  size: Int,
+  weight: Int,
+  metadata: Map[String, String]
+)
 
 case class GraphEdge(
-    source: String,
-    target: String,
-    weight: Double,
-    label: String,
-    metadata: Map[String, String])
+  source: String,
+  target: String,
+  weight: Double,
+  label: String,
+  metadata: Map[String, String]
+)
 
-/**
- * Data structure for convergence plot visualization.
- */
+/** Data structure for convergence plot visualization.
+  */
 case class ConvergencePlotData(
-    iterations: Seq[Int],
-    objectives: Seq[Double],
-    convergenceRates: Seq[Double],
-    finalObjective: Double,
-    totalIterations: Int)
+  iterations: Seq[Int],
+  objectives: Seq[Double],
+  convergenceRates: Seq[Double],
+  finalObjective: Double,
+  totalIterations: Int
+)
 
-/**
- * Data structure for distribution analysis.
- */
+/** Data structure for distribution analysis.
+  */
 case class DistributionData(
-    rowSizeDistribution: Seq[(Double, Int)],
-    colSizeDistribution: Seq[(Double, Int)],
-    blockDensityDistribution: Seq[(Double, Int)],
-    valuesByRowCluster: Map[String, Seq[Double]],
-    valuesByColCluster: Map[String, Seq[Double]],
-    overallStats: Map[String, Any])
+  rowSizeDistribution: Seq[(Double, Int)],
+  colSizeDistribution: Seq[(Double, Int)],
+  blockDensityDistribution: Seq[(Double, Int)],
+  valuesByRowCluster: Map[String, Seq[Double]],
+  valuesByColCluster: Map[String, Seq[Double]],
+  overallStats: Map[String, Any]
+)

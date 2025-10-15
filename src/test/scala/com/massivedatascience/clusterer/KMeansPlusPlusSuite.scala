@@ -26,13 +26,13 @@ import funsuite._
 
 import com.holdenkarau.spark.testing.LocalSparkContext
 
-class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
+class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext {
 
   test("k-means plus plus chooses only point with non-zero weight") {
 
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val ops            = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val implementation = new KMeansPlusPlus(ops)
-    val seed = 0
+    val seed           = 0
     val data = Array(
       WeightedVector(Vectors.dense(1.0, 2.0, 6.0), 2.0),
       WeightedVector(Vectors.dense(1.0, 3.0, 0.0), 4.0),
@@ -40,10 +40,10 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
     )
 
     val candidateCenters = data.map(ops.toCenter)
-    val weights = Array(1.0, 0.0, 0.0)
-    val totalRequested = 1
-    val perRound = 1
-    val numPreselected = 0
+    val weights          = Array(1.0, 0.0, 0.0)
+    val totalRequested   = 1
+    val perRound         = 1
+    val numPreselected   = 0
 
     val goodCenters = implementation.goodCenters(
       seed,
@@ -51,7 +51,8 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
       weights,
       totalRequested,
       perRound,
-      numPreselected)
+      numPreselected
+    )
 
     assert(goodCenters.length == 1)
     assert(goodCenters.head == candidateCenters(0))
@@ -59,22 +60,21 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
 
   test("k-means plus plus keep pre-selected centers") {
 
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val ops            = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val implementation = new KMeansPlusPlus(ops)
-    val seed = 0
+    val seed           = 0
     val data = Array(
       WeightedVector(Vectors.dense(1.0, 2.0, 6.0), 2.0),
       WeightedVector(Vectors.dense(1.0, 3.0, 0.0), 4.0),
       WeightedVector(Vectors.dense(1.0, 4.0, 6.0), 8.0),
       WeightedVector(Vectors.dense(1.0, 4.0, 10.0), 10.0)
-
     )
 
     val candidateCenters = data.map(ops.toCenter)
-    val weights = Array(0.0, 0.0, 1.0, 0.0)
-    val totalRequested = 2
-    val perRound = 1
-    val numPreselected = 1
+    val weights          = Array(0.0, 0.0, 1.0, 0.0)
+    val totalRequested   = 2
+    val perRound         = 1
+    val numPreselected   = 1
 
     val goodCenters = implementation.goodCenters(
       seed,
@@ -82,7 +82,8 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext{
       weights,
       totalRequested,
       perRound,
-      numPreselected)
+      numPreselected
+    )
 
     assert(goodCenters.length == 2)
     assert(goodCenters.head == candidateCenters(0))

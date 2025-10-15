@@ -21,7 +21,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
+import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.DoubleAccumulator
 
@@ -29,11 +29,9 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.slf4j.LoggerFactory
 
-/**
- * A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
- * returning the one with the lowest cost.
- *
- */
+/** A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
+  * returning the one with the lowest cost.
+  */
 
 //scalastyle:off
 @deprecated("use ColumnTrackingKMeans", "1.2.0")
@@ -45,20 +43,21 @@ class MultiKMeans extends MultiKMeansClusterer {
     maxIterations: Int,
     pointOps: BregmanPointOps,
     data: RDD[BregmanPoint],
-    c: Seq[IndexedSeq[BregmanCenter]]): Seq[ClusteringWithDistortion] = {
+    c: Seq[IndexedSeq[BregmanCenter]]
+  ): Seq[ClusteringWithDistortion] = {
 
     val centers = c.map(_.toArray).toArray
 
     def cluster(): Seq[ClusteringWithDistortion] = {
-      val runs = centers.length
-      val active = Array.fill(runs)(true)
-      val costs = Array.fill(runs)(0.0)
+      val runs       = centers.length
+      val active     = Array.fill(runs)(true)
+      val costs      = Array.fill(runs)(0.0)
       var activeRuns = new ArrayBuffer[Int] ++ (0 until runs)
-      var iteration = 0
+      var iteration  = 0
 
       /*
-     * Execute iterations of Lloyd's algorithm until all runs have converged.
-     */
+       * Execute iterations of Lloyd's algorithm until all runs have converged.
+       */
 
       while (iteration < maxIterations && activeRuns.nonEmpty) {
         // remove the empty clusters
@@ -72,7 +71,8 @@ class MultiKMeans extends MultiKMeansClusterer {
         }
 
         // Find the sum and count of points mapping to each center
-        val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) = getCentroids(data, activeCenters)
+        val (centroids: Array[((Int, Int), WeightedVector)], runDistortion) =
+          getCentroids(data, activeCenters)
 
         if (logger.isInfoEnabled) {
           for (run <- activeRuns) logger.info(s"run $run distortion ${runDistortion(run)}")
@@ -86,10 +86,15 @@ class MultiKMeans extends MultiKMeansClusterer {
             active(run) = true
             // Mark center for removal instead of setting to null
             centers(run)(clusterIndex) = null.asInstanceOf[BregmanCenter]
-            logger.warn(s"Run $run, cluster $clusterIndex has insufficient weight (${cn.weight}), marking for removal")
+            logger.warn(
+              s"Run $run, cluster $clusterIndex has insufficient weight (${cn.weight}), marking for removal"
+            )
           } else {
             val centroid = cn.asImmutable
-            active(run) = active(run) || pointOps.centerMoved(pointOps.toPoint(centroid), centers(run)(clusterIndex))
+            active(run) = active(run) || pointOps.centerMoved(
+              pointOps.toPoint(centroid),
+              centers(run)(clusterIndex)
+            )
             centers(run)(clusterIndex) = pointOps.toCenter(centroid)
           }
         }
@@ -110,32 +115,39 @@ class MultiKMeans extends MultiKMeansClusterer {
 
     def getCentroids(
       data: RDD[BregmanPoint],
-      activeCenters: Array[Array[BregmanCenter]]): (Array[((Int, Int), WeightedVector)], Array[Double]) = {
+      activeCenters: Array[Array[BregmanCenter]]
+    ): (Array[((Int, Int), WeightedVector)], Array[Double]) = {
 
       val sc = data.sparkContext
-      val runDistortion:Array[DoubleAccumulator] = Array.fill(activeCenters.length)(sc.doubleAccumulator("distortion"))
+      val runDistortion: Array[DoubleAccumulator] =
+        Array.fill(activeCenters.length)(sc.doubleAccumulator("distortion"))
       val bcActiveCenters = sc.broadcast(activeCenters)
-      val result = data.mapPartitions[((Int, Int), WeightedVector)] { points =>
-        val bcCenters = bcActiveCenters.value
-        val centers = bcCenters.map(c => Array.fill(c.length)(pointOps.make()))
-        for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
-          val (cluster, cost) = pointOps.findClosest(clusters, point)
-          runDistortion(run).add(cost)
-          centers(run)(cluster).add(point)
-        }
+      val result = data
+        .mapPartitions[((Int, Int), WeightedVector)] { points =>
+          val bcCenters = bcActiveCenters.value
+          val centers   = bcCenters.map(c => Array.fill(c.length)(pointOps.make()))
+          for (point <- points; (clusters, run) <- bcCenters.zipWithIndex) {
+            val (cluster, cost) = pointOps.findClosest(clusters, point)
+            runDistortion(run).add(cost)
+            centers(run)(cluster).add(point)
+          }
 
-        val contribution = for (
-          (clusters, run) <- bcCenters.zipWithIndex;
-          (contrib, cluster) <- clusters.zipWithIndex
-        ) yield {
-          ((run, cluster), centers(run)(cluster).asImmutable)
-        }
+          val contribution =
+            for (
+              (clusters, run)    <- bcCenters.zipWithIndex;
+              (contrib, cluster) <- clusters.zipWithIndex
+            ) yield {
+              ((run, cluster), centers(run)(cluster).asImmutable)
+            }
 
-        contribution.iterator
-      }.aggregateByKey(pointOps.make())(
-        (x, y) => x.add(y),
-        (x, y) => x.add(y)
-      ).map(x => (x._1, x._2.asImmutable)).collect()
+          contribution.iterator
+        }
+        .aggregateByKey(pointOps.make())(
+          (x, y) => x.add(y),
+          (x, y) => x.add(y)
+        )
+        .map(x => (x._1, x._2.asImmutable))
+        .collect()
       bcActiveCenters.unpersist()
       (result, runDistortion.map(x => x.value.doubleValue))
     }

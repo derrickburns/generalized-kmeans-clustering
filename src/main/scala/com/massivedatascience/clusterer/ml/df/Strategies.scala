@@ -5,60 +5,66 @@ import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
-/**
- * Strategy for assigning points to clusters.
- *
- * Takes a DataFrame with features and produces a DataFrame with cluster assignments.
- */
+/** Strategy for assigning points to clusters.
+  *
+  * Takes a DataFrame with features and produces a DataFrame with cluster assignments.
+  */
 trait AssignmentStrategy extends Serializable {
-  /**
-   * Assign each point to the nearest cluster center.
-   *
-   * @param df          input DataFrame
-   * @param featuresCol name of features column
-   * @param weightCol   optional weight column
-   * @param centers     current cluster centers
-   * @param kernel      Bregman kernel
-   * @return DataFrame with additional "cluster" column (Int)
-   */
+
+  /** Assign each point to the nearest cluster center.
+    *
+    * @param df
+    *   input DataFrame
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   optional weight column
+    * @param centers
+    *   current cluster centers
+    * @param kernel
+    *   Bregman kernel
+    * @return
+    *   DataFrame with additional "cluster" column (Int)
+    */
   def assign(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      kernel: BregmanKernel): DataFrame
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    kernel: BregmanKernel
+  ): DataFrame
 }
 
-/**
- * Broadcast UDF assignment strategy.
- *
- * Broadcasts centers to executors and uses UDF to compute assignments.
- * Works with any Bregman divergence but may be slower than expression-based approaches.
- */
+/** Broadcast UDF assignment strategy.
+  *
+  * Broadcasts centers to executors and uses UDF to compute assignments. Works with any Bregman
+  * divergence but may be slower than expression-based approaches.
+  */
 class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
   override def assign(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      kernel: BregmanKernel): DataFrame = {
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    kernel: BregmanKernel
+  ): DataFrame = {
 
     logDebug(s"BroadcastUDFAssignment: assigning ${centers.length} clusters")
 
-    val spark = df.sparkSession
+    val spark     = df.sparkSession
     val bcCenters = spark.sparkContext.broadcast(centers)
-    val bcKernel = spark.sparkContext.broadcast(kernel)
+    val bcKernel  = spark.sparkContext.broadcast(kernel)
 
     val assignUDF = udf { (features: Vector) =>
-      val ctrs = bcCenters.value
-      val kern = bcKernel.value
+      val ctrs    = bcCenters.value
+      val kern    = bcKernel.value
       var minDist = Double.PositiveInfinity
-      var minIdx = 0
-      var i = 0
+      var minIdx  = 0
+      var i       = 0
       while (i < ctrs.length) {
         val center = Vectors.dense(ctrs(i))
-        val dist = kern.divergence(features, center)
+        val dist   = kern.divergence(features, center)
         if (dist < minDist) {
           minDist = dist
           minIdx = i
@@ -72,23 +78,25 @@ class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
   }
 }
 
-/**
- * Squared Euclidean cross-join assignment strategy.
- *
- * Uses DataFrame cross-join with expression-based distance computation.
- * Much faster than UDF for Squared Euclidean, but only works with SE kernel.
- */
+/** Squared Euclidean cross-join assignment strategy.
+  *
+  * Uses DataFrame cross-join with expression-based distance computation. Much faster than UDF for
+  * Squared Euclidean, but only works with SE kernel.
+  */
 class SECrossJoinAssignment extends AssignmentStrategy with Logging {
 
   override def assign(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      kernel: BregmanKernel): DataFrame = {
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    kernel: BregmanKernel
+  ): DataFrame = {
 
-    require(kernel.supportsExpressionOptimization,
-      s"SECrossJoinAssignment only works with Squared Euclidean kernel, got ${kernel.name}")
+    require(
+      kernel.supportsExpressionOptimization,
+      s"SECrossJoinAssignment only works with Squared Euclidean kernel, got ${kernel.name}"
+    )
 
     logDebug(s"SECrossJoinAssignment: assigning ${centers.length} clusters")
 
@@ -109,8 +117,8 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
     val distanceUDF = udf { (features: Vector, center: Vector) =>
       val fArr = features.toArray
       val cArr = center.toArray
-      var sum = 0.0
-      var i = 0
+      var sum  = 0.0
+      var i    = 0
       while (i < fArr.length) {
         val diff = fArr(i) - cArr(i)
         sum += diff * diff
@@ -137,22 +145,22 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
   }
 }
 
-/**
- * Auto-selecting assignment strategy.
- *
- * Chooses between BroadcastUDF and SECrossJoin based on kernel and data size.
- */
+/** Auto-selecting assignment strategy.
+  *
+  * Chooses between BroadcastUDF and SECrossJoin based on kernel and data size.
+  */
 class AutoAssignment extends AssignmentStrategy with Logging {
 
   private val broadcastStrategy = new BroadcastUDFAssignment()
-  private val seStrategy = new SECrossJoinAssignment()
+  private val seStrategy        = new SECrossJoinAssignment()
 
   override def assign(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      kernel: BregmanKernel): DataFrame = {
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    kernel: BregmanKernel
+  ): DataFrame = {
 
     if (kernel.supportsExpressionOptimization) {
       logInfo("AutoAssignment: using SECrossJoin for Squared Euclidean")
@@ -164,47 +172,53 @@ class AutoAssignment extends AssignmentStrategy with Logging {
   }
 }
 
-/**
- * Strategy for updating cluster centers.
- *
- * Computes new centers based on assigned points using gradient-based aggregation.
- */
+/** Strategy for updating cluster centers.
+  *
+  * Computes new centers based on assigned points using gradient-based aggregation.
+  */
 trait UpdateStrategy extends Serializable {
-  /**
-   * Compute new cluster centers from assignments.
-   *
-   * @param assigned    DataFrame with "cluster" column
-   * @param featuresCol name of features column
-   * @param weightCol   optional weight column
-   * @param k           number of clusters
-   * @param kernel      Bregman kernel
-   * @return new cluster centers (may have fewer than k if some clusters are empty)
-   */
+
+  /** Compute new cluster centers from assignments.
+    *
+    * @param assigned
+    *   DataFrame with "cluster" column
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   optional weight column
+    * @param k
+    *   number of clusters
+    * @param kernel
+    *   Bregman kernel
+    * @return
+    *   new cluster centers (may have fewer than k if some clusters are empty)
+    */
   def update(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      k: Int,
-      kernel: BregmanKernel): Array[Array[Double]]
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    k: Int,
+    kernel: BregmanKernel
+  ): Array[Array[Double]]
 }
 
-/**
- * Gradient mean update strategy using UDAF.
- *
- * Computes μ = invGrad(∑_i w_i · grad(x_i) / ∑_i w_i) for each cluster.
- */
+/** Gradient mean update strategy using UDAF.
+  *
+  * Computes μ = invGrad(∑_i w_i · grad(x_i) / ∑_i w_i) for each cluster.
+  */
 class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
 
   override def update(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      k: Int,
-      kernel: BregmanKernel): Array[Array[Double]] = {
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    k: Int,
+    kernel: BregmanKernel
+  ): Array[Array[Double]] = {
 
     logDebug(s"GradMeanUDAFUpdate: computing centers for k=$k clusters")
 
-    val spark = assigned.sparkSession
+    val spark    = assigned.sparkSession
     val bcKernel = spark.sparkContext.broadcast(kernel)
 
     // UDF to compute gradient
@@ -218,7 +232,7 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
     // Add weight column if not present
     val withWeight = weightCol match {
       case Some(col) => withGrad
-      case None => withGrad.withColumn("weight", lit(1.0))
+      case None      => withGrad.withColumn("weight", lit(1.0))
     }
     val actualWeightCol = weightCol.getOrElse("weight")
 
@@ -228,8 +242,8 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
       .rdd
       .map { row =>
         val cluster = row.getInt(0)
-        val grad = row.getAs[Vector](1)
-        val weight = row.getDouble(2)
+        val grad    = row.getAs[Vector](1)
+        val weight  = row.getDouble(2)
         (cluster, (grad, weight))
       }
 
@@ -271,22 +285,22 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
   }
 }
 
-/**
- * Median update strategy for K-Medians clustering.
- *
- * Computes component-wise weighted median for each cluster instead of gradient-based mean.
- * More robust to outliers than mean-based methods.
- *
- * Note: This should be paired with L1Kernel (Manhattan distance).
- */
+/** Median update strategy for K-Medians clustering.
+  *
+  * Computes component-wise weighted median for each cluster instead of gradient-based mean. More
+  * robust to outliers than mean-based methods.
+  *
+  * Note: This should be paired with L1Kernel (Manhattan distance).
+  */
 class MedianUpdateStrategy extends UpdateStrategy with Logging {
 
   override def update(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      k: Int,
-      kernel: BregmanKernel): Array[Array[Double]] = {
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    k: Int,
+    kernel: BregmanKernel
+  ): Array[Array[Double]] = {
 
     logDebug(s"MedianUpdateStrategy: computing medians for k=$k clusters")
 
@@ -295,14 +309,14 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
     // Add weight column if not present
     val withWeight = weightCol match {
       case Some(col) => assigned
-      case None => assigned.withColumn("weight", lit(1.0))
+      case None      => assigned.withColumn("weight", lit(1.0))
     }
     val actualWeightCol = weightCol.getOrElse("weight")
 
     // For each cluster, compute component-wise median
     val centers = (0 until k).flatMap { clusterId =>
       val clusterData = withWeight.filter(col("cluster") === clusterId)
-      val count = clusterData.count()
+      val count       = clusterData.count()
 
       if (count == 0) {
         // Empty cluster
@@ -322,20 +336,25 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
     centers
   }
 
-  /**
-   * Compute weighted median of a specific dimension across a DataFrame.
-   *
-   * @param df DataFrame with features and weights
-   * @param featuresCol name of features column
-   * @param weightCol name of weight column
-   * @param dimension which dimension to compute median for
-   * @return weighted median value
-   */
+  /** Compute weighted median of a specific dimension across a DataFrame.
+    *
+    * @param df
+    *   DataFrame with features and weights
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   name of weight column
+    * @param dimension
+    *   which dimension to compute median for
+    * @return
+    *   weighted median value
+    */
   private def computeWeightedMedian(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: String,
-      dimension: Int): Double = {
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: String,
+    dimension: Int
+  ): Double = {
 
     // Extract dimension values with weights
     val dimUDF = udf { (features: Vector) =>
@@ -355,13 +374,13 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
     }
 
     // Sort by value
-    val sorted = values.sortBy(_._1)
+    val sorted      = values.sortBy(_._1)
     val totalWeight = sorted.map(_._2).sum
-    val halfWeight = totalWeight / 2.0
+    val halfWeight  = totalWeight / 2.0
 
     // Find weighted median
     var cumWeight = 0.0
-    var i = 0
+    var i         = 0
     while (i < sorted.length && cumWeight < halfWeight) {
       cumWeight += sorted(i)._2
       i += 1
@@ -383,43 +402,51 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
   }
 }
 
-/**
- * Strategy for handling empty clusters.
- */
+/** Strategy for handling empty clusters.
+  */
 trait EmptyClusterHandler extends Serializable {
-  /**
-   * Handle empty clusters by reseeding or dropping.
-   *
-   * @param assigned    DataFrame with "cluster" assignments
-   * @param featuresCol name of features column
-   * @param weightCol   optional weight column
-   * @param centers     computed centers (may have fewer than k)
-   * @param originalDF  original DataFrame for reseeding
-   * @param kernel      Bregman kernel
-   * @return (final centers with k elements, number of empty clusters handled)
-   */
+
+  /** Handle empty clusters by reseeding or dropping.
+    *
+    * @param assigned
+    *   DataFrame with "cluster" assignments
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   optional weight column
+    * @param centers
+    *   computed centers (may have fewer than k)
+    * @param originalDF
+    *   original DataFrame for reseeding
+    * @param kernel
+    *   Bregman kernel
+    * @return
+    *   (final centers with k elements, number of empty clusters handled)
+    */
   def handle(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      originalDF: DataFrame,
-      kernel: BregmanKernel): (Array[Array[Double]], Int)
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    originalDF: DataFrame,
+    kernel: BregmanKernel
+  ): (Array[Array[Double]], Int)
 }
 
-/**
- * Reseed empty clusters with random points.
- */
+/** Reseed empty clusters with random points.
+  */
 class ReseedRandomHandler(seed: Long = System.currentTimeMillis())
-    extends EmptyClusterHandler with Logging {
+    extends EmptyClusterHandler
+    with Logging {
 
   override def handle(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      originalDF: DataFrame,
-      kernel: BregmanKernel): (Array[Array[Double]], Int) = {
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    originalDF: DataFrame,
+    kernel: BregmanKernel
+  ): (Array[Array[Double]], Int) = {
 
     val k = centers.length
 
@@ -445,61 +472,68 @@ class ReseedRandomHandler(seed: Long = System.currentTimeMillis())
   }
 }
 
-/**
- * Drop empty clusters (return fewer than k centers).
- */
+/** Drop empty clusters (return fewer than k centers).
+  */
 class DropEmptyClustersHandler extends EmptyClusterHandler with Logging {
 
   override def handle(
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      centers: Array[Array[Double]],
-      originalDF: DataFrame,
-      kernel: BregmanKernel): (Array[Array[Double]], Int) = {
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    centers: Array[Array[Double]],
+    originalDF: DataFrame,
+    kernel: BregmanKernel
+  ): (Array[Array[Double]], Int) = {
 
-    (centers, 0)  // Just return what we have
+    (centers, 0) // Just return what we have
   }
 }
 
-/**
- * Strategy for checking convergence.
- */
+/** Strategy for checking convergence.
+  */
 trait ConvergenceCheck extends Serializable {
-  /**
-   * Check convergence and compute statistics.
-   *
-   * @param oldCenters  previous centers
-   * @param newCenters  new centers
-   * @param assigned    DataFrame with assignments
-   * @param featuresCol name of features column
-   * @param weightCol   optional weight column
-   * @param kernel      Bregman kernel
-   * @return (max center movement, total distortion)
-   */
+
+  /** Check convergence and compute statistics.
+    *
+    * @param oldCenters
+    *   previous centers
+    * @param newCenters
+    *   new centers
+    * @param assigned
+    *   DataFrame with assignments
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   optional weight column
+    * @param kernel
+    *   Bregman kernel
+    * @return
+    *   (max center movement, total distortion)
+    */
   def check(
-      oldCenters: Array[Array[Double]],
-      newCenters: Array[Array[Double]],
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      kernel: BregmanKernel): (Double, Double)
+    oldCenters: Array[Array[Double]],
+    newCenters: Array[Array[Double]],
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    kernel: BregmanKernel
+  ): (Double, Double)
 }
 
-/**
- * Movement-based convergence check.
- *
- * Computes maximum L2 movement of any center and total distortion.
- */
+/** Movement-based convergence check.
+  *
+  * Computes maximum L2 movement of any center and total distortion.
+  */
 class MovementConvergence extends ConvergenceCheck with Logging {
 
   override def check(
-      oldCenters: Array[Array[Double]],
-      newCenters: Array[Array[Double]],
-      assigned: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      kernel: BregmanKernel): (Double, Double) = {
+    oldCenters: Array[Array[Double]],
+    newCenters: Array[Array[Double]],
+    assigned: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    kernel: BregmanKernel
+  ): (Double, Double) = {
 
     // Compute max movement (only for centers that exist in both arrays)
     val minLength = math.min(oldCenters.length, newCenters.length)
@@ -513,9 +547,9 @@ class MovementConvergence extends ConvergenceCheck with Logging {
     }
 
     // Compute total distortion
-    val spark = assigned.sparkSession
-    val bcCenters = spark.sparkContext.broadcast(newCenters)
-    val bcKernel = spark.sparkContext.broadcast(kernel)
+    val spark      = assigned.sparkSession
+    val bcCenters  = spark.sparkContext.broadcast(newCenters)
+    val bcKernel   = spark.sparkContext.broadcast(kernel)
     val numCenters = newCenters.length
 
     val distortionUDF = udf { (features: Vector, clusterId: Int) =>
@@ -547,49 +581,54 @@ class MovementConvergence extends ConvergenceCheck with Logging {
   }
 }
 
-/**
- * Input validation strategy.
- */
+/** Input validation strategy.
+  */
 trait InputValidator extends Serializable {
-  /**
-   * Validate input DataFrame.
-   *
-   * @param df          input DataFrame
-   * @param featuresCol name of features column
-   * @param weightCol   optional weight column
-   * @param kernel      Bregman kernel
-   * @throws IllegalArgumentException if validation fails
-   */
+
+  /** Validate input DataFrame.
+    *
+    * @param df
+    *   input DataFrame
+    * @param featuresCol
+    *   name of features column
+    * @param weightCol
+    *   optional weight column
+    * @param kernel
+    *   Bregman kernel
+    * @throws IllegalArgumentException
+    *   if validation fails
+    */
   def validate(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      kernel: BregmanKernel): Unit
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    kernel: BregmanKernel
+  ): Unit
 }
 
-/**
- * Standard input validator.
- */
+/** Standard input validator.
+  */
 class StandardInputValidator extends InputValidator with Logging {
 
   override def validate(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      kernel: BregmanKernel): Unit = {
+    df: DataFrame,
+    featuresCol: String,
+    weightCol: Option[String],
+    kernel: BregmanKernel
+  ): Unit = {
 
-    require(df.columns.contains(featuresCol),
-      s"Features column '$featuresCol' not found in DataFrame")
+    require(
+      df.columns.contains(featuresCol),
+      s"Features column '$featuresCol' not found in DataFrame"
+    )
 
     weightCol.foreach { col =>
-      require(df.columns.contains(col),
-        s"Weight column '$col' not found in DataFrame")
+      require(df.columns.contains(col), s"Weight column '$col' not found in DataFrame")
     }
 
     // Check feature column type - try to get first row to validate it's a Vector
     val firstRow = df.select(featuresCol).first()
-    require(firstRow.get(0).isInstanceOf[Vector],
-      s"Features column must contain Vector type")
+    require(firstRow.get(0).isInstanceOf[Vector], s"Features column must contain Vector type")
 
     // Basic count check
     val count = df.count()

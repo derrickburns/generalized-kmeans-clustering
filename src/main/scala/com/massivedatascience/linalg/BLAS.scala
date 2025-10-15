@@ -17,19 +17,17 @@
 
 package com.massivedatascience.linalg
 
-import com.github.fommil.netlib.{ BLAS => NetlibBLAS, F2jBLAS }
-import org.apache.spark.ml.linalg.{ DenseVector, SparseVector, Vector }
+import com.github.fommil.netlib.{BLAS => NetlibBLAS, F2jBLAS}
+import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector}
 
 import scala.collection.mutable.ArrayBuffer
 
-/**
- * This code comes from Spark.  Unfortunately, the Spark version is private to the mllib package,
- * so we copied the code to a separate package.
- */
+/** This code comes from Spark. Unfortunately, the Spark version is private to the mllib package, so
+  * we copied the code to a separate package.
+  */
 
-/**
- * BLAS routines for MLlib's vectors and matrices.
- */
+/** BLAS routines for MLlib's vectors and matrices.
+  */
 object BLAS extends Serializable {
 
   @transient private var _f2jBLAS: NetlibBLAS = _
@@ -42,9 +40,8 @@ object BLAS extends Serializable {
     _f2jBLAS
   }
 
-  /**
-   * y += a * x
-   */
+  /** y += a * x
+    */
   def axpy(a: Double, x: Vector, y: Vector): Vector = {
     y match {
       case dy: DenseVector =>
@@ -54,8 +51,7 @@ object BLAS extends Serializable {
           case dx: DenseVector =>
             denseAxpy(a, dx, dy)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"axpy doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
@@ -64,8 +60,7 @@ object BLAS extends Serializable {
           case dx: DenseVector =>
             axpy(a, new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"axpy doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
 
         }
     }
@@ -83,7 +78,7 @@ object BLAS extends Serializable {
 
     val transformed = v.copy
     transformed match {
-      case y: DenseVector => transform(y.values)
+      case y: DenseVector  => transform(y.values)
       case y: SparseVector => transform(y.values)
     }
     transformed
@@ -96,16 +91,14 @@ object BLAS extends Serializable {
           case dx: DenseVector =>
             merge(dx, dy, op)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"axpy doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
             merge(sx, sy, op)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"merge doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"merge doesn't support x type ${x.getClass}.")
         }
     }
   }
@@ -114,8 +107,12 @@ object BLAS extends Serializable {
     merge(x, y, (xv: Double, yv: Double) => a * xv + yv)
   }
 
-  private def merge(x: DenseVector, y: DenseVector, op: ((Double, Double) => Double)): DenseVector = {
-    var i = 0
+  private def merge(
+    x: DenseVector,
+    y: DenseVector,
+    op: ((Double, Double) => Double)
+  ): DenseVector = {
+    var i       = 0
     val results = new Array[Double](x.size)
     while (i < x.size) {
       results(i) = op(x(i), y(i))
@@ -124,15 +121,19 @@ object BLAS extends Serializable {
     new DenseVector(results)
   }
 
-  private def merge(x: SparseVector, y: SparseVector, op: ((Double, Double) => Double)): SparseVector = {
-    var i = 0
-    var j = 0
+  private def merge(
+    x: SparseVector,
+    y: SparseVector,
+    op: ((Double, Double) => Double)
+  ): SparseVector = {
+    var i        = 0
+    var j        = 0
     val xIndices = x.indices
     val yIndices = y.indices
-    val xValues = x.values
-    val yValues = y.values
+    val xValues  = x.values
+    val yValues  = y.values
 
-    val maxLength = x.indices.length + y.indices.length
+    val maxLength   = x.indices.length + y.indices.length
     val indexBuffer = new ArrayBuffer[Int](maxLength)
     val valueBuffer = new ArrayBuffer[Double](maxLength)
 
@@ -167,22 +168,20 @@ object BLAS extends Serializable {
     }
 
     val indices = indexBuffer.toArray
-    val values = valueBuffer.toArray
+    val values  = valueBuffer.toArray
     new SparseVector(x.size, indices, values)
   }
 
-  /**
-   * y += a * x
-   */
+  /** y += a * x
+    */
   def denseAxpy(a: Double, x: DenseVector, y: DenseVector): Vector = {
     val n = x.size
     f2jBLAS.daxpy(n, a, x.values, 1, y.values, 1)
     y
   }
 
-  /**
-   * y += a * x
-   */
+  /** y += a * x
+    */
   private def axpy(a: Double, x: SparseVector, y: DenseVector): Vector = {
     val nnz = x.indices.length
     if (a == 1.0) {
@@ -201,9 +200,8 @@ object BLAS extends Serializable {
     y
   }
 
-  /**
-   * dot(x, y)
-   */
+  /** dot(x, y)
+    */
   def dot(x: Vector, y: Vector): Double = {
     if (x.size != y.size) {
       require(x.size == y.size, s"${x.size} vs ${y.size}")
@@ -217,8 +215,7 @@ object BLAS extends Serializable {
           case dx: DenseVector =>
             denseDot(dx, dy)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"sum doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"sum doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
@@ -227,30 +224,27 @@ object BLAS extends Serializable {
           case dx: DenseVector =>
             dot(new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
           case _ =>
-            throw new UnsupportedOperationException(
-              s"sum doesn't support x type ${x.getClass}.")
+            throw new UnsupportedOperationException(s"sum doesn't support x type ${x.getClass}.")
 
         }
     }
   }
 
-  /**
-   * dot(x, y)
-   */
+  /** dot(x, y)
+    */
   @inline
   private def denseDot(x: DenseVector, y: DenseVector): Double = {
     val n = x.size
     f2jBLAS.ddot(n, x.values, 1, y.values, 1)
   }
 
-  /**
-   * dot(x, y)
-   */
+  /** dot(x, y)
+    */
 
   private def dot(x: SparseVector, y: DenseVector): Double = {
     val nnz = x.indices.length
     var sum = 0.0
-    var k = 0
+    var k   = 0
     while (k < nnz) {
       sum += x.values(k) * y.values(x.indices(k))
       k += 1
@@ -258,15 +252,14 @@ object BLAS extends Serializable {
     sum
   }
 
-  /**
-   * dot(x, y)
-   */
+  /** dot(x, y)
+    */
   private def dot(x: SparseVector, y: SparseVector): Double = {
-    var kx = 0
+    var kx   = 0
     val nnzx = x.indices.length
-    var ky = 0
+    var ky   = 0
     val nnzy = y.indices.length
-    var sum = 0.0
+    var sum  = 0.0
     // y catching x
     while (kx < nnzx && ky < nnzy) {
       val ix = x.indices(kx)
@@ -282,9 +275,8 @@ object BLAS extends Serializable {
     sum
   }
 
-  /**
-   * y = x
-   */
+  /** y = x
+    */
   def copy(x: Vector, y: Vector): Unit = {
     val n = y.size
     require(x.size == n)
@@ -292,8 +284,8 @@ object BLAS extends Serializable {
       case dy: DenseVector =>
         x match {
           case sx: SparseVector =>
-            var i = 0
-            var k = 0
+            var i   = 0
+            var k   = 0
             val nnz = sx.indices.length
             while (k < nnz) {
               val j = sx.indices(k)
@@ -317,9 +309,8 @@ object BLAS extends Serializable {
     }
   }
 
-  /**
-   * x = a * x
-   */
+  /** x = a * x
+    */
   def scal(a: Double, x: Vector): Unit = {
     x match {
       case sx: SparseVector =>
@@ -351,7 +342,7 @@ object BLAS extends Serializable {
   }
 
   private def doMax(v: Array[Double]): Double = {
-    var i = 0
+    var i       = 0
     var maximum = Double.MinValue
     while (i < v.length) {
       if (v(i) < maximum) maximum = v(i)
@@ -362,21 +353,21 @@ object BLAS extends Serializable {
 
   def add(v: Vector, c: Double): Vector = {
     v match {
-      case x: DenseVector => new DenseVector(doAdd(x.values.clone(), c))
+      case x: DenseVector  => new DenseVector(doAdd(x.values.clone(), c))
       case x: SparseVector => new SparseVector(x.size, x.indices, doAdd(x.values.clone(), c))
     }
   }
 
   def sum(v: Vector): Double = {
     v match {
-      case x: DenseVector => doSum(x.values)
+      case x: DenseVector  => doSum(x.values)
       case y: SparseVector => doSum(y.values)
     }
   }
 
   def max(v: Vector): Double = {
     v match {
-      case x: DenseVector => doMax(x.values)
+      case x: DenseVector  => doMax(x.values)
       case y: SparseVector => doMax(y.values)
     }
   }

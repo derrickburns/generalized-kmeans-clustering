@@ -24,14 +24,18 @@ import org.scalatest.funsuite.AnyFunSuite
 class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("OnlineKMeans should cluster basic 2D data") {
-    val data = sc.parallelize(Seq(
-      WeightedVector(Vectors.dense(1.0, 1.0)),
-      WeightedVector(Vectors.dense(1.5, 1.2)),
-      WeightedVector(Vectors.dense(1.2, 1.5)),
-      WeightedVector(Vectors.dense(10.0, 10.0)),
-      WeightedVector(Vectors.dense(10.5, 10.2)),
-      WeightedVector(Vectors.dense(10.2, 10.5))
-    )).cache()
+    val data = sc
+      .parallelize(
+        Seq(
+          WeightedVector(Vectors.dense(1.0, 1.0)),
+          WeightedVector(Vectors.dense(1.5, 1.2)),
+          WeightedVector(Vectors.dense(1.2, 1.5)),
+          WeightedVector(Vectors.dense(10.0, 10.0)),
+          WeightedVector(Vectors.dense(10.5, 10.2)),
+          WeightedVector(Vectors.dense(10.2, 10.5))
+        )
+      )
+      .cache()
 
     val model = KMeans.train(
       data.map(_.homogeneous),
@@ -51,31 +55,41 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
   }
 
   test("OnlineKMeans with different learning rate strategies") {
-    val data = sc.parallelize((0 until 100).map { i =>
-      val cluster = i % 3
-      val x = cluster * 10.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 10.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 100).map { i =>
+        val cluster = i % 3
+        val x       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
     val strategies = Seq("standard", "sqrt", "constant")
 
     strategies.foreach { strategy =>
-      val config = OnlineKMeansConfig(learningRateDecay = strategy)
+      val config    = OnlineKMeansConfig(learningRateDecay = strategy)
       val clusterer = OnlineKMeans(config)
 
-      val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+      val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
       val bregmanData = data.map(pointOps.toPoint).cache()
 
       val initialCenters = KMeansRandom.init(
-        pointOps, bregmanData, 3, None, 1, 0L
+        pointOps,
+        bregmanData,
+        3,
+        None,
+        1,
+        0L
       )
 
       val result = clusterer.cluster(10, pointOps, bregmanData, initialCenters).head
 
       assert(result.centers.length == 3, s"Strategy $strategy should produce 3 centers")
       assert(result.distortion >= 0.0, s"Strategy $strategy distortion should be non-negative")
-      assert(java.lang.Double.isFinite(result.distortion), s"Strategy $strategy distortion should be finite")
+      assert(
+        java.lang.Double.isFinite(result.distortion),
+        s"Strategy $strategy distortion should be finite"
+      )
 
       bregmanData.unpersist()
     }
@@ -83,10 +97,12 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
 
   test("OnlineKMeans fast variant") {
     val data = sc.parallelize((0 until 50).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian(),
-        scala.util.Random.nextGaussian()
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian(),
+          scala.util.Random.nextGaussian()
+        )
+      )
     })
 
     val model = KMeans.train(
@@ -101,14 +117,18 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
   }
 
   test("AnnealedKMeans should cluster basic 2D data") {
-    val data = sc.parallelize(Seq(
-      WeightedVector(Vectors.dense(1.0, 1.0)),
-      WeightedVector(Vectors.dense(1.5, 1.2)),
-      WeightedVector(Vectors.dense(1.2, 1.5)),
-      WeightedVector(Vectors.dense(10.0, 10.0)),
-      WeightedVector(Vectors.dense(10.5, 10.2)),
-      WeightedVector(Vectors.dense(10.2, 10.5))
-    )).cache()
+    val data = sc
+      .parallelize(
+        Seq(
+          WeightedVector(Vectors.dense(1.0, 1.0)),
+          WeightedVector(Vectors.dense(1.5, 1.2)),
+          WeightedVector(Vectors.dense(1.2, 1.5)),
+          WeightedVector(Vectors.dense(10.0, 10.0)),
+          WeightedVector(Vectors.dense(10.5, 10.2)),
+          WeightedVector(Vectors.dense(10.2, 10.5))
+        )
+      )
+      .cache()
 
     val model = KMeans.train(
       data.map(_.homogeneous),
@@ -133,12 +153,14 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
   }
 
   test("AnnealedKMeans with different annealing schedules") {
-    val data = sc.parallelize((0 until 60).map { i =>
-      val cluster = i % 3
-      val x = cluster * 5.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 5.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 60).map { i =>
+        val cluster = i % 3
+        val x       = cluster * 5.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 5.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
     val schedules = Seq("exponential", "linear")
 
@@ -153,18 +175,26 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
       )
       val clusterer = AnnealedKMeans(config)
 
-      val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+      val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
       val bregmanData = data.map(pointOps.toPoint).cache()
 
       val initialCenters = KMeansRandom.init(
-        pointOps, bregmanData, 3, None, 1, 0L
+        pointOps,
+        bregmanData,
+        3,
+        None,
+        1,
+        0L
       )
 
       val result = clusterer.cluster(10, pointOps, bregmanData, initialCenters).head
 
       assert(result.centers.length == 3, s"Schedule $schedule should produce 3 centers")
       assert(result.distortion >= 0.0, s"Schedule $schedule distortion should be non-negative")
-      assert(java.lang.Double.isFinite(result.distortion), s"Schedule $schedule distortion should be finite")
+      assert(
+        java.lang.Double.isFinite(result.distortion),
+        s"Schedule $schedule distortion should be finite"
+      )
 
       bregmanData.unpersist()
     }
@@ -172,10 +202,12 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
 
   test("AnnealedKMeans fast variant") {
     val data = sc.parallelize((0 until 50).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian(),
-        scala.util.Random.nextGaussian()
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian(),
+          scala.util.Random.nextGaussian()
+        )
+      )
     })
 
     val model = KMeans.train(
@@ -192,10 +224,12 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
   test("AnnealedKMeans high quality variant") {
     val data = sc.parallelize((0 until 30).map { i =>
       val cluster = if (i < 15) 0.0 else 10.0
-      WeightedVector(Vectors.dense(
-        cluster + scala.util.Random.nextGaussian() * 0.5,
-        cluster + scala.util.Random.nextGaussian() * 0.5
-      ))
+      WeightedVector(
+        Vectors.dense(
+          cluster + scala.util.Random.nextGaussian() * 0.5,
+          cluster + scala.util.Random.nextGaussian() * 0.5
+        )
+      )
     })
 
     val model = KMeans.train(
@@ -218,10 +252,12 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
 
   test("AnnealedKMeans robust initialization variant") {
     val data = sc.parallelize((0 until 40).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian() * 2,
-        scala.util.Random.nextGaussian() * 2
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian() * 2,
+          scala.util.Random.nextGaussian() * 2
+        )
+      )
     })
 
     val model = KMeans.train(
@@ -237,12 +273,14 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
 
   test("OnlineKMeans vs standard k-means quality comparison") {
     // Generate well-separated clusters
-    val data = sc.parallelize((0 until 90).map { i =>
-      val cluster = i / 30
-      val x = cluster * 20.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 20.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 90).map { i =>
+        val cluster = i / 30
+        val x       = cluster * 20.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 20.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
     val onlineModel = KMeans.train(
       data.map(_.homogeneous),
@@ -258,23 +296,27 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
       clustererName = MultiKMeansClusterer.COLUMN_TRACKING
     )
 
-    val onlineCost = onlineModel.computeCost(data.map(_.homogeneous))
+    val onlineCost   = onlineModel.computeCost(data.map(_.homogeneous))
     val standardCost = standardModel.computeCost(data.map(_.homogeneous))
 
     // Online should be within reasonable quality range
     // (might be slightly worse, but not dramatically)
     assert(onlineCost >= 0.0)
     assert(standardCost >= 0.0)
-    assert(onlineCost < standardCost * 3.0,
-      s"Online cost ($onlineCost) should be within 3x of standard cost ($standardCost)")
+    assert(
+      onlineCost < standardCost * 3.0,
+      s"Online cost ($onlineCost) should be within 3x of standard cost ($standardCost)"
+    )
   }
 
   test("AnnealedKMeans should handle single cluster gracefully") {
     val data = sc.parallelize((0 until 20).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian(),
-        scala.util.Random.nextGaussian()
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian(),
+          scala.util.Random.nextGaussian()
+        )
+      )
     })
 
     val model = KMeans.train(

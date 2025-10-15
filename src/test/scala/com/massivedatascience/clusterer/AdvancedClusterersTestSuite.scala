@@ -26,14 +26,18 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   // === BisectingKMeans Tests ===
 
   test("BisectingKMeans should cluster basic 2D data") {
-    val data = sc.parallelize(Seq(
-      WeightedVector(Vectors.dense(1.0, 1.0)),
-      WeightedVector(Vectors.dense(1.5, 1.2)),
-      WeightedVector(Vectors.dense(1.2, 1.5)),
-      WeightedVector(Vectors.dense(10.0, 10.0)),
-      WeightedVector(Vectors.dense(10.5, 10.2)),
-      WeightedVector(Vectors.dense(10.2, 10.5))
-    )).cache()
+    val data = sc
+      .parallelize(
+        Seq(
+          WeightedVector(Vectors.dense(1.0, 1.0)),
+          WeightedVector(Vectors.dense(1.5, 1.2)),
+          WeightedVector(Vectors.dense(1.2, 1.5)),
+          WeightedVector(Vectors.dense(10.0, 10.0)),
+          WeightedVector(Vectors.dense(10.5, 10.2)),
+          WeightedVector(Vectors.dense(10.2, 10.5))
+        )
+      )
+      .cache()
 
     val model = KMeans.train(
       data.map(_.homogeneous),
@@ -48,38 +52,48 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
     assert(java.lang.Double.isFinite(cost))
 
     // Check that clusters are separated
-    val predictions = model.predict(data.map(_.homogeneous)).collect()
+    val predictions   = model.predict(data.map(_.homogeneous)).collect()
     val cluster0Count = predictions.count(_ == 0)
     val cluster1Count = predictions.count(_ == 1)
     assert(cluster0Count == 3 || cluster1Count == 3, "Should separate into 3+3 clusters")
   }
 
   test("BisectingKMeans with different split criteria") {
-    val data = sc.parallelize((0 until 60).map { i =>
-      val cluster = i % 3
-      val x = cluster * 10.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 10.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 60).map { i =>
+        val cluster = i % 3
+        val x       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
     val criteria = Seq("largest", "highest_cost")
 
     criteria.foreach { criterion =>
-      val config = BisectingKMeansConfig(splitCriterion = criterion)
+      val config    = BisectingKMeansConfig(splitCriterion = criterion)
       val clusterer = BisectingKMeans(config)
 
-      val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+      val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
       val bregmanData = data.map(pointOps.toPoint).cache()
 
       val initialCenters = KMeansRandom.init(
-        pointOps, bregmanData, 3, None, 1, 0L
+        pointOps,
+        bregmanData,
+        3,
+        None,
+        1,
+        0L
       )
 
       val result = clusterer.cluster(20, pointOps, bregmanData, initialCenters).head
 
       assert(result.centers.length == 3, s"Criterion $criterion should produce 3 centers")
       assert(result.distortion >= 0.0, s"Criterion $criterion distortion should be non-negative")
-      assert(java.lang.Double.isFinite(result.distortion), s"Criterion $criterion distortion should be finite")
+      assert(
+        java.lang.Double.isFinite(result.distortion),
+        s"Criterion $criterion distortion should be finite"
+      )
 
       bregmanData.unpersist()
     }
@@ -87,10 +101,12 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
 
   test("BisectingKMeans fast variant") {
     val data = sc.parallelize((0 until 40).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian(),
-        scala.util.Random.nextGaussian()
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian(),
+          scala.util.Random.nextGaussian()
+        )
+      )
     })
 
     val model = KMeans.train(
@@ -108,21 +124,28 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
 
   test("XMeans should find optimal k automatically") {
     // Create data with 3 clear clusters
-    val data = sc.parallelize((0 until 60).map { i =>
-      val cluster = i / 20
-      val x = cluster * 15.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 15.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 60).map { i =>
+        val cluster = i / 20
+        val x       = cluster * 15.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 15.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
-    val config = XMeansConfig(minK = 2, maxK = 5)
+    val config    = XMeansConfig(minK = 2, maxK = 5)
     val clusterer = XMeans(config)
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     val initialCenters = KMeansRandom.init(
-      pointOps, bregmanData, 2, None, 1, 0L
+      pointOps,
+      bregmanData,
+      2,
+      None,
+      1,
+      0L
     )
 
     val result = clusterer.cluster(20, pointOps, bregmanData, initialCenters).head
@@ -136,26 +159,30 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   }
 
   test("XMeans with BIC vs AIC") {
-    val data = sc.parallelize((0 until 40).map { i =>
-      val cluster = if (i < 20) 0.0 else 10.0
-      WeightedVector(Vectors.dense(
-        cluster + scala.util.Random.nextGaussian(),
-        cluster + scala.util.Random.nextGaussian()
-      ))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 40).map { i =>
+        val cluster = if (i < 20) 0.0 else 10.0
+        WeightedVector(
+          Vectors.dense(
+            cluster + scala.util.Random.nextGaussian(),
+            cluster + scala.util.Random.nextGaussian()
+          )
+        )
+      })
+      .cache()
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     // Test BIC
     val bicClusterer = XMeans(XMeansConfig(minK = 1, maxK = 4, criterion = "bic"))
-    val bicInitial = KMeansRandom.init(pointOps, bregmanData, 1, None, 1, 0L)
-    val bicResult = bicClusterer.cluster(20, pointOps, bregmanData, bicInitial).head
+    val bicInitial   = KMeansRandom.init(pointOps, bregmanData, 1, None, 1, 0L)
+    val bicResult    = bicClusterer.cluster(20, pointOps, bregmanData, bicInitial).head
 
     // Test AIC
     val aicClusterer = XMeans(XMeansConfig(minK = 1, maxK = 4, criterion = "aic"))
-    val aicInitial = KMeansRandom.init(pointOps, bregmanData, 1, None, 1, 0L)
-    val aicResult = aicClusterer.cluster(20, pointOps, bregmanData, aicInitial).head
+    val aicInitial   = KMeansRandom.init(pointOps, bregmanData, 1, None, 1, 0L)
+    val aicResult    = aicClusterer.cluster(20, pointOps, bregmanData, aicInitial).head
 
     // Both should find valid clusters
     assert(bicResult.centers.length >= 1 && bicResult.centers.length <= 4)
@@ -168,15 +195,17 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
 
   test("XMeans fast variant") {
     val data = sc.parallelize((0 until 30).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian() * 2,
-        scala.util.Random.nextGaussian() * 2
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian() * 2,
+          scala.util.Random.nextGaussian() * 2
+        )
+      )
     })
 
     val model = KMeans.train(
       data.map(_.homogeneous),
-      k = 2,  // Will be ignored, XMeans finds optimal k
+      k = 2, // Will be ignored, XMeans finds optimal k
       maxIterations = 10,
       clustererName = MultiKMeansClusterer.XMEANS_FAST
     )
@@ -189,24 +218,33 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   // === ConstrainedKMeans Tests ===
 
   test("ConstrainedKMeans with must-link constraints") {
-    val data = sc.parallelize(Seq(
-      WeightedVector(Vectors.dense(1.0, 1.0)),    // 0
-      WeightedVector(Vectors.dense(1.5, 1.2)),    // 1
-      WeightedVector(Vectors.dense(1.2, 1.5)),    // 2
-      WeightedVector(Vectors.dense(10.0, 10.0)),  // 3
-      WeightedVector(Vectors.dense(10.5, 10.2)),  // 4
-      WeightedVector(Vectors.dense(10.2, 10.5))   // 5
-    )).cache()
+    val data = sc
+      .parallelize(
+        Seq(
+          WeightedVector(Vectors.dense(1.0, 1.0)),   // 0
+          WeightedVector(Vectors.dense(1.5, 1.2)),   // 1
+          WeightedVector(Vectors.dense(1.2, 1.5)),   // 2
+          WeightedVector(Vectors.dense(10.0, 10.0)), // 3
+          WeightedVector(Vectors.dense(10.5, 10.2)), // 4
+          WeightedVector(Vectors.dense(10.2, 10.5))  // 5
+        )
+      )
+      .cache()
 
     // Points 0 and 1 must be in same cluster
     val constraints = Constraints(mustLink = Set((0L, 1L)))
-    val clusterer = ConstrainedKMeans(constraints)
+    val clusterer   = ConstrainedKMeans(constraints)
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     val initialCenters = KMeansRandom.init(
-      pointOps, bregmanData, 2, None, 1, 0L
+      pointOps,
+      bregmanData,
+      2,
+      None,
+      1,
+      0L
     )
 
     val result = clusterer.cluster(20, pointOps, bregmanData, initialCenters).head
@@ -218,22 +256,31 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   }
 
   test("ConstrainedKMeans with cannot-link constraints") {
-    val data = sc.parallelize(Seq(
-      WeightedVector(Vectors.dense(1.0, 1.0)),
-      WeightedVector(Vectors.dense(1.5, 1.2)),
-      WeightedVector(Vectors.dense(10.0, 10.0)),
-      WeightedVector(Vectors.dense(10.5, 10.2))
-    )).cache()
+    val data = sc
+      .parallelize(
+        Seq(
+          WeightedVector(Vectors.dense(1.0, 1.0)),
+          WeightedVector(Vectors.dense(1.5, 1.2)),
+          WeightedVector(Vectors.dense(10.0, 10.0)),
+          WeightedVector(Vectors.dense(10.5, 10.2))
+        )
+      )
+      .cache()
 
     // Points 0 and 2 cannot be in same cluster
     val constraints = Constraints(cannotLink = Set((0L, 2L)))
-    val clusterer = ConstrainedKMeans(constraints)
+    val clusterer   = ConstrainedKMeans(constraints)
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     val initialCenters = KMeansRandom.init(
-      pointOps, bregmanData, 2, None, 1, 0L
+      pointOps,
+      bregmanData,
+      2,
+      None,
+      1,
+      0L
     )
 
     val result = clusterer.cluster(20, pointOps, bregmanData, initialCenters).head
@@ -246,21 +293,28 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
 
   test("ConstrainedKMeans with no constraints behaves like standard k-means") {
     val data = sc.parallelize((0 until 30).map { _ =>
-      WeightedVector(Vectors.dense(
-        scala.util.Random.nextGaussian(),
-        scala.util.Random.nextGaussian()
-      ))
+      WeightedVector(
+        Vectors.dense(
+          scala.util.Random.nextGaussian(),
+          scala.util.Random.nextGaussian()
+        )
+      )
     })
 
     // No constraints
     val constraints = Constraints()
-    val clusterer = ConstrainedKMeans(constraints)
+    val clusterer   = ConstrainedKMeans(constraints)
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     val initialCenters = KMeansRandom.init(
-      pointOps, bregmanData, 3, None, 1, 0L
+      pointOps,
+      bregmanData,
+      3,
+      None,
+      1,
+      0L
     )
 
     val result = clusterer.cluster(10, pointOps, bregmanData, initialCenters).head
@@ -272,23 +326,32 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   }
 
   test("ConstrainedKMeans soft constraints") {
-    val data = sc.parallelize((0 until 20).map { i =>
-      val x = if (i < 10) 0.0 else 10.0
-      WeightedVector(Vectors.dense(
-        x + scala.util.Random.nextGaussian(),
-        x + scala.util.Random.nextGaussian()
-      ))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 20).map { i =>
+        val x = if (i < 10) 0.0 else 10.0
+        WeightedVector(
+          Vectors.dense(
+            x + scala.util.Random.nextGaussian(),
+            x + scala.util.Random.nextGaussian()
+          )
+        )
+      })
+      .cache()
 
     // Soft constraints: points 0 and 15 cannot link (different natural clusters)
     val constraints = Constraints(cannotLink = Set((0L, 15L)))
-    val clusterer = ConstrainedKMeans.withSoftConstraints(constraints, penalty = 10.0)
+    val clusterer   = ConstrainedKMeans.withSoftConstraints(constraints, penalty = 10.0)
 
-    val pointOps = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val pointOps    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val bregmanData = data.map(pointOps.toPoint).cache()
 
     val initialCenters = KMeansRandom.init(
-      pointOps, bregmanData, 2, None, 1, 0L
+      pointOps,
+      bregmanData,
+      2,
+      None,
+      1,
+      0L
     )
 
     val result = clusterer.cluster(20, pointOps, bregmanData, initialCenters).head
@@ -302,12 +365,14 @@ class AdvancedClusterersTestSuite extends AnyFunSuite with LocalClusterSparkCont
   // === Integration Tests ===
 
   test("All three advanced clusterers should handle same dataset") {
-    val data = sc.parallelize((0 until 60).map { i =>
-      val cluster = i / 20
-      val x = cluster * 10.0 + scala.util.Random.nextGaussian()
-      val y = cluster * 10.0 + scala.util.Random.nextGaussian()
-      WeightedVector(Vectors.dense(x, y))
-    }).cache()
+    val data = sc
+      .parallelize((0 until 60).map { i =>
+        val cluster = i / 20
+        val x       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        val y       = cluster * 10.0 + scala.util.Random.nextGaussian()
+        WeightedVector(Vectors.dense(x, y))
+      })
+      .cache()
 
     val clusterers = Seq(
       MultiKMeansClusterer.BISECTING,

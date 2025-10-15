@@ -71,14 +71,16 @@ object ValidationUtils {
   def requireValidArrayIndex(index: Int, arrayLength: Int, context: String = "Index"): Unit = {
     if (index < 0 || index >= arrayLength) {
       throw new IllegalArgumentException(
-        s"$context must be between 0 and ${arrayLength - 1}, got: $index")
+        s"$context must be between 0 and ${arrayLength - 1}, got: $index"
+      )
     }
   }
 
   def requireSameDimensions(v1: Vector, v2: Vector, context: String = "Vectors"): Unit = {
     if (v1.size != v2.size) {
       throw new IllegalArgumentException(
-        s"$context must have same dimensions, got: ${v1.size} and ${v2.size}")
+        s"$context must have same dimensions, got: ${v1.size} and ${v2.size}"
+      )
     }
   }
 

@@ -17,24 +17,24 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
+import com.massivedatascience.divergence.{BregmanDivergence, RealKullbackLeiblerSimplexDivergence}
 import com.massivedatascience.linalg._
-import org.apache.spark.ml.linalg.{ Vector }
+import org.apache.spark.ml.linalg.{Vector}
 
-/**
- * One can create a symmetric version of any Bregman Divergence</a>
- *
- * This one is
- *
- *   distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
- *
- * The embedding is simply
- *
- * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
- *
- * @see <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a>
- *
- */
+/** One can create a symmetric version of any Bregman Divergence</a>
+  *
+  * This one is
+  *
+  * distance(x,y) = KL(x,y) + KL(y,x) + (1/2) ||x-y||^2 + (1/2) || gradF(x) - gradF(y)||^2
+  *
+  * The embedding is simply
+  *
+  * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
+  *
+  * @see
+  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized
+  *   Bregman Divergences and Metrics</a>
+  */
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   def embed(v: VectorIterator): Vector = embed(v.toVector)
 
@@ -44,12 +44,11 @@ class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   }
 }
 
-/**
- * A symmetric version of the standard Kullback-Leibler Divergence
- *
- *
- * @see <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and Metrics</a>
- *
- */
-case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
-
+/** A symmetric version of the standard Kullback-Leibler Divergence
+  *
+  * @see
+  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized
+  *   Bregman Divergences and Metrics</a>
+  */
+case object SymmetrizingKLEmbedding
+    extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)

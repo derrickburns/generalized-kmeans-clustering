@@ -20,9 +20,9 @@ package com.massivedatascience.transforms
 object HaarWavelet {
 
   def average(input: Array[Double]): Array[Double] = {
-    val len = input.length >> 1
+    val len    = input.length >> 1
     val result = new Array[Double](len)
-    var i = 0
+    var i      = 0
     while (i < len) {
       val baseIndex = 2 * i
       if (baseIndex + 1 < input.length) {
@@ -39,22 +39,31 @@ object HaarWavelet {
 
     val tmp = new Array[Double](size)
 
-    /**
-     * in place Haar transform
-     *
-     * @param result  input to transform
-     * @param halfLength half the length of array
-     */
+    /** in place Haar transform
+      *
+      * @param result
+      *   input to transform
+      * @param halfLength
+      *   half the length of array
+      */
     def haar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
       require(halfLength >= 0, "halfLength must be non-negative")
-      require(halfLength * 2 <= input.length, s"Input array length ${input.length} insufficient for halfLength $halfLength")
-      require(halfLength * 2 <= tmp.length, s"Temp array length ${tmp.length} insufficient for halfLength $halfLength")
-      
+      require(
+        halfLength * 2 <= input.length,
+        s"Input array length ${input.length} insufficient for halfLength $halfLength"
+      )
+      require(
+        halfLength * 2 <= tmp.length,
+        s"Temp array length ${tmp.length} insufficient for halfLength $halfLength"
+      )
+
       var i = 0
       while (i != halfLength) {
         val j = i << 1
-        if (j < input.length && j + 1 < input.length && 
-            i < tmp.length && halfLength + i < tmp.length) {
+        if (
+          j < input.length && j + 1 < input.length &&
+          i < tmp.length && halfLength + i < tmp.length
+        ) {
           tmp(i) = input(j)
           tmp(halfLength + i) = input(j + 1)
         }
@@ -64,8 +73,10 @@ object HaarWavelet {
       i = 0
       while (i != halfLength) {
         val j = halfLength + i
-        if (i < tmp.length && j < tmp.length && 
-            i < result.length && j < result.length) {
+        if (
+          i < tmp.length && j < tmp.length &&
+          i < result.length && j < result.length
+        ) {
           val l = tmp(i) / 2.0
           val r = tmp(j) / 2.0
           result(i) = l + r
@@ -76,22 +87,31 @@ object HaarWavelet {
       result
     }
 
-    /**
-     * in place inverse Haar transform
-     *
-     * @param result input to transform
-     * @param halfLength half the length of the coordinates
-     */
+    /** in place inverse Haar transform
+      *
+      * @param result
+      *   input to transform
+      * @param halfLength
+      *   half the length of the coordinates
+      */
     def inverseHaar(input: Array[Double], result: Array[Double], halfLength: Int): Array[Double] = {
       require(halfLength >= 0, "halfLength must be non-negative")
-      require(halfLength * 2 <= result.length, s"Result array length ${result.length} insufficient for halfLength $halfLength")
-      require(halfLength * 2 <= tmp.length, s"Temp array length ${tmp.length} insufficient for halfLength $halfLength")
-      
+      require(
+        halfLength * 2 <= result.length,
+        s"Result array length ${result.length} insufficient for halfLength $halfLength"
+      )
+      require(
+        halfLength * 2 <= tmp.length,
+        s"Temp array length ${tmp.length} insufficient for halfLength $halfLength"
+      )
+
       var i = 0
       while (i != halfLength) {
         val j = halfLength + i
-        if (i < input.length && j < input.length && 
-            i < tmp.length && j < tmp.length) {
+        if (
+          i < input.length && j < input.length &&
+          i < tmp.length && j < tmp.length
+        ) {
           val l = input(i)
           val r = input(j)
           tmp(i) = l + r
@@ -103,8 +123,10 @@ object HaarWavelet {
       i = 0
       while (i != halfLength) {
         val j = i << 1
-        if (i < tmp.length && halfLength + i < tmp.length && 
-            j < result.length && j + 1 < result.length) {
+        if (
+          i < tmp.length && halfLength + i < tmp.length &&
+          j < result.length && j + 1 < result.length
+        ) {
           result(j) = tmp(i)
           result(j + 1) = tmp(halfLength + i)
         }
@@ -114,7 +136,7 @@ object HaarWavelet {
     }
 
     def transform(values: Array[Double]) = {
-      var start = values.length
+      var start  = values.length
       val result = values.clone()
       while (start != 0) {
         require(start == 1 || (start & 1) == 0, "length of input must be power of 2")
@@ -130,6 +152,5 @@ object HaarWavelet {
       result
     }
   }
-
 
 }

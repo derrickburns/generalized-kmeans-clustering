@@ -24,27 +24,28 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
-/**
- * A point with an additional single Double value that is used in distance computation.
- *
- */
+/** A point with an additional single Double value that is used in distance computation.
+  */
 case class BregmanPoint(homogeneous: Vector, weight: Double, f: Double) extends WeightedVector {
   lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
-/**
- * A cluster center with an additional Double and an additional vector containing the gradient
- * that are used in distance computation.
- *
- * @param homogeneous point
- * @param dotGradMinusF  center dot gradient(center) - f(center)
- * @param gradient gradient of center
- */
+/** A cluster center with an additional Double and an additional vector containing the gradient that
+  * are used in distance computation.
+  *
+  * @param homogeneous
+  *   point
+  * @param dotGradMinusF
+  *   center dot gradient(center) - f(center)
+  * @param gradient
+  *   gradient of center
+  */
 case class BregmanCenter(
-    homogeneous: Vector,
-    weight: Double,
-    dotGradMinusF: Double,
-    gradient: Vector) extends WeightedVector {
+  homogeneous: Vector,
+  weight: Double,
+  dotGradMinusF: Double,
+  gradient: Vector
+) extends WeightedVector {
   lazy val inhomogeneous = asInhomogeneous(homogeneous, weight)
 }
 
@@ -58,16 +59,14 @@ object BregmanCenter {
     new BregmanCenter(v.homogeneous, v.weight, dotGradMinusF, gradient)
 }
 
-/**
- * An enrichment to the Bregman divergence that supports expedient distance calculations.
- *
- * This is done by pre-computing and caching certain values.
- *
- * For points, these values are stored in BregmanPoint objects.
- *
- * For cluster centers, these values are stored in BregmanCenter objects.
- *
- */
+/** An enrichment to the Bregman divergence that supports expedient distance calculations.
+  *
+  * This is done by pre-computing and caching certain values.
+  *
+  * For points, these values are stored in BregmanPoint objects.
+  *
+  * For cluster centers, these values are stored in BregmanCenter objects.
+  */
 trait BregmanPointOps extends Serializable with ClusterFactory {
   type P = BregmanPoint
   type C = BregmanCenter
@@ -80,49 +79,60 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
-  /**
-   * converted a weighted vector to a point
-   * @param v input vector
-   * @return weighted vector
-   */
+  /** converted a weighted vector to a point
+    * @param v
+    *   input vector
+    * @return
+    *   weighted vector
+    */
   def toPoint(v: WeightedVector): P
 
-  /**
-   * converted a weighted vector to a center
-   * @param v input vector
-   * @return center
-   */
+  /** converted a weighted vector to a center
+    * @param v
+    *   input vector
+    * @return
+    *   center
+    */
   def toCenter(v: WeightedVector): C
 
-  /**
-   * determine if a center has moved appreciably
-   * @param v point
-   * @param w center
-   * @return is the point distinct from the center
-   */
+  /** determine if a center has moved appreciably
+    * @param v
+    *   point
+    * @param w
+    *   center
+    * @return
+    *   is the point distinct from the center
+    */
   def centerMoved(v: P, w: C): Boolean =
     distance(v, w) > distanceThreshold
 
-  /**
-   * Return the index of the closest point in `centers` to `point`, as well as its distance.
-   *
-   * N.B. This is inner loop code, so until the Scala compiler is smart enough, we eschew
-   * the more functional approach.
-   *
-   * @param centers centers
-   * @param point point
-   * @param f function that creates the result
-   * @param initialDistance initial best distance
-   * @param initialIndex  initial index of best cluster
-   * @tparam T   output type of function provided
-   * @return best index and best distance after function f application
-   */
+  /** Return the index of the closest point in `centers` to `point`, as well as its distance.
+    *
+    * N.B. This is inner loop code, so until the Scala compiler is smart enough, we eschew the more
+    * functional approach.
+    *
+    * @param centers
+    *   centers
+    * @param point
+    *   point
+    * @param f
+    *   function that creates the result
+    * @param initialDistance
+    *   initial best distance
+    * @param initialIndex
+    *   initial index of best cluster
+    * @tparam T
+    *   output type of function provided
+    * @return
+    *   best index and best distance after function f application
+    */
   def findClosestInfo[T](
     centers: IndexedSeq[C],
     point: P,
     f: (Int, Double) => T,
     initialDistance: Double = Infinity,
-    initialIndex: Int = -1): T = {
+    initialIndex: Int = -1
+  ): T = {
 
     // Pre-filter centers by weight threshold to avoid repeated checks
     if (point.weight <= weightThreshold) {
@@ -130,10 +140,10 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
 
     var bestDistance = initialDistance
-    var bestIndex = initialIndex
-    var i = 0
-    val end = centers.length
-    
+    var bestIndex    = initialIndex
+    var i            = 0
+    val end          = centers.length
+
     // Inline distance calculation for better performance
     while (i < end && bestDistance > 0.0) {
       val center = centers(i)
@@ -148,7 +158,7 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
           }
           0.0
         } else d
-        
+
         if (validDistance < bestDistance) {
           bestIndex = i
           bestDistance = validDistance
@@ -171,20 +181,17 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
   def distortion(data: RDD[P], centers: IndexedSeq[C]): Double =
     data.aggregate(0.0)(_ + findClosestDistance(centers, _), _ + _)
 
-  /**
-   * Assign each point to its closest cluster center.
-   * Returns RDD of (clusterIndex, point) pairs.
-   */
+  /** Assign each point to its closest cluster center. Returns RDD of (clusterIndex, point) pairs.
+    */
   def assignPointsToClusters(data: RDD[P], centers: IndexedSeq[C]): RDD[(Int, P)] = {
     data.map { point =>
       (findClosestCluster(centers, point), point)
     }
   }
 
-  /**
-   * Assign each point to its closest cluster center with distance.
-   * Returns RDD of (clusterIndex, (point, distance)) tuples.
-   */
+  /** Assign each point to its closest cluster center with distance. Returns RDD of (clusterIndex,
+    * (point, distance)) tuples.
+    */
   def assignPointsWithDistance(data: RDD[P], centers: IndexedSeq[C]): RDD[(Int, (P, Double))] = {
     data.map { point =>
       val (cluster, distance) = findClosest(centers, point)
@@ -192,23 +199,24 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
   }
 
-  /**
-   * Return the K-means cost of a given point against the given cluster centers.
-   */
+  /** Return the K-means cost of a given point against the given cluster centers.
+    */
   def pointCost(centers: IndexedSeq[C], point: P): Double = findClosestDistance(centers, point)
 
   def make(index: Int = -1): MutableWeightedVector = DenseClusterFactory.make(index)
 
-  /**
-   * Bregman distance function
-   *
-   * The distance function is called in the innermost loop of the K-Means clustering algorithm.
-   * Therefore, we seek to make the operation as efficient as possible.
-   *
-   * @param p point
-   * @param c center
-   * @return distance
-   */
+  /** Bregman distance function
+    *
+    * The distance function is called in the innermost loop of the K-Means clustering algorithm.
+    * Therefore, we seek to make the operation as efficient as possible.
+    *
+    * @param p
+    *   point
+    * @param c
+    *   center
+    * @return
+    *   distance
+    */
   def distance(p: P, c: C): Double = {
     weightThreshold match {
       case x: Double if c.weight <= x => Infinity
@@ -228,47 +236,48 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
     }
   }
 
-  /**
-   * Scale a BregmanPoint by a factor, creating a new weighted point.
-   * This is used in soft clustering to weight points by their membership probabilities.
-   * 
-   * @param point The point to scale
-   * @param factor The scaling factor (e.g., membership probability)
-   * @return A new WeightedVector with adjusted weight
-   */
+  /** Scale a BregmanPoint by a factor, creating a new weighted point. This is used in soft
+    * clustering to weight points by their membership probabilities.
+    *
+    * @param point
+    *   The point to scale
+    * @param factor
+    *   The scaling factor (e.g., membership probability)
+    * @return
+    *   A new WeightedVector with adjusted weight
+    */
   def scale(point: P, factor: Double): WeightedVector = {
     WeightedVector(point.homogeneous, point.weight * factor)
   }
 }
 
-/**
- * A factory for BregmanPoints and BregmanCenters given the Bregman divergence function.
- */
+/** A factory for BregmanPoints and BregmanCenters given the Bregman divergence function.
+  */
 trait PointCenterFactory {
 
-  /**
-   * The divergence to use when manufacturing points and centers.
-   */
+  /** The divergence to use when manufacturing points and centers.
+    */
   val divergence: BregmanDivergence
 
-  /**
-   * Create a BregmanPoint from a WeightedVector
-   * @param v weighted vector
-   * @return a BregmanPoint for the given Bregman divergence
-   */
+  /** Create a BregmanPoint from a WeightedVector
+    * @param v
+    *   weighted vector
+    * @return
+    *   a BregmanPoint for the given Bregman divergence
+    */
   def toPoint(v: WeightedVector): BregmanPoint
 
-  /**
-   * Create a BregmanCenter from a WeightedVector
-   * @param v weighted vector
-   * @return a BregmanCenter for the given Bregman divergence
-   */
+  /** Create a BregmanCenter from a WeightedVector
+    * @param v
+    *   weighted vector
+    * @return
+    *   a BregmanCenter for the given Bregman divergence
+    */
   def toCenter(v: WeightedVector): BregmanCenter
 }
 
-/**
- * Create BregmanCenters without smoothing.
- */
+/** Create BregmanCenters without smoothing.
+  */
 trait NonSmoothedPointCenterFactory extends PointCenterFactory {
 
   def toPoint(v: WeightedVector): BregmanPoint = {
@@ -280,17 +289,16 @@ trait NonSmoothedPointCenterFactory extends PointCenterFactory {
     val w = v.weight
     ValidationUtils.requireNonNegativeWeight(w, "Weight for center creation")
     val df = divergence.gradientOfConvexHomogeneous(h, w)
-    val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
+    val dotGradMinusF =
+      if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
     BregmanCenter(v, dotGradMinusF, df)
   }
 }
 
-/**
- * Create BregmanPoints and BregmanCenters by smoothing the centers.
- *
- * Smooth by adding one to each coordinate.
- *
- */
+/** Create BregmanPoints and BregmanCenters by smoothing the centers.
+  *
+  * Smooth by adding one to each coordinate.
+  */
 trait SmoothedPointCenterFactory extends PointCenterFactory {
   val smoothingFactor: Double
 
@@ -303,103 +311,104 @@ trait SmoothedPointCenterFactory extends PointCenterFactory {
     val w = v.weight + v.homogeneous.size * smoothingFactor
     ValidationUtils.requireNonNegativeWeight(w, "Smoothed weight for center creation")
     val df = divergence.gradientOfConvexHomogeneous(h, w)
-    val dotGradMinusF = if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
+    val dotGradMinusF =
+      if (w == 0.0) 0.0 else BLAS.dot(h, df) / w - divergence.convexHomogeneous(h, w)
     BregmanCenter(h, w, dotGradMinusF, df)
   }
 }
 
-/**
- * Implements Kullback-Leibler divergence on dense vectors in R+ ** n
- */
-private[clusterer] case object DenseKLPointOps extends BregmanPointOps
+/** Implements Kullback-Leibler divergence on dense vectors in R+ ** n
+  */
+private[clusterer] case object DenseKLPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = RealKLDivergence
 }
 
-/**
- * Implements Generalized I-divergence on dense vectors in R+ ** n
- */
-private[clusterer] case object GeneralizedIPointOps extends BregmanPointOps
+/** Implements Generalized I-divergence on dense vectors in R+ ** n
+  */
+private[clusterer] case object GeneralizedIPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = GeneralizedIDivergence
 }
 
-/**
- * Implements Squared Euclidean distance on dense vectors in R ** n
- */
-private[clusterer] case object SquaredEuclideanPointOps extends BregmanPointOps
+/** Implements Squared Euclidean distance on dense vectors in R ** n
+  */
+private[clusterer] case object SquaredEuclideanPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = SquaredEuclideanDistanceDivergence
 }
 
-/**
- * Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
- */
+/** Implements logistic loss divergence on dense vectors in (0.0,1.0) ** n
+  */
 
-private[clusterer] case object LogisticLossPointOps extends BregmanPointOps
+private[clusterer] case object LogisticLossPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = LogisticLossDivergence
 }
 
-/**
- * Implements Itakura-Saito divergence on dense vectors in R+ ** n
- */
-private[clusterer] case object ItakuraSaitoPointOps extends BregmanPointOps
+/** Implements Itakura-Saito divergence on dense vectors in R+ ** n
+  */
+private[clusterer] case object ItakuraSaitoPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = ItakuraSaitoDivergence
 }
 
-/**
- * Implements the Kullback-Leibler divergence for dense points are in N+ ** n,
- * i.e. the entries in each vector are positive integers.
- */
-private[clusterer] case object DiscreteKLPointOps extends BregmanPointOps
+/** Implements the Kullback-Leibler divergence for dense points are in N+ ** n, i.e. the entries in
+  * each vector are positive integers.
+  */
+private[clusterer] case object DiscreteKLPointOps
+    extends BregmanPointOps
     with NonSmoothedPointCenterFactory {
   val divergence = NaturalKLDivergence
 }
 
-/**
- * Implements Kullback-Leibler divergence with dense points in N ** n and whose
- * weights equal the sum of the frequencies.
- *
- * Because KL divergence is not defined on
- * zero values, we smooth the points by adding 1 to all entries.
- *
- */
-private[clusterer] case object DiscreteSmoothedKLPointOps extends BregmanPointOps
+/** Implements Kullback-Leibler divergence with dense points in N ** n and whose weights equal the
+  * sum of the frequencies.
+  *
+  * Because KL divergence is not defined on zero values, we smooth the points by adding 1 to all
+  * entries.
+  */
+private[clusterer] case object DiscreteSmoothedKLPointOps
+    extends BregmanPointOps
     with SmoothedPointCenterFactory {
-  val divergence = NaturalKLDivergence
+  val divergence      = NaturalKLDivergence
   val smoothingFactor = 1.0
 }
 
-private[clusterer] case object DiscreteSimplexSmoothedKLPointOps extends BregmanPointOps
+private[clusterer] case object DiscreteSimplexSmoothedKLPointOps
+    extends BregmanPointOps
     with SmoothedPointCenterFactory {
-  val divergence = NaturalKLSimplexDivergence
+  val divergence      = NaturalKLSimplexDivergence
   val smoothingFactor = 1.0
 }
 
 object BregmanPointOps {
   val RELATIVE_ENTROPY = "DENSE_KL_DIVERGENCE"
-  val DISCRETE_KL = "DISCRETE_DENSE_KL_DIVERGENCE"
+  val DISCRETE_KL      = "DISCRETE_DENSE_KL_DIVERGENCE"
   @deprecated("convert data to dense vectors first", "1.2.0")
-  val SPARSE_SMOOTHED_KL = "SPARSE_SMOOTHED_KL_DIVERGENCE"
+  val SPARSE_SMOOTHED_KL   = "SPARSE_SMOOTHED_KL_DIVERGENCE"
   val DISCRETE_SMOOTHED_KL = "DISCRETE_DENSE_SMOOTHED_KL_DIVERGENCE"
-  val SIMPLEX_SMOOTHED_KL = "SIMPLEX_SMOOTHED_KL"
-  val EUCLIDEAN = "EUCLIDEAN"
-  val LOGISTIC_LOSS = "LOGISTIC_LOSS"
-  val GENERALIZED_I = "GENERALIZED_I_DIVERGENCE"
-  val ITAKURA_SAITO = "ITAKURA_SAITO"
+  val SIMPLEX_SMOOTHED_KL  = "SIMPLEX_SMOOTHED_KL"
+  val EUCLIDEAN            = "EUCLIDEAN"
+  val LOGISTIC_LOSS        = "LOGISTIC_LOSS"
+  val GENERALIZED_I        = "GENERALIZED_I_DIVERGENCE"
+  val ITAKURA_SAITO        = "ITAKURA_SAITO"
 
   def apply(distanceFunction: String): BregmanPointOps = {
     distanceFunction match {
-      case EUCLIDEAN => SquaredEuclideanPointOps
-      case RELATIVE_ENTROPY => DenseKLPointOps
-      case DISCRETE_KL => DiscreteKLPointOps
-      case SIMPLEX_SMOOTHED_KL => DiscreteSimplexSmoothedKLPointOps
+      case EUCLIDEAN            => SquaredEuclideanPointOps
+      case RELATIVE_ENTROPY     => DenseKLPointOps
+      case DISCRETE_KL          => DiscreteKLPointOps
+      case SIMPLEX_SMOOTHED_KL  => DiscreteSimplexSmoothedKLPointOps
       case DISCRETE_SMOOTHED_KL => DiscreteSmoothedKLPointOps
-      case LOGISTIC_LOSS => LogisticLossPointOps
-      case GENERALIZED_I => GeneralizedIPointOps
-      case ITAKURA_SAITO => ItakuraSaitoPointOps
+      case LOGISTIC_LOSS        => LogisticLossPointOps
+      case GENERALIZED_I        => GeneralizedIPointOps
+      case ITAKURA_SAITO        => ItakuraSaitoPointOps
       case _ => throw new RuntimeException(s"unknown distance function $distanceFunction")
     }
   }
@@ -411,7 +420,7 @@ object BregmanPointOps {
 
   def apply(d: BregmanDivergence, factor: Double): BregmanPointOps =
     new BregmanPointOps with SmoothedPointCenterFactory {
-      val divergence = d
+      val divergence      = d
       val smoothingFactor = factor
     }
 }

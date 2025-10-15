@@ -23,7 +23,7 @@ import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDisto
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
@@ -40,10 +40,9 @@ trait KMeansPredictor {
 
   // operations on Vectors
 
-  /**
-   * Return the K-means cost (sum of squared distances of points to their nearest center) for this
-   * model on the given data.
-   */
+  /** Return the K-means cost (sum of squared distances of points to their nearest center) for this
+    * model on the given data.
+    */
   def computeCost(data: RDD[Vector]): Double =
     computeCostWeighted(data.map(WeightedVector.apply))
 
@@ -66,9 +65,11 @@ trait KMeansPredictor {
 
   private def validateDimension(point: WeightedVector): Unit = {
     val expectedDim = centers.head.gradient.size
-    val actualDim = point.inhomogeneous.size
-    require(actualDim == expectedDim,
-      s"Point dimension $actualDim does not match model dimension $expectedDim")
+    val actualDim   = point.inhomogeneous.size
+    require(
+      actualDim == expectedDim,
+      s"Point dimension $actualDim does not match model dimension $expectedDim"
+    )
   }
 
   def predictWeighted(point: WeightedVector): Int = {
@@ -111,14 +112,17 @@ trait KMeansPredictor {
 
 }
 
-/**
- * An immutable K-Means model
- *
- * @param pointOps  distance function
- * @param centers cluster centers
- */
+/** An immutable K-Means model
+  *
+  * @param pointOps
+  *   distance function
+  * @param centers
+  *   cluster centers
+  */
 case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCenter])
-    extends KMeansPredictor with Serializable with Logging {
+    extends KMeansPredictor
+    with Serializable
+    with Logging {
 
   // Filter out invalid centers (zero/near-zero weight or non-finite coordinates)
   override lazy val validCenters: IndexedSeq[BregmanCenter] = {
@@ -128,89 +132,116 @@ case class KMeansModel(pointOps: BregmanPointOps, centers: IndexedSeq[BregmanCen
     }
 
     if (valid.length < centers.length) {
-      logger.warn(s"Filtered out ${centers.length - valid.length} invalid centers " +
-                  s"(zero weight or non-finite coordinates). Using ${valid.length} valid centers.")
+      logger.warn(
+        s"Filtered out ${centers.length - valid.length} invalid centers " +
+          s"(zero weight or non-finite coordinates). Using ${valid.length} valid centers."
+      )
     }
 
     valid
   }
 
   // Validate that we have at least one valid center
-  require(validCenters.nonEmpty,
-    s"KMeansModel requires at least one valid center, got ${centers.length} total, ${validCenters.length} valid")
+  require(
+    validCenters.nonEmpty,
+    s"KMeansModel requires at least one valid center, got ${centers.length} total, ${validCenters.length} valid"
+  )
 
   lazy val k: Int = validCenters.length
 
-  /**
-   * Returns the cluster centers.  N.B. These are in the embedded space where the clustering
-   * takes place, which may be different from the space of the input vectors!
-   */
+  /** Returns the cluster centers. N.B. These are in the embedded space where the clustering takes
+    * place, which may be different from the space of the input vectors!
+    */
   lazy val weightedClusterCenters: IndexedSeq[WeightedVector] = centers.map(pointOps.toPoint)
 }
 
 object KMeansModel extends Logging {
 
-  /**
-   * Create a K-means model from given cluster centers and weights
-   *
-   * @param ops distance function
-   * @param centers initial cluster centers in homogeneous coordinates
-   * @param weights initial cluster weights
-   * @return  k-means model
-   */
+  /** Create a K-means model from given cluster centers and weights
+    *
+    * @param ops
+    *   distance function
+    * @param centers
+    *   initial cluster centers in homogeneous coordinates
+    * @param weights
+    *   initial cluster weights
+    * @return
+    *   k-means model
+    */
   def fromVectorsAndWeights(
     ops: BregmanPointOps,
     centers: IndexedSeq[Vector],
-    weights: IndexedSeq[Double]): KMeansModel = {
-    val bregmanCenters = centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w)) }
+    weights: IndexedSeq[Double]
+  ): KMeansModel = {
+    val bregmanCenters =
+      centers.zip(weights).map { case (c, w) => ops.toCenter(WeightedVector(c, w)) }
     new KMeansModel(ops, bregmanCenters)
   }
 
-  /**
-   * Create a K-means model from given weighted vectors
-   *
-   * @param ops distance function
-   * @param centers initial cluster centers as weighted vectors
-   * @return  k-means model
-   */
-  def fromWeightedVectors[T <: WeightedVector](ops: BregmanPointOps, centers: IndexedSeq[T]): KMeansModel = {
+  /** Create a K-means model from given weighted vectors
+    *
+    * @param ops
+    *   distance function
+    * @param centers
+    *   initial cluster centers as weighted vectors
+    * @return
+    *   k-means model
+    */
+  def fromWeightedVectors[T <: WeightedVector](
+    ops: BregmanPointOps,
+    centers: IndexedSeq[T]
+  ): KMeansModel = {
     new KMeansModel(ops, centers.map(ops.toCenter))
   }
 
-  /**
-   * Create a K-means model by selecting a set of k points at random
-   *
-   * @param ops distance function
-   * @param k number of centers desired
-   * @param dim dimension of space
-   * @param weight initial weight of points
-   * @param seed random number seed
-   * @return  k-means model
-   */
-  def usingRandomGenerator(ops: BregmanPointOps,
+  /** Create a K-means model by selecting a set of k points at random
+    *
+    * @param ops
+    *   distance function
+    * @param k
+    *   number of centers desired
+    * @param dim
+    *   dimension of space
+    * @param weight
+    *   initial weight of points
+    * @param seed
+    *   random number seed
+    * @return
+    *   k-means model
+    */
+  def usingRandomGenerator(
+    ops: BregmanPointOps,
     k: Int,
     dim: Int,
     weight: Double,
-    seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
+    seed: Long = XORShiftRandom.random.nextLong()
+  ): KMeansModel = {
 
-    val random = new XORShiftRandom(seed)
-    val centers = IndexedSeq.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))
+    val random         = new XORShiftRandom(seed)
+    val centers        = IndexedSeq.fill(k)(Vectors.dense(Array.fill(dim)(random.nextGaussian())))
     val bregmanCenters = centers.map(c => ops.toCenter(WeightedVector(c, weight)))
     new KMeansModel(ops, bregmanCenters)
   }
 
-  /**
-   * Create a K-Means model using the KMeans++ algorithm on an initial set of candidate centers
-   *
-   * @param ops distance function
-   * @param data initial candidate centers
-   * @param weights initial weights
-   * @param k number of clusters desired
-   * @param perRound number of candidates to add per round
-   * @param numPreselected initial sub-sequence of candidates to always select
-   * @param seed random number seed
-   * @return  k-means model
-   */
+  /** Create a K-Means model using the KMeans++ algorithm on an initial set of candidate centers
+    *
+    * @param ops
+    *   distance function
+    * @param data
+    *   initial candidate centers
+    * @param weights
+    *   initial weights
+    * @param k
+    *   number of clusters desired
+    * @param perRound
+    *   number of candidates to add per round
+    * @param numPreselected
+    *   initial sub-sequence of candidates to always select
+    * @param seed
+    *   random number seed
+    * @return
+    *   k-means model
+    */
   def fromCenters[T <: WeightedVector](
     ops: BregmanPointOps,
     data: IndexedSeq[T],
@@ -218,53 +249,67 @@ object KMeansModel extends Logging {
     k: Int,
     perRound: Int,
     numPreselected: Int,
-    seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
+    seed: Long = XORShiftRandom.random.nextLong()
+  ): KMeansModel = {
 
     val candidates = data.map(ops.toCenter)
-    val bregmanCenters = new KMeansPlusPlus(ops).goodCenters(seed, candidates, weights,
-      k, perRound, numPreselected)
+    val bregmanCenters =
+      new KMeansPlusPlus(ops).goodCenters(seed, candidates, weights, k, perRound, numPreselected)
     new KMeansModel(ops, bregmanCenters)
   }
 
-  /**
-   * Create a K-Means Model from a streaming k-means model.
-   *
-   * @param streamingKMeansModel mutable streaming model
-   * @return immutable k-means model
-   */
+  /** Create a K-Means Model from a streaming k-means model.
+    *
+    * @param streamingKMeansModel
+    *   mutable streaming model
+    * @return
+    *   immutable k-means model
+    */
   def fromStreamingModel(streamingKMeansModel: StreamingKMeansModel): KMeansModel = {
     new KMeansModel(streamingKMeansModel.pointOps, streamingKMeansModel.centers)
   }
 
-  /**
-   * Create a K-Means Model from a set of assignments of points to clusters.
-   *
-   * @param ops distance function
-   * @param points RDD of weighted vectors representing the data points
-   * @param assignments RDD of cluster indices (0-based) corresponding to each point
-   * @param expectedNumClusters Optional expected number of clusters. If provided and greater than 0,
-   *                           the method will ensure exactly this many clusters are returned.
-   * @return A KMeansModel with the computed cluster centers
-   * @throws IllegalArgumentException if inputs are invalid or misaligned
-   * @throws org.apache.spark.SparkException if RDD operations fail
-   * @throws IllegalStateException if no valid clusters are found or expected number of clusters cannot be satisfied
-   */
+  /** Create a K-Means Model from a set of assignments of points to clusters.
+    *
+    * @param ops
+    *   distance function
+    * @param points
+    *   RDD of weighted vectors representing the data points
+    * @param assignments
+    *   RDD of cluster indices (0-based) corresponding to each point
+    * @param expectedNumClusters
+    *   Optional expected number of clusters. If provided and greater than 0, the method will ensure
+    *   exactly this many clusters are returned.
+    * @return
+    *   A KMeansModel with the computed cluster centers
+    * @throws IllegalArgumentException
+    *   if inputs are invalid or misaligned
+    * @throws org.apache.spark.SparkException
+    *   if RDD operations fail
+    * @throws IllegalStateException
+    *   if no valid clusters are found or expected number of clusters cannot be satisfied
+    */
   def fromAssignments[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     points: RDD[T],
     assignments: RDD[Int],
-    expectedNumClusters: Int = -1): KMeansModel = {
+    expectedNumClusters: Int = -1
+  ): KMeansModel = {
 
     // Input validation
     require(points != null, "Points RDD must not be null")
     require(assignments != null, "Assignments RDD must not be null")
-    require(expectedNumClusters == -1 || expectedNumClusters > 0,
-      "Expected number of clusters must be either -1 (unspecified) or positive")
-    require(!points.partitioner.exists(_.numPartitions != assignments.partitions.length),
-      "Points and assignments must have the same number of partitions")
+    require(
+      expectedNumClusters == -1 || expectedNumClusters > 0,
+      "Expected number of clusters must be either -1 (unspecified) or positive"
+    )
+    require(
+      !points.partitioner.exists(_.numPartitions != assignments.partitions.length),
+      "Points and assignments must have the same number of partitions"
+    )
 
     // Cache RDDs to avoid recomputation
-    val cachedPoints = points.cache()
+    val cachedPoints      = points.cache()
     val cachedAssignments = assignments.cache()
 
     try {
@@ -277,34 +322,39 @@ object KMeansModel extends Logging {
       }
 
       // Verify RDDs have the same number of elements
-      val pointsCount = cachedPoints.count()
+      val pointsCount      = cachedPoints.count()
       val assignmentsCount = cachedAssignments.count()
       if (pointsCount != assignmentsCount) {
         throw new IllegalArgumentException(
-          s"Points (size=$pointsCount) and assignments (size=$assignmentsCount) must have the same number of elements")
+          s"Points (size=$pointsCount) and assignments (size=$assignmentsCount) must have the same number of elements"
+        )
       }
 
       // Process assignments and compute centroids
       val (centroids, clusterSizes, hasInvalidAssignments) = {
         // Zip with index to preserve ordering and detect misaligned data
-        val zipped = cachedAssignments.zipWithIndex().map(_.swap)
+        val zipped = cachedAssignments
+          .zipWithIndex()
+          .map(_.swap)
           .join(cachedPoints.zipWithIndex().map(_.swap))
           .map { case (_, (clusterIdx, point)) => (clusterIdx, point) }
 
         // Check for invalid cluster indices
-        val allIndices = cachedAssignments.collect()
-        val hasNegative = allIndices.exists(_ < 0)
-        val maxIndex = if (allIndices.nonEmpty) allIndices.max else -1
+        val allIndices     = cachedAssignments.collect()
+        val hasNegative    = allIndices.exists(_ < 0)
+        val maxIndex       = if (allIndices.nonEmpty) allIndices.max else -1
         val hasOutOfBounds = expectedNumClusters > 0 && maxIndex >= expectedNumClusters
 
         // Throw exception if there are invalid assignments
         if (hasNegative) {
           throw new IllegalArgumentException(
-            s"Invalid cluster assignment: found negative cluster index in assignments")
+            s"Invalid cluster assignment: found negative cluster index in assignments"
+          )
         }
         if (hasOutOfBounds) {
           throw new IllegalArgumentException(
-            s"Invalid cluster assignment: found cluster index $maxIndex but expected at most ${expectedNumClusters - 1}")
+            s"Invalid cluster assignment: found cluster index $maxIndex but expected at most ${expectedNumClusters - 1}"
+          )
         }
 
         // Filter out invalid cluster indices, count points per cluster, and compute centroids
@@ -330,37 +380,42 @@ object KMeansModel extends Logging {
 
       // Process centroids and handle empty clusters
       val (bregmanCenters, emptyClusters) = {
-        val centersWithIndices = centroids.map { case (clusterIdx, vector) =>
-          val size = clusterSizes.getOrElse(clusterIdx, 0L)
-          if (size == 0) {
-            (clusterIdx, None)
-          } else {
-            (clusterIdx, Some(ops.toCenter(vector.asImmutable)))
+        val centersWithIndices = centroids
+          .map { case (clusterIdx, vector) =>
+            val size = clusterSizes.getOrElse(clusterIdx, 0L)
+            if (size == 0) {
+              (clusterIdx, None)
+            } else {
+              (clusterIdx, Some(ops.toCenter(vector.asImmutable)))
+            }
           }
-        }.collect().toMap
-        
+          .collect()
+          .toMap
+
         val validCenters = centersWithIndices.collect { case (_, Some(center)) => center }
         val emptyIndices = centersWithIndices.collect { case (idx, None) => idx }.toSet
-        
+
         (validCenters, emptyIndices)
       }
-      
+
       // Handle empty clusters if expected number of clusters is specified
       val finalCenters = if (expectedNumClusters > 0) {
         val actualNumClusters = bregmanCenters.size
-        
+
         if (actualNumClusters == 0) {
           throw new IllegalStateException(
             s"No valid clusters found. All points might be filtered out. " +
-            s"Expected $expectedNumClusters clusters but found 0.")
+              s"Expected $expectedNumClusters clusters but found 0."
+          )
         }
-        
+
         if (actualNumClusters > expectedNumClusters) {
           throw new IllegalStateException(
             s"Found $actualNumClusters clusters but expected at most $expectedNumClusters. " +
-            "This indicates invalid cluster indices in the assignments.")
+              "This indicates invalid cluster indices in the assignments."
+          )
         }
-        
+
         if (actualNumClusters < expectedNumClusters) {
           // Add empty clusters to match the expected number
           val existingIndices = centroids.keys.collect().toSet
@@ -379,7 +434,7 @@ object KMeansModel extends Logging {
                 ops.toCenter(WeightedVector(Vectors.dense(Array.fill(10)(0.0)), 0.0))
               }
             }
-          
+
           (bregmanCenters ++ newClusters).toIndexedSeq
         } else {
           bregmanCenters.toIndexedSeq
@@ -388,18 +443,19 @@ object KMeansModel extends Logging {
         // If no expected number of clusters is specified, just use what we have
         if (bregmanCenters.isEmpty) {
           throw new IllegalStateException(
-            "No valid clusters found. All points might be filtered out.")
+            "No valid clusters found. All points might be filtered out."
+          )
         }
         bregmanCenters.toIndexedSeq
       }
-      
+
       // Log warnings about empty clusters if any
       if (emptyClusters.nonEmpty) {
         val emptyIndicesStr = emptyClusters.toSeq.sorted.mkString(", ")
-        val warningMsg = 
+        val warningMsg =
           s"Found ${emptyClusters.size} empty cluster(s) with indices: $emptyIndicesStr. " +
-          "These clusters will be initialized with zero-weighted centers."
-        
+            "These clusters will be initialized with zero-weighted centers."
+
         // Log the warning using SLF4J logger
         logger.warn(warningMsg)
       }
@@ -412,50 +468,64 @@ object KMeansModel extends Logging {
     }
   }
 
-  /**
-   * Create a K-Means Model using K-Means || algorithm from an RDD of WeightedVectors
-   *
-   * @param ops distance function
-   * @param data initial points
-   * @param k  number of cluster centers desired
-   * @param numSteps number of iterations of k-Means ||
-   * @param sampleRate fractions of points to use in weighting clusters
-   * @param seed random number seed
-   * @return  k-means model
-   */
+  /** Create a K-Means Model using K-Means || algorithm from an RDD of WeightedVectors
+    *
+    * @param ops
+    *   distance function
+    * @param data
+    *   initial points
+    * @param k
+    *   number of cluster centers desired
+    * @param numSteps
+    *   number of iterations of k-Means ||
+    * @param sampleRate
+    *   fractions of points to use in weighting clusters
+    * @param seed
+    *   random number seed
+    * @return
+    *   k-means model
+    */
   def usingKMeansParallel[T <: WeightedVector](
     ops: BregmanPointOps,
     data: RDD[T],
     k: Int,
     numSteps: Int = 2,
     sampleRate: Double = 1.0,
-    seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
+    seed: Long = XORShiftRandom.random.nextLong()
+  ): KMeansModel = {
 
     val points = data.map(ops.toPoint)
-    val initializedCenters = new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed)
+    val initializedCenters =
+      new KMeansParallel(numSteps, sampleRate).init(ops, points, k, None, 1, seed)
     require(initializedCenters.nonEmpty, "KMeansParallel.init returned empty centers")
     val centers = initializedCenters.head
     new KMeansModel(ops, centers)
   }
 
-  /**
-   * Construct a K-Means model of a set of points using Lloyd's algorithm given a set of initial
-   * K-Means models.
-   *
-   * @param ops distance function
-   * @param data points to fit
-   * @param initialModels  initial k-means models
-   * @param clusterer k-means clusterer to use
-   * @param seed random number seed
-   * @return  the best K-means model found
-   */
+  /** Construct a K-Means model of a set of points using Lloyd's algorithm given a set of initial
+    * K-Means models.
+    *
+    * @param ops
+    *   distance function
+    * @param data
+    *   points to fit
+    * @param initialModels
+    *   initial k-means models
+    * @param clusterer
+    *   k-means clusterer to use
+    * @param seed
+    *   random number seed
+    * @return
+    *   the best K-means model found
+    */
   def usingClusterer[T <: WeightedVector: ClassTag](
     ops: BregmanPointOps,
     data: RDD[T],
     initialModels: Seq[KMeansModel],
     maxIterations: Int,
     clusterer: MultiKMeansClusterer = new ColumnTrackingKMeans(),
-    seed: Long = XORShiftRandom.random.nextLong()): KMeansModel = {
+    seed: Long = XORShiftRandom.random.nextLong()
+  ): KMeansModel = {
 
     val initialCenters = initialModels.map { model =>
       if (model.pointOps == ops)
@@ -464,7 +534,8 @@ object KMeansModel extends Logging {
         fromAssignments(ops, data, data.map(model.predictWeighted)).centers
     }
     val points = data.map(ops.toPoint)
-    val ClusteringWithDistortion(_, centers) = clusterer.best(maxIterations, ops, points, initialCenters)
+    val ClusteringWithDistortion(_, centers) =
+      clusterer.best(maxIterations, ops, points, initialCenters)
     new KMeansModel(ops, centers)
   }
 }

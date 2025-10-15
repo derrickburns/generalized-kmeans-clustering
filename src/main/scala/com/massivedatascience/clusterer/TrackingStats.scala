@@ -23,16 +23,15 @@ class TrackingStats(sc: SparkContext) extends BasicStats with Serializable {
   val currentRound = sc.longAccumulator("Round")
   currentRound.add(-1)
   val newlyAssignedPoints = sc.longAccumulator("Newly Assigned Points")
-  val reassignedPoints = sc.longAccumulator("Reassigned Points")
-  val unassignedPoints = sc.longAccumulator("Unassigned Points")
-  val improvement = sc.doubleAccumulator("Improvement")
-  val relocatedCenters = sc.longAccumulator("Relocated Centers")
-  val movement = sc.doubleAccumulator("Center Movement")
-  val nonemptyClusters = sc.longAccumulator("Non-Empty Clusters")
-  val emptyClusters = sc.longAccumulator("Empty Clusters")
-  val largestCluster = sc.longAccumulator("Largest Cluster")
+  val reassignedPoints    = sc.longAccumulator("Reassigned Points")
+  val unassignedPoints    = sc.longAccumulator("Unassigned Points")
+  val improvement         = sc.doubleAccumulator("Improvement")
+  val relocatedCenters    = sc.longAccumulator("Relocated Centers")
+  val movement            = sc.doubleAccumulator("Center Movement")
+  val nonemptyClusters    = sc.longAccumulator("Non-Empty Clusters")
+  val emptyClusters       = sc.longAccumulator("Empty Clusters")
+  val largestCluster      = sc.longAccumulator("Largest Cluster")
   val replenishedClusters = sc.longAccumulator("Replenished Centers")
-
 
   def centerMovement: Double = movement.value
 

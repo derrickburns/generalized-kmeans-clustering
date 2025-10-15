@@ -20,8 +20,8 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.StreamingKMeans.SimpleWeightedVector
-import com.massivedatascience.linalg.{ BLAS, WeightedVector }
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import com.massivedatascience.linalg.{BLAS, WeightedVector}
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
@@ -30,39 +30,29 @@ import scala.reflect.ClassTag
 
 import org.slf4j.LoggerFactory
 
-/**
- * :: DeveloperApi ::
- * StreamingKMeansModel extends MLlib's KMeansModel for streaming
- * algorithms, so it can keep track of a continuously updated weight
- * associated with each cluster, and also update the model by
- * doing a single iteration of the standard k-means algorithm.
- *
- * The update algorithm uses the "mini-batch" KMeans rule,
- * generalized to incorporate forgetfulness (i.e. decay).
- * The update rule (for each cluster) is:
- *
- * c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t]
- * n_t+t = n_t * a + m_t
- *
- * Where c_t is the previously estimated centroid for that cluster,
- * n_t is the number of points assigned to it thus far, x_t is the centroid
- * estimated on the current batch, and m_t is the number of points assigned
- * to that centroid in the current batch.
- *
- * The decay factor 'a' scales the contribution of the clusters as estimated thus far,
- * by applying a as a discount weighting on the current point when evaluating
- * new incoming data. If a=1, all batches are weighted equally. If a=0, new centroids
- * are determined entirely by recent data. Lower values correspond to
- * more forgetting.
- *
- * Decay can optionally be specified by a half life and associated
- * time unit. The time unit can either be a batch of data or a single
- * data point. Considering data arrived at time t, the half life h is defined
- * such that at time t + h the discount applied to the data from t is 0.5.
- * The definition remains the same whether the time unit is given
- * as batches or points.
- *
- */
+/** :: DeveloperApi :: StreamingKMeansModel extends MLlib's KMeansModel for streaming algorithms, so
+  * it can keep track of a continuously updated weight associated with each cluster, and also update
+  * the model by doing a single iteration of the standard k-means algorithm.
+  *
+  * The update algorithm uses the "mini-batch" KMeans rule, generalized to incorporate forgetfulness
+  * (i.e. decay). The update rule (for each cluster) is:
+  *
+  * c_t+1 = [(c_t * n_t * a) + (x_t * m_t)] / [n_t + m_t] n_t+t = n_t * a + m_t
+  *
+  * Where c_t is the previously estimated centroid for that cluster, n_t is the number of points
+  * assigned to it thus far, x_t is the centroid estimated on the current batch, and m_t is the
+  * number of points assigned to that centroid in the current batch.
+  *
+  * The decay factor 'a' scales the contribution of the clusters as estimated thus far, by applying
+  * a as a discount weighting on the current point when evaluating new incoming data. If a=1, all
+  * batches are weighted equally. If a=0, new centroids are determined entirely by recent data.
+  * Lower values correspond to more forgetting.
+  *
+  * Decay can optionally be specified by a half life and associated time unit. The time unit can
+  * either be a batch of data or a single data point. Considering data arrived at time t, the half
+  * life h is defined such that at time t + h the discount applied to the data from t is 0.5. The
+  * definition remains the same whether the time unit is given as batches or points.
+  */
 
 /* TODO - perform updates on centers in homogeneous coordinates
  * TODO - lazily discount clusters
@@ -70,10 +60,10 @@ import org.slf4j.LoggerFactory
  */
 
 class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
-  val pointOps = model.pointOps
-  val centerArrays = model.centers.toArray
+  val pointOps       = model.pointOps
+  val centerArrays   = model.centers.toArray
   val clusterWeights = centerArrays.map(_.weight)
-  val logger = LoggerFactory.getLogger(getClass.getName)
+  val logger         = LoggerFactory.getLogger(getClass.getName)
 
   def centers: IndexedSeq[BregmanCenter] = centerArrays.toIndexedSeq
 
@@ -84,10 +74,11 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
     val closest = data.map(point => (model.predict(point), SimpleWeightedVector(point, 1L)))
 
     // get sums and counts for updating each cluster
-    val mergeContribs: (SimpleWeightedVector, SimpleWeightedVector) => SimpleWeightedVector = (p1, p2) => {
-      BLAS.axpy(1.0, p2.vector, p1.vector)
-      SimpleWeightedVector(p1.vector, p1.weight + p2.weight)
-    }
+    val mergeContribs: (SimpleWeightedVector, SimpleWeightedVector) => SimpleWeightedVector =
+      (p1, p2) => {
+        BLAS.axpy(1.0, p2.vector, p1.vector)
+        SimpleWeightedVector(p1.vector, p1.weight + p2.weight)
+      }
     val dim = centerArrays(0).size
     val pointStats: Array[(Int, SimpleWeightedVector)] = closest
       .aggregateByKey(SimpleWeightedVector(Vectors.zeros(dim), 0L))(mergeContribs, mergeContribs)
@@ -96,9 +87,8 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
     val discount = timeUnit match {
       case StreamingKMeans.BATCHES => decayFactor
       case StreamingKMeans.POINTS =>
-        val numNewPoints = pointStats.view.map {
-          case (_, SimpleWeightedVector(_, n)) =>
-            n
+        val numNewPoints = pointStats.view.map { case (_, SimpleWeightedVector(_, n)) =>
+          n
         }.sum
         math.pow(decayFactor, numNewPoints)
     }
@@ -107,29 +97,29 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
     BLAS.scal(discount, Vectors.dense(clusterWeights))
 
     // implement update rule
-    pointStats.foreach {
-      case (label, SimpleWeightedVector(sum, count)) =>
-        val centroid = centerArrays(label).inhomogeneous
-        val updatedWeight = clusterWeights(label) + count
-        val lambda = count / math.max(updatedWeight, 1e-16)
-        clusterWeights(label) = updatedWeight
+    pointStats.foreach { case (label, SimpleWeightedVector(sum, count)) =>
+      val centroid      = centerArrays(label).inhomogeneous
+      val updatedWeight = clusterWeights(label) + count
+      val lambda        = count / math.max(updatedWeight, 1e-16)
+      clusterWeights(label) = updatedWeight
 
-        BLAS.scal(1.0 - lambda, centroid)
-        BLAS.axpy(lambda / count, sum, centroid)
-        centerArrays(label) = pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
+      BLAS.scal(1.0 - lambda, centroid)
+      BLAS.axpy(lambda / count, sum, centroid)
+      centerArrays(label) =
+        pointOps.toCenter(WeightedVector.fromInhomogeneousWeighted(centroid, 1.0))
 
-        // display the updated cluster centers
-        val display = centerArrays(label).size match {
-          case x: Int if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
-          case _ => centroid.toArray.mkString("[", ",", "]")
-        }
+      // display the updated cluster centers
+      val display = centerArrays(label).size match {
+        case x: Int if x > 100 => centroid.toArray.take(100).mkString("[", ",", "...")
+        case _                 => centroid.toArray.mkString("[", ",", "]")
+      }
 
-        logger.info(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
+      logger.info(s"Cluster $label updated with weight $updatedWeight and centroid: $display")
     }
 
     // Check whether the smallest cluster is dying. If so, split the largest cluster.
-    val weightsWithIndex = clusterWeights.view.zipWithIndex
-    val (maxWeight, largest) = weightsWithIndex.maxBy { case (weight, _) => weight }
+    val weightsWithIndex      = clusterWeights.view.zipWithIndex
+    val (maxWeight, largest)  = weightsWithIndex.maxBy { case (weight, _) => weight }
     val (minWeight, smallest) = weightsWithIndex.minBy { case (weight, _) => weight }
     if (minWeight < 1e-8 * maxWeight) {
       logger.info(s"Cluster $smallest is dying. Split the largest cluster $largest into two.")
@@ -148,19 +138,19 @@ class StreamingKMeansModel(model: KMeansModel) extends KMeansPredictor {
 }
 
 class StreamingKMeans(
-    k: Int = 2,
-    decayFactor: Double = 1.0,
-    timeUnit: String = StreamingKMeans.BATCHES,
-    var model: StreamingKMeansModel) {
+  k: Int = 2,
+  decayFactor: Double = 1.0,
+  timeUnit: String = StreamingKMeans.BATCHES,
+  var model: StreamingKMeansModel
+) {
 
-  /**
-   * Update the clustering model by training on batches of data from a DStream.
-   * This operation registers a DStream for training the model,
-   * checks whether the cluster centers have been initialized,
-   * and updates the model using each batch of data from the stream.
-   *
-   * @param data DStream containing vector data
-   */
+  /** Update the clustering model by training on batches of data from a DStream. This operation
+    * registers a DStream for training the model, checks whether the cluster centers have been
+    * initialized, and updates the model using each batch of data from the stream.
+    *
+    * @param data
+    *   DStream containing vector data
+    */
   def trainOn(data: DStream[Vector]): Unit = {
     assertInitialized()
     data.foreachRDD { (rdd, time) =>
@@ -168,24 +158,27 @@ class StreamingKMeans(
     }
   }
 
-  /**
-   * Use the clustering model to make predictions on batches of data from a DStream.
-   *
-   * @param data DStream containing vector data
-   * @return DStream containing predictions
-   */
+  /** Use the clustering model to make predictions on batches of data from a DStream.
+    *
+    * @param data
+    *   DStream containing vector data
+    * @return
+    *   DStream containing predictions
+    */
   def predictOn(data: DStream[Vector]): DStream[Int] = {
     assertInitialized()
     data.map(model.predict)
   }
 
-  /**
-   * Use the model to make predictions on the values of a DStream and carry over its keys.
-   *
-   * @param data DStream containing (key, feature vector) pairs
-   * @tparam K key type
-   * @return DStream containing the input keys and the predictions as values
-   */
+  /** Use the model to make predictions on the values of a DStream and carry over its keys.
+    *
+    * @param data
+    *   DStream containing (key, feature vector) pairs
+    * @tparam K
+    *   key type
+    * @return
+    *   DStream containing the input keys and the predictions as values
+    */
   def predictOnValues[K: ClassTag](data: DStream[(K, Vector)]): DStream[(K, Int)] = {
     assertInitialized()
     data.mapValues(model.predict)
@@ -195,14 +188,15 @@ class StreamingKMeans(
   private[this] def assertInitialized(): Unit = {
     if (model.centers == null) {
       throw new IllegalStateException(
-        "Initial cluster centers must be set before starting predictions")
+        "Initial cluster centers must be set before starting predictions"
+      )
     }
   }
 }
 
 object StreamingKMeans {
   final val BATCHES = "batches"
-  final val POINTS = "points"
+  final val POINTS  = "points"
 
   case class SimpleWeightedVector(vector: Vector, weight: Long)
 }

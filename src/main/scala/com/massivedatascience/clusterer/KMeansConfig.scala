@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 trait KMeansConfig extends Serializable {
-  //for stochastic sampling, the percentage of points to update on each round
+  // for stochastic sampling, the percentage of points to update on each round
   val updateRate: Double
 
   // maxRoundsToBackfill maximum number of rounds to try to fill empty clusters
@@ -35,7 +35,7 @@ case class SimpleKMeansConfig(
   updateRate: Double = 1.0,
   maxRoundsToBackfill: Int = 0,
   fractionOfPointsToWeigh: Double = 0.10,
-  addOnly: Boolean = true) extends KMeansConfig
+  addOnly: Boolean = true
+) extends KMeansConfig
 
 object DefaultKMeansConfig extends SimpleKMeansConfig()
-
