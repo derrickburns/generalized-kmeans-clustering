@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.ml.{KMedoids, KMedoidsModel}
+import com.massivedatascience.clusterer.ml.{CLARA, KMedoids, KMedoidsModel}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
@@ -479,5 +479,298 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Cost should be reasonable (not huge)
     assert(cost < 5.0)
+  }
+
+  // ===== CLARA Tests =====
+
+  test("CLARA should cluster well-separated data") {
+    val data = Seq(
+      // Cluster 1: around (0, 0)
+      Vectors.dense(0.0, 0.0),
+      Vectors.dense(0.1, 0.1),
+      Vectors.dense(-0.1, 0.1),
+      Vectors.dense(0.1, -0.1),
+      Vectors.dense(0.0, 0.2),
+      // Cluster 2: around (5, 5)
+      Vectors.dense(5.0, 5.0),
+      Vectors.dense(5.1, 5.1),
+      Vectors.dense(4.9, 5.1),
+      Vectors.dense(5.1, 4.9),
+      Vectors.dense(5.0, 4.8)
+    )
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(2)
+      .setNumSamples(3)
+      .setSampleSize(6)
+      .setMaxIter(10)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    // Should find 2 clusters
+    assert(model.numClusters === 2)
+
+    // Medoids should be actual data points
+    assert(data.exists(p => p.toArray.sameElements(model.medoids(0).toArray)))
+    assert(data.exists(p => p.toArray.sameElements(model.medoids(1).toArray)))
+
+    val predictions = model.transform(df)
+    assert(predictions.select("prediction").distinct().count() === 2)
+  }
+
+  test("CLARA should handle larger datasets than PAM") {
+    // Generate 100 points in 3 clusters
+    val data = (0 until 30).map(i => Vectors.dense(0.0 + i * 0.1, 0.0 + i * 0.1)) ++
+      (0 until 30).map(i => Vectors.dense(10.0 + i * 0.1, 10.0 + i * 0.1)) ++
+      (0 until 40).map(i => Vectors.dense(20.0 + i * 0.1, 20.0 + i * 0.1))
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(5)
+      .setSampleSize(30)  // Sample size << dataset size
+      .setMaxIter(10)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    assert(model.numClusters === 3)
+
+    // Should find 3 distinct clusters
+    val predictions = model.transform(df)
+    assert(predictions.select("prediction").distinct().count() === 3)
+
+    // Cost should be reasonable
+    val cost = model.computeCost(df)
+    assert(cost > 0.0)
+  }
+
+  test("CLARA with auto sample size (40 + 2*k)") {
+    val data = (0 until 50).map(i => Vectors.dense(i.toDouble / 10.0, i.toDouble / 10.0))
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(3)
+      // Don't set sampleSize, should auto-compute to 40 + 2*3 = 46
+      .setMaxIter(10)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    assert(model.numClusters === 3)
+
+    val predictions = model.transform(df)
+    assert(predictions.count() === 50)
+  }
+
+  test("CLARA should work with different distance functions") {
+    val data = Seq(
+      Vectors.dense(1.0, 1.0),
+      Vectors.dense(1.1, 0.9),
+      Vectors.dense(9.0, 9.0),
+      Vectors.dense(9.1, 8.9),
+      Vectors.dense(5.0, 5.0),
+      Vectors.dense(5.1, 4.9)
+    )
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(3)
+      .setSampleSize(4)
+      .setDistanceFunction("manhattan")
+      .setMaxIter(10)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    assert(model.numClusters === 3)
+    assert(model.distanceFunctionName === "manhattan")
+  }
+
+  test("CLARA should be deterministic with same seed") {
+    val data = (0 until 20).map(i => Vectors.dense(i.toDouble, i.toDouble * 2))
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val model1 = new CLARA()
+      .setK(3)
+      .setNumSamples(3)
+      .setSampleSize(10)
+      .setMaxIter(5)
+      .setSeed(42)
+      .fit(df)
+
+    val model2 = new CLARA()
+      .setK(3)
+      .setNumSamples(3)
+      .setSampleSize(10)
+      .setMaxIter(5)
+      .setSeed(42)
+      .fit(df)
+
+    // Same seed should produce same medoids
+    (0 until 3).foreach { i =>
+      assert(model1.medoids(i).toArray.sameElements(model2.medoids(i).toArray))
+    }
+  }
+
+  test("CLARA should select best result across samples") {
+    val data = Seq(
+      // Cluster 1
+      Vectors.dense(0.0, 0.0),
+      Vectors.dense(0.1, 0.1),
+      Vectors.dense(0.2, 0.2),
+      // Cluster 2
+      Vectors.dense(5.0, 5.0),
+      Vectors.dense(5.1, 5.1),
+      Vectors.dense(5.2, 5.2),
+      // Cluster 3
+      Vectors.dense(10.0, 10.0),
+      Vectors.dense(10.1, 10.1),
+      Vectors.dense(10.2, 10.2)
+    )
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    // With more samples, should find better clustering
+    val claraFewSamples = new CLARA()
+      .setK(3)
+      .setNumSamples(1)
+      .setSampleSize(6)
+      .setMaxIter(5)
+      .setSeed(42)
+      .fit(df)
+
+    val claraManySamples = new CLARA()
+      .setK(3)
+      .setNumSamples(10)
+      .setSampleSize(6)
+      .setMaxIter(5)
+      .setSeed(42)
+      .fit(df)
+
+    val costFew = claraFewSamples.computeCost(df)
+    val costMany = claraManySamples.computeCost(df)
+
+    // More samples should generally find better or equal solution
+    assert(costMany <= costFew * 1.5)  // Allow some variance
+  }
+
+  test("CLARA parameter validation") {
+    // numSamples must be > 0
+    assertThrows[IllegalArgumentException] {
+      new CLARA().setNumSamples(0)
+    }
+
+    // sampleSize must be > 0
+    assertThrows[IllegalArgumentException] {
+      new CLARA().setSampleSize(0)
+    }
+
+    // Valid parameters should not throw
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(5)
+      .setSampleSize(20)
+      .setMaxIter(10)
+      .setDistanceFunction("euclidean")
+      .setSeed(123)
+
+    assert(clara.getK === 3)
+    assert(clara.getNumSamples === 5)
+    assert(clara.getSampleSize === 20)
+  }
+
+  test("CLARA should handle k equal to dataset size") {
+    val data = Seq(
+      Vectors.dense(1.0, 1.0),
+      Vectors.dense(2.0, 2.0),
+      Vectors.dense(3.0, 3.0)
+    )
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(2)
+      .setSampleSize(3)  // Same as dataset size
+      .setMaxIter(5)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    // All points should be medoids
+    assert(model.numClusters === 3)
+
+    // Cost should be 0 (each point assigned to itself)
+    val cost = model.computeCost(df)
+    assert(cost < 1e-10)
+  }
+
+  test("CLARA persistence") {
+    val data = Seq(
+      Vectors.dense(0.0, 0.0),
+      Vectors.dense(0.1, 0.1),
+      Vectors.dense(5.0, 5.0),
+      Vectors.dense(5.1, 5.1)
+    )
+
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+
+    val clara = new CLARA()
+      .setK(2)
+      .setNumSamples(2)
+      .setSampleSize(3)
+      .setMaxIter(5)
+      .setSeed(42)
+
+    val model = clara.fit(df)
+
+    val originalPredictions = model.transform(df).select("prediction").collect().map(_.getInt(0))
+
+    // Save and load model
+    val tempDir = java.nio.file.Files.createTempDirectory("clara-model-test").toString
+    try {
+      model.write.overwrite().save(tempDir)
+
+      val loadedModel = KMedoidsModel.load(tempDir)
+
+      // Verify medoids match
+      (0 until model.numClusters).foreach { i =>
+        assert(model.medoids(i).toArray.sameElements(loadedModel.medoids(i).toArray))
+      }
+
+      // Verify predictions match
+      val loadedPredictions = loadedModel.transform(df).select("prediction").collect().map(_.getInt(0))
+      assert(originalPredictions.sameElements(loadedPredictions))
+    } finally {
+      // Clean up
+      import scala.reflect.io.Directory
+      val dir = new Directory(new java.io.File(tempDir))
+      dir.deleteRecursively()
+    }
+  }
+
+  test("CLARA copy should work correctly") {
+    val clara = new CLARA()
+      .setK(3)
+      .setNumSamples(5)
+      .setSampleSize(20)
+      .setMaxIter(10)
+      .setSeed(42)
+
+    val copied = clara.copy(org.apache.spark.ml.param.ParamMap.empty)
+
+    assert(copied.getK === clara.getK)
+    assert(copied.getNumSamples === clara.getNumSamples)
+    assert(copied.getSampleSize === clara.getSampleSize)
   }
 }

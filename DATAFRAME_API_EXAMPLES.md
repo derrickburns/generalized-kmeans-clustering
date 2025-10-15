@@ -1693,6 +1693,311 @@ if (divergence > 1.0) {
 
 ---
 
+## K-Medoids (PAM) - Robust Clustering
+
+K-Medoids (Partitioning Around Medoids) is a clustering algorithm that uses actual data points as cluster centers (medoids) instead of computed centroids. This makes it more robust to outliers and works with any distance function.
+
+### Basic K-Medoids
+
+```scala
+import com.massivedatascience.clusterer.ml.KMedoids
+import org.apache.spark.ml.linalg.Vectors
+
+// Create training data
+val data = spark.createDataFrame(Seq(
+  Vectors.dense(0.0, 0.0),
+  Vectors.dense(0.1, 0.1),
+  Vectors.dense(5.0, 5.0),
+  Vectors.dense(5.1, 5.1),
+  Vectors.dense(10.0, 10.0),
+  Vectors.dense(10.1, 10.1)
+).map(Tuple1.apply)).toDF("features")
+
+// Train K-Medoids model
+val kmedoids = new KMedoids()
+  .setK(3)
+  .setMaxIter(20)
+  .setDistanceFunction("euclidean")  // Options: euclidean, manhattan, cosine
+  .setSeed(42)
+
+val model = kmedoids.fit(data)
+
+// Medoids are actual data points!
+println("Medoids:")
+model.medoids.foreach { medoid =>
+  println(s"  $medoid")
+}
+
+// Make predictions
+val predictions = model.transform(data)
+predictions.show()
+
+// Compute cost
+val cost = model.computeCost(data)
+println(s"Total cost: $cost")
+```
+
+### Distance Functions
+
+K-Medoids supports multiple distance functions:
+
+```scala
+// Euclidean distance (default) - L2 norm
+val euclidean = new KMedoids()
+  .setK(3)
+  .setDistanceFunction("euclidean")
+  .fit(data)
+
+// Manhattan distance - L1 norm (good for high-dimensional data)
+val manhattan = new KMedoids()
+  .setK(3)
+  .setDistanceFunction("manhattan")
+  .fit(data)
+
+// Cosine distance (good for text/document clustering)
+val cosine = new KMedoids()
+  .setK(3)
+  .setDistanceFunction("cosine")
+  .fit(data)
+```
+
+### K-Medoids vs K-Means
+
+K-Medoids is more robust to outliers:
+
+```scala
+// Data with outlier
+val dataWithOutlier = spark.createDataFrame(Seq(
+  // Cluster 1
+  Vectors.dense(0.0, 0.0),
+  Vectors.dense(0.1, 0.1),
+  Vectors.dense(-0.1, 0.1),
+  // Outlier - far from all clusters!
+  Vectors.dense(100.0, 100.0),
+  // Cluster 2
+  Vectors.dense(5.0, 5.0),
+  Vectors.dense(5.1, 5.1),
+  Vectors.dense(4.9, 4.9)
+).map(Tuple1.apply)).toDF("features")
+
+// K-Medoids
+val kmedoidsModel = new KMedoids()
+  .setK(3)
+  .setMaxIter(20)
+  .fit(dataWithOutlier)
+
+// K-Means (for comparison)
+val kmeansModel = new GeneralizedKMeans()
+  .setK(3)
+  .setMaxIter(20)
+  .fit(dataWithOutlier)
+
+// K-Medoids centers are actual points (not affected by outlier)
+println("K-Medoids medoids:")
+kmedoidsModel.medoids.foreach(println)
+
+// K-Means centroids can be pulled towards outlier
+println("\nK-Means centroids:")
+kmeansModel.clusterCentersAsVectors.foreach(println)
+
+// K-Medoids often has lower cost in presence of outliers
+val kmedoidsCost = kmedoidsModel.computeCost(dataWithOutlier)
+val kmeansCost = kmeansModel.computeCost(dataWithOutlier)
+println(f"\nK-Medoids cost: $kmedoidsCost%.4f")
+println(f"K-Means cost:   $kmeansCost%.4f")
+```
+
+### Model Persistence
+
+```scala
+// Save model
+val savePath = "/tmp/kmedoids-model"
+model.write.overwrite().save(savePath)
+
+// Load model
+val loadedModel = KMedoidsModel.load(savePath)
+
+// Use loaded model
+val newPredictions = loadedModel.transform(data)
+```
+
+### When to Use K-Medoids
+
+**Use K-Medoids when:**
+- You need interpretable cluster centers (actual data points)
+- Data contains outliers that would skew centroids
+- Working with non-Euclidean distance functions
+- Dataset is small to medium (<10,000 points)
+
+**Use K-Means when:**
+- You need fast clustering on large datasets
+- Data is clean with few outliers
+- Euclidean or Bregman divergence is appropriate
+- Computed centroids are acceptable
+
+**Time Complexity:**
+- K-Medoids (PAM): O(k(n-k)²) per iteration
+- K-Means: O(knd) per iteration (n=points, d=dimensions)
+
+---
+
+## CLARA - K-Medoids for Large Datasets
+
+CLARA (Clustering Large Applications) is a sampling-based version of PAM designed for large datasets. It runs PAM on multiple samples and selects the best result.
+
+### Basic CLARA
+
+```scala
+import com.massivedatascience.clusterer.ml.CLARA
+
+// Generate large dataset
+val largeData = (0 until 1000).flatMap { cluster =>
+  (0 until 100).map { i =>
+    val center = cluster * 10.0
+    val noise = scala.util.Random.nextGaussian() * 0.5
+    Vectors.dense(center + noise, center + noise)
+  }
+}
+val df = spark.createDataFrame(largeData.map(Tuple1.apply)).toDF("features")
+
+// Train CLARA
+val clara = new CLARA()
+  .setK(100)
+  .setNumSamples(10)              // Number of samples to try
+  .setSampleSize(200)             // Size of each sample
+  .setMaxIter(10)
+  .setDistanceFunction("euclidean")
+  .setSeed(42)
+
+val model = clara.fit(df)
+
+// Medoids are still actual data points
+println(s"Found ${model.numClusters} clusters")
+
+// Make predictions on full dataset
+val predictions = model.transform(df)
+val cost = model.computeCost(df)
+println(f"Total cost on full dataset: $cost%.2f")
+```
+
+### Auto Sample Size
+
+CLARA can automatically determine sample size using the formula from the original paper:
+
+```scala
+// Auto sample size: 40 + 2*k (recommended in CLARA paper)
+val claraAuto = new CLARA()
+  .setK(5)
+  .setNumSamples(10)
+  // Don't set sampleSize - will auto-compute to 40 + 2*5 = 50
+  .fit(df)
+```
+
+### Tuning CLARA Parameters
+
+```scala
+// More samples = better quality, more computation
+val highQuality = new CLARA()
+  .setK(3)
+  .setNumSamples(50)    // Try 50 different samples
+  .setSampleSize(100)
+  .fit(df)
+
+// Fewer samples = faster, potentially lower quality
+val fast = new CLARA()
+  .setK(3)
+  .setNumSamples(5)     // Try only 5 samples
+  .setSampleSize(50)
+  .fit(df)
+
+// Compare costs
+println(f"High quality cost: ${highQuality.computeCost(df)}%.2f")
+println(f"Fast cost:         ${fast.computeCost(df)}%.2f")
+```
+
+### CLARA vs PAM Performance
+
+```scala
+// Small dataset - use PAM
+val smallData = (0 until 100).map(i =>
+  Vectors.dense(i.toDouble, i.toDouble)
+).map(Tuple1.apply)
+val smallDF = spark.createDataFrame(smallData).toDF("features")
+
+val pamTime = {
+  val start = System.currentTimeMillis()
+  val pamModel = new KMedoids().setK(5).fit(smallDF)
+  System.currentTimeMillis() - start
+}
+
+val claraTime = {
+  val start = System.currentTimeMillis()
+  val claraModel = new CLARA().setK(5).setNumSamples(5).fit(smallDF)
+  System.currentTimeMillis() - start
+}
+
+println(s"PAM time:   $pamTime ms")
+println(s"CLARA time: $claraTime ms")
+
+// Large dataset - use CLARA
+val largeData = (0 until 10000).map(i =>
+  Vectors.dense(i.toDouble, i.toDouble)
+).map(Tuple1.apply)
+val largeDF = spark.createDataFrame(largeData).toDF("features")
+
+// PAM would be too slow on large dataset
+val claraLargeTime = {
+  val start = System.currentTimeMillis()
+  val claraModel = new CLARA()
+    .setK(10)
+    .setNumSamples(10)
+    .setSampleSize(200)
+    .fit(largeDF)
+  System.currentTimeMillis() - start
+}
+
+println(s"CLARA on large dataset: $claraLargeTime ms")
+```
+
+### Distance Functions with CLARA
+
+```scala
+// Manhattan distance - good for high-dimensional data
+val claraManhattan = new CLARA()
+  .setK(5)
+  .setNumSamples(10)
+  .setSampleSize(100)
+  .setDistanceFunction("manhattan")
+  .fit(df)
+
+// Cosine distance - good for text/document clustering
+val claraCosine = new CLARA()
+  .setK(5)
+  .setNumSamples(10)
+  .setSampleSize(100)
+  .setDistanceFunction("cosine")
+  .fit(df)
+```
+
+### When to Use CLARA
+
+**Use CLARA when:**
+- Dataset has > 10,000 points
+- PAM is too slow (time complexity O(k(n-k)²))
+- Good approximation to PAM is acceptable
+- Need robustness to outliers at scale
+
+**Guidelines:**
+- `numSamples`: 5-20 (more = better quality, slower)
+- `sampleSize`: 40 + 2*k or larger (auto default)
+- If `sampleSize ≥ 90%` of dataset, use PAM instead
+
+**Time Complexity:**
+- CLARA: O(numSamples × k(s-k)²) where s = sampleSize
+- Much faster than PAM for large n
+
+---
+
 ## Next Steps
 
 - **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
@@ -1704,4 +2009,5 @@ if (divergence > 1.0) {
   - `src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala`
   - `src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala`
 - **Legacy RDD API**: Still available for backward compatibility
