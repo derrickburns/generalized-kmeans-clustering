@@ -224,8 +224,293 @@ Benefits:
 - Type-safe parameters
 - Automatic schema validation
 
+## Real-World Examples
+
+### Example 1: Customer Segmentation
+
+```scala
+import org.apache.spark.sql.functions._
+
+// Load customer data
+val customers = spark.read.parquet("customers.parquet")
+  // Features: age, annual_income, spending_score, recency_days
+  .select($"customer_id",
+    array($"age", $"annual_income", $"spending_score", $"recency_days").as("features_array"))
+  .withColumn("features", vec_to_vector($"features_array"))
+
+// Normalize features first
+import org.apache.spark.ml.feature.StandardScaler
+
+val scaler = new StandardScaler()
+  .setInputCol("features")
+  .setOutputCol("scaled_features")
+  .setWithMean(true)
+  .setWithStd(true)
+
+val scalerModel = scaler.fit(customers)
+val normalizedCustomers = scalerModel.transform(customers)
+
+// Cluster customers
+val kmeans = new GeneralizedKMeans()
+  .setK(5)  // 5 customer segments
+  .setFeaturesCol("scaled_features")
+  .setPredictionCol("segment")
+  .setMaxIter(50)
+  .setSeed(42)
+
+val model = kmeans.fit(normalizedCustomers)
+
+// Analyze segments
+val segments = model.transform(normalizedCustomers)
+
+segments.groupBy("segment")
+  .agg(
+    count("*").as("count"),
+    avg("age").as("avg_age"),
+    avg("annual_income").as("avg_income"),
+    avg("spending_score").as("avg_spending")
+  )
+  .orderBy("segment")
+  .show()
+
+// Save model for production use
+model.write.overwrite().save("models/customer_segmentation")
+```
+
+### Example 2: Document Clustering with KL Divergence
+
+```scala
+// Load TF-IDF vectors representing documents
+val documents = spark.read.parquet("documents_tfidf.parquet")
+
+// TF-IDF vectors are non-negative and can be treated as probability distributions
+// after normalization
+
+import org.apache.spark.sql.functions._
+
+// Normalize to probability distribution (sum to 1)
+val normalize_udf = udf { (vec: Vector) =>
+  val sum = vec.toArray.sum
+  if (sum > 0) Vectors.dense(vec.toArray.map(_ / sum))
+  else vec
+}
+
+val probDocuments = documents
+  .withColumn("prob_features", normalize_udf($"tfidf_features"))
+
+// Use KL divergence for clustering
+val docKMeans = new GeneralizedKMeans()
+  .setK(20)  // 20 topic clusters
+  .setDivergence("kl")
+  .setSmoothing(1e-10)  // Avoid log(0)
+  .setFeaturesCol("prob_features")
+  .setPredictionCol("topic")
+  .setMaxIter(30)
+
+val docModel = docKMeans.fit(probDocuments)
+
+// Get document topics
+val topicAssignments = docModel.transform(probDocuments)
+  .select("doc_id", "topic", "title")
+
+// Find representative documents per topic
+topicAssignments.groupBy("topic")
+  .agg(
+    count("*").as("num_docs"),
+    collect_list("title").as("sample_titles")
+  )
+  .show(false)
+```
+
+### Example 3: Audio Clustering with Itakura-Saito
+
+```scala
+// Load audio spectral features (power spectrogram)
+val audioData = spark.read.parquet("audio_spectra.parquet")
+  // Features: power spectral density values (non-negative)
+
+// Itakura-Saito divergence is ideal for spectral data
+val audioKMeans = new GeneralizedKMeans()
+  .setK(10)  // 10 acoustic patterns
+  .setDivergence("itakuraSaito")
+  .setSmoothing(1e-10)
+  .setFeaturesCol("spectrum")
+  .setPredictionCol("acoustic_class")
+  .setMaxIter(40)
+  .setSeed(42)
+
+val audioModel = audioKMeans.fit(audioData)
+
+// Classify new audio segments
+val predictions = audioModel.transform(testAudio)
+  .select("audio_id", "timestamp", "acoustic_class")
+
+predictions.write.parquet("audio_classifications.parquet")
+```
+
+### Example 4: Finding Optimal K (Elbow Method)
+
+```scala
+// Evaluate different values of k
+val kValues = (2 to 20).toArray
+val results = kValues.map { k =>
+  val kmeans = new GeneralizedKMeans()
+    .setK(k)
+    .setMaxIter(30)
+    .setSeed(42)
+
+  val model = kmeans.fit(data)
+  val cost = model.computeCost(data)
+
+  (k, cost)
+}
+
+// Print results
+results.foreach { case (k, cost) =>
+  println(f"k=$k%2d: WCSS=$cost%.2f")
+}
+
+// Visualize elbow curve (export to CSV)
+import spark.implicits._
+results.toSeq.toDF("k", "wcss")
+  .coalesce(1)
+  .write.option("header", "true")
+  .csv("elbow_curve.csv")
+```
+
+### Example 5: Quality Metrics
+
+```scala
+// Train model
+val kmeans = new GeneralizedKMeans()
+  .setK(5)
+  .setMaxIter(30)
+  .setSeed(42)
+
+val model = kmeans.fit(data)
+
+// Get comprehensive quality metrics
+val summary = new GeneralizedKMeansSummary(
+  predictions = model.transform(data),
+  predictionCol = "prediction",
+  featuresCol = "features",
+  clusterCenters = model.clusterCenters,
+  kernel = new SquaredEuclideanKernel(),
+  numClusters = model.numClusters,
+  numFeatures = model.numFeatures,
+  numIter = 10,
+  converged = true,
+  distortionHistory = Array(),
+  movementHistory = Array()
+)
+
+// Print quality metrics
+println(s"Within-Cluster Sum of Squares (WCSS): ${summary.wcss}")
+println(s"Between-Cluster Sum of Squares (BCSS): ${summary.bcss}")
+println(s"Calinski-Harabasz Index: ${summary.calinskiHarabaszIndex}")
+println(s"Davies-Bouldin Index: ${summary.daviesBouldinIndex}")
+println(s"Dunn Index: ${summary.dunnIndex}")
+
+// Compute silhouette (expensive, uses sampling)
+val silhouette = summary.silhouette(sampleFraction = 0.1)
+println(s"Mean Silhouette Coefficient: $silhouette")
+```
+
+### Example 6: Weighted Time-Series Clustering
+
+```scala
+// Give more weight to recent observations
+val timeSeriesData = spark.read.parquet("time_series.parquet")
+
+// Calculate decay weights (more recent = higher weight)
+val withWeights = timeSeriesData
+  .withColumn("days_ago", datediff(current_date(), $"timestamp"))
+  .withColumn("weight", exp(-$"days_ago" / 30.0))  // 30-day decay
+
+val tsKMeans = new GeneralizedKMeans()
+  .setK(8)
+  .setWeightCol("weight")
+  .setFeaturesCol("ts_features")
+  .setMaxIter(40)
+
+val tsModel = tsKMeans.fit(withWeights)
+
+// Recent patterns will have more influence on cluster centers
+val patterns = tsModel.transform(withWeights)
+```
+
+### Example 7: Cross-Validation for Hyperparameters
+
+```scala
+import org.apache.spark.ml.tuning.{ParamGridBuilder, CrossValidator}
+import org.apache.spark.ml.evaluation.ClusteringEvaluator
+
+val kmeans = new GeneralizedKMeans()
+  .setFeaturesCol("features")
+  .setPredictionCol("prediction")
+
+// Build parameter grid
+val paramGrid = new ParamGridBuilder()
+  .addGrid(kmeans.k, Array(3, 5, 7, 10))
+  .addGrid(kmeans.maxIter, Array(20, 40))
+  .addGrid(kmeans.divergence, Array("squaredEuclidean", "kl"))
+  .build()
+
+// Define evaluator (use silhouette score)
+val evaluator = new ClusteringEvaluator()
+  .setFeaturesCol("features")
+  .setPredictionCol("prediction")
+  .setMetricName("silhouette")
+
+// Cross-validation
+val cv = new CrossValidator()
+  .setEstimator(kmeans)
+  .setEvaluator(evaluator)
+  .setEstimatorParamMaps(paramGrid)
+  .setNumFolds(3)
+
+val cvModel = cv.fit(trainingData)
+val bestModel = cvModel.bestModel.asInstanceOf[GeneralizedKMeansModel]
+
+println(s"Best k: ${bestModel.numClusters}")
+```
+
+### Example 8: Incremental/Mini-Batch Learning
+
+```scala
+// For very large datasets, train on samples and refine
+val largeDat = spark.read.parquet("huge_dataset.parquet")
+
+// Initial model on sample
+val sample = largeData.sample(withReplacement = false, fraction = 0.1, seed = 42)
+
+val initialModel = new GeneralizedKMeans()
+  .setK(100)
+  .setMaxIter(20)
+  .fit(sample)
+
+// Use initial centers for full dataset (one pass)
+val fullModel = new GeneralizedKMeans()
+  .setK(100)
+  .setMaxIter(5)  // Just a few iterations
+  .setInitMode("custom")  // if supported, or just use same seed
+  .fit(largeData)
+
+// Or: process in batches
+var currentCenters = initialModel.clusterCenters
+val batches = largeData.randomSplit(Array.fill(10)(0.1))
+
+batches.foreach { batch =>
+  // Train on batch starting from current centers
+  // (requires custom initialization support)
+  println(s"Processing batch with ${batch.count()} points")
+}
+```
+
 ## Next Steps
 
-- See test suite: `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
-- Architecture details: `DF_ML_REFACTORING_PLAN.md`
-- Legacy RDD API: Still available for backward compatibility
+- **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
+- **Migration Guide**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Migrate from RDD API
+- **Performance Tuning**: [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) - Optimization tips
+- **Test Suite**: `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
+- **Legacy RDD API**: Still available for backward compatibility
