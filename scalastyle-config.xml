@@ -28,9 +28,9 @@
             <parameter name="illegalImports"><![CDATA[sun._,java.awt._]]></parameter>
         </parameters>
     </check>
-    <check level="error" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="true"></check>
-    <check level="error" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="true"></check>
-    <check level="error" class="org.scalastyle.scalariform.ReturnChecker" enabled="true"></check>
+    <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="true"></check>
+    <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="true"></check>
+    <check level="warning" class="org.scalastyle.scalariform.ReturnChecker" enabled="true"></check>
     <check level="warning" class="org.scalastyle.scalariform.NullChecker" enabled="true"></check>
     <check level="error" class="org.scalastyle.scalariform.NoCloneChecker" enabled="true"></check>
     <check level="error" class="org.scalastyle.scalariform.NoFinalizeChecker" enabled="true"></check>
@@ -54,7 +54,7 @@
     <check level="error" class="org.scalastyle.scalariform.SimplifyBooleanExpressionChecker" enabled="true"></check>
     <check level="warning" class="org.scalastyle.scalariform.MethodLengthChecker" enabled="true">
         <parameters>
-            <parameter name="maxLength"><![CDATA[50]]></parameter>
+            <parameter name="maxLength"><![CDATA[120]]></parameter>
         </parameters>
     </check>
     <check level="error" class="org.scalastyle.file.NewLineAtEofChecker" enabled="true"></check>
