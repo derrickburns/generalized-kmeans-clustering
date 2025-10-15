@@ -684,11 +684,222 @@ println(s"Bisecting K-Means cost: $bisectingCost")
 // Bisecting often has lower cost due to better initialization
 ```
 
+## X-Means (Automatic K Selection)
+
+X-Means automatically determines the optimal number of clusters using information criteria (BIC or AIC), eliminating the need to specify k in advance.
+
+### Basic X-Means - Finding Optimal K
+
+```scala
+import com.massivedatascience.clusterer.ml.XMeans
+import org.apache.spark.ml.linalg.Vectors
+
+// Create data with unknown number of natural clusters
+val data = spark.createDataFrame(Seq(
+  // Cluster 1
+  Vectors.dense(0.0, 0.0),
+  Vectors.dense(0.1, 0.1),
+  Vectors.dense(0.2, 0.2),
+  // Cluster 2
+  Vectors.dense(5.0, 5.0),
+  Vectors.dense(5.1, 5.1),
+  Vectors.dense(5.2, 5.2),
+  // Cluster 3
+  Vectors.dense(10.0, 10.0),
+  Vectors.dense(10.1, 10.1),
+  Vectors.dense(10.2, 10.2)
+).map(Tuple1.apply)).toDF("features")
+
+// X-means will try k from 2 to 10 and pick the best
+val xmeans = new XMeans()
+  .setMinK(2)
+  .setMaxK(10)
+  .setCriterion("bic") // or "aic"
+  .setDivergence("squaredEuclidean")
+  .setMaxIter(20)
+  .setSeed(42)
+
+val model = xmeans.fit(data)
+
+println(s"Optimal k = ${model.numClusters}")
+// Output: Optimal k = 3
+
+val predictions = model.transform(data)
+predictions.groupBy("prediction").count().show()
+```
+
+### X-Means with BIC vs AIC
+
+BIC (Bayesian Information Criterion) penalizes complexity more than AIC, preferring simpler models:
+
+```scala
+// BIC - prefers fewer clusters
+val xmeansBIC = new XMeans()
+  .setMinK(2)
+  .setMaxK(10)
+  .setCriterion("bic")
+
+val modelBIC = xmeansBIC.fit(data)
+println(s"BIC selected k = ${modelBIC.numClusters}")
+
+// AIC - allows more complex models
+val xmeansAIC = new XMeans()
+  .setMinK(2)
+  .setMaxK(10)
+  .setCriterion("aic")
+
+val modelAIC = xmeansAIC.fit(data)
+println(s"AIC selected k = ${modelAIC.numClusters}")
+
+// AIC often selects k >= BIC's k
+```
+
+### X-Means with Different Divergences
+
+Works with all Bregman divergences:
+
+```scala
+// X-Means with KL divergence for probability distributions
+val probData = spark.createDataFrame(Seq(
+  Vectors.dense(0.7, 0.2, 0.1),
+  Vectors.dense(0.6, 0.3, 0.1),
+  Vectors.dense(0.1, 0.2, 0.7),
+  Vectors.dense(0.1, 0.3, 0.6)
+).map(Tuple1.apply)).toDF("features")
+
+val xmeansKL = new XMeans()
+  .setMinK(2)
+  .setMaxK(4)
+  .setDivergence("kl")
+  .setSmoothing(1e-10)
+
+val klModel = xmeansKL.fit(probData)
+println(s"KL divergence selected k = ${klModel.numClusters}")
+
+// X-Means with L1 for outlier robustness
+val xmeansL1 = new XMeans()
+  .setMinK(2)
+  .setMaxK(5)
+  .setDivergence("l1")
+
+val l1Model = xmeansL1.fit(data)
+println(s"L1 divergence selected k = ${l1Model.numClusters}")
+```
+
+### X-Means with Weighted Data
+
+```scala
+val weightedData = spark.createDataFrame(Seq(
+  (Vectors.dense(1.0, 1.0), 10.0),  // High importance
+  (Vectors.dense(1.1, 0.9), 10.0),
+  (Vectors.dense(9.0, 9.0), 1.0),   // Low importance
+  (Vectors.dense(9.1, 8.9), 1.0)
+)).toDF("features", "weight")
+
+val xmeans = new XMeans()
+  .setMinK(2)
+  .setMaxK(4)
+  .setWeightCol("weight")
+
+val model = xmeans.fit(weightedData)
+// High-weight points have more influence on cluster selection
+```
+
+### Controlling the Search Range
+
+```scala
+// Narrow search for faster execution
+val fastXMeans = new XMeans()
+  .setMinK(3)
+  .setMaxK(6)
+  .setMaxIter(10) // Fewer iterations per k
+
+val model = fastXMeans.fit(data)
+
+// Wide search for thorough exploration
+val thoroughXMeans = new XMeans()
+  .setMinK(2)
+  .setMaxK(50)
+  .setMaxIter(30)
+  .setImprovementThreshold(-0.1) // Stop if improvement < 0.1
+
+val thoroughModel = thoroughXMeans.fit(largeData)
+```
+
+### When to Use X-Means
+
+**Use X-Means when:**
+- You don't know the optimal number of clusters
+- You want principled k selection (not just elbow method)
+- You're doing exploratory data analysis
+- You need reproducible k selection
+- You want to avoid grid search over k
+
+**Use Standard K-Means when:**
+- You know the target k (e.g., business requirement)
+- You need maximum speed (X-Means tries multiple k values)
+- You're using streaming/mini-batch variants
+- k is very large (> 50)
+
+### Information Criteria Explained
+
+**BIC (Bayesian Information Criterion)**:
+```
+BIC = -2 * log-likelihood + p * log(n)
+where p = k*d + 1 (parameters)
+      n = number of points
+```
+- Stronger complexity penalty
+- Prefers simpler models (fewer clusters)
+- Better for avoiding overfitting
+
+**AIC (Akaike Information Criterion)**:
+```
+AIC = -2 * log-likelihood + 2 * p
+```
+- Weaker complexity penalty
+- Allows more complex models
+- Better for capturing subtle patterns
+
+**In practice**:
+- Start with BIC for conservative estimates
+- Try AIC if BIC seems too simple
+- Compare both to understand data structure
+
+### Comparing X-Means with Manual K Selection
+
+```scala
+// Manual approach - try many k values
+val kValues = (2 to 10).map { k =>
+  val kmeans = new GeneralizedKMeans().setK(k).setMaxIter(20)
+  val model = kmeans.fit(data)
+  val cost = model.computeCost(data)
+  (k, cost)
+}
+
+// Find elbow manually (subjective)
+kValues.foreach { case (k, cost) =>
+  println(s"k=$k, cost=$cost")
+}
+
+// X-Means approach - automatic with statistical criterion
+val xmeans = new XMeans()
+  .setMinK(2)
+  .setMaxK(10)
+  .setCriterion("bic")
+
+val model = xmeans.fit(data)
+println(s"X-Means automatically selected k=${model.numClusters}")
+// More principled and reproducible than visual elbow method
+```
+
 ## Next Steps
 
 - **Architecture Guide**: [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into design patterns
 - **Migration Guide**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Migrate from RDD API
 - **Performance Tuning**: [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) - Optimization tips
-- **Test Suite**: `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
-- **Bisecting K-Means Tests**: `src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala`
+- **Test Suites**:
+  - `src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala`
 - **Legacy RDD API**: Still available for backward compatibility
