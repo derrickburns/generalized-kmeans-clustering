@@ -128,7 +128,7 @@ class GeneralizedKMeans(override val uid: String)
 
     // Create strategies
     val assigner = createAssignmentStrategy($(assignmentStrategy))
-    val updater = new GradMeanUDAFUpdate()
+    val updater = createUpdateStrategy($(divergence))
     val emptyHandler = createEmptyClusterHandler($(emptyClusterStrategy), $(seed))
     val convergence = new MovementConvergence()
     val validator = new StandardInputValidator()
@@ -183,6 +183,7 @@ class GeneralizedKMeans(override val uid: String)
       case "itakuraSaito" => new ItakuraSaitoKernel(smooth)
       case "generalizedI" => new GeneralizedIDivergenceKernel(smooth)
       case "logistic" => new LogisticLossKernel(smooth)
+      case "l1" | "manhattan" => new L1Kernel()
       case _ => throw new IllegalArgumentException(s"Unknown divergence: $divName")
     }
   }
@@ -196,6 +197,17 @@ class GeneralizedKMeans(override val uid: String)
       case "crossJoin" => new SECrossJoinAssignment()
       case "auto" => new AutoAssignment()
       case _ => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
+    }
+  }
+
+  /**
+   * Create update strategy based on divergence.
+   * L1/Manhattan distance uses MedianUpdateStrategy, others use GradMeanUDAFUpdate.
+   */
+  private def createUpdateStrategy(divName: String): UpdateStrategy = {
+    divName match {
+      case "l1" | "manhattan" => new MedianUpdateStrategy()
+      case _ => new GradMeanUDAFUpdate()
     }
   }
 

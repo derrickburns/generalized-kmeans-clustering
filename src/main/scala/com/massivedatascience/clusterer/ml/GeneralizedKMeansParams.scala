@@ -31,6 +31,7 @@ trait GeneralizedKMeansParams extends Params
    * - "itakuraSaito"
    * - "generalizedI"
    * - "logistic"
+   * - "l1" or "manhattan" (L1 for K-Medians)
    * Default: "squaredEuclidean"
    */
   final val divergence = new Param[String](
@@ -42,7 +43,9 @@ trait GeneralizedKMeansParams extends Params
       "kl",
       "itakuraSaito",
       "generalizedI",
-      "logistic"
+      "logistic",
+      "l1",
+      "manhattan"
     )))
 
   def getDivergence: String = $(divergence)
