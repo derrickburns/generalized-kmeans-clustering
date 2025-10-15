@@ -51,7 +51,7 @@ class XORShiftRandom(init: Long) extends JavaRandom(init) {
   /** Hash seeds to have 0/1 bits throughout. */
   private[this] def hashSeed(seed: Long): Long = {
     val bytes = ByteBuffer.allocate(java.lang.Long.SIZE).putLong(seed).array()
-    MurmurHash3.bytesHash(bytes)
+    MurmurHash3.bytesHash(bytes).toLong
   }
 }
 
