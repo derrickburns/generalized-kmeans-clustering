@@ -122,12 +122,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f"
     )
 
-    // Pre-compute log-weights for numerical stability (if needed for future use)
-    // val logWeights = weights.map { w =>
-    //   if (w > 0.0) math.log(w) else Double.NegativeInfinity
-    // }
-
-    val points  = reWeightedPoints(candidateCenters, weights)
+    // Convert candidate centers to points using their ORIGINAL weights for distance calculations
+    // Do NOT use reWeightedPoints here as it creates invalid zero-weight points
+    val points = candidateCenters.map(c => ops.toPoint(WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, c.weight)))
     val rand    = new XORShiftRandom(seed)
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
@@ -139,25 +136,19 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
           s"Round $iteration: selecting up to $perRound centers from ${distances.length} candidates"
         )
 
-        // Use log-sum-exp trick for numerical stability when computing probabilities
-        val logDistances = distances.map(d => if (d > 0.0) math.log(d) else Double.NegativeInfinity)
-        val maxLogDist   = if (logDistances.nonEmpty) logDistances.max else 0.0
-        val logProbs     = logDistances.map(_ - maxLogDist) // Subtract max for numerical stability
+        // Multiply distances by SELECTION weights (not point weights) to get selection scores
+        // This allows zero selection weights to exclude certain points from selection
+        val weightedDistances = distances.zip(weights).map { case (d, w) => d * w }
 
-        // Convert back to linear scale with log-sum-exp trick
-        val probs = logProbs.map(lp => {
-          val expTerm = math.exp(lp)
-          if (expTerm.isInfinite || expTerm.isNaN) 0.0 else expTerm
-        })
-
-        val totalProb = probs.sum
-        if (totalProb <= 0.0) {
-          logger.warn("No valid probabilities, falling back to uniform sampling")
+        // Check if we have any valid selection weights
+        val totalWeight = weightedDistances.sum
+        if (totalWeight <= 0.0) {
+          logger.warn("No valid selection weights, falling back to uniform sampling")
           val uniformSample =
             (0 until math.min(perRound, needed)).map(_ => rand.nextInt(candidateCenters.length))
           centers ++= uniformSample.distinct.map(candidateCenters)
         } else {
-          val cumulative = cumulativeWeights(probs)
+          val cumulative = cumulativeWeights(weightedDistances)
           val selected = (0 until perRound).par.flatMap { _ =>
             pickWeighted(rand, cumulative).iterator
           }
@@ -417,7 +408,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     }
 
     if (r <= 0.0) {
-      Seq(0)
+      // Find first index with non-zero cumulative weight
+      val firstNonZero = cumulative.indexWhere(_ > 0.0)
+      Seq(if (firstNonZero >= 0) firstNonZero else 0)
     } else if (r >= totalWeight) {
       logger.warn(s"Random value $r exceeds total weight $totalWeight, using last index")
       Seq(cumulative.length - 1)
