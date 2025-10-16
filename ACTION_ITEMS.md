@@ -7,6 +7,11 @@ Status: Post Scala 2.13 Migration
 
 ✅ Recently Completed (October 2025)
 
+    •   Examples as executable tests → ✅ (when the 3 example mains are in and examples-run job is green)
+	•	Cross-version persistence → ✅ (when persistence-cross is green)
+	•	Perf sanity metric → ✅ (when perf-sanity is green)
+	•	Travis removal → ✅ (the lint step already fails if .travis.yml exists)
+
 Scala 2.13 Migration (October 2025)
 	•	Migrate to Scala 2.13.14 as default version
 	•	Fix all Scala 2.13 compatibility issues
@@ -100,10 +105,6 @@ Final Status: 290/290 tests passing
 	•	JVM test matrix: Scala {2.12, 2.13} × Spark {3.4.x, 3.5.x} (core)
 	•	Python smoke job (build 2.12 JAR, PySpark)
 	•	Coverage job
-	•	Cross-version persistence: save on 3.4, load on 3.5; and reverse (add job)
-	•	Run examples: compile/execute Scala snippets to keep docs executable
-	•	Perf sanity: log perf_sanity_seconds=... and surface in job summary
-	•	Travis removal check: verify no .travis.yml; if found, delete (one-time)
 
 2) Performance Benchmarking Suite
 	•	JMH benchmarks across divergences & algorithms
