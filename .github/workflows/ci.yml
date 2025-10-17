@@ -20,12 +20,18 @@ env:
   SBT_OPTS: "-Xms2g -Xmx4g -XX:+UseG1GC -Dsbt.log.noformat=true"
 
 jobs:
-  # Job 0: Simple test to verify workflow is accepted
-  test-minimal:
+  # Job 0: Linting and Code Style (fast gate)
+  lint:
     runs-on: ubuntu-latest
-    name: Minimal Test
+    name: Lint & Style Check
     steps:
       - uses: actions/checkout@v4
-      - name: Echo test
-        run: echo "CI workflow is running successfully"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Check Style
+        run: sbt ++${{ env.SCALA_213 }} scalastyle
 
