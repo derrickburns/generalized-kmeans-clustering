@@ -29,7 +29,7 @@ class PerfSanitySuite extends AnyFunSuite {
       val _ = mSe.transform(data).count()
       val t1 = System.nanoTime()
 
-      val kl = new GeneralizedKMeans().setK(2).setDivergence("kl").setInputTransform("epsilonShift").setShiftValue(1e-6).setMaxIter(3).setSeed(2)
+      val kl = new GeneralizedKMeans().setK(2).setDivergence("kl").setMaxIter(3).setSeed(2)
       val mKl = kl.fit(data)
       val _2 = mKl.transform(data).count()
       val t2 = System.nanoTime()

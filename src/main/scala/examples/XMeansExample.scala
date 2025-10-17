@@ -17,7 +17,7 @@ object XMeansExample extends App {
 
   val xm = new XMeans().setMinK(1).setMaxK(3).setDivergence("squaredEuclidean").setSeed(7)
   val model = xm.fit(df)
-  val kFound = model.k
+  val kFound = model.getK
   assert(kFound >= 1 && kFound <= 3, s"XMeans returned invalid k=$kFound")
 
   println(s"examples.XMeansExample OK (k=$kFound)")

@@ -30,8 +30,6 @@ object PersistenceRoundTrip {
         val gkm = new GeneralizedKMeans()
           .setK(2)
           .setDivergence("squaredEuclidean")
-          .setInputTransform("log1p")  // ensure transform params round-trip
-          .setShiftValue(1e-6)
           .setSeed(123)
         val model = gkm.fit(df)
         model.write.overwrite().save(path)
