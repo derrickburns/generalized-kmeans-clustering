@@ -24,6 +24,8 @@ import com.massivedatascience.util.XORShiftRandom
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+
+// Cross-version compatible parallel collections import
 import scala.collection.parallel.CollectionConverters._
 
 /** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization

@@ -27,9 +27,11 @@
       "org.scalacheck" %% "scalacheck" % "1.17.0" % "test"
     )
 
-    // Scala 2.13 requires parallel collections as a separate dependency
+    // Both Scala 2.12 and 2.13 need parallel collections library for CollectionConverters
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 12)) =>
+          Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0")
         case Some((2, n)) if n >= 13 =>
           Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
         case _ =>
