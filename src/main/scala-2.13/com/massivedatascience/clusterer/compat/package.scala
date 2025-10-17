@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer
 
-import scala.collection.parallel.CollectionConverters
+import scala.collection.parallel.CollectionConverters._
 
 // Scala 2.13 compatibility: parallel collections require explicit import
-package object compat extends CollectionConverters
+package object compat
