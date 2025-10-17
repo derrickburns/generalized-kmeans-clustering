@@ -1,4 +1,6 @@
 package com.massivedatascience.clusterer
 
-// Scala 2.13: Re-export CollectionConverters for .par support
-package object compat extends scala.collection.parallel.CollectionConverters.type
+import scala.collection.parallel.CollectionConverters
+
+// Scala 2.13: Re-export CollectionConverters implicits for .par support
+package object compat extends CollectionConverters
