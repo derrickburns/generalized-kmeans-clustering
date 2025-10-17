@@ -25,8 +25,7 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
-// Scala 2.13 needs this import for .par; Scala 2.12 will ignore it (built-in)
-// The ParCollectionCompat trait brings this into scope
+// Cross-version parallel collections support via compat package
 import com.massivedatascience.clusterer.compat._
 
 /** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization
@@ -155,7 +154,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
             pickWeighted(rand, cumulative).iterator
           }
 
-          val uniqueSelected = selected.distinct
+          val uniqueSelected = selected.seq.toSeq.distinct
           logger.debug(
             s"Selected ${uniqueSelected.size} unique centers from ${selected.size} samples"
           )
