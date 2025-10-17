@@ -122,9 +122,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       f"Weight statistics: total=$totalWeight%.4f, min=$minWeight%.4f, max=$maxWeight%.4f"
     )
 
-    // Convert candidate centers to points using their ORIGINAL weights for distance calculations
-    // Do NOT use reWeightedPoints here as it creates invalid zero-weight points
-    val points = candidateCenters.map(c => ops.toPoint(WeightedVector.fromInhomogeneousWeighted(c.inhomogeneous, c.weight)))
+    // Convert candidate centers to points using SELECTION weights for both distance and selection
+    val points = reWeightedPoints(candidateCenters, weights)
     val rand    = new XORShiftRandom(seed)
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
@@ -136,9 +135,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
           s"Round $iteration: selecting up to $perRound centers from ${distances.length} candidates"
         )
 
-        // Multiply distances by SELECTION weights (not point weights) to get selection scores
+        // Multiply distances by point weights (which are the selection weights from reWeightedPoints)
         // This allows zero selection weights to exclude certain points from selection
-        val weightedDistances = distances.zip(weights).map { case (d, w) => d * w }
+        val weightedDistances = points.zip(distances).map { case (p, d) => p.weight * d }
 
         // Check if we have any valid selection weights
         val totalWeight = weightedDistances.sum
