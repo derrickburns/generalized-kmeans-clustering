@@ -25,13 +25,17 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
+// Scala 2.13 needs this import for .par; Scala 2.12 will ignore it (built-in)
+// The ParCollectionCompat trait brings this into scope
+import com.massivedatascience.clusterer.compat._
+
 /** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization
   * algorithm</a>
   *
   * @param ops
   *   distance function
   */
-class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging with compat.ParCollectionCompat {
+class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /** Select centers in rounds. On each round, select 'perRound' centers, with probability of selection equal to the
     * product of the given weights and distance to the closest cluster center of the previous round.
