@@ -23,7 +23,9 @@ import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import org.apache.spark.ml.linalg.Vectors
 import org.scalatest.funsuite.AnyFunSuite
-import scala.collection.parallel.CollectionConverters._
+
+// Cross-version parallel collections support via compat package
+import com.massivedatascience.clusterer.compat._
 
 class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 

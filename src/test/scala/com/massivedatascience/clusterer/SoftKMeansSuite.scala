@@ -224,11 +224,11 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Hard cost
     val hardCost = model.computeCost(df)
-    assert(hardCost > 0.0 && hardCost.isFinite)
+    assert(hardCost > 0.0 && java.lang.Double.isFinite(hardCost))
 
     // Soft cost
     val softCost = model.computeSoftCost(df)
-    assert(softCost > 0.0 && softCost.isFinite)
+    assert(softCost > 0.0 && java.lang.Double.isFinite(softCost))
 
     // Soft cost should be <= hard cost (weighted average property)
     assert(softCost <= hardCost * 1.1) // Allow small numerical tolerance

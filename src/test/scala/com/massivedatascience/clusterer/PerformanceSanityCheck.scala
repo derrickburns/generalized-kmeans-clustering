@@ -73,6 +73,7 @@ object PerformanceSanityCheck {
       val model = kmeans.fit(data)
       val predictions = model.transform(data)
       val clusterCount = predictions.select("cluster").distinct().count()
+      val cost = model.computeCost(data)
 
       val elapsedTime = System.currentTimeMillis() - startTime
 
@@ -80,7 +81,7 @@ object PerformanceSanityCheck {
       System.out.println(s"\nResults:")
       System.out.println(s"  Elapsed time: ${elapsedTime}ms")
       System.out.println(s"  Clusters found: $clusterCount")
-      System.out.println(s"  Cost: ${model.summary.trainingCost}")
+      System.out.println(s"  Cost: $cost")
 
       // Check for major regression
       if (elapsedTime > timeBudgetMs) {
@@ -100,7 +101,7 @@ object PerformanceSanityCheck {
         logFile.println(s"timestamp,${System.currentTimeMillis()}")
         logFile.println(s"elapsed_ms,$elapsedTime")
         logFile.println(s"clusters,$clusterCount")
-        logFile.println(s"cost,${model.summary.trainingCost}")
+        logFile.println(s"cost,$cost")
         logFile.println(s"budget_ms,$timeBudgetMs")
         logFile.println(s"passed,${elapsedTime <= timeBudgetMs}")
       } finally {

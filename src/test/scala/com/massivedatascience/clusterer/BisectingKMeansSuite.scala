@@ -325,7 +325,7 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val cost  = model.computeCost(df)
 
     // Cost should be positive and finite
-    assert(cost > 0.0 && cost.isFinite)
+    assert(cost > 0.0 && java.lang.Double.isFinite(cost))
   }
 
   test("Bisecting K-Means parameter validation should work") {

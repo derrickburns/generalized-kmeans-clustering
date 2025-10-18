@@ -258,7 +258,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val cost = model.computeCost(df)
 
     // Cost should be positive and finite
-    assert(cost > 0.0 && cost.isFinite)
+    assert(cost > 0.0 && java.lang.Double.isFinite(cost))
   }
 
   test("X-Means parameter validation") {

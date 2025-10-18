@@ -106,8 +106,10 @@ jobs:
         run: sbt ++${{ env.SCALA_213 }} "runMain examples.SoftKMeansExample"
       - name: Run XMeansExample
         run: sbt ++${{ env.SCALA_213 }} "runMain examples.XMeansExample"
-      - name: Run PersistenceRoundTrip
-        run: sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip"
+      - name: Run PersistenceRoundTrip (save)
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip save /tmp/test-model"
+      - name: Run PersistenceRoundTrip (load)
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip load /tmp/test-model"
 
   # Job 4: Cross-version persistence test (save in 2.12, load in 2.13, vice versa)
   persistence-cross:
@@ -130,16 +132,16 @@ jobs:
       - name: Save model with Scala 2.12
         run: |
           mkdir -p /tmp/persistence-test
-          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-212"
+          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip save /tmp/persistence-test/model-212"
       - name: Load model with Scala 2.13
         run: |
-          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-212"
+          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip load /tmp/persistence-test/model-212"
       - name: Save model with Scala 2.13
         run: |
-          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-213"
+          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip save /tmp/persistence-test/model-213"
       - name: Load model with Scala 2.12
         run: |
-          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-213"
+          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip load /tmp/persistence-test/model-213"
 
   # Job 5: Performance sanity check (ensure no major regression)
   perf-sanity:

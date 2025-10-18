@@ -453,7 +453,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val cost = model.computeCost(df)
 
     // Cost should be positive and finite
-    assert(cost > 0.0 && cost.isFinite)
+    assert(cost > 0.0 && java.lang.Double.isFinite(cost))
 
     // After update, cost on new similar data should be reasonable
     val batch = Seq(
@@ -465,7 +465,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     model.update(batchDF)
 
     val newCost = model.computeCost(batchDF)
-    assert(newCost > 0.0 && newCost.isFinite)
+    assert(newCost > 0.0 && java.lang.Double.isFinite(newCost))
   }
 
   test("StreamingKMeans parameter validation") {
