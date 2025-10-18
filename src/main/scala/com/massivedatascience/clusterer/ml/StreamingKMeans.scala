@@ -168,6 +168,7 @@ class StreamingKMeansModel(
   val decayFactorValue: Double,
   val timeUnitValue: String
 ) extends GeneralizedKMeansModel(uid, initialCenters, kernelNameForParent)
+    with MLWritable
     with Logging {
 
   // Mutable state for streaming updates
@@ -428,6 +429,8 @@ class StreamingKMeansModel(
     if (parent != null) copied.setParent(parent)
     copied
   }
+
+  override def write: MLWriter = new StreamingKMeansModel.StreamingKMeansModelWriter(this)
 }
 
 /** Streaming updater for incremental model updates.
@@ -504,27 +507,151 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
 
   override def load(path: String): StreamingKMeansModel = super.load(path)
 
-  private class StreamingKMeansModelReader extends MLReader[StreamingKMeansModel] {
+  private class StreamingKMeansModelWriter(instance: StreamingKMeansModel) extends MLWriter with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.Serialization
+
+    override protected def saveImpl(path: String): Unit = {
+      val spark = sparkSession
+
+      logInfo(s"Saving StreamingKMeansModel to $path")
+
+      // Sync mutable state before saving
+      instance.syncCenters()
+
+      // Prepare centers data with weights: (center_id, weight, vector)
+      // For streaming K-Means, we need to save the cluster weights!
+      val currentCenters = instance.currentCenters
+      val currentWeights = instance.currentWeights
+      val centersData = currentCenters.indices.map { i =>
+        val weight = currentWeights(i)
+        val vector = currentCenters(i)
+        (i, weight, vector)
+      }
+
+      // Write centers with deterministic ordering
+      val centersHash = writeCenters(spark, path, centersData)
+      logInfo(s"Centers saved with SHA-256: $centersHash")
+
+      // Collect all model parameters
+      val params = Map(
+        "k" -> instance.numClusters,
+        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol" -> instance.getOrDefault(instance.predictionCol),
+        "divergence" -> instance.divergenceName,
+        "smoothing" -> instance.smoothingValue,
+        "decayFactor" -> instance.decayFactorValue,
+        "timeUnit" -> instance.timeUnitValue,
+        "kernelName" -> instance.kernelName  // Parent's kernel name format
+      )
+
+      val k = instance.numClusters
+      val dim = currentCenters.headOption.map(_.size).getOrElse(0)
+
+      // Build metadata object
+      implicit val formats = DefaultFormats
+      val metaObj = Map(
+        "layoutVersion" -> LayoutVersion,
+        "algo" -> "StreamingKMeansModel",
+        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+        "scalaBinaryVersion" -> getScalaBinaryVersion,
+        "divergence" -> instance.divergenceName,
+        "k" -> k,
+        "dim" -> dim,
+        "uid" -> instance.uid,
+        "params" -> params,
+        "centers" -> Map(
+          "count" -> k,
+          "ordering" -> "center_id ASC (0..k-1)",
+          "storage" -> "parquet",
+          "includesWeights" -> true  // Important: weights are stored in weight column
+        ),
+        "checksums" -> Map(
+          "centersParquetSHA256" -> centersHash
+        )
+      )
+
+      // Serialize to JSON
+      val json = Serialization.write(metaObj)(formats)
+
+      // Write metadata
+      val metadataHash = writeMetadata(path, json)
+      logInfo(s"Metadata saved with SHA-256: $metadataHash")
+      logInfo(s"StreamingKMeansModel successfully saved to $path (includes cluster weights)")
+    }
+  }
+
+  private class StreamingKMeansModelReader extends MLReader[StreamingKMeansModel] with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.JsonMethods
 
     override def load(path: String): StreamingKMeansModel = {
       val spark = sparkSession
-      import spark.implicits._
 
-      val centersPath = s"$path/centers"
-      val metadataPath = s"$path/metadata"
+      logInfo(s"Loading StreamingKMeansModel from $path")
 
-      // Load centers
-      val centersDF = spark.read.parquet(centersPath)
-      val centers = centersDF.as[(Int, Array[Double])].collect()
-        .sortBy(_._1)
-        .map { case (_, arr) => arr }
+      // Read metadata
+      val metaStr = readMetadata(path)
+      implicit val formats = DefaultFormats
+      val metaJ = JsonMethods.parse(metaStr)
 
-      // Load metadata
-      val metadataDF = spark.read.parquet(metadataPath)
-      val metadata = metadataDF.as[(String, String, String, Double, Double, String)].head()
-      val (uid, kernelName, divergence, smoothing, decayFactor, timeUnit) = metadata
+      // Extract and validate layout version
+      val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
+      val k = (metaJ \ "k").extract[Int]
+      val dim = (metaJ \ "dim").extract[Int]
+      val uid = (metaJ \ "uid").extract[String]
+      val divergence = (metaJ \ "divergence").extract[String]
 
-      new StreamingKMeansModel(uid, centers, kernelName, divergence, smoothing, decayFactor, timeUnit)
+      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence")
+
+      // Read centers with weights
+      val centersDF = readCenters(spark, path)
+      val rows = centersDF.collect()
+
+      // Validate metadata
+      validateMetadata(layoutVersion, k, dim, rows.length)
+
+      // Extract centers and weights (sorted by center_id)
+      val sortedRows = rows.sortBy(_.getInt(0))
+      val centers = sortedRows.map { row =>
+        row.getAs[Vector]("vector").toArray
+      }
+      val weights = sortedRows.map { row =>
+        row.getDouble(1)  // weight column
+      }
+
+      // Extract parameters
+      val paramsJ = metaJ \ "params"
+      val smoothing = (paramsJ \ "smoothing").extract[Double]
+      val decayFactor = (paramsJ \ "decayFactor").extract[Double]
+      val timeUnit = (paramsJ \ "timeUnit").extract[String]
+      val kernelName = (paramsJ \ "kernelName").extract[String]
+
+      // Reconstruct model
+      val model = new StreamingKMeansModel(
+        uid,
+        centers,
+        kernelName,
+        divergence,
+        smoothing,
+        decayFactor,
+        timeUnit
+      )
+
+      // Restore cluster weights (critical for streaming!)
+      System.arraycopy(weights, 0, model.clusterWeights, 0, weights.length)
+      logInfo(s"Restored cluster weights: ${weights.mkString("[", ", ", "]")}")
+
+      // Set parameters
+      model.set(model.featuresCol, (paramsJ \ "featuresCol").extract[String])
+      model.set(model.predictionCol, (paramsJ \ "predictionCol").extract[String])
+
+      logInfo(s"StreamingKMeansModel successfully loaded from $path")
+      model
     }
   }
 }
