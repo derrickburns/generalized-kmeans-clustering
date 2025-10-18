@@ -26,7 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: sbt/setup-sbt@v1
       - uses: actions/cache@v4
         with:
@@ -49,7 +51,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: sbt/setup-sbt@v1
       - uses: actions/cache@v4
         with:
@@ -81,7 +85,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Legal pairs only. Spark 3.4 ships Scala 2.12 artifacts, not 2.13.
+          # Legal Spark–Scala pairs only
           - { scala: "2.13.14", spark: "3.5.1" }
           - { scala: "2.12.18", spark: "3.4.3" }
           - { scala: "2.12.18", spark: "3.5.1" }
@@ -89,7 +93,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: sbt/setup-sbt@v1
       - uses: actions/cache@v4
         with:
@@ -110,7 +116,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: sbt/setup-sbt@v1
       - uses: actions/cache@v4
         with:
@@ -137,17 +145,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: jars, path: jars }
+        with:
+          name: jars
+          path: jars
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Install PySpark
         run: |
           python -m pip install --upgrade pip
           pip install pyspark==${{ env.SPARK_35 }}
       - name: Run smoke test with 2.12 JAR
-        env: { PYTHONUNBUFFERED: "1" }
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
           JAR_212=$(ls jars/target/scala-2.12/*.jar 2>/dev/null | head -n1 || true)
           if [ -z "$JAR_212" ]; then
@@ -164,7 +178,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: sbt/setup-sbt@v1
       - uses: actions/cache@v4
         with:
@@ -178,7 +194,6 @@ jobs:
       - name: Run scoverage
         run: |
           sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.SPARK_35 }} coverage test coverageReport
-          # Optional perf sanity line for log scraping:
           echo "perf_sanity_seconds=$(grep -hR --only-matching -E 'perf_sanity_seconds=[0-9.]+' target || true)"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -186,7 +201,7 @@ jobs:
           name: scoverage-report
           path: target/**/scoverage-report/*
           retention-days: 7
-      - name: Upload to Codecov (optional)
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v4
         with:
           files: ./target/scala-2.12/scoverage-report/scoverage.xml
