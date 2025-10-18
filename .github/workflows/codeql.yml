@@ -1,63 +1,22 @@
-name: "CodeQL Security Scan"
+name: CodeQL
 
 on:
-  push:
-    branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
+  push: { branches: [ master, main ] }
+  pull_request: { branches: [ master, main ] }
   schedule:
-    # Run at 6:00 AM UTC every Monday
-    - cron: '0 6 * * 1'
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 jobs:
   analyze:
-    name: Analyze
     runs-on: ubuntu-latest
     permissions:
+      security-events: write
       actions: read
       contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'java' ]
-        # CodeQL supports: 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby'
-        # Learn more: https://aka.ms/codeql-docs/language-support
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-        cache: 'sbt'
-
-    - name: Set up SBT
-      uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
-
-    # Initializes the CodeQL tools for scanning
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f  # v3.27.4
-      with:
-        languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-        # queries: security-extended,security-and-quality
-
-    # Autobuild attempts to build any compiled languages (Java in this case)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f  # v3.27.4
-    
-    # If autobuild fails, uncomment and use manual build steps:
-    # - name: Build with SBT
-    #   run: sbt compile
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f  # v3.27.4
-      with:
-        category: "/language:${{matrix.language}}"
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: scala
+      - uses: github/codeql-action/analyze@v3
