@@ -20,13 +20,14 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
 
-import scala.math.{exp, log}
+import scala.math.{ exp, log }
 
 /** Configuration for Bregman soft clustering (fuzzy c-means).
   *
   * @param beta
-  *   Inverse temperature parameter controlling soft assignment sharpness. Higher values = sharper assignments
-  *   (approaches hard clustering). Lower values = softer assignments (more fuzzy membership).
+  *   Inverse temperature parameter controlling soft assignment sharpness. Higher values = sharper
+  *   assignments (approaches hard clustering). Lower values = softer assignments (more fuzzy
+  *   membership).
   * @param minMembership
   *   Minimum membership probability to avoid numerical issues
   * @param maxIterations
@@ -37,11 +38,11 @@ import scala.math.{exp, log}
   *   Whether to compute and track the soft clustering objective
   */
 case class BregmanSoftKMeansConfig(
-  beta: Double = 1.0,
-  minMembership: Double = 1e-10,
-  maxIterations: Int = 100,
-  convergenceThreshold: Double = 1e-6,
-  computeObjective: Boolean = true
+    beta: Double = 1.0,
+    minMembership: Double = 1e-10,
+    maxIterations: Int = 100,
+    convergenceThreshold: Double = 1e-6,
+    computeObjective: Boolean = true
 ) extends ConfigValidator {
 
   requirePositive(beta, "Beta (inverse temperature)")
@@ -66,12 +67,12 @@ case class BregmanSoftKMeansConfig(
   *   Configuration used
   */
 case class SoftClusteringResult(
-  memberships: RDD[(BregmanPoint, Array[Double])],
-  centers: IndexedSeq[BregmanCenter],
-  objective: Double,
-  iterations: Int,
-  converged: Boolean,
-  config: BregmanSoftKMeansConfig
+    memberships: RDD[(BregmanPoint, Array[Double])],
+    centers: IndexedSeq[BregmanCenter],
+    objective: Double,
+    iterations: Int,
+    converged: Boolean,
+    config: BregmanSoftKMeansConfig
 ) {
 
   /** Convert soft assignments to hard assignments (maximum membership).
@@ -85,8 +86,8 @@ case class SoftClusteringResult(
 
   /** Get the effective number of clusters (entropy-based measure).
     *
-    * For each point, the effective number of clusters is exp(entropy). We return the average effective number across
-    * all points.
+    * For each point, the effective number of clusters is exp(entropy). We return the average
+    * effective number across all points.
     *
     * This correctly handles:
     *   - Hard assignment (entropy=0) → exp(0) = 1 effective cluster
@@ -116,15 +117,15 @@ case class SoftClusteringResult(
 
 /** Bregman soft clustering (fuzzy c-means) implementation.
   *
-  * This implements probabilistic clustering where each point has a membership probability for each cluster, computed
-  * using:
+  * This implements probabilistic clustering where each point has a membership probability for each
+  * cluster, computed using:
   *
   * p(cluster c | point x) ∝ exp(-β * D_φ(x, μ_c))
   *
   * where β is the inverse temperature parameter and D_φ is the Bregman divergence.
   *
-  * Higher β values lead to sharper (more decisive) assignments, while lower β values lead to softer (more fuzzy)
-  * assignments.
+  * Higher β values lead to sharper (more decisive) assignments, while lower β values lead to softer
+  * (more fuzzy) assignments.
   */
 case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans.defaultConfig)
     extends MultiKMeansClusterer
@@ -144,10 +145,10 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     *   Sequence of soft clustering results (one per initial center set)
     */
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    initialCenters: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      initialCenters: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     require(initialCenters.nonEmpty, "At least one set of initial centers must be provided")
@@ -185,10 +186,10 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     *   Soft clustering result with membership probabilities
     */
   def clusterSoft(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    initialCenters: IndexedSeq[BregmanCenter]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      initialCenters: IndexedSeq[BregmanCenter]
   ): SoftClusteringResult = {
 
     val numClusters = initialCenters.length
@@ -216,7 +217,7 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
 
       // Check convergence
       if (config.computeObjective) {
-        val objective = computeSoftObjective(memberships, newCenters, pointOps)
+        val objective   = computeSoftObjective(memberships, newCenters, pointOps)
         val improvement =
           (previousObjective - objective) / math.max(math.abs(previousObjective), 1e-10)
 
@@ -248,7 +249,7 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
 
     // Final soft assignments
     val finalMemberships = computeSoftAssignments(data, centers, pointOps)
-    val finalObjective = if (config.computeObjective) {
+    val finalObjective   = if (config.computeObjective) {
       computeSoftObjective(finalMemberships, centers, pointOps)
     } else {
       computeHardObjective(finalMemberships, centers, pointOps)
@@ -268,13 +269,13 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     *
     * Uses the Boltzmann distribution: p(c|x) ∝ exp(-β * D_φ(x, μ_c))
     *
-    * Uses the log-sum-exp trick for numerical stability by subtracting the minimum distance before exponentiating. This
-    * ensures the largest probability is exp(0) = 1.0.
+    * Uses the log-sum-exp trick for numerical stability by subtracting the minimum distance before
+    * exponentiating. This ensures the largest probability is exp(0) = 1.0.
     */
   private def computeSoftAssignments(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Array[Double])] = {
 
     val beta             = config.beta
@@ -287,13 +288,13 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
       // Compute unnormalized probabilities: exp(-β * distance)
       // Use min distance for numerical stability (log-sum-exp trick)
       // This ensures the largest probability is exp(0) = 1.0
-      val minDistance = distances.min
+      val minDistance       = distances.min
       val unnormalizedProbs = distances.map { dist =>
         math.exp(-beta * (dist - minDistance))
       }
 
       // Normalize to get probabilities
-      val totalProb = unnormalizedProbs.sum
+      val totalProb                    = unnormalizedProbs.sum
       val probabilities: Array[Double] = if (totalProb > 1e-100) {
         unnormalizedProbs.map(_ / totalProb).toArray
       } else {
@@ -315,39 +316,36 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     * Each center is the weighted average of all points, where weights are membership probabilities.
     */
   private def computeSoftCenters(
-    memberships: RDD[(BregmanPoint, Array[Double])],
-    numClusters: Int,
-    pointOps: BregmanPointOps
+      memberships: RDD[(BregmanPoint, Array[Double])],
+      numClusters: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     // Compute weighted sums for each cluster
-    val clusterSums = memberships
-      .flatMap { case (point, probs) =>
-        probs.zipWithIndex.map { case (prob, clusterId) =>
-          val weightedPoint = pointOps.scale(point, prob)
-          (clusterId, (weightedPoint, prob))
-        }
+    val clusterSums = memberships.flatMap { case (point, probs) =>
+      probs.zipWithIndex.map { case (prob, clusterId) =>
+        val weightedPoint = pointOps.scale(point, prob)
+        (clusterId, (weightedPoint, prob))
       }
-      .aggregateByKey((pointOps.make(), 0.0))(
-        // Sequence operation: add point to accumulator
-        { case ((accumulator, totalWeight), (weightedPoint, weight)) =>
-          accumulator.add(weightedPoint)
-          (accumulator, totalWeight + weight)
-        },
-        // Combiner operation: merge accumulators
-        { case ((acc1, weight1), (acc2, weight2)) =>
-          acc1.add(acc2)
-          (acc1, weight1 + weight2)
-        }
-      )
-      .collectAsMap()
+    }.aggregateByKey((pointOps.make(), 0.0))(
+      // Sequence operation: add point to accumulator
+      { case ((accumulator, totalWeight), (weightedPoint, weight)) =>
+        accumulator.add(weightedPoint)
+        (accumulator, totalWeight + weight)
+      },
+      // Combiner operation: merge accumulators
+      { case ((acc1, weight1), (acc2, weight2)) =>
+        acc1.add(acc2)
+        (acc1, weight1 + weight2)
+      }
+    ).collectAsMap()
 
     // Convert to centers
     (0 until numClusters).map { clusterId =>
       clusterSums.get(clusterId) match {
         case Some((accumulator, totalWeight)) if totalWeight > pointOps.weightThreshold =>
           pointOps.toCenter(accumulator.asImmutable)
-        case _ =>
+        case _                                                                          =>
           // Handle empty cluster - keep previous center or create default
           logger.warn(s"Cluster $clusterId has insufficient soft membership weight")
           pointOps.toCenter(pointOps.make().asImmutable)
@@ -360,47 +358,43 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     * Objective = Σ_x Σ_c p(c|x) * D_φ(x, μ_c)
     */
   private def computeSoftObjective(
-    memberships: RDD[(BregmanPoint, Array[Double])],
-    centers: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      memberships: RDD[(BregmanPoint, Array[Double])],
+      centers: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): Double = {
 
     val broadcastCenters = memberships.sparkContext.broadcast(centers)
 
-    memberships
-      .map { case (point, probs) =>
-        probs.zipWithIndex.map { case (prob, clusterId) =>
-          val distance = pointOps.distance(point, broadcastCenters.value(clusterId))
-          prob * distance
-        }.sum
-      }
-      .sum()
+    memberships.map { case (point, probs) =>
+      probs.zipWithIndex.map { case (prob, clusterId) =>
+        val distance = pointOps.distance(point, broadcastCenters.value(clusterId))
+        prob * distance
+      }.sum
+    }.sum()
   }
 
   /** Compute hard clustering objective (sum of distances to assigned centers).
     */
   private def computeHardObjective(
-    memberships: RDD[(BregmanPoint, Array[Double])],
-    centers: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      memberships: RDD[(BregmanPoint, Array[Double])],
+      centers: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): Double = {
 
     val broadcastCenters = memberships.sparkContext.broadcast(centers)
 
-    memberships
-      .map { case (point, probs) =>
-        val hardAssignment = probs.zipWithIndex.maxBy(_._1)._2
-        pointOps.distance(point, broadcastCenters.value(hardAssignment))
-      }
-      .sum()
+    memberships.map { case (point, probs) =>
+      val hardAssignment = probs.zipWithIndex.maxBy(_._1)._2
+      pointOps.distance(point, broadcastCenters.value(hardAssignment))
+    }.sum()
   }
 
   /** Compute the total movement of centers between iterations.
     */
   private def computeCenterMovement(
-    oldCenters: IndexedSeq[BregmanCenter],
-    newCenters: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      oldCenters: IndexedSeq[BregmanCenter],
+      newCenters: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): Double = {
 
     oldCenters

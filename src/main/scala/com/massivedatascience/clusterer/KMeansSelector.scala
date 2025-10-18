@@ -21,12 +21,12 @@ import org.apache.spark.rdd.RDD
 
 trait KMeansSelector extends Serializable {
   def init(
-    ops: BregmanPointOps,
-    d: RDD[BregmanPoint],
-    numClusters: Int,
-    initialInfo: Option[KMeansSelector.InitialCondition] = None,
-    runs: Int,
-    seed: Long
+      ops: BregmanPointOps,
+      d: RDD[BregmanPoint],
+      numClusters: Int,
+      initialInfo: Option[KMeansSelector.InitialCondition] = None,
+      runs: Int,
+      seed: Long
   ): Seq[IndexedSeq[BregmanCenter]]
 }
 

@@ -4,18 +4,21 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.linalg.Vectors
 import com.massivedatascience.clusterer.ml.StreamingKMeans
 
-/**
- * Usage:
- *   sbt -Dspark.version=3.4.3 "runMain examples.PersistenceRoundTripStreamingKMeans save ./tmp_streaming_34"
- *   sbt -Dspark.version=3.5.1 "runMain examples.PersistenceRoundTripStreamingKMeans load ./tmp_streaming_34"
- */
+/** Usage: sbt -Dspark.version=3.4.3 "runMain examples.PersistenceRoundTripStreamingKMeans save
+  * ./tmp_streaming_34" sbt -Dspark.version=3.5.1 "runMain
+  * examples.PersistenceRoundTripStreamingKMeans load ./tmp_streaming_34"
+  */
 object PersistenceRoundTripStreamingKMeans {
   def main(args: Array[String]): Unit = {
     require(args.length == 2, "args: save|load <path>")
     val mode = args(0)
     val path = args(1)
 
-    val spark = SparkSession.builder().appName("PersistenceRoundTripStreamingKMeans").master("local[*]").getOrCreate()
+    val spark = SparkSession
+      .builder()
+      .appName("PersistenceRoundTripStreamingKMeans")
+      .master("local[*]")
+      .getOrCreate()
     import spark.implicits._
 
     val df1 = Seq(
@@ -57,28 +60,49 @@ object PersistenceRoundTripStreamingKMeans {
 
         // Assertions to verify roundtrip correctness
         assert(loaded.numClusters == 2, s"Expected k=2, got ${loaded.numClusters}")
-        assert(loaded.clusterCenters.length == 2, s"Expected 2 centers, got ${loaded.clusterCenters.length}")
+        assert(
+          loaded.clusterCenters.length == 2,
+          s"Expected 2 centers, got ${loaded.clusterCenters.length}"
+        )
         assert(loaded.numFeatures == 2, s"Expected dim=2, got ${loaded.numFeatures}")
 
         // Verify streaming-specific parameters
-        assert(loaded.divergenceName == "squaredEuclidean", s"Expected squaredEuclidean divergence, got ${loaded.divergenceName}")
-        assert(math.abs(loaded.decayFactorValue - 0.9) < 0.001, s"Expected decayFactor=0.9, got ${loaded.decayFactorValue}")
-        assert(math.abs(loaded.smoothingValue - 1e-9) < 1e-10, s"Expected smoothing=1e-9, got ${loaded.smoothingValue}")
+        assert(
+          loaded.divergenceName == "squaredEuclidean",
+          s"Expected squaredEuclidean divergence, got ${loaded.divergenceName}"
+        )
+        assert(
+          math.abs(loaded.decayFactorValue - 0.9) < 0.001,
+          s"Expected decayFactor=0.9, got ${loaded.decayFactorValue}"
+        )
+        assert(
+          math.abs(loaded.smoothingValue - 1e-9) < 1e-10,
+          s"Expected smoothing=1e-9, got ${loaded.smoothingValue}"
+        )
 
         // CRITICAL: Verify cluster weights were restored (essential for streaming!)
         val currentWeights = loaded.currentWeights
-        assert(currentWeights.length == 2, s"Expected 2 cluster weights, got ${currentWeights.length}")
-        assert(currentWeights.forall(_ > 0), s"Cluster weights should be positive, got ${currentWeights.mkString(", ")}")
+        assert(
+          currentWeights.length == 2,
+          s"Expected 2 cluster weights, got ${currentWeights.length}"
+        )
+        assert(
+          currentWeights.forall(_ > 0),
+          s"Cluster weights should be positive, got ${currentWeights.mkString(", ")}"
+        )
         println(s"Cluster weights restored: ${currentWeights.mkString(", ")}")
 
         // Verify predictions work
         val preds = loaded.transform(df1)
-        val n = preds.count()
+        val n     = preds.count()
         assert(n == 3, s"expected 3 rows after load, got $n")
 
         // Verify we can continue streaming after load
         val continued = loaded.update(df2)
-        assert(continued.clusterCenters.length == 2, "Should be able to continue streaming after load")
+        assert(
+          continued.clusterCenters.length == 2,
+          "Should be able to continue streaming after load"
+        )
         println(s"After continued update - Centers: ${continued.clusterCenters.mkString(", ")}")
         println(s"After continued update - Weights: ${continued.currentWeights.mkString(", ")}")
 

@@ -16,9 +16,10 @@ object BisectingExample extends App {
   ).toDF("features")
 
   // Use standard GKM for a trivial run; bisecting variant often wraps base API in your codebase.
-  val gkm = new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(42)
+  val gkm   =
+    new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(42)
   val model = gkm.fit(df)
-  val pred = model.transform(df)
+  val pred  = model.transform(df)
 
   val cnt = pred.count()
   assert(cnt == 4, s"expected 4 rows, got $cnt")

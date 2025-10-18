@@ -17,9 +17,9 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.divergence.{BregmanDivergence, RealKullbackLeiblerSimplexDivergence}
+import com.massivedatascience.divergence.{ BregmanDivergence, RealKullbackLeiblerSimplexDivergence }
 import com.massivedatascience.linalg._
-import org.apache.spark.ml.linalg.{Vector}
+import org.apache.spark.ml.linalg.{ Vector }
 
 /** One can create a symmetric version of any Bregman Divergence</a>
   *
@@ -32,8 +32,8 @@ import org.apache.spark.ml.linalg.{Vector}
   * x => x + gradF(x) (Lemma 1 with alpha = beta = 1)
   *
   * @see
-  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and
-  *   Metrics</a>
+  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized
+  *   Bregman Divergences and Metrics</a>
   */
 class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
   def embed(v: VectorIterator): Vector = embed(v.toVector)
@@ -47,7 +47,8 @@ class SymmetrizingEmbedding(divergence: BregmanDivergence) extends Embedding {
 /** A symmetric version of the standard Kullback-Leibler Divergence
   *
   * @see
-  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized Bregman Divergences and
-  *   Metrics</a>
+  *   <a href="http://www-users.cs.umn.edu/~banerjee/papers/13/bregman-metric.pdf">Symmetrized
+  *   Bregman Divergences and Metrics</a>
   */
-case object SymmetrizingKLEmbedding extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)
+case object SymmetrizingKLEmbedding
+    extends SymmetrizingEmbedding(RealKullbackLeiblerSimplexDivergence)

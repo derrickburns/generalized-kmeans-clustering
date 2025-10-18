@@ -28,16 +28,17 @@ import scala.collection.mutable.ArrayBuffer
 // Cross-version parallel collections support via compat package
 import com.massivedatascience.clusterer.compat._
 
-/** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++ initialization
-  * algorithm</a>
+/** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++
+  * initialization algorithm</a>
   *
   * @param ops
   *   distance function
   */
 class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
-  /** Select centers in rounds. On each round, select 'perRound' centers, with probability of selection equal to the
-    * product of the given weights and distance to the closest cluster center of the previous round.
+  /** Select centers in rounds. On each round, select 'perRound' centers, with probability of
+    * selection equal to the product of the given weights and distance to the closest cluster center
+    * of the previous round.
     *
     * This version allows some centers to be pre-selected.
     *
@@ -57,7 +58,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   an array of at most k cluster centers
     */
 
-  /** Select high-quality initial centers using the K-Means++ algorithm with improved numerical stability.
+  /** Select high-quality initial centers using the K-Means++ algorithm with improved numerical
+    * stability.
     *
     * @param seed
     *   random number generator seed
@@ -77,12 +79,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   if inputs are invalid
     */
   def goodCenters(
-    seed: Long,
-    candidateCenters: IndexedSeq[BregmanCenter],
-    weights: IndexedSeq[Double],
-    totalRequested: Int,
-    perRound: Int,
-    numPreselected: Int
+      seed: Long,
+      candidateCenters: IndexedSeq[BregmanCenter],
+      weights: IndexedSeq[Double],
+      totalRequested: Int,
+      perRound: Int,
+      numPreselected: Int
   ): IndexedSeq[BregmanCenter] = {
 
     // Input validation
@@ -125,7 +127,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     )
 
     // Convert candidate centers to points using SELECTION weights for both distance and selection
-    val points = reWeightedPoints(candidateCenters, weights)
+    val points  = reWeightedPoints(candidateCenters, weights)
     val rand    = new XORShiftRandom(seed)
     val centers = new ArrayBuffer[BregmanCenter](totalRequested)
 
@@ -150,7 +152,7 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
           centers ++= uniformSample.distinct.map(candidateCenters)
         } else {
           val cumulative = cumulativeWeights(weightedDistances)
-          val selected = (0 until perRound).par.flatMap { _ =>
+          val selected   = (0 until perRound).par.flatMap { _ =>
             pickWeighted(rand, cumulative).iterator
           }
 
@@ -214,8 +216,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   }
 
   private[this] def reWeightedPoints(
-    candidateCenters: IndexedSeq[BregmanCenter],
-    weights: IndexedSeq[Double]
+      candidateCenters: IndexedSeq[BregmanCenter],
+      weights: IndexedSeq[Double]
   ): IndexedSeq[KMeansPlusPlus.this.ops.P] = {
 
     candidateCenters
@@ -226,7 +228,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       .map(ops.toPoint)
   }
 
-  /** Update the distance of each point to its closest cluster center, given the cluster centers that were added.
+  /** Update the distance of each point to its closest cluster center, given the cluster centers
+    * that were added.
     *
     * @param points
     *   set of candidate initial cluster centers
@@ -237,9 +240,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     */
 
   private[this] def updateDistances(
-    points: IndexedSeq[BregmanPoint],
-    distances: IndexedSeq[Double],
-    centers: IndexedSeq[BregmanCenter]
+      points: IndexedSeq[BregmanPoint],
+      distances: IndexedSeq[Double],
+      centers: IndexedSeq[BregmanCenter]
   ): IndexedSeq[Double] = {
 
     val newDistances = points.zip(distances).par.map { case (p, d) =>
@@ -253,8 +256,9 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
 
   /** Pick a point at random using the alias method for O(1) sampling.
     *
-    * The alias method provides constant-time sampling from discrete distributions by pre-computing alias and
-    * probability tables. This is more efficient than binary search for repeated sampling from the same distribution.
+    * The alias method provides constant-time sampling from discrete distributions by pre-computing
+    * alias and probability tables. This is more efficient than binary search for repeated sampling
+    * from the same distribution.
     *
     * @param rand
     *   random number generator
@@ -264,8 +268,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     *   the index of the chosen point
     */
   private[this] def pickWeightedAlias(
-    rand: XORShiftRandom,
-    weights: IndexedSeq[Double]
+      rand: XORShiftRandom,
+      weights: IndexedSeq[Double]
   ): Seq[Int] = {
     require(weights.nonEmpty, "Weights cannot be empty")
     require(weights.exists(_ > 0.0), "At least one weight must be positive")
@@ -352,8 +356,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     (alias, prob)
   }
 
-  /** Pick a point at random, weighing the choices by the given cumulative weight vector. This is the legacy method
-    * maintained for backward compatibility.
+  /** Pick a point at random, weighing the choices by the given cumulative weight vector. This is
+    * the legacy method maintained for backward compatibility.
     *
     * @param rand
     *   random number generator
@@ -383,8 +387,8 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
   /** Binary search implementation for small distributions.
     */
   private[this] def pickWeightedBinarySearch(
-    rand: XORShiftRandom,
-    cumulative: IndexedSeq[Double]
+      rand: XORShiftRandom,
+      cumulative: IndexedSeq[Double]
   ): Seq[Int] = {
     val totalWeight = cumulative.last
     val r           = rand.nextDouble() * totalWeight

@@ -28,8 +28,8 @@ import org.apache.spark.rdd.RDD
   *   Set of (point_id, point_id) pairs that cannot be in same cluster
   */
 case class Constraints(
-  mustLink: Set[(Long, Long)] = Set.empty,
-  cannotLink: Set[(Long, Long)] = Set.empty
+    mustLink: Set[(Long, Long)] = Set.empty,
+    cannotLink: Set[(Long, Long)] = Set.empty
 ) {
 
   // Transitive closure of must-link constraints
@@ -93,9 +93,9 @@ case class Constraints(
   *   Maximum constraint violations allowed (0 = hard constraints)
   */
 case class ConstrainedKMeansConfig(
-  constraints: Constraints = Constraints(),
-  violationPenalty: Double = Double.PositiveInfinity,
-  maxViolations: Int = 0
+    constraints: Constraints = Constraints(),
+    violationPenalty: Double = Double.PositiveInfinity,
+    maxViolations: Int = 0
 ) extends ConfigValidator {
 
   requirePositive(violationPenalty, "Violation penalty")
@@ -111,9 +111,11 @@ case class ConstrainedKMeansConfig(
   *   - Cannot-link: two points cannot be in the same cluster
   *
   * Algorithm:
-  *   1. Standard k-means with modified assignment step 2. When assigning point to cluster, respect constraints:
+  *   1. Standard k-means with modified assignment step 2. When assigning point to cluster, respect
+  *      constraints:
   *      - Cannot assign to clusters containing cannot-link points
-  *      - Should assign to same cluster as must-link points (if possible) 3. Center update unchanged (standard k-means)
+  *      - Should assign to same cluster as must-link points (if possible) 3. Center update
+  *        unchanged (standard k-means)
   *
   * Constraint enforcement:
   *   - Hard constraints: violations forbidden (may fail to converge)
@@ -137,16 +139,16 @@ case class ConstrainedKMeansConfig(
   *   Underlying clusterer (default: ColumnTrackingKMeans)
   */
 class ConstrainedKMeans(
-  config: ConstrainedKMeansConfig,
-  baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
+    config: ConstrainedKMeansConfig,
+    baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
 ) extends MultiKMeansClusterer
     with Logging {
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     logger.info(s"Starting constrained k-means")
@@ -181,10 +183,10 @@ class ConstrainedKMeans(
   /** Perform constrained clustering on indexed data.
     */
   private def constrainedCluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    indexedData: RDD[(Long, BregmanPoint)],
-    initialCenters: IndexedSeq[BregmanCenter]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      indexedData: RDD[(Long, BregmanPoint)],
+      initialCenters: IndexedSeq[BregmanCenter]
   ): ClusteringWithDistortion = {
 
     var centers    = initialCenters
@@ -230,9 +232,9 @@ class ConstrainedKMeans(
   /** Assign points to clusters respecting constraints.
     */
   private def assignWithConstraints(
-    indexedData: RDD[(Long, BregmanPoint)],
-    centers: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      indexedData: RDD[(Long, BregmanPoint)],
+      centers: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): RDD[(Long, Int)] = {
 
     // Broadcast constraints and centers
@@ -266,12 +268,12 @@ class ConstrainedKMeans(
   /** Find closest cluster that doesn't violate hard constraints.
     */
   private def findClosestValidCluster(
-    pointId: Long,
-    point: BregmanPoint,
-    centers: IndexedSeq[BregmanCenter],
-    assignments: Map[Long, Int],
-    constraints: Constraints,
-    pointOps: BregmanPointOps
+      pointId: Long,
+      point: BregmanPoint,
+      centers: IndexedSeq[BregmanCenter],
+      assignments: Map[Long, Int],
+      constraints: Constraints,
+      pointOps: BregmanPointOps
   ): Int = {
 
     // Get forbidden clusters from cannot-link constraints
@@ -295,10 +297,10 @@ class ConstrainedKMeans(
   /** Update cluster centers from assignments (standard k-means).
     */
   private def updateCenters(
-    indexedData: RDD[(Long, BregmanPoint)],
-    assignments: RDD[(Long, Int)],
-    k: Int,
-    pointOps: BregmanPointOps
+      indexedData: RDD[(Long, BregmanPoint)],
+      assignments: RDD[(Long, Int)],
+      k: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     // Use fromAssignments to compute centers
@@ -340,9 +342,9 @@ class ConstrainedKMeans(
   /** Check if clustering has converged.
     */
   private def hasConverged(
-    oldCenters: IndexedSeq[BregmanCenter],
-    newCenters: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      oldCenters: IndexedSeq[BregmanCenter],
+      newCenters: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): Boolean = {
 
     oldCenters.zip(newCenters).forall { case (old, neu) =>
@@ -353,10 +355,10 @@ class ConstrainedKMeans(
   /** Compute clustering cost.
     */
   private def computeCost(
-    indexedData: RDD[(Long, BregmanPoint)],
-    assignments: RDD[(Long, Int)],
-    centers: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      indexedData: RDD[(Long, BregmanPoint)],
+      assignments: RDD[(Long, Int)],
+      centers: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): Double = {
 
     indexedData

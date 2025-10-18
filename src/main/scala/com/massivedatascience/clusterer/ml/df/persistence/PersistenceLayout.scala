@@ -17,16 +17,16 @@
 
 package com.massivedatascience.clusterer.ml.df.persistence
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.apache.spark.ml.linalg.Vector
 import java.security.MessageDigest
-import java.nio.file.{Files, Paths, StandardOpenOption}
+import java.nio.file.{ Files, Paths, StandardOpenOption }
 import java.nio.charset.StandardCharsets
 
 /** Versioned persistence layout for K-Means models.
   *
-  * Layout V1 provides a stable, engine-neutral format for saving and loading
-  * clustering models across different Spark and Scala versions.
+  * Layout V1 provides a stable, engine-neutral format for saving and loading clustering models
+  * across different Spark and Scala versions.
   *
   * On-disk structure:
   * {{{
@@ -70,10 +70,14 @@ object PersistenceLayoutV1 {
 
   /** Write cluster centers to Parquet with deterministic ordering.
     *
-    * @param spark SparkSession
-    * @param path Base path for model
-    * @param centers Sequence of (center_id, weight, vector) tuples
-    * @return SHA-256 hash of the centers data
+    * @param spark
+    *   SparkSession
+    * @param path
+    *   Base path for model
+    * @param centers
+    *   Sequence of (center_id, weight, vector) tuples
+    * @return
+    *   SHA-256 hash of the centers data
     */
   def writeCenters(
       spark: SparkSession,
@@ -95,19 +99,19 @@ object PersistenceLayoutV1 {
   /** Compute SHA-256 hash of Parquet data in deterministic order */
   private def sha256OfParquet(df: DataFrame): String = {
     // Order by center_id and convert to JSON for deterministic hashing
-    val bytes = df.orderBy("center_id")
-      .toJSON
-      .collect()
-      .mkString("\n")
-      .getBytes(StandardCharsets.UTF_8)
+    val bytes =
+      df.orderBy("center_id").toJSON.collect().mkString("\n").getBytes(StandardCharsets.UTF_8)
     sha256(bytes)
   }
 
   /** Write metadata JSON to disk.
     *
-    * @param path Base path for model
-    * @param json JSON string
-    * @return SHA-256 hash of the metadata
+    * @param path
+    *   Base path for model
+    * @param json
+    *   JSON string
+    * @return
+    *   SHA-256 hash of the metadata
     */
   def writeMetadata(path: String, json: String): String = {
     val p = Paths.get(s"$path/metadata.json")
@@ -123,8 +127,10 @@ object PersistenceLayoutV1 {
 
   /** Write optional training summary to disk.
     *
-    * @param path Base path for model
-    * @param json JSON string containing training metrics
+    * @param path
+    *   Base path for model
+    * @param json
+    *   JSON string containing training metrics
     */
   def writeSummary(path: String, json: String): Unit = {
     val p = Paths.get(s"$path/summary.json")
@@ -139,9 +145,12 @@ object PersistenceLayoutV1 {
 
   /** Read cluster centers from Parquet in deterministic order.
     *
-    * @param spark SparkSession
-    * @param path Base path for model
-    * @return DataFrame with centers ordered by center_id
+    * @param spark
+    *   SparkSession
+    * @param path
+    *   Base path for model
+    * @return
+    *   DataFrame with centers ordered by center_id
     */
   def readCenters(spark: SparkSession, path: String): DataFrame = {
     spark.read.parquet(s"$path/centers.parquet").orderBy("center_id")
@@ -149,8 +158,10 @@ object PersistenceLayoutV1 {
 
   /** Read metadata JSON from disk.
     *
-    * @param path Base path for model
-    * @return JSON string
+    * @param path
+    *   Base path for model
+    * @return
+    *   JSON string
     */
   def readMetadata(path: String): String = {
     val p = Paths.get(s"$path/metadata.json")
@@ -159,8 +170,10 @@ object PersistenceLayoutV1 {
 
   /** Read optional training summary from disk.
     *
-    * @param path Base path for model
-    * @return JSON string if file exists, None otherwise
+    * @param path
+    *   Base path for model
+    * @return
+    *   JSON string if file exists, None otherwise
     */
   def readSummary(path: String): Option[String] = {
     val p = Paths.get(s"$path/summary.json")
@@ -184,10 +197,14 @@ object PersistenceLayoutV1 {
 
   /** Validate that loaded metadata is compatible with current environment.
     *
-    * @param layoutVersion Layout version from loaded metadata
-    * @param expectedK Expected number of clusters
-    * @param expectedDim Expected dimensionality
-    * @param actualCentersCount Actual number of centers loaded
+    * @param layoutVersion
+    *   Layout version from loaded metadata
+    * @param expectedK
+    *   Expected number of clusters
+    * @param expectedDim
+    *   Expected dimensionality
+    * @param actualCentersCount
+    *   Actual number of centers loaded
     */
   def validateMetadata(
       layoutVersion: Int,

@@ -30,17 +30,17 @@ import scala.collection.mutable.ArrayBuffer
   *   checkpoint directory (None = use Spark default)
   */
 case class LloydsConfig(
-  k: Int,
-  maxIter: Int,
-  tol: Double,
-  kernel: BregmanKernel,
-  assigner: AssignmentStrategy,
-  updater: UpdateStrategy,
-  emptyHandler: EmptyClusterHandler,
-  convergence: ConvergenceCheck,
-  validator: InputValidator,
-  checkpointInterval: Int = 10,
-  checkpointDir: Option[String] = None
+    k: Int,
+    maxIter: Int,
+    tol: Double,
+    kernel: BregmanKernel,
+    assigner: AssignmentStrategy,
+    updater: UpdateStrategy,
+    emptyHandler: EmptyClusterHandler,
+    convergence: ConvergenceCheck,
+    validator: InputValidator,
+    checkpointInterval: Int = 10,
+    checkpointDir: Option[String] = None
 )
 
 /** Result of Lloyd's algorithm.
@@ -59,22 +59,22 @@ case class LloydsConfig(
   *   number of times empty clusters were handled
   */
 case class LloydResult(
-  centers: Array[Array[Double]],
-  iterations: Int,
-  distortionHistory: Array[Double],
-  movementHistory: Array[Double],
-  converged: Boolean,
-  emptyClusterEvents: Int
+    centers: Array[Array[Double]],
+    iterations: Int,
+    distortionHistory: Array[Double],
+    movementHistory: Array[Double],
+    converged: Boolean,
+    emptyClusterEvents: Int
 )
 
 /** Core abstraction for Lloyd's algorithm (k-means iteration).
   *
   * This trait defines the single source of truth for the Lloyd's algorithm loop:
-  *   1. Assign each point to nearest center 2. Update centers based on assignments 3. Handle empty clusters 4. Check
-  *      convergence 5. Repeat until convergence or max iterations
+  *   1. Assign each point to nearest center 2. Update centers based on assignments 3. Handle empty
+  *      clusters 4. Check convergence 5. Repeat until convergence or max iterations
   *
-  * All clustering algorithms (standard k-means, soft k-means, constrained k-means, etc.) can be implemented by plugging
-  * in different strategies.
+  * All clustering algorithms (standard k-means, soft k-means, constrained k-means, etc.) can be
+  * implemented by plugging in different strategies.
   */
 trait LloydsIterator extends Logging {
 
@@ -94,27 +94,27 @@ trait LloydsIterator extends Logging {
     *   result with final centers and statistics
     */
   def run(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    initialCenters: Array[Array[Double]],
-    config: LloydsConfig
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      initialCenters: Array[Array[Double]],
+      config: LloydsConfig
   ): LloydResult
 }
 
 /** Default implementation of Lloyd's iterator.
   *
-  * This is the single implementation of the Lloyd's algorithm loop. Different clustering behaviors are achieved through
-  * pluggable strategies.
+  * This is the single implementation of the Lloyd's algorithm loop. Different clustering behaviors
+  * are achieved through pluggable strategies.
   */
 class DefaultLloydsIterator extends LloydsIterator {
 
   override def run(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    initialCenters: Array[Array[Double]],
-    config: LloydsConfig
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      initialCenters: Array[Array[Double]],
+      config: LloydsConfig
   ): LloydResult = {
 
     logInfo(

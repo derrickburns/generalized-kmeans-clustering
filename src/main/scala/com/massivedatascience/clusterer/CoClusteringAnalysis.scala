@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -103,7 +103,8 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       blockCohesion = blockCohesion,
       separationIndex = separationIndex,
       modularity = modularity,
-      overallQuality = (rowSilhouette + colSilhouette + blockCohesion + separationIndex + modularity) / 5.0
+      overallQuality =
+        (rowSilhouette + colSilhouette + blockCohesion + separationIndex + modularity) / 5.0
     )
   }
 
@@ -117,25 +118,23 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
     *   Export data in multiple formats
     */
   def exportForVisualization(
-    entries: RDD[MatrixEntry],
-    spark: SparkSession
+      entries: RDD[MatrixEntry],
+      spark: SparkSession
   ): VisualizationExport = {
     import spark.implicits._
 
     logger.info("Preparing data for visualization export...")
 
     // Block structure matrix
-    val blockMatrix = createBlockMatrix(entries)
+    val blockMatrix   = createBlockMatrix(entries)
     val blockMatrixDF =
       blockMatrix.toDF("rowCluster", "colCluster", "meanValue", "entryCount", "weight")
 
     // Cluster assignments
-    val assignments = entries
-      .map { entry =>
-        val (rowCluster, colCluster) = model.predict(entry)
-        (entry.rowIndex, entry.colIndex, entry.value, entry.weight, rowCluster, colCluster)
-      }
-      .toDF("rowIndex", "colIndex", "value", "weight", "rowCluster", "colCluster")
+    val assignments = entries.map { entry =>
+      val (rowCluster, colCluster) = model.predict(entry)
+      (entry.rowIndex, entry.colIndex, entry.value, entry.weight, rowCluster, colCluster)
+    }.toDF("rowIndex", "colIndex", "value", "weight", "rowCluster", "colCluster")
 
     // Row cluster profiles
     val rowProfiles = createRowClusterProfiles(entries, spark)
@@ -144,9 +143,9 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
     val colProfiles = createColClusterProfiles(entries, spark)
 
     // Convergence data
-    val convergenceDF = model.result.convergenceHistory.zipWithIndex
-      .map { case (objective, iteration) => (iteration, objective) }
-      .toDF("iteration", "objective")
+    val convergenceDF = model.result.convergenceHistory.zipWithIndex.map {
+      case (objective, iteration) => (iteration, objective)
+    }.toDF("iteration", "objective")
 
     VisualizationExport(
       blockMatrix = blockMatrixDF,
@@ -171,10 +170,10 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
     *   Stability analysis results
     */
   def analyzeStability(
-    entries: RDD[MatrixEntry],
-    config: BregmanCoClusteringConfig,
-    pointOps: BregmanPointOps,
-    numRuns: Int = 10
+      entries: RDD[MatrixEntry],
+      config: BregmanCoClusteringConfig,
+      pointOps: BregmanPointOps,
+      numRuns: Int = 10
   ): StabilityAnalysis = {
 
     logger.info(s"Performing stability analysis with $numRuns runs...")
@@ -359,8 +358,8 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
   }
 
   private def sampleForQualityAnalysis(
-    entries: RDD[MatrixEntry],
-    maxSamples: Int
+      entries: RDD[MatrixEntry],
+      maxSamples: Int
   ): Seq[MatrixEntry] = {
     val totalCount = entries.count()
     if (totalCount <= maxSamples) {
@@ -422,7 +421,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
   }
 
   private def computeBlockCohesion(entries: Seq[MatrixEntry]): Double = {
-    val blockEntries = entries.groupBy(e => model.predict(e))
+    val blockEntries   = entries.groupBy(e => model.predict(e))
     val cohesionScores = blockEntries.map { case (_, blockData) =>
       if (blockData.size > 1) {
         val mean     = blockData.map(_.value).sum / blockData.length
@@ -456,7 +455,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
     val totalWeight = entries.map(_.weight).sum
     if (totalWeight == 0) return 0.0
 
-    val blockEntries = entries.groupBy(e => model.predict(e))
+    val blockEntries   = entries.groupBy(e => model.predict(e))
     val internalWeight = blockEntries.map { case (_, blockData) =>
       blockData.map(_.weight).sum
     }.sum
@@ -466,32 +465,28 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
   }
 
   private def createBlockMatrix(entries: RDD[MatrixEntry]): RDD[(Int, Int, Double, Int, Double)] = {
-    entries
-      .map { entry =>
-        val (rowCluster, colCluster) = model.predict(entry)
-        ((rowCluster, colCluster), (entry.value, 1, entry.weight))
-      }
-      .reduceByKey { (t1: (Double, Int, Double), t2: (Double, Int, Double)) =>
-        (t1._1 + t2._1, t1._2 + t2._2, t1._3 + t2._3)
-      }
-      .map { case ((rowCluster, colCluster), (totalValue: Double, count: Int, totalWeight: Double)) =>
+    entries.map { entry =>
+      val (rowCluster, colCluster) = model.predict(entry)
+      ((rowCluster, colCluster), (entry.value, 1, entry.weight))
+    }.reduceByKey { (t1: (Double, Int, Double), t2: (Double, Int, Double)) =>
+      (t1._1 + t2._1, t1._2 + t2._2, t1._3 + t2._3)
+    }.map {
+      case ((rowCluster, colCluster), (totalValue: Double, count: Int, totalWeight: Double)) =>
         val meanValue = if (totalWeight > 0) totalValue / totalWeight else 0.0
         (rowCluster, colCluster, meanValue, count, totalWeight)
-      }
+    }
   }
 
   private def createRowClusterProfiles(
-    entries: RDD[MatrixEntry],
-    spark: SparkSession
+      entries: RDD[MatrixEntry],
+      spark: SparkSession
   ): DataFrame = {
     import spark.implicits._
 
-    entries
-      .map { entry =>
-        val (rowCluster, colCluster) = model.predict(entry)
-        (rowCluster, colCluster, entry.value, entry.weight)
-      }
-      .toDF("rowCluster", "colCluster", "value", "weight")
+    entries.map { entry =>
+      val (rowCluster, colCluster) = model.predict(entry)
+      (rowCluster, colCluster, entry.value, entry.weight)
+    }.toDF("rowCluster", "colCluster", "value", "weight")
       .groupBy("rowCluster", "colCluster")
       .agg(
         org.apache.spark.sql.functions.avg("value").alias("avgValue"),
@@ -501,17 +496,15 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
   }
 
   private def createColClusterProfiles(
-    entries: RDD[MatrixEntry],
-    spark: SparkSession
+      entries: RDD[MatrixEntry],
+      spark: SparkSession
   ): DataFrame = {
     import spark.implicits._
 
-    entries
-      .map { entry =>
-        val (rowCluster, colCluster) = model.predict(entry)
-        (colCluster, rowCluster, entry.value, entry.weight)
-      }
-      .toDF("colCluster", "rowCluster", "value", "weight")
+    entries.map { entry =>
+      val (rowCluster, colCluster) = model.predict(entry)
+      (colCluster, rowCluster, entry.value, entry.weight)
+    }.toDF("colCluster", "rowCluster", "value", "weight")
       .groupBy("colCluster", "rowCluster")
       .agg(
         org.apache.spark.sql.functions.avg("value").alias("avgValue"),
@@ -535,46 +528,46 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
 /** Results of block pattern analysis.
   */
 case class BlockPatternAnalysis(
-  patterns: Map[String, Int],
-  dominantBlocks: Seq[(Int, Int, Double)],
-  blockDensity: Double,
-  connectivity: Double,
-  totalNonEmptyBlocks: Int
+    patterns: Map[String, Int],
+    dominantBlocks: Seq[(Int, Int, Double)],
+    blockDensity: Double,
+    connectivity: Double,
+    totalNonEmptyBlocks: Int
 )
 
 /** Cluster quality metrics.
   */
 case class ClusterQualityMetrics(
-  rowSilhouetteScore: Double,
-  colSilhouetteScore: Double,
-  blockCohesion: Double,
-  separationIndex: Double,
-  modularity: Double,
-  overallQuality: Double
+    rowSilhouetteScore: Double,
+    colSilhouetteScore: Double,
+    blockCohesion: Double,
+    separationIndex: Double,
+    modularity: Double,
+    overallQuality: Double
 )
 
 /** Data export for visualization tools.
   */
 case class VisualizationExport(
-  blockMatrix: DataFrame,
-  assignments: DataFrame,
-  rowProfiles: DataFrame,
-  colProfiles: DataFrame,
-  convergenceHistory: DataFrame
+    blockMatrix: DataFrame,
+    assignments: DataFrame,
+    rowProfiles: DataFrame,
+    colProfiles: DataFrame,
+    convergenceHistory: DataFrame
 )
 
 /** Results of stability analysis.
   */
 case class StabilityAnalysis(
-  numRuns: Int,
-  objectiveStability: Double,
-  errorStability: Double,
-  iterationStability: Double,
-  averageObjective: Double,
-  averageReconstructionError: Double,
-  averageIterations: Double,
-  objectiveRange: (Double, Double),
-  errorRange: (Double, Double)
+    numRuns: Int,
+    objectiveStability: Double,
+    errorStability: Double,
+    iterationStability: Double,
+    averageObjective: Double,
+    averageReconstructionError: Double,
+    averageIterations: Double,
+    objectiveRange: (Double, Double),
+    errorRange: (Double, Double)
 )
 
 object CoClusteringAnalysis {
@@ -588,9 +581,9 @@ object CoClusteringAnalysis {
   /** Export cluster assignments to CSV format.
     */
   def exportAssignmentsCSV(
-    model: BregmanCoClusteringModel,
-    entries: RDD[MatrixEntry],
-    outputPath: String
+      model: BregmanCoClusteringModel,
+      entries: RDD[MatrixEntry],
+      outputPath: String
   ): Unit = {
 
     val assignments = entries.map { entry =>

@@ -17,22 +17,22 @@
 
 package com.massivedatascience.clusterer
 
-import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.{ Column, DataFrame }
 import org.apache.spark.sql.functions._
 
 /** Provides stable row identifiers for DataFrame operations.
   *
-  * This trait abstracts row ID generation, enabling different strategies for assigning unique identifiers to rows in a
-  * DataFrame. Row IDs are essential for:
-  * - Efficient join operations in assignment strategies (especially squared Euclidean cross-join)
-  * - Tracking point-to-cluster assignments across iterations
-  * - Deterministic behavior in distributed operations
+  * This trait abstracts row ID generation, enabling different strategies for assigning unique
+  * identifiers to rows in a DataFrame. Row IDs are essential for:
+  *   - Efficient join operations in assignment strategies (especially squared Euclidean cross-join)
+  *   - Tracking point-to-cluster assignments across iterations
+  *   - Deterministic behavior in distributed operations
   *
   * Design principles:
-  * - IDs must be unique within a DataFrame
-  * - IDs should be monotonically increasing when possible for performance
-  * - ID generation should be deterministic for reproducibility
-  * - Support for both adding new ID columns and using existing columns
+  *   - IDs must be unique within a DataFrame
+  *   - IDs should be monotonically increasing when possible for performance
+  *   - ID generation should be deterministic for reproducibility
+  *   - Support for both adding new ID columns and using existing columns
   *
   * Example usage:
   * {{{
@@ -56,8 +56,8 @@ trait RowIdProvider extends Serializable {
 
   /** Get the column expression for row ID generation.
     *
-    * This allows using the row ID expression in select/withColumn operations without materializing an intermediate
-    * DataFrame.
+    * This allows using the row ID expression in select/withColumn operations without materializing
+    * an intermediate DataFrame.
     *
     * @return
     *   Column expression that generates row IDs
@@ -97,12 +97,12 @@ trait RowIdProvider extends Serializable {
 
 /** Monotonically increasing ID provider using Spark's monotonically_increasing_id().
   *
-  * This implementation uses Spark's built-in monotonically_increasing_id() function, which generates unique,
-  * monotonically increasing 64-bit integers. The IDs:
-  * - Are unique within a DataFrame
-  * - Are monotonically increasing within partitions
-  * - May have gaps between partitions
-  * - Are deterministic for the same input data and partitioning
+  * This implementation uses Spark's built-in monotonically_increasing_id() function, which
+  * generates unique, monotonically increasing 64-bit integers. The IDs:
+  *   - Are unique within a DataFrame
+  *   - Are monotonically increasing within partitions
+  *   - May have gaps between partitions
+  *   - Are deterministic for the same input data and partitioning
   *
   * This is the recommended default for most use cases due to its efficiency and Spark optimization.
   */
@@ -123,8 +123,8 @@ case object MonotonicRowIdProvider extends RowIdProvider {
 
 /** Row ID provider that uses an existing column as the row ID.
   *
-  * This implementation allows reusing an existing column (e.g., a primary key or index column) as the row ID, avoiding
-  * the overhead of generating new IDs.
+  * This implementation allows reusing an existing column (e.g., a primary key or index column) as
+  * the row ID, avoiding the overhead of generating new IDs.
   *
   * @param existingCol
   *   name of existing column to use as row ID
@@ -153,17 +153,18 @@ case class ExistingColumnRowIdProvider(existingCol: String) extends RowIdProvide
 
 /** Row ID provider using zipWithIndex for sequential 0-based IDs.
   *
-  * This implementation uses RDD.zipWithIndex to generate sequential, 0-based row IDs. Unlike monotonically_increasing_id,
-  * this produces contiguous IDs starting from 0, but requires a shuffle operation to maintain global ordering.
+  * This implementation uses RDD.zipWithIndex to generate sequential, 0-based row IDs. Unlike
+  * monotonically_increasing_id, this produces contiguous IDs starting from 0, but requires a
+  * shuffle operation to maintain global ordering.
   *
   * Characteristics:
-  * - IDs are sequential: 0, 1, 2, ..., n-1
-  * - No gaps in ID sequence
-  * - Requires shuffle for global ordering (slower than monotonic IDs)
-  * - Deterministic for the same input data
+  *   - IDs are sequential: 0, 1, 2, ..., n-1
+  *   - No gaps in ID sequence
+  *   - Requires shuffle for global ordering (slower than monotonic IDs)
+  *   - Deterministic for the same input data
   *
-  * Use this when you need sequential IDs starting from 0, such as for array indexing or when interoperating with
-  * systems that expect contiguous IDs.
+  * Use this when you need sequential IDs starting from 0, such as for array indexing or when
+  * interoperating with systems that expect contiguous IDs.
   */
 case object ZipWithIndexRowIdProvider extends RowIdProvider {
 
@@ -174,14 +175,15 @@ case object ZipWithIndexRowIdProvider extends RowIdProvider {
       val spark = df.sparkSession
 
       // Convert to RDD, zipWithIndex, and convert back using Row objects
-      val schema = df.schema
+      val schema      = df.schema
       val rowsWithIds = df.rdd.zipWithIndex().map { case (row, idx) =>
         org.apache.spark.sql.Row.fromSeq(idx +: row.toSeq)
       }
 
       // Create new schema with ID column first
       val newSchema = org.apache.spark.sql.types.StructType(
-        org.apache.spark.sql.types.StructField(idCol, org.apache.spark.sql.types.LongType, nullable = false) +:
+        org.apache.spark.sql.types
+          .StructField(idCol, org.apache.spark.sql.types.LongType, nullable = false) +:
           schema.fields
       )
 
@@ -211,8 +213,8 @@ object RowIdProvider {
 
   /** Monotonically increasing ID provider.
     *
-    * Generates unique, monotonically increasing IDs using Spark's built-in function. IDs are monotonic within
-    * partitions but may have gaps between partitions.
+    * Generates unique, monotonically increasing IDs using Spark's built-in function. IDs are
+    * monotonic within partitions but may have gaps between partitions.
     */
   def monotonic(): RowIdProvider = MonotonicRowIdProvider
 
@@ -225,7 +227,8 @@ object RowIdProvider {
 
   /** Sequential row ID provider using zipWithIndex.
     *
-    * Generates sequential, 0-based IDs. Slower than monotonic due to shuffle requirement, but produces contiguous IDs.
+    * Generates sequential, 0-based IDs. Slower than monotonic due to shuffle requirement, but
+    * produces contiguous IDs.
     */
   def sequential(): RowIdProvider = ZipWithIndexRowIdProvider
 }

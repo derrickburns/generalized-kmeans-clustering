@@ -20,7 +20,7 @@ package com.massivedatascience.clusterer
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
-import scala.math.{log, exp}
+import scala.math.{ log, exp }
 
 /** Configuration for Bregman mixture model estimation.
   *
@@ -36,11 +36,11 @@ import scala.math.{log, exp}
   *   Method for initializing parameters
   */
 case class BregmanMixtureConfig(
-  maxIterations: Int = 100,
-  convergenceThreshold: Double = 1e-6,
-  minMixingWeight: Double = 1e-8,
-  regularization: Double = 1e-6,
-  initializationMethod: String = "kmeans"
+    maxIterations: Int = 100,
+    convergenceThreshold: Double = 1e-6,
+    minMixingWeight: Double = 1e-8,
+    regularization: Double = 1e-6,
+    initializationMethod: String = "kmeans"
 ) {
 
   require(maxIterations > 0, s"Max iterations must be positive, got: $maxIterations")
@@ -88,12 +88,12 @@ case class MixtureComponent(center: BregmanCenter, mixingWeight: Double, compone
   *   Configuration used
   */
 case class BregmanMixtureResult(
-  components: IndexedSeq[MixtureComponent],
-  logLikelihood: Double,
-  responsibilities: RDD[(BregmanPoint, Array[Double])],
-  iterations: Int,
-  converged: Boolean,
-  config: BregmanMixtureConfig
+    components: IndexedSeq[MixtureComponent],
+    logLikelihood: Double,
+    responsibilities: RDD[(BregmanPoint, Array[Double])],
+    iterations: Int,
+    converged: Boolean,
+    config: BregmanMixtureConfig
 ) {
 
   /** Get the number of components in the mixture.
@@ -160,7 +160,8 @@ case class BregmanMixtureResult(
   *
   * This estimates mixture models of the form: p(x) = Σ_k π_k * p_k(x)
   *
-  * where π_k are mixing weights and p_k(x) are exponential family distributions corresponding to Bregman divergences.
+  * where π_k are mixing weights and p_k(x) are exponential family distributions corresponding to
+  * Bregman divergences.
   *
   * The likelihood for each component is: p_k(x) ∝ exp(-D_φ(x, μ_k))
   *
@@ -184,10 +185,10 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
     *   Estimated mixture model
     */
   def fit(
-    data: RDD[BregmanPoint],
-    numComponents: Int,
-    pointOps: BregmanPointOps,
-    initialCenters: Option[IndexedSeq[BregmanCenter]] = None
+      data: RDD[BregmanPoint],
+      numComponents: Int,
+      pointOps: BregmanPointOps,
+      initialCenters: Option[IndexedSeq[BregmanCenter]] = None
   ): BregmanMixtureResult = {
 
     require(numComponents > 0, s"Number of components must be positive, got: $numComponents")
@@ -261,10 +262,10 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
   /** Initialize mixture model parameters.
     */
   private def initializeParameters(
-    data: RDD[BregmanPoint],
-    numComponents: Int,
-    pointOps: BregmanPointOps,
-    initialCenters: Option[IndexedSeq[BregmanCenter]]
+      data: RDD[BregmanPoint],
+      numComponents: Int,
+      pointOps: BregmanPointOps,
+      initialCenters: Option[IndexedSeq[BregmanCenter]]
   ): (IndexedSeq[MixtureComponent], RDD[(BregmanPoint, Array[Double])]) = {
 
     val centers = initialCenters.getOrElse {
@@ -293,7 +294,7 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
 
     // Initialize with uniform mixing weights
     val uniformWeight = 1.0 / numComponents
-    val components = centers.zipWithIndex.map { case (center, id) =>
+    val components    = centers.zipWithIndex.map { case (center, id) =>
       MixtureComponent(center, uniformWeight, id)
     }
 
@@ -311,9 +312,9 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
     * r_ik = π_k * p_k(x_i) / Σ_j π_j * p_j(x_i)
     */
   private def computeResponsibilities(
-    data: RDD[BregmanPoint],
-    components: IndexedSeq[MixtureComponent],
-    pointOps: BregmanPointOps
+      data: RDD[BregmanPoint],
+      components: IndexedSeq[MixtureComponent],
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Array[Double])] = {
 
     val broadcastComponents = data.sparkContext.broadcast(components)
@@ -348,32 +349,29 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
   /** M-step: Update parameters based on responsibilities.
     */
   private def updateParameters(
-    responsibilities: RDD[(BregmanPoint, Array[Double])],
-    numComponents: Int,
-    pointOps: BregmanPointOps
+      responsibilities: RDD[(BregmanPoint, Array[Double])],
+      numComponents: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[MixtureComponent] = {
 
     // Compute effective counts and weighted sums for each component
-    val componentStats = responsibilities
-      .flatMap { case (point, resps) =>
-        resps.zipWithIndex.map { case (resp, componentId) =>
-          val weightedPoint = pointOps.scale(point, resp)
-          (componentId, (weightedPoint, resp))
-        }
+    val componentStats = responsibilities.flatMap { case (point, resps) =>
+      resps.zipWithIndex.map { case (resp, componentId) =>
+        val weightedPoint = pointOps.scale(point, resp)
+        (componentId, (weightedPoint, resp))
       }
-      .aggregateByKey((pointOps.make(), 0.0))(
-        // Sequence operation
-        { case ((accumulator, totalWeight), (weightedPoint, weight)) =>
-          accumulator.add(weightedPoint)
-          (accumulator, totalWeight + weight)
-        },
-        // Combiner operation
-        { case ((acc1, weight1), (acc2, weight2)) =>
-          acc1.add(acc2)
-          (acc1, weight1 + weight2)
-        }
-      )
-      .collectAsMap()
+    }.aggregateByKey((pointOps.make(), 0.0))(
+      // Sequence operation
+      { case ((accumulator, totalWeight), (weightedPoint, weight)) =>
+        accumulator.add(weightedPoint)
+        (accumulator, totalWeight + weight)
+      },
+      // Combiner operation
+      { case ((acc1, weight1), (acc2, weight2)) =>
+        acc1.add(acc2)
+        (acc1, weight1 + weight2)
+      }
+    ).collectAsMap()
 
     val totalDataWeight = componentStats.values.map(_._2).sum
 
@@ -381,7 +379,7 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
     (0 until numComponents).map { componentId =>
       componentStats.get(componentId) match {
         case Some((accumulator, effectiveCount)) if effectiveCount > pointOps.weightThreshold =>
-          val center = pointOps.toCenter(accumulator.asImmutable)
+          val center       = pointOps.toCenter(accumulator.asImmutable)
           val mixingWeight = math.max(
             (effectiveCount + config.regularization) / (totalDataWeight + numComponents * config.regularization),
             config.minMixingWeight
@@ -400,29 +398,27 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
   /** Compute the log-likelihood of the data given the current parameters.
     */
   private def computeLogLikelihood(
-    responsibilities: RDD[(BregmanPoint, Array[Double])],
-    components: IndexedSeq[MixtureComponent],
-    pointOps: BregmanPointOps
+      responsibilities: RDD[(BregmanPoint, Array[Double])],
+      components: IndexedSeq[MixtureComponent],
+      pointOps: BregmanPointOps
   ): Double = {
 
     val broadcastComponents = responsibilities.sparkContext.broadcast(components)
 
-    responsibilities
-      .map { case (point, _) =>
-        val comps = broadcastComponents.value
+    responsibilities.map { case (point, _) =>
+      val comps = broadcastComponents.value
 
-        // Compute log p(x_i) = log(Σ_k π_k * p_k(x_i))
-        val logProbs = comps.map { component =>
-          val distance = pointOps.distance(point, component.center)
-          log(component.mixingWeight) - distance
-        }
-
-        // Use log-sum-exp for numerical stability
-        val maxLogProb = logProbs.max
-        val logSumExp  = maxLogProb + log(logProbs.map(lp => exp(lp - maxLogProb)).sum)
-        logSumExp
+      // Compute log p(x_i) = log(Σ_k π_k * p_k(x_i))
+      val logProbs = comps.map { component =>
+        val distance = pointOps.distance(point, component.center)
+        log(component.mixingWeight) - distance
       }
-      .sum()
+
+      // Use log-sum-exp for numerical stability
+      val maxLogProb = logProbs.max
+      val logSumExp  = maxLogProb + log(logProbs.map(lp => exp(lp - maxLogProb)).sum)
+      logSumExp
+    }.sum()
   }
 }
 
@@ -473,9 +469,9 @@ object BregmanMixtureModel {
   /** Quick mixture model estimation with reasonable defaults.
     */
   def quick(
-    data: RDD[BregmanPoint],
-    numComponents: Int,
-    pointOps: BregmanPointOps
+      data: RDD[BregmanPoint],
+      numComponents: Int,
+      pointOps: BregmanPointOps
   ): BregmanMixtureResult = {
 
     val config = defaultConfig.copy(maxIterations = 50)

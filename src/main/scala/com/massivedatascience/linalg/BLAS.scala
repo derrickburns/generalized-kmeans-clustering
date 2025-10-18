@@ -17,13 +17,13 @@
 
 package com.massivedatascience.linalg
 
-import com.github.fommil.netlib.{BLAS => NetlibBLAS, F2jBLAS}
-import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector}
+import com.github.fommil.netlib.{ BLAS => NetlibBLAS, F2jBLAS }
+import org.apache.spark.ml.linalg.{ DenseVector, SparseVector, Vector }
 
 import scala.collection.mutable.ArrayBuffer
 
-/** This code comes from Spark. Unfortunately, the Spark version is private to the mllib package, so we copied the code
-  * to a separate package.
+/** This code comes from Spark. Unfortunately, the Spark version is private to the mllib package, so
+  * we copied the code to a separate package.
   */
 
 /** BLAS routines for MLlib's vectors and matrices.
@@ -44,22 +44,22 @@ object BLAS extends Serializable {
     */
   def axpy(a: Double, x: Vector, y: Vector): Vector = {
     y match {
-      case dy: DenseVector =>
+      case dy: DenseVector  =>
         x match {
           case sx: SparseVector =>
             axpy(a, sx, dy)
-          case dx: DenseVector =>
+          case dx: DenseVector  =>
             denseAxpy(a, dx, dy)
-          case _ =>
+          case _                =>
             throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
             axpy(a, sx, sy)
-          case dx: DenseVector =>
+          case dx: DenseVector  =>
             axpy(a, new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
-          case _ =>
+          case _                =>
             throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
 
         }
@@ -86,18 +86,18 @@ object BLAS extends Serializable {
 
   def merge(x: Vector, y: Vector, op: ((Double, Double) => Double)): Vector = {
     y match {
-      case dy: DenseVector =>
+      case dy: DenseVector  =>
         x match {
           case dx: DenseVector =>
             merge(dx, dy, op)
-          case _ =>
+          case _               =>
             throw new UnsupportedOperationException(s"axpy doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
             merge(sx, sy, op)
-          case _ =>
+          case _                =>
             throw new UnsupportedOperationException(s"merge doesn't support x type ${x.getClass}.")
         }
     }
@@ -108,9 +108,9 @@ object BLAS extends Serializable {
   }
 
   private def merge(
-    x: DenseVector,
-    y: DenseVector,
-    op: ((Double, Double) => Double)
+      x: DenseVector,
+      y: DenseVector,
+      op: ((Double, Double) => Double)
   ): DenseVector = {
     var i       = 0
     val results = new Array[Double](x.size)
@@ -122,9 +122,9 @@ object BLAS extends Serializable {
   }
 
   private def merge(
-    x: SparseVector,
-    y: SparseVector,
-    op: ((Double, Double) => Double)
+      x: SparseVector,
+      y: SparseVector,
+      op: ((Double, Double) => Double)
   ): SparseVector = {
     var i        = 0
     var j        = 0
@@ -208,22 +208,22 @@ object BLAS extends Serializable {
     }
 
     y match {
-      case dy: DenseVector =>
+      case dy: DenseVector  =>
         x match {
           case sx: SparseVector =>
             dot(sx, dy)
-          case dx: DenseVector =>
+          case dx: DenseVector  =>
             denseDot(dx, dy)
-          case _ =>
+          case _                =>
             throw new UnsupportedOperationException(s"sum doesn't support x type ${x.getClass}.")
         }
       case sy: SparseVector =>
         x match {
           case sx: SparseVector =>
             dot(sx, sy)
-          case dx: DenseVector =>
+          case dx: DenseVector  =>
             dot(new SparseVector(dx.size, (0 until dx.size).toArray, dx.values), sy)
-          case _ =>
+          case _                =>
             throw new UnsupportedOperationException(s"sum doesn't support x type ${x.getClass}.")
 
         }
@@ -301,10 +301,10 @@ object BLAS extends Serializable {
               dy.values(i) = 0.0
               i += 1
             }
-          case dx: DenseVector =>
+          case dx: DenseVector  =>
             Array.copy(dx.values, 0, dy.values, 0, n)
         }
-      case _ =>
+      case _               =>
         throw new IllegalArgumentException(s"y must be dense in copy but got ${y.getClass}")
     }
   }
@@ -315,9 +315,9 @@ object BLAS extends Serializable {
     x match {
       case sx: SparseVector =>
         f2jBLAS.dscal(sx.values.length, a, sx.values, 1)
-      case dx: DenseVector =>
+      case dx: DenseVector  =>
         f2jBLAS.dscal(dx.values.length, a, dx.values, 1)
-      case _ =>
+      case _                =>
         throw new IllegalArgumentException(s"scal doesn't support vector type ${x.getClass}.")
     }
   }

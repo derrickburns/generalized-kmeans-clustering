@@ -22,32 +22,34 @@ import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.util.{DoubleAccumulator, LongAccumulator}
+import org.apache.spark.util.{ DoubleAccumulator, LongAccumulator }
 import org.slf4j.LoggerFactory
 
 import scala.collection.Map
 
-/** A K-means implementation that caches distances to clusters and that adjusts cluster centers by sampling the points
-  * on each iteration.
+/** A K-means implementation that caches distances to clusters and that adjusts cluster centers by
+  * sampling the points on each iteration.
   *
   * Maintain for each point the index of its closest cluster and the distance to that cluster.
   *
-  * Maintain for each cluster the weighted centroid of its points. Each cluster is initialized with exactly one point
-  * from the input point set. Mark each cluster as "moved."
+  * Maintain for each cluster the weighted centroid of its points. Each cluster is initialized with
+  * exactly one point from the input point set. Mark each cluster as "moved."
   *
   *   1. Broadcast the moved cluster centers and their indices.
   *
-  * 2. For each point, for each moved cluster center, mark the distance to that cluster as "stale." If the cluster is
-  * empty, mark the cluster as "empty".
+  * 2. For each point, for each moved cluster center, mark the distance to that cluster as "stale."
+  * If the cluster is empty, mark the cluster as "empty".
   *
   * 3. Select a set of points to update. Update the distance to each stale cluster centers.
   *
-  * 4. For each selected point, identify the index of the closest cluster center and the distance. If the index has
-  * moved, emit two changes: one for the old cluster center and one for the new cluster center, keyed by cluster index:
+  * 4. For each selected point, identify the index of the closest cluster center and the distance.
+  * If the index has moved, emit two changes: one for the old cluster center and one for the new
+  * cluster center, keyed by cluster index:
   *
   * (index, (point, add/subtract))
   *
-  * 5. Sum by key the changes for the clusters. Identify the moved clusters and update their locations.
+  * 5. Sum by key the changes for the clusters. Identify the moved clusters and update their
+  * locations.
   *
   * 6. If any cluster moved, then go to 1.
   */
@@ -58,33 +60,33 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
   private[this] case class Closest(dist: Double, index: Int)
 
   private[this] case class FatPoint(
-    point: BregmanPoint,
-    assignment: Array[Closest],
-    var current: Int,
-    distances: Array[Double]
+      point: BregmanPoint,
+      assignment: Array[Closest],
+      var current: Int,
+      distances: Array[Double]
   )
 
   private[this] case class FatCenter(
-    center: BregmanCenter,
-    index: Int,
-    moved: Boolean,
-    nonEmpty: Boolean
+      center: BregmanCenter,
+      index: Int,
+      moved: Boolean,
+      nonEmpty: Boolean
   )
 
   private[this] val unassigned = Closest(Unknown, -1)
 
   def cluster(
-    data: RDD[BregmanPoint],
-    centers: Array[BregmanCenter],
-    maxIterations: Int = 20,
-    sampleRate: Double = 1.0
+      data: RDD[BregmanPoint],
+      centers: Array[BregmanCenter],
+      maxIterations: Int = 20,
+      sampleRate: Double = 1.0
   ): (Double, KMeansModel) = {
 
     val logger = LoggerFactory.getLogger(getClass.getName)
     logger.info(s"sample rate = $sampleRate")
     logger.info(s"max iterations = $maxIterations")
 
-    var fatPoints: RDD[FatPoint] = initialFatPoints(data, centers.length).persist()
+    var fatPoints: RDD[FatPoint]     = initialFatPoints(data, centers.length).persist()
     data.unpersist()
     var fatCenters: Array[FatCenter] = initialFatCenters(centers)
     var numMoved                     = fatCenters.count(c => c.moved)
@@ -152,7 +154,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
       FatPoint(p, Array(unassigned, unassigned), 0, Array.fill[Double](len)(Unknown))
     }
 
-  /** Update the cluster assignment of the fat points. Need to manage the RDD storage to avoid stack overflow.
+  /** Update the cluster assignment of the fat points. Need to manage the RDD storage to avoid stack
+    * overflow.
     *
     * @param fatPoints
     *   the old points
@@ -162,8 +165,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     *   the new fat points
     */
   private[this] def updatedFatPoints(
-    fatPoints: RDD[FatPoint],
-    updatedPoints: RDD[FatPoint]
+      fatPoints: RDD[FatPoint],
+      updatedPoints: RDD[FatPoint]
   ): RDD[FatPoint] = {
     val oldFatPoints = fatPoints
     updatedPoints.persist(StorageLevel.MEMORY_ONLY_SER).count()
@@ -185,14 +188,14 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     *   points and their new assignments
     */
   private[this] def newAssignments(
-    freshPoints: LongAccumulator,
-    improvedPoints: LongAccumulator,
-    movedPoints: LongAccumulator,
-    costDiff: DoubleAccumulator,
-    bcCenters: Broadcast[Array[FatCenter]],
-    fatPoints: RDD[FatPoint],
-    sampleRate: Double,
-    seed: Int
+      freshPoints: LongAccumulator,
+      improvedPoints: LongAccumulator,
+      movedPoints: LongAccumulator,
+      costDiff: DoubleAccumulator,
+      bcCenters: Broadcast[Array[FatCenter]],
+      fatPoints: RDD[FatPoint],
+      sampleRate: Double,
+      seed: Int
   ): RDD[FatPoint] = {
 
     fatPoints.mapPartitionsWithIndex[FatPoint] { (index, points) =>
@@ -206,7 +209,7 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
           val closest = getClosest(updateDistances(myFatCenters, p.point, p.distances))
           p.assignment(p.current) match {
             case Closest(_, -1) => freshPoints.add(1)
-            case Closest(d, i) =>
+            case Closest(d, i)  =>
               val diff = d - closest.dist
               if (diff > 0.0) improvedPoints.add(1)
               costDiff.add(diff)
@@ -229,8 +232,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     * @return
     */
   private[this] def updatedFatCenters(
-    centroidChanges: Map[Int, MutableWeightedVector],
-    fatCenters: Array[FatCenter]
+      centroidChanges: Map[Int, MutableWeightedVector],
+      fatCenters: Array[FatCenter]
   ): Array[FatCenter] = {
 
     centroidChanges.map { case (index, delta) =>
@@ -263,8 +266,8 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     *   changes to cluster position
     */
   private[this] def getCentroidChanges(
-    bcCenters: Broadcast[Array[FatCenter]],
-    points: RDD[FatPoint]
+      bcCenters: Broadcast[Array[FatCenter]],
+      points: RDD[FatPoint]
   ): Map[Int, MutableWeightedVector] =
     points
       .mapPartitions[(Int, MutableWeightedVector)] { (changes: Iterator[FatPoint]) =>
@@ -298,9 +301,9 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     *   updated array of distances
     */
   private[this] def updateDistances(
-    myFatCenters: Array[FatCenter],
-    point: BregmanPoint,
-    distances: Array[Double]
+      myFatCenters: Array[FatCenter],
+      point: BregmanPoint,
+      distances: Array[Double]
   ): Array[Double] = {
     for (c <- myFatCenters if c.moved || distances(c.index) == Unknown)
       distances(c.index) = if (c.center.weight > 0.0) ops.distance(point, c.center) else Unknown
@@ -319,9 +322,9 @@ class CachingKMeans(ops: BregmanPointOps) extends Serializable {
     *   updated array of distances
     */
   private[this] def markStale(
-    myFatCenters: Array[FatCenter],
-    point: BregmanPoint,
-    distances: Array[Double]
+      myFatCenters: Array[FatCenter],
+      point: BregmanPoint,
+      distances: Array[Double]
   ) = {
     for (c <- myFatCenters if c.moved) distances(c.index) = Unknown
     distances

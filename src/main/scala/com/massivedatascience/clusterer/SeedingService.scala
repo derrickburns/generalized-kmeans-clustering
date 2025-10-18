@@ -21,17 +21,18 @@ import org.apache.spark.rdd.RDD
 
 /** Service for initializing cluster centers.
   *
-  * This trait centralizes all seeding/initialization strategies for k-means clustering. It provides:
-  * - Consistent API across all initialization methods
-  * - Deterministic seeding with seed control
-  * - Support for weighted and unweighted data
-  * - Easy to add new initialization strategies
+  * This trait centralizes all seeding/initialization strategies for k-means clustering. It
+  * provides:
+  *   - Consistent API across all initialization methods
+  *   - Deterministic seeding with seed control
+  *   - Support for weighted and unweighted data
+  *   - Easy to add new initialization strategies
   *
   * Design principles:
-  * - All methods are deterministic given same seed
-  * - Strategies handle edge cases (k > n, duplicate points, etc.)
-  * - Performance characteristics are documented
-  * - Support both RDD and DataFrame workflows
+  *   - All methods are deterministic given same seed
+  *   - Strategies handle edge cases (k > n, duplicate points, etc.)
+  *   - Performance characteristics are documented
+  *   - Support both RDD and DataFrame workflows
   *
   * Example usage:
   * {{{
@@ -54,8 +55,8 @@ trait SeedingService extends Serializable {
     *   initial cluster centers
     */
   def selectInitialCenters(
-    data: RDD[BregmanPoint],
-    ops: BregmanPointOps
+      data: RDD[BregmanPoint],
+      ops: BregmanPointOps
   ): IndexedSeq[BregmanCenter]
 
   /** Number of centers to select */
@@ -70,12 +71,13 @@ trait SeedingService extends Serializable {
 
 /** Random seeding - select k random points as initial centers.
   *
-  * This is the simplest and fastest initialization strategy. It samples k random points from the data uniformly.
+  * This is the simplest and fastest initialization strategy. It samples k random points from the
+  * data uniformly.
   *
   * Characteristics:
-  * - Time: O(k) - single sample operation
-  * - Quality: Low - may select poor initial centers
-  * - Best for: Quick prototyping, when k << n
+  *   - Time: O(k) - single sample operation
+  *   - Quality: Low - may select poor initial centers
+  *   - Best for: Quick prototyping, when k << n
   *
   * @param k
   *   number of centers to select
@@ -88,13 +90,13 @@ case class RandomSeeding(k: Int, seed: Long) extends SeedingService {
   override def name: String = s"random(k=$k)"
 
   override def selectInitialCenters(
-    data: RDD[BregmanPoint],
-    ops: BregmanPointOps
+      data: RDD[BregmanPoint],
+      ops: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
     val n = data.count()
     require(n > 0, "Data cannot be empty")
 
-    val actualK = math.min(k, n.toInt)
+    val actualK  = math.min(k, n.toInt)
     val fraction = math.min(1.0, actualK.toDouble / n * 2.0) // Oversample for safety
 
     val sample = data
@@ -112,14 +114,14 @@ case class RandomSeeding(k: Int, seed: Long) extends SeedingService {
 
 /** K-means++ seeding - iteratively select centers far from existing ones.
   *
-  * This strategy selects the first center randomly, then iteratively selects remaining centers with probability
-  * proportional to squared distance from nearest existing center. Provides better initial centers than random
-  * selection.
+  * This strategy selects the first center randomly, then iteratively selects remaining centers with
+  * probability proportional to squared distance from nearest existing center. Provides better
+  * initial centers than random selection.
   *
   * Characteristics:
-  * - Time: O(k * n) - k passes over data
-  * - Quality: High - provably O(log k) approximation
-  * - Best for: General purpose, balanced speed/quality
+  *   - Time: O(k * n) - k passes over data
+  *   - Quality: High - provably O(log k) approximation
+  *   - Best for: General purpose, balanced speed/quality
   *
   * @param k
   *   number of centers to select
@@ -129,9 +131,9 @@ case class RandomSeeding(k: Int, seed: Long) extends SeedingService {
   *   multiplier for parallel k-means++ (select multiple per round)
   */
 case class KMeansPlusPlusSeeding(
-  k: Int,
-  seed: Long,
-  oversamplingFactor: Int = 2
+    k: Int,
+    seed: Long,
+    oversamplingFactor: Int = 2
 ) extends SeedingService {
 
   require(k > 0, s"k must be positive, got $k")
@@ -140,8 +142,8 @@ case class KMeansPlusPlusSeeding(
   override def name: String = s"kMeans++(k=$k, oversampling=$oversamplingFactor)"
 
   override def selectInitialCenters(
-    data: RDD[BregmanPoint],
-    ops: BregmanPointOps
+      data: RDD[BregmanPoint],
+      ops: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
     val n = data.count()
     require(n > 0, "Data cannot be empty")
@@ -170,13 +172,13 @@ case class KMeansPlusPlusSeeding(
 
 /** K-means|| (parallel k-means++) seeding.
   *
-  * This is the parallel version of k-means++. Instead of selecting one center per round, it selects multiple centers
-  * in parallel, reducing the number of passes over data.
+  * This is the parallel version of k-means++. Instead of selecting one center per round, it selects
+  * multiple centers in parallel, reducing the number of passes over data.
   *
   * Characteristics:
-  * - Time: O(log(k) * n) - fewer passes than k-means++
-  * - Quality: High - similar to k-means++
-  * - Best for: Large datasets where multiple passes are expensive
+  *   - Time: O(log(k) * n) - fewer passes than k-means++
+  *   - Quality: High - similar to k-means++
+  *   - Best for: Large datasets where multiple passes are expensive
   *
   * @param k
   *   number of centers to select
@@ -186,9 +188,9 @@ case class KMeansPlusPlusSeeding(
   *   number of sampling rounds (fewer = faster, more = better quality)
   */
 case class KMeansParallelSeeding(
-  k: Int,
-  seed: Long,
-  rounds: Int = 5
+    k: Int,
+    seed: Long,
+    rounds: Int = 5
 ) extends SeedingService {
 
   require(k > 0, s"k must be positive, got $k")
@@ -197,14 +199,14 @@ case class KMeansParallelSeeding(
   override def name: String = s"kMeans||(k=$k, rounds=$rounds)"
 
   override def selectInitialCenters(
-    data: RDD[BregmanPoint],
-    ops: BregmanPointOps
+      data: RDD[BregmanPoint],
+      ops: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
     val n = data.count()
     require(n > 0, "Data cannot be empty")
 
-    val actualK   = math.min(k, n.toInt)
-    val perRound  = math.max(1, actualK / rounds)
+    val actualK  = math.min(k, n.toInt)
+    val perRound = math.max(1, actualK / rounds)
 
     // Use KMeansPlusPlus with higher oversampling for parallel behavior
     val kpp = new KMeansPlusPlus(ops)
@@ -227,13 +229,13 @@ case class KMeansParallelSeeding(
 
 /** Grid-based seeding - partition space into grid and select one center per cell.
   *
-  * This strategy partitions the feature space into a grid and selects one representative point per grid cell. Useful
-  * for uniformly distributed data.
+  * This strategy partitions the feature space into a grid and selects one representative point per
+  * grid cell. Useful for uniformly distributed data.
   *
   * Characteristics:
-  * - Time: O(n) - single pass
-  * - Quality: Medium - depends on data distribution
-  * - Best for: Uniformly distributed data, deterministic initialization
+  *   - Time: O(n) - single pass
+  *   - Quality: Medium - depends on data distribution
+  *   - Best for: Uniformly distributed data, deterministic initialization
   *
   * @param k
   *   number of centers to select
@@ -246,8 +248,8 @@ case class GridSeeding(k: Int, seed: Long) extends SeedingService {
   override def name: String = s"grid(k=$k)"
 
   override def selectInitialCenters(
-    data: RDD[BregmanPoint],
-    ops: BregmanPointOps
+      data: RDD[BregmanPoint],
+      ops: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
     val n = data.count()
     require(n > 0, "Data cannot be empty")
@@ -337,11 +339,11 @@ object SeedingService {
   def fromString(name: String, k: Int, seed: Long = 42): SeedingService = {
     val normalized = name.toLowerCase.replaceAll("[\\s-_]", "")
     normalized match {
-      case "random"                     => RandomSeeding(k, seed)
-      case "kmeans++" | "kmeanspp"      => KMeansPlusPlusSeeding(k, seed)
+      case "random"                      => RandomSeeding(k, seed)
+      case "kmeans++" | "kmeanspp"       => KMeansPlusPlusSeeding(k, seed)
       case "kmeans||" | "kmeansparallel" => KMeansParallelSeeding(k, seed)
-      case "grid"                       => GridSeeding(k, seed)
-      case _ =>
+      case "grid"                        => GridSeeding(k, seed)
+      case _                             =>
         throw new IllegalArgumentException(
           s"Unknown seeding strategy: $name. Supported: random, kmeans++, kmeans||, grid"
         )

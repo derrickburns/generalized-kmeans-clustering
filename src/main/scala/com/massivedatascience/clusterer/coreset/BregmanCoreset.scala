@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.coreset
 
-import com.massivedatascience.clusterer.{BregmanPoint, BregmanPointOps}
+import com.massivedatascience.clusterer.{ BregmanPoint, BregmanPointOps }
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
@@ -39,12 +39,12 @@ import scala.util.Random
   *   Maximum weight allowed for core-set points
   */
 case class CoresetConfig(
-  coresetSize: Int,
-  epsilon: Double = 0.1,
-  sensitivity: BregmanSensitivity = BregmanSensitivity.hybrid(),
-  seed: Long = 42L,
-  minSamplingProb: Double = 1e-6,
-  maxWeight: Double = 1e6
+    coresetSize: Int,
+    epsilon: Double = 0.1,
+    sensitivity: BregmanSensitivity = BregmanSensitivity.hybrid(),
+    seed: Long = 42L,
+    minSamplingProb: Double = 1e-6,
+    maxWeight: Double = 1e6
 ) {
 
   require(coresetSize > 0, s"Core-set size must be positive, got: $coresetSize")
@@ -72,12 +72,12 @@ case class CoresetConfig(
   *   Configuration used for construction
   */
 case class CoresetResult(
-  coreset: Seq[WeightedPoint],
-  originalSize: Long,
-  compressionRatio: Double,
-  totalSensitivity: Double,
-  avgSamplingProb: Double,
-  config: CoresetConfig
+    coreset: Seq[WeightedPoint],
+    originalSize: Long,
+    compressionRatio: Double,
+    totalSensitivity: Double,
+    avgSamplingProb: Double,
+    config: CoresetConfig
 ) {
 
   /** Get the effective size of the core-set (sum of importance weights).
@@ -102,7 +102,7 @@ case class CoresetResult(
       "avgWeight"        -> (if (weights.nonEmpty) weights.sum / weights.length else 0.0),
       "minSensitivity"   -> (if (sensitivities.nonEmpty) sensitivities.min else 0.0),
       "maxSensitivity"   -> (if (sensitivities.nonEmpty) sensitivities.max else 0.0),
-      "avgSensitivity" -> (if (sensitivities.nonEmpty) sensitivities.sum / sensitivities.length
+      "avgSensitivity"   -> (if (sensitivities.nonEmpty) sensitivities.sum / sensitivities.length
                            else 0.0)
     )
   }
@@ -110,8 +110,8 @@ case class CoresetResult(
 
 /** Bregman core-set construction for efficient approximate clustering.
   *
-  * This class implements sensitivity-based sampling to create a small weighted subset of points that preserves the
-  * clustering structure for Bregman divergences.
+  * This class implements sensitivity-based sampling to create a small weighted subset of points
+  * that preserves the clustering structure for Bregman divergences.
   */
 class BregmanCoreset(config: CoresetConfig) extends Serializable {
 
@@ -209,9 +209,9 @@ class BregmanCoreset(config: CoresetConfig) extends Serializable {
     * Uses the theoretical bound: coreset_size = O(k * log(k) / epsilon^2)
     */
   def buildAdaptiveCoreset(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): CoresetResult = {
 
     val theoreticalSize = math.ceil(k * math.log(k) / (config.epsilon * config.epsilon)).toInt
@@ -228,10 +228,10 @@ class BregmanCoreset(config: CoresetConfig) extends Serializable {
   /** Build multiple core-sets with different parameters for ensemble methods.
     */
   def buildEnsembleCoresets(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps,
-    numCoresets: Int = 3
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps,
+      numCoresets: Int = 3
   ): Seq[CoresetResult] = {
 
     require(numCoresets > 0, s"Number of core-sets must be positive, got: $numCoresets")
@@ -288,10 +288,10 @@ object BregmanCoreset {
     *   CoresetResult
     */
   def quick(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps,
-    compressionRatio: Double = 0.01
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps,
+      compressionRatio: Double = 0.01
   ): CoresetResult = {
 
     val originalSize = points.count()
@@ -304,10 +304,10 @@ object BregmanCoreset {
   /** Create a high-quality core-set with conservative parameters.
     */
   def highQuality(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps,
-    epsilon: Double = 0.05
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps,
+      epsilon: Double = 0.05
   ): CoresetResult = {
 
     val theoreticalSize  = math.ceil(k * math.log(k) / (epsilon * epsilon)).toInt

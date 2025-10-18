@@ -22,14 +22,14 @@ import scala.util.Random
 
 /** Strategy for handling empty clusters during k-means iterations.
   *
-  * Empty clusters can occur when all points are reassigned away from a center. This trait defines how to reseed
-  * (reinitialize) empty clusters to maintain the target number of clusters.
+  * Empty clusters can occur when all points are reassigned away from a center. This trait defines
+  * how to reseed (reinitialize) empty clusters to maintain the target number of clusters.
   *
   * Design principles:
-  * - Each policy defines a complete reseeding strategy
-  * - Policies are stateless and deterministic (given same seed)
-  * - Cost/performance tradeoffs are documented
-  * - Support both RDD and DataFrame operations
+  *   - Each policy defines a complete reseeding strategy
+  *   - Policies are stateless and deterministic (given same seed)
+  *   - Cost/performance tradeoffs are documented
+  *   - Support both RDD and DataFrame operations
   *
   * Example usage:
   * {{{
@@ -64,16 +64,17 @@ trait ReseedPolicy extends Serializable {
     *   new centers with empty clusters reseeded
     */
   def reseedEmptyClusters(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    emptyClusters: Set[Int],
-    ops: BregmanPointOps,
-    seed: Long
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      emptyClusters: Set[Int],
+      ops: BregmanPointOps,
+      seed: Long
   ): IndexedSeq[BregmanCenter]
 
   /** Whether this policy requires distance computation to all points.
     *
-    * If true, expect O(n*k) distance computations per reseed operation. If false, expect O(1) or O(k) operations.
+    * If true, expect O(n*k) distance computations per reseed operation. If false, expect O(1) or
+    * O(k) operations.
     */
   def requiresFullScan: Boolean
 
@@ -85,6 +86,7 @@ trait ReseedPolicy extends Serializable {
 sealed trait ReseedCostCategory
 
 object ReseedCostCategory {
+
   /** O(1) - Constant time, no data scan */
   case object Constant extends ReseedCostCategory
 
@@ -100,8 +102,8 @@ object ReseedCostCategory {
 
 /** No reseeding - leave empty clusters as-is.
   *
-  * This policy does not reseed empty clusters, effectively reducing k. Useful when the target number of clusters is a
-  * maximum rather than exact requirement.
+  * This policy does not reseed empty clusters, effectively reducing k. Useful when the target
+  * number of clusters is a maximum rather than exact requirement.
   *
   * Cost: O(1)
   */
@@ -109,11 +111,11 @@ case object NoReseedPolicy extends ReseedPolicy {
   override def name: String = "none"
 
   override def reseedEmptyClusters(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    emptyClusters: Set[Int],
-    ops: BregmanPointOps,
-    seed: Long
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      emptyClusters: Set[Int],
+      ops: BregmanPointOps,
+      seed: Long
   ): IndexedSeq[BregmanCenter] = {
     // Return centers unchanged
     centers
@@ -126,11 +128,11 @@ case object NoReseedPolicy extends ReseedPolicy {
 
 /** Random reseeding - select random points from data as new centers.
   *
-  * This policy samples random points from the dataset to replace empty cluster centers. Fast but may select
-  * suboptimal centers (e.g., points close to existing centers).
+  * This policy samples random points from the dataset to replace empty cluster centers. Fast but
+  * may select suboptimal centers (e.g., points close to existing centers).
   *
-  * Cost: O(k) for k empty clusters - requires small sample from data Tradeoff: Fast but potentially suboptimal center
-  * placement
+  * Cost: O(k) for k empty clusters - requires small sample from data Tradeoff: Fast but potentially
+  * suboptimal center placement
   */
 case class RandomReseedPolicy(sampleSize: Int = 100) extends ReseedPolicy {
   require(sampleSize > 0, s"Sample size must be positive, got $sampleSize")
@@ -138,11 +140,11 @@ case class RandomReseedPolicy(sampleSize: Int = 100) extends ReseedPolicy {
   override def name: String = s"random(sample=$sampleSize)"
 
   override def reseedEmptyClusters(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    emptyClusters: Set[Int],
-    ops: BregmanPointOps,
-    seed: Long
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      emptyClusters: Set[Int],
+      ops: BregmanPointOps,
+      seed: Long
   ): IndexedSeq[BregmanCenter] = {
     if (emptyClusters.isEmpty) {
       return centers
@@ -178,11 +180,12 @@ case class RandomReseedPolicy(sampleSize: Int = 100) extends ReseedPolicy {
 
 /** Farthest-point reseeding - select points with maximum distance to nearest center.
   *
-  * This policy finds points that are farthest from their nearest cluster center and uses them to reseed empty
-  * clusters. Provides better center placement than random selection but requires distance computation.
+  * This policy finds points that are farthest from their nearest cluster center and uses them to
+  * reseed empty clusters. Provides better center placement than random selection but requires
+  * distance computation.
   *
-  * Cost: O(n*k) - requires full pass over data with distance computations Tradeoff: Higher quality centers but more
-  * expensive
+  * Cost: O(n*k) - requires full pass over data with distance computations Tradeoff: Higher quality
+  * centers but more expensive
   */
 case class FarthestPointReseedPolicy(numCandidates: Int = 100) extends ReseedPolicy {
   require(numCandidates > 0, s"Number of candidates must be positive, got $numCandidates")
@@ -190,24 +193,21 @@ case class FarthestPointReseedPolicy(numCandidates: Int = 100) extends ReseedPol
   override def name: String = s"farthest(candidates=$numCandidates)"
 
   override def reseedEmptyClusters(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    emptyClusters: Set[Int],
-    ops: BregmanPointOps,
-    seed: Long
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      emptyClusters: Set[Int],
+      ops: BregmanPointOps,
+      seed: Long
   ): IndexedSeq[BregmanCenter] = {
     if (emptyClusters.isEmpty) {
       return centers
     }
 
     // Find points with largest distance to their nearest center
-    val farthestPoints = data
-      .map { point =>
-        val distance = ops.pointCost(centers, point)
-        (distance, point)
-      }
-      .top(numCandidates)(Ordering.by(_._1))
-      .map(_._2)
+    val farthestPoints = data.map { point =>
+      val distance = ops.pointCost(centers, point)
+      (distance, point)
+    }.top(numCandidates)(Ordering.by(_._1)).map(_._2)
 
     if (farthestPoints.isEmpty) {
       return centers // Can't reseed without data
@@ -234,10 +234,12 @@ case class FarthestPointReseedPolicy(numCandidates: Int = 100) extends ReseedPol
 
 /** Split largest cluster - divide the largest cluster into two.
   *
-  * This policy identifies the cluster with the most points and splits it by selecting two points from that cluster as
-  * new centers. Good for balancing cluster sizes but requires cluster membership tracking.
+  * This policy identifies the cluster with the most points and splits it by selecting two points
+  * from that cluster as new centers. Good for balancing cluster sizes but requires cluster
+  * membership tracking.
   *
-  * Cost: O(n) - single pass to count cluster memberships Tradeoff: Balanced clusters but requires extra bookkeeping
+  * Cost: O(n) - single pass to count cluster memberships Tradeoff: Balanced clusters but requires
+  * extra bookkeeping
   */
 case class SplitLargestReseedPolicy(perturbation: Double = 0.1) extends ReseedPolicy {
   require(perturbation > 0.0, s"Perturbation must be positive, got $perturbation")
@@ -245,21 +247,19 @@ case class SplitLargestReseedPolicy(perturbation: Double = 0.1) extends ReseedPo
   override def name: String = s"splitLargest(perturb=$perturbation)"
 
   override def reseedEmptyClusters(
-    data: RDD[BregmanPoint],
-    centers: IndexedSeq[BregmanCenter],
-    emptyClusters: Set[Int],
-    ops: BregmanPointOps,
-    seed: Long
+      data: RDD[BregmanPoint],
+      centers: IndexedSeq[BregmanCenter],
+      emptyClusters: Set[Int],
+      ops: BregmanPointOps,
+      seed: Long
   ): IndexedSeq[BregmanCenter] = {
     if (emptyClusters.isEmpty) {
       return centers
     }
 
     // Count cluster memberships
-    val clusterSizes = data
-      .map(point => ops.findClosestCluster(centers, point))
-      .countByValue()
-      .toMap
+    val clusterSizes =
+      data.map(point => ops.findClosestCluster(centers, point)).countByValue().toMap
 
     val rng = new Random(seed)
 
@@ -277,7 +277,8 @@ case class SplitLargestReseedPolicy(perturbation: Double = 0.1) extends ReseedPo
             }
             val perturbedVector = org.apache.spark.ml.linalg.Vectors.dense(perturbedArray)
             val perturbedCenter = ops.toCenter(
-              com.massivedatascience.linalg.WeightedVector.fromInhomogeneousWeighted(perturbedVector, 1.0)
+              com.massivedatascience.linalg.WeightedVector
+                .fromInhomogeneousWeighted(perturbedVector, 1.0)
             )
             currentCenters.updated(emptyIdx, perturbedCenter)
 
@@ -320,7 +321,9 @@ object ReseedPolicy {
     * @param perturbation
     *   amount to perturb cluster center (as fraction)
     */
-  def splitLargest(perturbation: Double = 0.1): ReseedPolicy = SplitLargestReseedPolicy(perturbation)
+  def splitLargest(perturbation: Double = 0.1): ReseedPolicy = SplitLargestReseedPolicy(
+    perturbation
+  )
 
   /** Default reseed policy (random with moderate sample) */
   def default: ReseedPolicy = RandomReseedPolicy(100)
@@ -335,11 +338,11 @@ object ReseedPolicy {
   def fromString(name: String): ReseedPolicy = {
     val normalized = name.toLowerCase.replaceAll("[\\s-_]", "")
     normalized match {
-      case "none" | "noreseed"    => NoReseedPolicy
-      case "random"               => RandomReseedPolicy()
-      case "farthest" | "outlier" => FarthestPointReseedPolicy()
+      case "none" | "noreseed"      => NoReseedPolicy
+      case "random"                 => RandomReseedPolicy()
+      case "farthest" | "outlier"   => FarthestPointReseedPolicy()
       case "splitlargest" | "split" => SplitLargestReseedPolicy()
-      case _ =>
+      case _                        =>
         throw new IllegalArgumentException(
           s"Unknown reseed policy: $name. Supported: none, random, farthest, splitLargest"
         )

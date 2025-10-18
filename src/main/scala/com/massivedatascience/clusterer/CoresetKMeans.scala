@@ -41,11 +41,11 @@ import org.apache.spark.rdd.RDD
   *   Whether to refine centers on full data after core-set clustering
   */
 case class CoresetKMeansConfig(
-  coresetConfig: CoresetConfig,
-  maxIterations: Int = 50,
-  refinementIterations: Int = 3,
-  convergenceThreshold: Double = 1e-6,
-  enableRefinement: Boolean = true
+    coresetConfig: CoresetConfig,
+    maxIterations: Int = 50,
+    refinementIterations: Int = 3,
+    convergenceThreshold: Double = 1e-6,
+    enableRefinement: Boolean = true
 ) extends ConfigValidator {
 
   requirePositive(maxIterations, "Max iterations")
@@ -71,19 +71,19 @@ case class CoresetKMeansConfig(
   *   Configuration used
   */
 case class CoresetKMeansResult(
-  centers: IndexedSeq[BregmanCenter],
-  distortion: Double,
-  coresetResult: CoresetResult,
-  coresetIterations: Int,
-  refinementIterations: Int,
-  totalTime: Long,
-  config: CoresetKMeansConfig
+    centers: IndexedSeq[BregmanCenter],
+    distortion: Double,
+    coresetResult: CoresetResult,
+    coresetIterations: Int,
+    refinementIterations: Int,
+    totalTime: Long,
+    config: CoresetKMeansConfig
 ) {
 
   /** Get comprehensive statistics about the clustering result.
     */
   def getStats: Map[String, Double] = {
-    val coresetStats = coresetResult.getStats
+    val coresetStats    = coresetResult.getStats
     val clusteringStats = Map(
       "numCenters"           -> centers.length.toDouble,
       "finalDistortion"      -> distortion,
@@ -99,8 +99,8 @@ case class CoresetKMeansResult(
 
 /** Core-set based K-means clustering for Bregman divergences.
   *
-  * This implementation first constructs a small representative core-set, performs exact clustering on the core-set,
-  * then optionally refines the centers using the full dataset.
+  * This implementation first constructs a small representative core-set, performs exact clustering
+  * on the core-set, then optionally refines the centers using the full dataset.
   */
 case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConfig)
     extends MultiKMeansClusterer
@@ -109,10 +109,10 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Cluster the given points using core-set approximation.
     */
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    initialCenters: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      initialCenters: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     require(initialCenters.nonEmpty, "At least one set of initial centers must be provided")
@@ -156,9 +156,9 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Perform exact clustering on the core-set using in-memory Lloyd's algorithm.
     */
   private def clusterCoreset(
-    coreset: Seq[WeightedPoint],
-    initialCenters: Seq[IndexedSeq[BregmanCenter]],
-    pointOps: BregmanPointOps
+      coreset: Seq[WeightedPoint],
+      initialCenters: Seq[IndexedSeq[BregmanCenter]],
+      pointOps: BregmanPointOps
   ): Seq[ClusteringWithDistortion] = {
 
     val coresetPoints = coreset.map(_.point)
@@ -174,9 +174,9 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Run Lloyd's algorithm iterations on the core-set.
     */
   private def lloydIterationsOnCoreset(
-    points: Seq[BregmanPoint],
-    initialCenters: IndexedSeq[BregmanCenter],
-    pointOps: BregmanPointOps
+      points: Seq[BregmanPoint],
+      initialCenters: IndexedSeq[BregmanCenter],
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     var centers            = initialCenters
@@ -193,7 +193,7 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
       val newCenters = computeNewCentersFromAssignments(assignments, centers.length, pointOps)
 
       // Check convergence
-      val distortion = assignments.map(_._3).sum
+      val distortion  = assignments.map(_._3).sum
       val improvement =
         math.abs(previousDistortion - distortion) / math.max(previousDistortion, 1e-10)
 
@@ -212,16 +212,13 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Compute new centers from point assignments.
     */
   private def computeNewCentersFromAssignments(
-    assignments: Seq[(Int, BregmanPoint, Double)],
-    numClusters: Int,
-    pointOps: BregmanPointOps
+      assignments: Seq[(Int, BregmanPoint, Double)],
+      numClusters: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     // Group points by cluster
-    val clusterGroups = assignments
-      .filter(_._1 >= 0)
-      .groupBy(_._1)
-      .mapValues(_.map(_._2))
+    val clusterGroups = assignments.filter(_._1 >= 0).groupBy(_._1).mapValues(_.map(_._2))
 
     // Compute center for each cluster
     (0 until numClusters).map { i =>
@@ -235,7 +232,7 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
             // Empty cluster - keep previous center or create default
             pointOps.toCenter(pointOps.make().asImmutable)
           }
-        case _ =>
+        case _                                             =>
           // Empty cluster
           logger.warn(s"Cluster $i is empty in core-set clustering")
           pointOps.toCenter(pointOps.make().asImmutable)
@@ -246,9 +243,9 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Refine cluster centers using the full dataset.
     */
   private def refineOnFullData(
-    initialCenters: IndexedSeq[BregmanCenter],
-    fullData: RDD[BregmanPoint],
-    pointOps: BregmanPointOps
+      initialCenters: IndexedSeq[BregmanCenter],
+      fullData: RDD[BregmanPoint],
+      pointOps: BregmanPointOps
   ): ClusteringWithDistortion = {
 
     var centers            = initialCenters
@@ -289,9 +286,9 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
   /** Compute new cluster centers from point assignments.
     */
   private def computeNewCenters(
-    assignments: RDD[(Int, BregmanPoint, Double)],
-    numClusters: Int,
-    pointOps: BregmanPointOps
+      assignments: RDD[(Int, BregmanPoint, Double)],
+      numClusters: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     // Aggregate points by cluster
@@ -309,7 +306,7 @@ case class CoresetKMeans(config: CoresetKMeansConfig = CoresetKMeans.defaultConf
       clusterSums.get(i) match {
         case Some(sum) if sum.weight > pointOps.weightThreshold =>
           pointOps.toCenter(sum.asImmutable)
-        case _ =>
+        case _                                                  =>
           // Handle empty cluster - use a random point or previous center
           logger.warn(s"Cluster $i is empty during refinement")
           // For now, create a zero-weight center
@@ -400,10 +397,10 @@ object CoresetKMeans {
   /** Quick clustering with automatic parameter selection.
     */
   def quick(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps,
-    compressionRatio: Double = 0.01
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps,
+      compressionRatio: Double = 0.01
   ): CoresetKMeansResult = {
 
     val startTime = System.currentTimeMillis()

@@ -32,10 +32,10 @@ trait KMeansConfig extends Serializable {
 }
 
 case class SimpleKMeansConfig(
-  updateRate: Double = 1.0,
-  maxRoundsToBackfill: Int = 0,
-  fractionOfPointsToWeigh: Double = 0.10,
-  addOnly: Boolean = true
+    updateRate: Double = 1.0,
+    maxRoundsToBackfill: Int = 0,
+    fractionOfPointsToWeigh: Double = 0.10,
+    addOnly: Boolean = true
 ) extends KMeansConfig
 
 object DefaultKMeansConfig extends SimpleKMeansConfig()

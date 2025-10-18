@@ -15,9 +15,9 @@ object SoftKMeansExample extends App {
     Tuple1(Vectors.dense(10.0, 10.0))
   ).toDF("features")
 
-  val soft = new SoftKMeans().setK(2).setBeta(1.5).setDivergence("squaredEuclidean").setSeed(11)
+  val soft  = new SoftKMeans().setK(2).setBeta(1.5).setDivergence("squaredEuclidean").setSeed(11)
   val model = soft.fit(df)
-  val pred = model.transform(df)
+  val pred  = model.transform(df)
   assert(pred.columns.contains("probabilities"), "probabilities column missing")
   assert(pred.columns.contains("prediction"), "prediction column missing")
 

@@ -19,14 +19,14 @@ package com.massivedatascience.clusterer.ml.df
 
 /** Typed errors for generalized k-means clustering.
   *
-  * This ADT provides a structured way to represent and handle errors that can occur during clustering. Each error type
-  * carries relevant context and provides clear error messages.
+  * This ADT provides a structured way to represent and handle errors that can occur during
+  * clustering. Each error type carries relevant context and provides clear error messages.
   *
   * Design principles:
-  * - Exhaustive pattern matching for error handling
-  * - Context-rich error messages for debugging
-  * - Type-safe error propagation
-  * - Easy to extend with new error types
+  *   - Exhaustive pattern matching for error handling
+  *   - Context-rich error messages for debugging
+  *   - Type-safe error propagation
+  *   - Easy to extend with new error types
   */
 sealed trait GKMError {
 
@@ -38,11 +38,11 @@ sealed trait GKMError {
 
   /** Convert to exception for throwing */
   def toException: Exception = category match {
-    case ErrorCategory.Validation   => new IllegalArgumentException(message)
+    case ErrorCategory.Validation    => new IllegalArgumentException(message)
     case ErrorCategory.Configuration => new IllegalStateException(message)
-    case ErrorCategory.Convergence  => new RuntimeException(message)
-    case ErrorCategory.Data         => new IllegalArgumentException(message)
-    case ErrorCategory.Internal     => new RuntimeException(message)
+    case ErrorCategory.Convergence   => new RuntimeException(message)
+    case ErrorCategory.Data          => new IllegalArgumentException(message)
+    case ErrorCategory.Internal      => new RuntimeException(message)
   }
 }
 
@@ -79,7 +79,7 @@ object ErrorCategory {
   *   the dataset size
   */
 case class InvalidK(k: Int, n: Long) extends GKMError {
-  override def message: String = s"Invalid k=$k: must be positive and <= dataset size ($n)"
+  override def message: String         = s"Invalid k=$k: must be positive and <= dataset size ($n)"
   override def category: ErrorCategory = ErrorCategory.Validation
 }
 
@@ -89,7 +89,7 @@ case class InvalidK(k: Int, n: Long) extends GKMError {
   *   the invalid tolerance value
   */
 case class InvalidTolerance(tolerance: Double) extends GKMError {
-  override def message: String = s"Invalid tolerance=$tolerance: must be >= 0.0"
+  override def message: String         = s"Invalid tolerance=$tolerance: must be >= 0.0"
   override def category: ErrorCategory = ErrorCategory.Validation
 }
 
@@ -99,7 +99,7 @@ case class InvalidTolerance(tolerance: Double) extends GKMError {
   *   the invalid max iterations value
   */
 case class InvalidMaxIterations(maxIter: Int) extends GKMError {
-  override def message: String = s"Invalid maxIter=$maxIter: must be >= 1"
+  override def message: String         = s"Invalid maxIter=$maxIter: must be >= 1"
   override def category: ErrorCategory = ErrorCategory.Validation
 }
 
@@ -109,7 +109,7 @@ case class InvalidMaxIterations(maxIter: Int) extends GKMError {
   *   the invalid seed value
   */
 case class InvalidSeed(seed: Long) extends GKMError {
-  override def message: String = s"Invalid seed=$seed: must be >= 0"
+  override def message: String         = s"Invalid seed=$seed: must be >= 0"
   override def category: ErrorCategory = ErrorCategory.Validation
 }
 
@@ -121,7 +121,7 @@ case class InvalidSeed(seed: Long) extends GKMError {
   *   optional row index where error occurred
   */
 case class InvalidWeight(weight: Double, rowIndex: Option[Long] = None) extends GKMError {
-  override def message: String = {
+  override def message: String         = {
     val location = rowIndex.map(i => s" at row $i").getOrElse("")
     s"Invalid weight=$weight$location: must be > 0.0 and finite"
   }
@@ -140,7 +140,7 @@ case class InvalidWeight(weight: Double, rowIndex: Option[Long] = None) extends 
   *   list of supported kernel names
   */
 case class UnknownKernel(name: String, supported: Seq[String]) extends GKMError {
-  override def message: String = s"Unknown kernel '$name'. Supported: ${supported.mkString(", ")}"
+  override def message: String         = s"Unknown kernel '$name'. Supported: ${supported.mkString(", ")}"
   override def category: ErrorCategory = ErrorCategory.Configuration
 }
 
@@ -152,7 +152,8 @@ case class UnknownKernel(name: String, supported: Seq[String]) extends GKMError 
   *   list of supported methods
   */
 case class UnknownInitMethod(method: String, supported: Seq[String]) extends GKMError {
-  override def message: String = s"Unknown initialization method '$method'. Supported: ${supported.mkString(", ")}"
+  override def message: String         =
+    s"Unknown initialization method '$method'. Supported: ${supported.mkString(", ")}"
   override def category: ErrorCategory = ErrorCategory.Configuration
 }
 
@@ -165,8 +166,10 @@ case class UnknownInitMethod(method: String, supported: Seq[String]) extends GKM
   * @param reason
   *   explanation of incompatibility
   */
-case class IncompatibleTransform(transform: String, kernel: String, reason: String) extends GKMError {
-  override def message: String = s"Transform '$transform' incompatible with kernel '$kernel': $reason"
+case class IncompatibleTransform(transform: String, kernel: String, reason: String)
+    extends GKMError {
+  override def message: String         =
+    s"Transform '$transform' incompatible with kernel '$kernel': $reason"
   override def category: ErrorCategory = ErrorCategory.Configuration
 }
 
@@ -178,7 +181,8 @@ case class IncompatibleTransform(transform: String, kernel: String, reason: Stri
   *   list of available columns
   */
 case class MissingColumn(columnName: String, availableColumns: Seq[String]) extends GKMError {
-  override def message: String = s"Missing required column '$columnName'. Available: ${availableColumns.mkString(", ")}"
+  override def message: String         =
+    s"Missing required column '$columnName'. Available: ${availableColumns.mkString(", ")}"
   override def category: ErrorCategory = ErrorCategory.Configuration
 }
 
@@ -192,7 +196,7 @@ case class MissingColumn(columnName: String, availableColumns: Seq[String]) exte
   *   additional context about where empty dataset was encountered
   */
 case class EmptyDataset(context: String = "") extends GKMError {
-  override def message: String = {
+  override def message: String         = {
     if (context.nonEmpty) s"Empty dataset: $context"
     else "Empty dataset"
   }
@@ -208,9 +212,12 @@ case class EmptyDataset(context: String = "") extends GKMError {
   * @param columnName
   *   optional column name
   */
-case class InvalidFeatures(reason: String, rowIndex: Option[Long] = None, columnName: Option[String] = None)
-    extends GKMError {
-  override def message: String = {
+case class InvalidFeatures(
+    reason: String,
+    rowIndex: Option[Long] = None,
+    columnName: Option[String] = None
+) extends GKMError {
+  override def message: String         = {
     val location = (rowIndex, columnName) match {
       case (Some(row), Some(col)) => s" in column '$col' at row $row"
       case (Some(row), None)      => s" at row $row"
@@ -231,8 +238,9 @@ case class InvalidFeatures(reason: String, rowIndex: Option[Long] = None, column
   * @param rowIndex
   *   optional row index where mismatch occurred
   */
-case class DimensionMismatch(expected: Int, actual: Int, rowIndex: Option[Long] = None) extends GKMError {
-  override def message: String = {
+case class DimensionMismatch(expected: Int, actual: Int, rowIndex: Option[Long] = None)
+    extends GKMError {
+  override def message: String         = {
     val location = rowIndex.map(i => s" at row $i").getOrElse("")
     s"Dimension mismatch$location: expected $expected, got $actual"
   }
@@ -253,7 +261,7 @@ case class DimensionMismatch(expected: Int, actual: Int, rowIndex: Option[Long] 
   *   final cost change
   */
 case class ConvergenceFailure(maxIter: Int, finalCost: Double, costDelta: Double) extends GKMError {
-  override def message: String =
+  override def message: String         =
     f"Failed to converge after $maxIter iterations (final cost=$finalCost%.4f, delta=$costDelta%.6f)"
   override def category: ErrorCategory = ErrorCategory.Convergence
 }
@@ -264,7 +272,7 @@ case class ConvergenceFailure(maxIter: Int, finalCost: Double, costDelta: Double
   *   iteration where this occurred
   */
 case class AllClustersEmpty(iteration: Int) extends GKMError {
-  override def message: String = s"All clusters became empty at iteration $iteration"
+  override def message: String         = s"All clusters became empty at iteration $iteration"
   override def category: ErrorCategory = ErrorCategory.Convergence
 }
 
@@ -277,8 +285,9 @@ case class AllClustersEmpty(iteration: Int) extends GKMError {
   * @param currentCost
   *   cost from current iteration
   */
-case class CostIncreased(iteration: Int, previousCost: Double, currentCost: Double) extends GKMError {
-  override def message: String =
+case class CostIncreased(iteration: Int, previousCost: Double, currentCost: Double)
+    extends GKMError {
+  override def message: String         =
     f"Cost increased at iteration $iteration: $previousCost%.4f -> $currentCost%.4f (delta=${currentCost - previousCost}%.4f)"
   override def category: ErrorCategory = ErrorCategory.Convergence
 }
@@ -293,7 +302,7 @@ case class CostIncreased(iteration: Int, previousCost: Double, currentCost: Doub
   *   where the null was encountered
   */
 case class UnexpectedNull(context: String) extends GKMError {
-  override def message: String = s"Unexpected null value: $context"
+  override def message: String         = s"Unexpected null value: $context"
   override def category: ErrorCategory = ErrorCategory.Internal
 }
 
@@ -303,7 +312,7 @@ case class UnexpectedNull(context: String) extends GKMError {
   *   description of the invalid state
   */
 case class InvalidState(description: String) extends GKMError {
-  override def message: String = s"Invalid internal state: $description"
+  override def message: String         = s"Invalid internal state: $description"
   override def category: ErrorCategory = ErrorCategory.Internal
 }
 
@@ -315,7 +324,7 @@ case class InvalidState(description: String) extends GKMError {
   *   additional context
   */
 case class AssertionFailed(assertion: String, context: String = "") extends GKMError {
-  override def message: String = {
+  override def message: String         = {
     if (context.nonEmpty) s"Assertion failed: $assertion ($context)"
     else s"Assertion failed: $assertion"
   }
@@ -328,8 +337,8 @@ case class AssertionFailed(assertion: String, context: String = "") extends GKME
 
 /** Result type for operations that can fail with typed errors.
   *
-  * This provides a functional approach to error handling, allowing errors to be composed and transformed without
-  * throwing exceptions.
+  * This provides a functional approach to error handling, allowing errors to be composed and
+  * transformed without throwing exceptions.
   *
   * Example usage:
   * {{{
@@ -372,22 +381,22 @@ object GKMResult {
 
   /** Successful result */
   case class Success[A](value: A) extends GKMResult[A] {
-    override def isSuccess: Boolean = true
-    override def get: A = value
-    override def getOrElse[B >: A](default: => B): B = value
-    override def map[B](f: A => B): GKMResult[B] = Success(f(value))
+    override def isSuccess: Boolean                             = true
+    override def get: A                                         = value
+    override def getOrElse[B >: A](default: => B): B            = value
+    override def map[B](f: A => B): GKMResult[B]                = Success(f(value))
     override def flatMap[B](f: A => GKMResult[B]): GKMResult[B] = f(value)
-    override def error: Option[GKMError] = None
+    override def error: Option[GKMError]                        = None
   }
 
   /** Failed result */
   case class Failure[A](err: GKMError) extends GKMResult[A] {
-    override def isSuccess: Boolean = false
-    override def get: A = throw err.toException
-    override def getOrElse[B >: A](default: => B): B = default
-    override def map[B](f: A => B): GKMResult[B] = Failure(err)
+    override def isSuccess: Boolean                             = false
+    override def get: A                                         = throw err.toException
+    override def getOrElse[B >: A](default: => B): B            = default
+    override def map[B](f: A => B): GKMResult[B]                = Failure(err)
     override def flatMap[B](f: A => GKMResult[B]): GKMResult[B] = Failure(err)
-    override def error: Option[GKMError] = Some(err)
+    override def error: Option[GKMError]                        = Some(err)
   }
 
   /** Create a successful result */

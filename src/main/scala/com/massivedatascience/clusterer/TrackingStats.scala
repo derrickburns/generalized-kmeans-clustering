@@ -20,7 +20,7 @@ package com.massivedatascience.clusterer
 import org.apache.spark.SparkContext
 
 class TrackingStats(sc: SparkContext) extends BasicStats with Serializable {
-  val currentRound = sc.longAccumulator("Round")
+  val currentRound        = sc.longAccumulator("Round")
   currentRound.add(-1)
   val newlyAssignedPoints = sc.longAccumulator("Newly Assigned Points")
   val reassignedPoints    = sc.longAccumulator("Reassigned Points")

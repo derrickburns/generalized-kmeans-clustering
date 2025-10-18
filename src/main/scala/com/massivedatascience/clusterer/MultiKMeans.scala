@@ -21,7 +21,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.{MutableWeightedVector, WeightedVector}
+import com.massivedatascience.linalg.{ MutableWeightedVector, WeightedVector }
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.DoubleAccumulator
 
@@ -29,8 +29,8 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.slf4j.LoggerFactory
 
-/** A K-Means clustering implementation that performs multiple K-means clusterings simultaneously, returning the one
-  * with the lowest cost.
+/** A K-Means clustering implementation that performs multiple K-means clusterings simultaneously,
+  * returning the one with the lowest cost.
   */
 
 //scalastyle:off
@@ -40,10 +40,10 @@ class MultiKMeans extends MultiKMeansClusterer {
   val logger = LoggerFactory.getLogger(getClass.getName)
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    c: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      c: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     val centers = c.map(_.toArray).toArray
@@ -114,15 +114,15 @@ class MultiKMeans extends MultiKMeansClusterer {
     }
 
     def getCentroids(
-      data: RDD[BregmanPoint],
-      activeCenters: Array[Array[BregmanCenter]]
+        data: RDD[BregmanPoint],
+        activeCenters: Array[Array[BregmanCenter]]
     ): (Array[((Int, Int), WeightedVector)], Array[Double]) = {
 
-      val sc = data.sparkContext
+      val sc                                      = data.sparkContext
       val runDistortion: Array[DoubleAccumulator] =
         Array.fill(activeCenters.length)(sc.doubleAccumulator("distortion"))
-      val bcActiveCenters = sc.broadcast(activeCenters)
-      val result = data
+      val bcActiveCenters                         = sc.broadcast(activeCenters)
+      val result                                  = data
         .mapPartitions[((Int, Int), WeightedVector)] { points =>
           val bcCenters = bcActiveCenters.value
           val centers   = bcCenters.map(c => Array.fill(c.length)(pointOps.make()))

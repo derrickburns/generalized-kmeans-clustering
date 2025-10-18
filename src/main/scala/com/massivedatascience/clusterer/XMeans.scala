@@ -19,7 +19,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
 import org.apache.spark.rdd.RDD
-import scala.math.{log, Pi}
+import scala.math.{ log, Pi }
 
 /** Configuration for X-means clustering.
   *
@@ -28,19 +28,19 @@ import scala.math.{log, Pi}
   * @param maxK
   *   Maximum number of clusters to try
   * @param criterion
-  *   Information criterion for model selection: "bic" - Bayesian Information Criterion (default) "aic" - Akaike
-  *   Information Criterion
+  *   Information criterion for model selection: "bic" - Bayesian Information Criterion (default)
+  *   "aic" - Akaike Information Criterion
   * @param maxIterationsPerK
   *   Maximum iterations for clustering at each k
   * @param improvementThreshold
   *   Minimum BIC/AIC improvement to continue (negative = improvement)
   */
 case class XMeansConfig(
-  minK: Int = 2,
-  maxK: Int = 20,
-  criterion: String = "bic",
-  maxIterationsPerK: Int = 20,
-  improvementThreshold: Double = -1.0
+    minK: Int = 2,
+    maxK: Int = 20,
+    criterion: String = "bic",
+    maxIterationsPerK: Int = 20,
+    improvementThreshold: Double = -1.0
 ) extends ConfigValidator {
 
   requirePositive(minK, "Min k")
@@ -51,13 +51,13 @@ case class XMeansConfig(
 
 /** X-means clustering implementation - automatically determines optimal k.
   *
-  * X-means extends k-means by automatically selecting the number of clusters using the Bayesian Information Criterion
-  * (BIC) or Akaike Information Criterion (AIC).
+  * X-means extends k-means by automatically selecting the number of clusters using the Bayesian
+  * Information Criterion (BIC) or Akaike Information Criterion (AIC).
   *
   * Algorithm:
   *   1. Start with k = minK clusters 2. For each k from minK to maxK:
-  *      a. Run k-means with k clusters b. Compute BIC or AIC score c. If score improved, continue; else stop 3. Return
-  *         clustering with best score
+  *      a. Run k-means with k clusters b. Compute BIC or AIC score c. If score improved, continue;
+  *         else stop 3. Return clustering with best score
   *
   * Information Criteria:
   *   - BIC = -2*log-likelihood + p*log(n)
@@ -87,16 +87,16 @@ case class XMeansConfig(
   *   Clusterer to use for each k (default: ColumnTrackingKMeans)
   */
 class XMeans(
-  config: XMeansConfig = XMeansConfig(),
-  baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
+    config: XMeansConfig = XMeansConfig(),
+    baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
 ) extends MultiKMeansClusterer
     with Logging {
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     logger.info(s"Starting X-means with k range [${config.minK}, ${config.maxK}]")
@@ -170,13 +170,14 @@ class XMeans(
     Seq(bestClustering)
   }
 
-  /** Initialize centers for a given k. Uses provided initial centers if k matches, otherwise samples from data.
+  /** Initialize centers for a given k. Uses provided initial centers if k matches, otherwise
+    * samples from data.
     */
   private def initializeCenters(
-    k: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    providedCenters: Seq[IndexedSeq[BregmanCenter]]
+      k: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      providedCenters: Seq[IndexedSeq[BregmanCenter]]
   ): IndexedSeq[BregmanCenter] = {
 
     // If provided centers match k, use them
@@ -198,12 +199,12 @@ class XMeans(
     * where p = k*d + 1 (centers + variance)
     */
   private def computeScore(
-    clustering: ClusteringWithDistortion,
-    data: RDD[BregmanPoint],
-    pointOps: BregmanPointOps,
-    k: Int,
-    n: Long,
-    d: Int
+      clustering: ClusteringWithDistortion,
+      data: RDD[BregmanPoint],
+      pointOps: BregmanPointOps,
+      k: Int,
+      n: Long,
+      d: Int
   ): Double = {
 
     // Compute log-likelihood from clustering cost

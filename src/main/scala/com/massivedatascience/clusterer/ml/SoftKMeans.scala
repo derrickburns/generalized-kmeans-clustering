@@ -21,8 +21,8 @@ import com.massivedatascience.clusterer.ml.df.BregmanKernel
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util._
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.sql.{Dataset, DataFrame}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.sql.{ Dataset, DataFrame }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.internal.Logging
@@ -33,8 +33,8 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
 
   /** Inverse temperature parameter controlling soft assignment sharpness.
     *
-    * Higher values → sharper assignments (approaches hard clustering) Lower values → softer assignments (more fuzzy
-    * membership)
+    * Higher values → sharper assignments (approaches hard clustering) Lower values → softer
+    * assignments (more fuzzy membership)
     *
     * Default: 1.0
     */
@@ -69,16 +69,16 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
   def getProbabilityCol: String = $(probabilityCol)
 
   setDefault(
-    beta -> 1.0,
-    minMembership -> 1e-10,
+    beta           -> 1.0,
+    minMembership  -> 1e-10,
     probabilityCol -> "probabilities"
   )
 }
 
 /** Soft K-Means clustering (fuzzy c-means) - DataFrame API.
   *
-  * Soft K-Means extends K-means by computing probabilistic cluster memberships instead of hard assignments. Each point
-  * has a membership probability for each cluster, computed using:
+  * Soft K-Means extends K-means by computing probabilistic cluster memberships instead of hard
+  * assignments. Each point has a membership probability for each cluster, computed using:
   *
   * p(cluster c | point x) ∝ exp(-β * D_φ(x, μ_c))
   *
@@ -91,9 +91,8 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
   *   - Provides uncertainty estimates
   *
   * Algorithm:
-  *   1. E-step: Compute soft assignments using Boltzmann distribution
-  *   2. M-step: Update centers as weighted averages with membership weights
-  *   3. Repeat until convergence
+  *   1. E-step: Compute soft assignments using Boltzmann distribution 2. M-step: Update centers as
+  *      weighted averages with membership weights 3. Repeat until convergence
   *
   * Example usage:
   * {{{
@@ -121,21 +120,21 @@ class SoftKMeans(override val uid: String)
 
   // Parameter setters
 
-  def setBeta(value: Double): this.type = set(beta, value)
-  def setMinMembership(value: Double): this.type = set(minMembership, value)
+  def setBeta(value: Double): this.type           = set(beta, value)
+  def setMinMembership(value: Double): this.type  = set(minMembership, value)
   def setProbabilityCol(value: String): this.type = set(probabilityCol, value)
 
   // Inherited parameter setters
-  def setK(value: Int): this.type = set(k, value)
-  def setDivergence(value: String): this.type = set(divergence, value)
-  def setSmoothing(value: Double): this.type = set(smoothing, value)
-  def setFeaturesCol(value: String): this.type = set(featuresCol, value)
+  def setK(value: Int): this.type                = set(k, value)
+  def setDivergence(value: String): this.type    = set(divergence, value)
+  def setSmoothing(value: Double): this.type     = set(smoothing, value)
+  def setFeaturesCol(value: String): this.type   = set(featuresCol, value)
   def setPredictionCol(value: String): this.type = set(predictionCol, value)
-  def setWeightCol(value: String): this.type = set(weightCol, value)
-  def setMaxIter(value: Int): this.type = set(maxIter, value)
-  def setTol(value: Double): this.type = set(tol, value)
-  def setSeed(value: Long): this.type = set(seed, value)
-  def setDistanceCol(value: String): this.type = set(distanceCol, value)
+  def setWeightCol(value: String): this.type     = set(weightCol, value)
+  def setMaxIter(value: Int): this.type          = set(maxIter, value)
+  def setTol(value: Double): this.type           = set(tol, value)
+  def setSeed(value: Long): this.type            = set(seed, value)
+  def setDistanceCol(value: String): this.type   = set(distanceCol, value)
 
   override def fit(dataset: Dataset[_]): SoftKMeansModel = {
     transformSchema(dataset.schema, logging = true)
@@ -165,10 +164,10 @@ class SoftKMeans(override val uid: String)
       logInfo(s"Initialized ${initialCenters.length} centers")
 
       // Convert to Vector objects
-      var centers = initialCenters.map(Vectors.dense)
+      var centers      = initialCenters.map(Vectors.dense)
       var previousCost = Double.MaxValue
-      var iteration = 0
-      var converged = false
+      var iteration    = 0
+      var converged    = false
 
       while (iteration < $(maxIter) && !converged) {
         iteration += 1
@@ -181,7 +180,7 @@ class SoftKMeans(override val uid: String)
         val newCenters = computeSoftCenters(memberships, centers.length, kernel)
 
         // Check convergence
-        val cost = computeSoftCost(memberships, newCenters, kernel)
+        val cost        = computeSoftCost(memberships, newCenters, kernel)
         val improvement = (previousCost - cost) / math.max(math.abs(previousCost), 1e-10)
 
         logDebug(f"Iteration $iteration: cost = $cost%.6f, improvement = $improvement%.8f")
@@ -228,10 +227,10 @@ class SoftKMeans(override val uid: String)
   /** Initialize cluster centers.
     */
   private def initializeCenters(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): Array[Array[Double]] = {
 
     // For soft k-means, use random initialization by default (simpler and often works well)
@@ -241,10 +240,10 @@ class SoftKMeans(override val uid: String)
   /** Random initialization: sample k random points.
     */
   private def initializeRandom(
-    df: DataFrame,
-    featuresCol: String,
-    k: Int,
-    seed: Long
+      df: DataFrame,
+      featuresCol: String,
+      k: Int,
+      seed: Long
   ): Array[Array[Double]] = {
 
     val fraction = math.min(1.0, (k * 10.0) / df.count().toDouble)
@@ -262,12 +261,12 @@ class SoftKMeans(override val uid: String)
     * Uses the log-sum-exp trick for numerical stability.
     */
   private def computeSoftAssignments(
-    df: DataFrame,
-    centers: Array[Vector],
-    kernel: BregmanKernel
+      df: DataFrame,
+      centers: Array[Vector],
+      kernel: BregmanKernel
   ): DataFrame = {
 
-    val betaValue = $(beta)
+    val betaValue          = $(beta)
     val minMembershipValue = $(minMembership)
 
     // Create UDF for soft assignment
@@ -277,13 +276,13 @@ class SoftKMeans(override val uid: String)
 
       // Compute unnormalized probabilities: exp(-β * distance)
       // Use min distance for numerical stability (log-sum-exp trick)
-      val minDistance = distances.min
+      val minDistance       = distances.min
       val unnormalizedProbs = distances.map { dist =>
         math.exp(-betaValue * (dist - minDistance))
       }
 
       // Normalize to get probabilities
-      val totalProb = unnormalizedProbs.sum
+      val totalProb                    = unnormalizedProbs.sum
       val probabilities: Array[Double] = if (totalProb > 1e-100) {
         unnormalizedProbs.map(_ / totalProb).toArray
       } else {
@@ -292,8 +291,8 @@ class SoftKMeans(override val uid: String)
       }
 
       // Apply minimum membership threshold
-      val adjustedProbs = probabilities.map(p => math.max(p, minMembershipValue))
-      val adjustedSum = adjustedProbs.sum
+      val adjustedProbs   = probabilities.map(p => math.max(p, minMembershipValue))
+      val adjustedSum     = adjustedProbs.sum
       val normalizedProbs = adjustedProbs.map(_ / adjustedSum)
 
       Vectors.dense(normalizedProbs)
@@ -307,12 +306,12 @@ class SoftKMeans(override val uid: String)
     * Each center is the weighted average of all points, where weights are membership probabilities.
     */
   private def computeSoftCenters(
-    memberships: DataFrame,
-    numClusters: Int,
-    kernel: BregmanKernel
+      memberships: DataFrame,
+      numClusters: Int,
+      kernel: BregmanKernel
   ): Array[Vector] = {
 
-    val featCol: String = $(featuresCol)
+    val featCol: String              = $(featuresCol)
     val weightColOpt: Option[String] = if (hasWeightCol) Some($(weightCol)) else None
 
     // Collect membership data to driver (needed for weighted averaging)
@@ -326,16 +325,16 @@ class SoftKMeans(override val uid: String)
     // For each cluster, compute weighted sum of points
     val clusterCenters = (0 until numClusters).map { clusterId =>
       var weightedSum: Array[Double] = null
-      var totalWeight = 0.0
+      var totalWeight                = 0.0
 
       membershipData.foreach { row =>
-        val features = row.getAs[Vector](0).toArray
-        val probs = row.getAs[Vector](1).toArray
+        val features    = row.getAs[Vector](0).toArray
+        val probs       = row.getAs[Vector](1).toArray
         val clusterProb = probs(clusterId)
 
         val finalWeight = weightColOpt match {
           case Some(wCol) => clusterProb * row.getAs[Double](2) // Third column is weight
-          case None => clusterProb
+          case None       => clusterProb
         }
 
         if (weightedSum == null) {
@@ -368,9 +367,9 @@ class SoftKMeans(override val uid: String)
     * Cost = Σ_x Σ_c p(c|x) * D_φ(x, μ_c)
     */
   private def computeSoftCost(
-    memberships: DataFrame,
-    centers: Array[Vector],
-    kernel: BregmanKernel
+      memberships: DataFrame,
+      centers: Array[Vector],
+      kernel: BregmanKernel
   ): Double = {
 
     val costUDF = udf { (features: Vector, probs: Vector) =>
@@ -414,11 +413,11 @@ object SoftKMeans extends DefaultParamsReadable[SoftKMeans] {
   *   Kernel for distance calculations
   */
 class SoftKMeansModel(
-  override val uid: String,
-  val clusterCenters: Array[Vector],
-  val betaValue: Double,
-  val minMembershipValue: Double,
-  private val kernel: BregmanKernel
+    override val uid: String,
+    val clusterCenters: Array[Vector],
+    val betaValue: Double,
+    val minMembershipValue: Double,
+    private val kernel: BregmanKernel
 ) extends org.apache.spark.ml.Model[SoftKMeansModel]
     with SoftKMeansParams
     with MLWritable
@@ -441,8 +440,8 @@ class SoftKMeansModel(
       probs.toArray.zipWithIndex.maxBy(_._1)._2
     }
 
-    val result = withProbabilities
-      .withColumn($(predictionCol), hardAssignUDF(col($(probabilityCol))))
+    val result =
+      withProbabilities.withColumn($(predictionCol), hardAssignUDF(col($(probabilityCol))))
 
     // Add distance column if requested
     if (hasDistanceCol) {
@@ -463,13 +462,13 @@ class SoftKMeansModel(
       val distances = clusterCenters.map(center => kernel.divergence(features, center))
 
       // Compute unnormalized probabilities: exp(-β * distance)
-      val minDistance = distances.min
+      val minDistance       = distances.min
       val unnormalizedProbs = distances.map { dist =>
         math.exp(-betaValue * (dist - minDistance))
       }
 
       // Normalize
-      val totalProb = unnormalizedProbs.sum
+      val totalProb                    = unnormalizedProbs.sum
       val probabilities: Array[Double] = if (totalProb > 1e-100) {
         unnormalizedProbs.map(_ / totalProb).toArray
       } else {
@@ -477,8 +476,8 @@ class SoftKMeansModel(
       }
 
       // Apply minimum membership threshold
-      val adjustedProbs = probabilities.map(p => math.max(p, minMembershipValue))
-      val adjustedSum = adjustedProbs.sum
+      val adjustedProbs   = probabilities.map(p => math.max(p, minMembershipValue))
+      val adjustedSum     = adjustedProbs.sum
       val normalizedProbs = adjustedProbs.map(_ / adjustedSum)
 
       Vectors.dense(normalizedProbs)
@@ -499,20 +498,20 @@ class SoftKMeansModel(
   def predictSoft(features: Vector): Vector = {
     val distances = clusterCenters.map(center => kernel.divergence(features, center))
 
-    val minDistance = distances.min
+    val minDistance       = distances.min
     val unnormalizedProbs = distances.map { dist =>
       math.exp(-betaValue * (dist - minDistance))
     }
 
-    val totalProb = unnormalizedProbs.sum
+    val totalProb                    = unnormalizedProbs.sum
     val probabilities: Array[Double] = if (totalProb > 1e-100) {
       unnormalizedProbs.map(_ / totalProb).toArray
     } else {
       Array.fill(clusterCenters.length)(1.0 / clusterCenters.length)
     }
 
-    val adjustedProbs = probabilities.map(p => math.max(p, minMembershipValue))
-    val adjustedSum = adjustedProbs.sum
+    val adjustedProbs   = probabilities.map(p => math.max(p, minMembershipValue))
+    val adjustedSum     = adjustedProbs.sum
     val normalizedProbs = adjustedProbs.map(_ / adjustedSum)
 
     Vectors.dense(normalizedProbs)
@@ -528,16 +527,13 @@ class SoftKMeansModel(
       kernel.divergence(features, clusterCenters(prediction))
     }
 
-    df.select(costUDF(col($(featuresCol))).as("cost"))
-      .agg(sum("cost"))
-      .head()
-      .getDouble(0)
+    df.select(costUDF(col($(featuresCol))).as("cost")).agg(sum("cost")).head().getDouble(0)
   }
 
   /** Compute soft clustering cost.
     */
   def computeSoftCost(dataset: Dataset[_]): Double = {
-    val df = dataset.toDF()
+    val df        = dataset.toDF()
     val withProbs = computeSoftAssignments(df)
 
     val costUDF = udf { (features: Vector, probs: Vector) =>
@@ -557,11 +553,12 @@ class SoftKMeansModel(
   /** Compute effective number of clusters (entropy-based measure).
     */
   def effectiveNumberOfClusters(dataset: Dataset[_]): Double = {
-    val df = dataset.toDF()
+    val df        = dataset.toDF()
     val withProbs = computeSoftAssignments(df)
 
     val entropyUDF = udf { (probs: Vector) =>
-      val entropy = -probs.toArray.map(p => if (p > minMembershipValue) p * math.log(p) else 0.0).sum
+      val entropy =
+        -probs.toArray.map(p => if (p > minMembershipValue) p * math.log(p) else 0.0).sum
       math.exp(entropy) // Effective number of clusters for this point
     }
 
@@ -586,7 +583,7 @@ class SoftKMeansModel(
 
   // Get divergence from model (need to track this)
   private[ml] var modelDivergence: String = "squaredEuclidean"
-  private[ml] var modelSmoothing: Double = 1e-10
+  private[ml] var modelSmoothing: Double  = 1e-10
 }
 
 object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
@@ -620,37 +617,37 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
 
       // Collect all model parameters
       val params = Map(
-        "k" -> instance.numClusters,
-        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
-        "predictionCol" -> instance.getOrDefault(instance.predictionCol),
+        "k"              -> instance.numClusters,
+        "featuresCol"    -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol"  -> instance.getOrDefault(instance.predictionCol),
         "probabilityCol" -> instance.getOrDefault(instance.probabilityCol),
-        "beta" -> instance.betaValue,
-        "minMembership" -> instance.minMembershipValue,
-        "divergence" -> instance.modelDivergence,
-        "smoothing" -> instance.modelSmoothing
+        "beta"           -> instance.betaValue,
+        "minMembership"  -> instance.minMembershipValue,
+        "divergence"     -> instance.modelDivergence,
+        "smoothing"      -> instance.modelSmoothing
       )
 
-      val k = instance.numClusters
+      val k   = instance.numClusters
       val dim = instance.clusterCenters.headOption.map(_.size).getOrElse(0)
 
       // Build metadata object
       implicit val formats = DefaultFormats
-      val metaObj = Map(
-        "layoutVersion" -> LayoutVersion,
-        "algo" -> "SoftKMeansModel",
-        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+      val metaObj          = Map(
+        "layoutVersion"      -> LayoutVersion,
+        "algo"               -> "SoftKMeansModel",
+        "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
         "scalaBinaryVersion" -> getScalaBinaryVersion,
-        "divergence" -> instance.modelDivergence,
-        "k" -> k,
-        "dim" -> dim,
-        "uid" -> instance.uid,
-        "params" -> params,
-        "centers" -> Map(
-          "count" -> k,
+        "divergence"         -> instance.modelDivergence,
+        "k"                  -> k,
+        "dim"                -> dim,
+        "uid"                -> instance.uid,
+        "params"             -> params,
+        "centers"            -> Map(
+          "count"    -> k,
           "ordering" -> "center_id ASC (0..k-1)",
-          "storage" -> "parquet"
+          "storage"  -> "parquet"
         ),
-        "checksums" -> Map(
+        "checksums"          -> Map(
           "centersParquetSHA256" -> centersHash
         )
       )
@@ -677,22 +674,24 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
       logInfo(s"Loading SoftKMeansModel from $path")
 
       // Read metadata
-      val metaStr = readMetadata(path)
+      val metaStr          = readMetadata(path)
       implicit val formats = DefaultFormats
-      val metaJ = JsonMethods.parse(metaStr)
+      val metaJ            = JsonMethods.parse(metaStr)
 
       // Extract and validate layout version
       val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
-      val k = (metaJ \ "k").extract[Int]
-      val dim = (metaJ \ "dim").extract[Int]
-      val uid = (metaJ \ "uid").extract[String]
-      val divergence = (metaJ \ "divergence").extract[String]
+      val k             = (metaJ \ "k").extract[Int]
+      val dim           = (metaJ \ "dim").extract[Int]
+      val uid           = (metaJ \ "uid").extract[String]
+      val divergence    = (metaJ \ "divergence").extract[String]
 
-      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence")
+      logInfo(
+        s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence"
+      )
 
       // Read centers
       val centersDF = readCenters(spark, path)
-      val rows = centersDF.collect()
+      val rows      = centersDF.collect()
 
       // Validate metadata
       validateMetadata(layoutVersion, k, dim, rows.length)
@@ -703,10 +702,10 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
       }
 
       // Extract parameters
-      val paramsJ = metaJ \ "params"
-      val beta = (paramsJ \ "beta").extract[Double]
+      val paramsJ       = metaJ \ "params"
+      val beta          = (paramsJ \ "beta").extract[Double]
       val minMembership = (paramsJ \ "minMembership").extract[Double]
-      val smoothing = (paramsJ \ "smoothing").extract[Double]
+      val smoothing     = (paramsJ \ "smoothing").extract[Double]
 
       // Create kernel
       import com.massivedatascience.clusterer.ml.df._

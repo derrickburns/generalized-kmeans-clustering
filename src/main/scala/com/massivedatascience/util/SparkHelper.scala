@@ -64,10 +64,10 @@ trait SparkHelper {
   }
 
   protected def withCached[T, Q](
-    name: String,
-    v: RDD[T],
-    blocking: Boolean = false,
-    synchronous: Boolean = true
+      name: String,
+      v: RDD[T],
+      blocking: Boolean = false,
+      synchronous: Boolean = true
   )(f: RDD[T] => Q): Q = {
 
     sync(name, v, synchronous)
@@ -82,7 +82,7 @@ trait SparkHelper {
   }
 
   protected def withBroadcast[T: ClassTag, Q](
-    v: T
+      v: T
   )(f: Broadcast[T] => Q)(implicit sc: SparkContext): Q = {
     val broadcast = sc.broadcast(v)
     val result    = f(broadcast)

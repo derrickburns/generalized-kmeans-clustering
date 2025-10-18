@@ -19,8 +19,8 @@ package com.massivedatascience.clusterer.ml.df
 
 /** Configuration for generalized k-means clustering.
   *
-  * This provides a more convenient, immutable configuration object that can be easily constructed and modified. It
-  * reduces ceremony compared to working directly with Spark ML Params.
+  * This provides a more convenient, immutable configuration object that can be easily constructed
+  * and modified. It reduces ceremony compared to working directly with Spark ML Params.
   *
   * Example usage:
   * {{{
@@ -39,22 +39,22 @@ package com.massivedatascience.clusterer.ml.df
   * }}}
   */
 case class GKMConfig(
-  k: Int = 5,
-  maxIter: Int = 20,
-  tolerance: Double = 1e-4,
-  seed: Long = 42L,
-  kernel: String = "squaredEuclidean",
-  initMode: String = "kmeans++",
-  featuresCol: String = "features",
-  predictionCol: String = "prediction",
-  weightCol: Option[String] = None,
-  distanceCol: Option[String] = None,
-  // Advanced options
-  miniBatchFraction: Double = 1.0,
-  reseedPolicy: String = "random",
-  validateData: Boolean = true,
-  checkpointInterval: Int = 10,
-  enableTelemetry: Boolean = false
+    k: Int = 5,
+    maxIter: Int = 20,
+    tolerance: Double = 1e-4,
+    seed: Long = 42L,
+    kernel: String = "squaredEuclidean",
+    initMode: String = "kmeans++",
+    featuresCol: String = "features",
+    predictionCol: String = "prediction",
+    weightCol: Option[String] = None,
+    distanceCol: Option[String] = None,
+    // Advanced options
+    miniBatchFraction: Double = 1.0,
+    reseedPolicy: String = "random",
+    validateData: Boolean = true,
+    checkpointInterval: Int = 10,
+    enableTelemetry: Boolean = false
 ) {
 
   /** Set number of clusters */
@@ -119,7 +119,9 @@ case class GKMConfig(
     } else if (seed < 0) {
       GKMResult.failure(InvalidSeed(seed))
     } else if (miniBatchFraction <= 0.0 || miniBatchFraction > 1.0) {
-      GKMResult.failure(InvalidState(s"miniBatchFraction must be in (0, 1], got $miniBatchFraction"))
+      GKMResult.failure(
+        InvalidState(s"miniBatchFraction must be in (0, 1], got $miniBatchFraction")
+      )
     } else if (checkpointInterval < 1) {
       GKMResult.failure(InvalidState(s"checkpointInterval must be >= 1, got $checkpointInterval"))
     } else {
@@ -217,7 +219,8 @@ object GKMConfig {
 
 /** Builder for constructing GKMConfig with fluent API.
   *
-  * This provides an alternative to the case class copy methods for those who prefer builder pattern.
+  * This provides an alternative to the case class copy methods for those who prefer builder
+  * pattern.
   *
   * Example:
   * {{{
@@ -230,21 +233,37 @@ object GKMConfig {
   */
 class GKMConfigBuilder private (private var config: GKMConfig) {
 
-  def setK(k: Int): GKMConfigBuilder = { config = config.withK(k); this }
-  def setMaxIter(maxIter: Int): GKMConfigBuilder = { config = config.withMaxIter(maxIter); this }
-  def setTolerance(tolerance: Double): GKMConfigBuilder = { config = config.withTolerance(tolerance); this }
-  def setSeed(seed: Long): GKMConfigBuilder = { config = config.withSeed(seed); this }
-  def setKernel(kernel: String): GKMConfigBuilder = { config = config.withKernel(kernel); this }
-  def setInitMode(initMode: String): GKMConfigBuilder = { config = config.withInitMode(initMode); this }
-  def setFeaturesCol(col: String): GKMConfigBuilder = { config = config.withFeaturesCol(col); this }
-  def setPredictionCol(col: String): GKMConfigBuilder = { config = config.withPredictionCol(col); this }
-  def setWeightCol(col: String): GKMConfigBuilder = { config = config.withWeightCol(col); this }
-  def setDistanceCol(col: String): GKMConfigBuilder = { config = config.withDistanceCol(col); this }
-  def setMiniBatchFraction(fraction: Double): GKMConfigBuilder = { config = config.withMiniBatchFraction(fraction); this }
-  def setReseedPolicy(policy: String): GKMConfigBuilder = { config = config.withReseedPolicy(policy); this }
-  def setValidation(validate: Boolean): GKMConfigBuilder = { config = config.withValidation(validate); this }
-  def setCheckpointInterval(interval: Int): GKMConfigBuilder = { config = config.withCheckpointInterval(interval); this }
-  def setTelemetry(enabled: Boolean): GKMConfigBuilder = { config = config.withTelemetry(enabled); this }
+  def setK(k: Int): GKMConfigBuilder                           = { config = config.withK(k); this }
+  def setMaxIter(maxIter: Int): GKMConfigBuilder               = { config = config.withMaxIter(maxIter); this }
+  def setTolerance(tolerance: Double): GKMConfigBuilder        = {
+    config = config.withTolerance(tolerance); this
+  }
+  def setSeed(seed: Long): GKMConfigBuilder                    = { config = config.withSeed(seed); this }
+  def setKernel(kernel: String): GKMConfigBuilder              = { config = config.withKernel(kernel); this }
+  def setInitMode(initMode: String): GKMConfigBuilder          = {
+    config = config.withInitMode(initMode); this
+  }
+  def setFeaturesCol(col: String): GKMConfigBuilder            = { config = config.withFeaturesCol(col); this }
+  def setPredictionCol(col: String): GKMConfigBuilder          = {
+    config = config.withPredictionCol(col); this
+  }
+  def setWeightCol(col: String): GKMConfigBuilder              = { config = config.withWeightCol(col); this }
+  def setDistanceCol(col: String): GKMConfigBuilder            = { config = config.withDistanceCol(col); this }
+  def setMiniBatchFraction(fraction: Double): GKMConfigBuilder = {
+    config = config.withMiniBatchFraction(fraction); this
+  }
+  def setReseedPolicy(policy: String): GKMConfigBuilder        = {
+    config = config.withReseedPolicy(policy); this
+  }
+  def setValidation(validate: Boolean): GKMConfigBuilder       = {
+    config = config.withValidation(validate); this
+  }
+  def setCheckpointInterval(interval: Int): GKMConfigBuilder   = {
+    config = config.withCheckpointInterval(interval); this
+  }
+  def setTelemetry(enabled: Boolean): GKMConfigBuilder         = {
+    config = config.withTelemetry(enabled); this
+  }
 
   /** Build the configuration */
   def build(): GKMConfig = config
@@ -292,8 +311,7 @@ object GKMPresets {
 
   /** Streaming/online (very small batch, many iterations) */
   def streaming(k: Int = 10): GKMConfig = {
-    GKMConfig.miniBatch(k, fraction = 0.01, maxIter = 1000)
-      .withCheckpointInterval(100)
+    GKMConfig.miniBatch(k, fraction = 0.01, maxIter = 1000).withCheckpointInterval(100)
   }
 
   /** Robust clustering (Manhattan, high quality) */

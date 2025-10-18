@@ -27,13 +27,13 @@ import org.apache.spark.rdd.RDD
   * @param minClusterSize
   *   Minimum size for a cluster to be split
   * @param splitCriterion
-  *   Criterion for selecting cluster to split: "largest" - split cluster with most points "highest_cost" - split
-  *   cluster with highest cost
+  *   Criterion for selecting cluster to split: "largest" - split cluster with most points
+  *   "highest_cost" - split cluster with highest cost
   */
 case class BisectingKMeansConfig(
-  maxIterationsPerSplit: Int = 20,
-  minClusterSize: Int = 2,
-  splitCriterion: String = "largest"
+    maxIterationsPerSplit: Int = 20,
+    minClusterSize: Int = 2,
+    splitCriterion: String = "largest"
 ) extends ConfigValidator {
 
   requirePositive(maxIterationsPerSplit, "Max iterations per split")
@@ -44,8 +44,8 @@ case class BisectingKMeansConfig(
 /** Bisecting k-means clustering implementation.
   *
   * This is a hierarchical divisive clustering algorithm that:
-  *   1. Starts with all points in one cluster 2. Repeatedly selects a cluster and splits it into two using k-means
-  *      (k=2) 3. Continues until reaching target k clusters
+  *   1. Starts with all points in one cluster 2. Repeatedly selects a cluster and splits it into
+  *      two using k-means (k=2) 3. Continues until reaching target k clusters
   *
   * Benefits over standard k-means:
   *   - More deterministic (less sensitive to initialization)
@@ -56,8 +56,8 @@ case class BisectingKMeansConfig(
   *
   * Algorithm:
   *   1. Start: all data in one cluster 2. While num_clusters < k:
-  *      a. Select largest cluster (or highest cost cluster) b. Split it into 2 using k-means with k=2 c. Add both
-  *         sub-clusters to active clusters 3. Return final k clusters
+  *      a. Select largest cluster (or highest cost cluster) b. Split it into 2 using k-means with
+  *         k=2 c. Add both sub-clusters to active clusters 3. Return final k clusters
   *
   * Works with any Bregman divergence.
   *
@@ -67,16 +67,16 @@ case class BisectingKMeansConfig(
   *   Clusterer to use for each split (default: ColumnTrackingKMeans)
   */
 class BisectingKMeans(
-  config: BisectingKMeansConfig = BisectingKMeansConfig(),
-  baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
+    config: BisectingKMeansConfig = BisectingKMeansConfig(),
+    baseClusterer: MultiKMeansClusterer = new ColumnTrackingKMeans()
 ) extends MultiKMeansClusterer
     with Logging {
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     logger.info(s"Starting bisecting k-means with ${centers.size} initial center sets")
@@ -94,10 +94,10 @@ class BisectingKMeans(
   /** Perform bisecting clustering to reach target k.
     */
   private def bisectingCluster(
-    targetK: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    initialCenters: IndexedSeq[BregmanCenter]
+      targetK: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      initialCenters: IndexedSeq[BregmanCenter]
   ): ClusteringWithDistortion = {
 
     logger.info(s"Bisecting clustering to k=$targetK")
@@ -160,7 +160,7 @@ class BisectingKMeans(
   /** Select which cluster to split next.
     */
   private def selectClusterToSplit(
-    clusters: List[ClusterNode]
+      clusters: List[ClusterNode]
   ): (ClusterNode, List[ClusterNode]) = {
     val splittable = clusters.filter(_.size >= config.minClusterSize)
 
@@ -182,12 +182,12 @@ class BisectingKMeans(
   /** Split a cluster into two using k-means with k=2.
     */
   private def splitCluster(
-    node: ClusterNode,
-    pointOps: BregmanPointOps
+      node: ClusterNode,
+      pointOps: BregmanPointOps
   ): (ClusterNode, ClusterNode) = {
 
     // Initialize with k=2 using K-Means++ style initialization
-    val initializer = new KMeansParallel(2)
+    val initializer    = new KMeansParallel(2)
     val initialCenters = initializer
       .init(
         pointOps,
@@ -210,12 +210,10 @@ class BisectingKMeans(
     val twoWayClustering = results.head
 
     // Assign points to the two clusters
-    val assignments = node.data
-      .map { point =>
-        val cluster = pointOps.findClosestCluster(twoWayClustering.centers, point)
-        (cluster, point)
-      }
-      .cache()
+    val assignments = node.data.map { point =>
+      val cluster = pointOps.findClosestCluster(twoWayClustering.centers, point)
+      (cluster, point)
+    }.cache()
 
     // Build left and right clusters
     val leftData  = assignments.filter(_._1 == 0).map(_._2).cache()
@@ -246,9 +244,9 @@ class BisectingKMeans(
   /** Build final clustering from list of cluster nodes.
     */
   private def buildFinalClustering(
-    clusters: List[ClusterNode],
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint]
+      clusters: List[ClusterNode],
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint]
   ): ClusteringWithDistortion = {
 
     val centers   = clusters.map(_.center).toIndexedSeq
@@ -260,10 +258,10 @@ class BisectingKMeans(
   /** Internal representation of a cluster during bisection.
     */
   private case class ClusterNode(
-    data: RDD[BregmanPoint],
-    center: BregmanCenter,
-    size: Long,
-    cost: Double
+      data: RDD[BregmanPoint],
+      center: BregmanCenter,
+      size: Long,
+      cost: Double
   )
 }
 

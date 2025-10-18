@@ -15,8 +15,8 @@ object XMeansExample extends App {
     Tuple1(Vectors.dense(10.0, 10.0))
   ).toDF("features")
 
-  val xm = new XMeans().setMinK(1).setMaxK(3).setDivergence("squaredEuclidean").setSeed(7)
-  val model = xm.fit(df)
+  val xm     = new XMeans().setMinK(1).setMaxK(3).setDivergence("squaredEuclidean").setSeed(7)
+  val model  = xm.fit(df)
   val kFound = model.getK
   assert(kFound >= 1 && kFound <= 3, s"XMeans returned invalid k=$kFound")
 

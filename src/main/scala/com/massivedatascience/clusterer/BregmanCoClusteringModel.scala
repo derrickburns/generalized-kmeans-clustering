@@ -25,15 +25,16 @@ import scala.collection.mutable
 
 /** Trained Bregman co-clustering model with prediction and analysis capabilities.
   *
-  * This class encapsulates the result of co-clustering training and provides methods for making predictions,
-  * reconstructing the matrix, and analyzing the clustering structure.
+  * This class encapsulates the result of co-clustering training and provides methods for making
+  * predictions, reconstructing the matrix, and analyzing the clustering structure.
   *
   * @param result
   *   The co-clustering result from training
   * @param pointOps
   *   Bregman point operations used for distance calculations
   */
-class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: BregmanPointOps) extends Serializable {
+class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: BregmanPointOps)
+    extends Serializable {
 
   /** Predict cluster assignments for new matrix entries.
     *
@@ -110,15 +111,13 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
     *   Total reconstruction error
     */
   def computeReconstructionError(entries: RDD[MatrixEntry]): Double = {
-    val totalError = entries
-      .map { entry =>
-        val (rowCluster, colCluster) = result.predict(entry, pointOps)
-        val blockCenter              = result.blockCenters(rowCluster)(colCluster)
-        val point =
-          BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
-        pointOps.distance(point, blockCenter) * entry.weight
-      }
-      .sum()
+    val totalError = entries.map { entry =>
+      val (rowCluster, colCluster) = result.predict(entry, pointOps)
+      val blockCenter              = result.blockCenters(rowCluster)(colCluster)
+      val point                    =
+        BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
+      pointOps.distance(point, blockCenter) * entry.weight
+    }.sum()
 
     totalError
   }
@@ -153,11 +152,11 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
         val weightedSum = values.zip(weights).map { case (v, w) => v * w }.sum
         val totalWeight = weights.sum
         val mean        = if (totalWeight > 0) weightedSum / totalWeight else 0.0
-        val variance = if (totalWeight > 0) {
+        val variance    = if (totalWeight > 0) {
           values.zip(weights).map { case (v, w) => w * math.pow(v - mean, 2) }.sum / totalWeight
         } else 0.0
-        val min = values.min
-        val max = values.max
+        val min         = values.min
+        val max         = values.max
 
         stats(rowCluster)(colCluster) = BlockStats(count, mean, variance, min, max, totalWeight)
       }
@@ -181,7 +180,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
 
     (0 until result.numRowClusters).map { cluster =>
       rowData.filter(_._1 == cluster).values.collect().flatten.toList match {
-        case Nil =>
+        case Nil            =>
           ClusterStats(0, 0, 0.0, 0.0, 0.0, 0.0)
         case clusterEntries =>
           val uniqueRows   = clusterEntries.map(_.rowIndex).distinct.length
@@ -192,7 +191,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
           val weightedSum = values.zip(weights).map { case (v, w) => v * w }.sum
           val totalWeight = weights.sum
           val mean        = if (totalWeight > 0) weightedSum / totalWeight else 0.0
-          val variance = if (totalWeight > 0) {
+          val variance    = if (totalWeight > 0) {
             values.zip(weights).map { case (v, w) => w * math.pow(v - mean, 2) }.sum / totalWeight
           } else 0.0
 
@@ -216,7 +215,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
 
     (0 until result.numColClusters).map { cluster =>
       colData.filter(_._1 == cluster).values.collect().flatten.toList match {
-        case Nil =>
+        case Nil            =>
           ClusterStats(0, 0, 0.0, 0.0, 0.0, 0.0)
         case clusterEntries =>
           val uniqueCols   = clusterEntries.map(_.colIndex).distinct.length
@@ -227,7 +226,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
           val weightedSum = values.zip(weights).map { case (v, w) => v * w }.sum
           val totalWeight = weights.sum
           val mean        = if (totalWeight > 0) weightedSum / totalWeight else 0.0
-          val variance = if (totalWeight > 0) {
+          val variance    = if (totalWeight > 0) {
             values.zip(weights).map { case (v, w) => w * math.pow(v - mean, 2) }.sum / totalWeight
           } else 0.0
 
@@ -279,7 +278,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
         // Predict column cluster for this entry
         val (_, colCluster) = result.predict(entry, pointOps)
         val blockCenter     = result.blockCenters(rowCluster)(colCluster)
-        val point =
+        val point           =
           BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
         pointOps.distance(point, blockCenter) * entry.weight
       }.sum
@@ -298,7 +297,7 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
         // Predict row cluster for this entry
         val (rowCluster, _) = result.predict(entry, pointOps)
         val blockCenter     = result.blockCenters(rowCluster)(colCluster)
-        val point =
+        val point           =
           BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
         pointOps.distance(point, blockCenter) * entry.weight
       }.sum
@@ -319,39 +318,39 @@ class BregmanCoClusteringModel(val result: BregmanCoClusteringResult, pointOps: 
 /** Statistics for a single block in the co-clustering.
   */
 case class BlockStats(
-  count: Int,
-  mean: Double,
-  variance: Double,
-  min: Double,
-  max: Double,
-  totalWeight: Double
+    count: Int,
+    mean: Double,
+    variance: Double,
+    min: Double,
+    max: Double,
+    totalWeight: Double
 )
 
 /** Statistics for a cluster (row or column).
   */
 case class ClusterStats(
-  uniqueIndices: Int,
-  totalEntries: Int,
-  mean: Double,
-  variance: Double,
-  min: Double,
-  max: Double
+    uniqueIndices: Int,
+    totalEntries: Int,
+    mean: Double,
+    variance: Double,
+    min: Double,
+    max: Double
 )
 
 /** Comprehensive summary of a co-clustering model.
   */
 case class CoClusteringModelSummary(
-  numRowClusters: Int,
-  numColClusters: Int,
-  totalEntries: Long,
-  reconstructionError: Double,
-  sparsity: Double,
-  iterations: Int,
-  finalObjective: Double,
-  convergenceHistory: Seq[Double],
-  blockStats: Array[Array[BlockStats]],
-  rowStats: IndexedSeq[ClusterStats],
-  colStats: IndexedSeq[ClusterStats]
+    numRowClusters: Int,
+    numColClusters: Int,
+    totalEntries: Long,
+    reconstructionError: Double,
+    sparsity: Double,
+    iterations: Int,
+    finalObjective: Double,
+    convergenceHistory: Seq[Double],
+    blockStats: Array[Array[BlockStats]],
+    rowStats: IndexedSeq[ClusterStats],
+    colStats: IndexedSeq[ClusterStats]
 ) {
 
   /** Get a compact text summary.
@@ -430,8 +429,8 @@ object BregmanCoClusteringModel {
   /** Create a model from training result.
     */
   def apply(
-    result: BregmanCoClusteringResult,
-    pointOps: BregmanPointOps
+      result: BregmanCoClusteringResult,
+      pointOps: BregmanPointOps
   ): BregmanCoClusteringModel = {
     new BregmanCoClusteringModel(result, pointOps)
   }
@@ -439,9 +438,9 @@ object BregmanCoClusteringModel {
   /** Train a model and return the fitted model.
     */
   def fit(
-    data: RDD[MatrixEntry],
-    config: BregmanCoClusteringConfig,
-    pointOps: BregmanPointOps
+      data: RDD[MatrixEntry],
+      config: BregmanCoClusteringConfig,
+      pointOps: BregmanPointOps
   ): BregmanCoClusteringModel = {
 
     val coClustering = new BregmanCoClustering(config, pointOps)
@@ -452,10 +451,10 @@ object BregmanCoClusteringModel {
   /** Train a model with default configuration.
     */
   def fit(
-    data: RDD[MatrixEntry],
-    numRowClusters: Int,
-    numColClusters: Int,
-    pointOps: BregmanPointOps
+      data: RDD[MatrixEntry],
+      numRowClusters: Int,
+      numColClusters: Int,
+      pointOps: BregmanPointOps
   ): BregmanCoClusteringModel = {
 
     val config = BregmanCoClustering.defaultConfig(numRowClusters, numColClusters)

@@ -2,10 +2,10 @@ package com.massivedatascience.clusterer.ml
 
 import com.massivedatascience.clusterer.ml.df._
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util._
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.StreamingQuery
 
@@ -15,9 +15,9 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
   /** Decay factor for exponential forgetting.
     *
-    * If decayFactor = 1.0, all batches are weighted equally (no forgetting).
-    * If decayFactor = 0.0, only the current batch matters (complete forgetting).
-    * Values between 0 and 1 provide exponential decay of old data.
+    * If decayFactor = 1.0, all batches are weighted equally (no forgetting). If decayFactor = 0.0,
+    * only the current batch matters (complete forgetting). Values between 0 and 1 provide
+    * exponential decay of old data.
     *
     * Default: 1.0 (no forgetting)
     */
@@ -32,8 +32,8 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
   /** Time unit for decay: "batches" or "points".
     *
-    * If "batches", decay is applied per batch regardless of batch size.
-    * If "points", decay is scaled by number of points in batch.
+    * If "batches", decay is applied per batch regardless of batch size. If "points", decay is
+    * scaled by number of points in batch.
     *
     * Default: "batches"
     */
@@ -48,8 +48,8 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
   /** Half-life for decay in number of batches or points.
     *
-    * If set, overrides decayFactor with: decayFactor = 0.5^(1/halfLife)
-    * Half-life is the time it takes for a data point's weight to decay to 50%.
+    * If set, overrides decayFactor with: decayFactor = 0.5^(1/halfLife) Half-life is the time it
+    * takes for a data point's weight to decay to 50%.
     *
     * Default: None (use explicit decayFactor)
     */
@@ -64,7 +64,7 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
   setDefault(
     decayFactor -> 1.0,
-    timeUnit -> "batches"
+    timeUnit    -> "batches"
   )
 
   /** Compute effective decay factor, using half-life if set.
@@ -80,9 +80,9 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
 /** Streaming K-Means clustering for incremental updates.
   *
-  * This implementation uses the mini-batch K-Means algorithm with exponential forgetting
-  * to enable real-time clustering on streaming data. The model is updated incrementally
-  * as new batches arrive.
+  * This implementation uses the mini-batch K-Means algorithm with exponential forgetting to enable
+  * real-time clustering on streaming data. The model is updated incrementally as new batches
+  * arrive.
   *
   * Update Rule (for each cluster):
   * {{{
@@ -91,11 +91,11 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   * }}}
   *
   * Where:
-  * - c_t: current center
-  * - n_t: current weight (number of points assigned)
-  * - x_t: mean of new points assigned to this cluster
-  * - m_t: number of new points assigned to this cluster
-  * - α: decay factor (applies exponential forgetting)
+  *   - c_t: current center
+  *   - n_t: current weight (number of points assigned)
+  *   - x_t: mean of new points assigned to this cluster
+  *   - m_t: number of new points assigned to this cluster
+  *   - α: decay factor (applies exponential forgetting)
   *
   * Example usage:
   * {{{
@@ -117,7 +117,8 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   * val currentModel = updater.currentModel
   * }}}
   *
-  * @param uid unique identifier
+  * @param uid
+  *   unique identifier
   */
 class StreamingKMeans(override val uid: String)
     extends GeneralizedKMeans(uid)
@@ -144,8 +145,8 @@ class StreamingKMeans(override val uid: String)
 
   // Parameter setters
   def setDecayFactor(value: Double): this.type = set(decayFactor, value)
-  def setTimeUnit(value: String): this.type = set(timeUnit, value)
-  def setHalfLife(value: Double): this.type = set(halfLife, value)
+  def setTimeUnit(value: String): this.type    = set(timeUnit, value)
+  def setHalfLife(value: Double): this.type    = set(halfLife, value)
 
   override def copy(extra: ParamMap): StreamingKMeans = defaultCopy(extra)
 }
@@ -156,25 +157,25 @@ object StreamingKMeans extends DefaultParamsReadable[StreamingKMeans] {
 
 /** Model for Streaming K-Means.
   *
-  * Maintains mutable cluster centers and weights that can be updated incrementally.
-  * Provides methods to create a streaming updater for real-time updates.
+  * Maintains mutable cluster centers and weights that can be updated incrementally. Provides
+  * methods to create a streaming updater for real-time updates.
   */
 class StreamingKMeansModel(
-  override val uid: String,
-  initialCenters: Array[Array[Double]],
-  kernelNameForParent: String, // Kernel name in parent's format (e.g., "SquaredEuclidean")
-  val divergenceName: String,   // Divergence name in our format (e.g., "squaredEuclidean")
-  val smoothingValue: Double,
-  val decayFactorValue: Double,
-  val timeUnitValue: String
+    override val uid: String,
+    initialCenters: Array[Array[Double]],
+    kernelNameForParent: String, // Kernel name in parent's format (e.g., "SquaredEuclidean")
+    val divergenceName: String,  // Divergence name in our format (e.g., "squaredEuclidean")
+    val smoothingValue: Double,
+    val decayFactorValue: Double,
+    val timeUnitValue: String
 ) extends GeneralizedKMeansModel(uid, initialCenters, kernelNameForParent)
     with MLWritable
     with Logging {
 
   // Mutable state for streaming updates
-  @transient private var centerArrays: Array[Vector] = initialCenters.map(Vectors.dense)
+  @transient private var centerArrays: Array[Vector]   = initialCenters.map(Vectors.dense)
   @transient private var clusterWeights: Array[Double] = Array.fill(initialCenters.length)(1.0)
-  @transient private lazy val kernel: BregmanKernel = createKernel(divergenceName, smoothingValue)
+  @transient private lazy val kernel: BregmanKernel    = createKernel(divergenceName, smoothingValue)
 
   /** Get current cluster centers as Vectors (defensive copy).
     */
@@ -192,7 +193,7 @@ class StreamingKMeansModel(
     var i = 0
     while (i < clusterCenters.length) {
       val newCenter = centerArrays(i).toArray
-      var j = 0
+      var j         = 0
       while (j < newCenter.length) {
         clusterCenters(i)(j) = newCenter(j)
         j += 1
@@ -210,7 +211,7 @@ class StreamingKMeansModel(
       case "itakuraSaito"     => new ItakuraSaitoKernel(smooth)
       case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
       case "l1" | "manhattan" => new L1Kernel()
-      case _ =>
+      case _                  =>
         logWarning(s"Unknown divergence $divName, using squared Euclidean")
         new SquaredEuclideanKernel()
     }
@@ -219,17 +220,18 @@ class StreamingKMeansModel(
   /** Update the model with a new batch of data.
     *
     * This method performs one iteration of mini-batch K-Means with exponential forgetting:
-    * 1. Assign each point to nearest cluster
-    * 2. Compute new cluster means from this batch
-    * 3. Merge with existing centers using decay factor
-    * 4. Handle dying clusters by splitting largest cluster
+    *   1. Assign each point to nearest cluster 2. Compute new cluster means from this batch 3.
+    *      Merge with existing centers using decay factor 4. Handle dying clusters by splitting
+    *      largest cluster
     *
-    * @param batchDF DataFrame with features column
-    * @return this (for chaining)
+    * @param batchDF
+    *   DataFrame with features column
+    * @return
+    *   this (for chaining)
     */
   def update(batchDF: Dataset[_]): this.type = {
-    val df = batchDF.toDF()
-    val featCol = $(featuresCol)
+    val df           = batchDF.toDF()
+    val featCol      = $(featuresCol)
     val weightColOpt = if (hasWeightCol) Some($(weightCol)) else None
 
     // Assign each point to nearest cluster
@@ -250,9 +252,9 @@ class StreamingKMeansModel(
         .select("cluster", featCol, wCol)
         .rdd
         .map { row =>
-          val cluster = row.getInt(0)
+          val cluster  = row.getInt(0)
           val features = row.getAs[Vector](1)
-          val weight = row.getDouble(2)
+          val weight   = row.getDouble(2)
           (cluster, (features, weight))
         }
         .groupByKey()
@@ -266,7 +268,7 @@ class StreamingKMeansModel(
               i += 1
             }
           }
-          val centroid = weightedSum.map(_ / totalWeight)
+          val centroid    = weightedSum.map(_ / totalWeight)
           (totalWeight, centroid)
         }
         .collect()
@@ -277,14 +279,14 @@ class StreamingKMeansModel(
         .select("cluster", featCol)
         .rdd
         .map { row =>
-          val cluster = row.getInt(0)
+          val cluster  = row.getInt(0)
           val features = row.getAs[Vector](1)
           (cluster, features)
         }
         .groupByKey()
         .mapValues { points =>
-          val count = points.size.toDouble
-          val sum = Array.fill(dim)(0.0)
+          val count    = points.size.toDouble
+          val sum      = Array.fill(dim)(0.0)
           points.foreach { features =>
             var i = 0
             while (i < dim) {
@@ -304,7 +306,7 @@ class StreamingKMeansModel(
 
     val discount = timeUnitValue match {
       case "batches" => decayFactorValue
-      case "points" => math.pow(decayFactorValue, totalNewPoints)
+      case "points"  => math.pow(decayFactorValue, totalNewPoints)
     }
 
     // Apply decay to existing weights
@@ -319,7 +321,7 @@ class StreamingKMeansModel(
       // Update rule: c_{t+1} = [(c_t * n_t) + (x_t * m_t)] / [n_t + m_t]
       val oldWeight = clusterWeights(clusterId)
       val newWeight = oldWeight + batchCount
-      val lambda = batchCount / math.max(newWeight, 1e-16)
+      val lambda    = batchCount / math.max(newWeight, 1e-16)
 
       clusterWeights(clusterId) = newWeight
 
@@ -335,7 +337,9 @@ class StreamingKMeansModel(
 
       centerArrays(clusterId) = Vectors.dense(newCenter)
 
-      logInfo(f"Cluster $clusterId updated: weight=$newWeight%.1f, center=[${newCenter.take(5).mkString(", ")}...]")
+      logInfo(
+        f"Cluster $clusterId updated: weight=$newWeight%.1f, center=[${newCenter.take(5).mkString(", ")}...]"
+      )
     }
 
     // Handle dying clusters
@@ -354,17 +358,19 @@ class StreamingKMeansModel(
     val minWeight = clusterWeights.min
 
     if (minWeight < 1e-8 * maxWeight) {
-      val largest = clusterWeights.indexOf(maxWeight)
+      val largest  = clusterWeights.indexOf(maxWeight)
       val smallest = clusterWeights.indexOf(minWeight)
 
-      logInfo(f"Cluster $smallest is dying (weight=$minWeight%.2e). Splitting cluster $largest (weight=$maxWeight%.2f).")
+      logInfo(
+        f"Cluster $smallest is dying (weight=$minWeight%.2e). Splitting cluster $largest (weight=$maxWeight%.2f)."
+      )
 
       val newWeight = (maxWeight + minWeight) / 2.0
       clusterWeights(largest) = newWeight
       clusterWeights(smallest) = newWeight
 
       val largestCenter = centerArrays(largest).toArray
-      val perturbation = 1e-14
+      val perturbation  = 1e-14
 
       val l = largestCenter.map(x => x + perturbation * math.max(math.abs(x), 1.0))
       val s = largestCenter.map(x => x - perturbation * math.max(math.abs(x), 1.0))
@@ -399,10 +405,11 @@ class StreamingKMeansModel(
 
   /** Create a streaming updater for real-time updates.
     *
-    * The updater maintains a reference to this model and updates it incrementally
-    * as streaming batches arrive.
+    * The updater maintains a reference to this model and updates it incrementally as streaming
+    * batches arrive.
     *
-    * @return StreamingKMeansUpdater
+    * @return
+    *   StreamingKMeansUpdater
     */
   def createStreamingUpdater(): StreamingKMeansUpdater = {
     new StreamingKMeansUpdater(this)
@@ -435,8 +442,8 @@ class StreamingKMeansModel(
 
 /** Streaming updater for incremental model updates.
   *
-  * Provides a convenient interface for updating a StreamingKMeansModel
-  * on streaming data sources using foreachBatch.
+  * Provides a convenient interface for updating a StreamingKMeansModel on streaming data sources
+  * using foreachBatch.
   *
   * Example:
   * {{{
@@ -460,11 +467,17 @@ class StreamingKMeansUpdater(private val model: StreamingKMeansModel) extends Lo
     *
     * Uses foreachBatch to update the model incrementally as batches arrive.
     *
-    * @param streamingDF Streaming DataFrame with features column
-    * @param checkpointLocation Optional checkpoint location for fault tolerance
-    * @return StreamingQuery
+    * @param streamingDF
+    *   Streaming DataFrame with features column
+    * @param checkpointLocation
+    *   Optional checkpoint location for fault tolerance
+    * @return
+    *   StreamingQuery
     */
-  def updateOn(streamingDF: Dataset[_], checkpointLocation: Option[String] = None): StreamingQuery = {
+  def updateOn(
+      streamingDF: Dataset[_],
+      checkpointLocation: Option[String] = None
+  ): StreamingQuery = {
     def processBatch(batchDF: Dataset[_], batchId: Long): Unit = {
       val count = batchDF.count()
       if (count > 0) {
@@ -478,13 +491,11 @@ class StreamingKMeansUpdater(private val model: StreamingKMeansModel) extends Lo
       }
     }
 
-    val query = streamingDF
-      .writeStream
-      .foreachBatch(processBatch _)
+    val query = streamingDF.writeStream.foreachBatch(processBatch _)
 
     checkpointLocation match {
       case Some(path) => query.option("checkpointLocation", path)
-      case None => query
+      case None       => query
     }
 
     query.start()
@@ -507,7 +518,9 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
 
   override def load(path: String): StreamingKMeansModel = super.load(path)
 
-  private class StreamingKMeansModelWriter(instance: StreamingKMeansModel) extends MLWriter with Logging {
+  private class StreamingKMeansModelWriter(instance: StreamingKMeansModel)
+      extends MLWriter
+      with Logging {
 
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
@@ -525,7 +538,7 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
       // For streaming K-Means, we need to save the cluster weights!
       val currentCenters = instance.currentCenters
       val currentWeights = instance.currentWeights
-      val centersData = currentCenters.indices.map { i =>
+      val centersData    = currentCenters.indices.map { i =>
         val weight = currentWeights(i)
         val vector = currentCenters(i)
         (i, weight, vector)
@@ -537,38 +550,38 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
 
       // Collect all model parameters
       val params = Map(
-        "k" -> instance.numClusters,
-        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
+        "k"             -> instance.numClusters,
+        "featuresCol"   -> instance.getOrDefault(instance.featuresCol),
         "predictionCol" -> instance.getOrDefault(instance.predictionCol),
-        "divergence" -> instance.divergenceName,
-        "smoothing" -> instance.smoothingValue,
-        "decayFactor" -> instance.decayFactorValue,
-        "timeUnit" -> instance.timeUnitValue,
-        "kernelName" -> instance.kernelName  // Parent's kernel name format
+        "divergence"    -> instance.divergenceName,
+        "smoothing"     -> instance.smoothingValue,
+        "decayFactor"   -> instance.decayFactorValue,
+        "timeUnit"      -> instance.timeUnitValue,
+        "kernelName"    -> instance.kernelName // Parent's kernel name format
       )
 
-      val k = instance.numClusters
+      val k   = instance.numClusters
       val dim = currentCenters.headOption.map(_.size).getOrElse(0)
 
       // Build metadata object
       implicit val formats = DefaultFormats
-      val metaObj = Map(
-        "layoutVersion" -> LayoutVersion,
-        "algo" -> "StreamingKMeansModel",
-        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+      val metaObj          = Map(
+        "layoutVersion"      -> LayoutVersion,
+        "algo"               -> "StreamingKMeansModel",
+        "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
         "scalaBinaryVersion" -> getScalaBinaryVersion,
-        "divergence" -> instance.divergenceName,
-        "k" -> k,
-        "dim" -> dim,
-        "uid" -> instance.uid,
-        "params" -> params,
-        "centers" -> Map(
-          "count" -> k,
-          "ordering" -> "center_id ASC (0..k-1)",
-          "storage" -> "parquet",
-          "includesWeights" -> true  // Important: weights are stored in weight column
+        "divergence"         -> instance.divergenceName,
+        "k"                  -> k,
+        "dim"                -> dim,
+        "uid"                -> instance.uid,
+        "params"             -> params,
+        "centers"            -> Map(
+          "count"           -> k,
+          "ordering"        -> "center_id ASC (0..k-1)",
+          "storage"         -> "parquet",
+          "includesWeights" -> true // Important: weights are stored in weight column
         ),
-        "checksums" -> Map(
+        "checksums"          -> Map(
           "centersParquetSHA256" -> centersHash
         )
       )
@@ -595,41 +608,43 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
       logInfo(s"Loading StreamingKMeansModel from $path")
 
       // Read metadata
-      val metaStr = readMetadata(path)
+      val metaStr          = readMetadata(path)
       implicit val formats = DefaultFormats
-      val metaJ = JsonMethods.parse(metaStr)
+      val metaJ            = JsonMethods.parse(metaStr)
 
       // Extract and validate layout version
       val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
-      val k = (metaJ \ "k").extract[Int]
-      val dim = (metaJ \ "dim").extract[Int]
-      val uid = (metaJ \ "uid").extract[String]
-      val divergence = (metaJ \ "divergence").extract[String]
+      val k             = (metaJ \ "k").extract[Int]
+      val dim           = (metaJ \ "dim").extract[Int]
+      val uid           = (metaJ \ "uid").extract[String]
+      val divergence    = (metaJ \ "divergence").extract[String]
 
-      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence")
+      logInfo(
+        s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence"
+      )
 
       // Read centers with weights
       val centersDF = readCenters(spark, path)
-      val rows = centersDF.collect()
+      val rows      = centersDF.collect()
 
       // Validate metadata
       validateMetadata(layoutVersion, k, dim, rows.length)
 
       // Extract centers and weights (sorted by center_id)
       val sortedRows = rows.sortBy(_.getInt(0))
-      val centers = sortedRows.map { row =>
+      val centers    = sortedRows.map { row =>
         row.getAs[Vector]("vector").toArray
       }
-      val weights = sortedRows.map { row =>
-        row.getDouble(1)  // weight column
+      val weights    = sortedRows.map { row =>
+        row.getDouble(1) // weight column
       }
 
       // Extract parameters
-      val paramsJ = metaJ \ "params"
-      val smoothing = (paramsJ \ "smoothing").extract[Double]
+      val paramsJ     = metaJ \ "params"
+      val smoothing   = (paramsJ \ "smoothing").extract[Double]
       val decayFactor = (paramsJ \ "decayFactor").extract[Double]
-      val timeUnit = (paramsJ \ "timeUnit").extract[String]
-      val kernelName = (paramsJ \ "kernelName").extract[String]
+      val timeUnit    = (paramsJ \ "timeUnit").extract[String]
+      val kernelName  = (paramsJ \ "kernelName").extract[String]
 
       // Reconstruct model
       val model = new StreamingKMeansModel(

@@ -17,7 +17,7 @@
 
 package com.massivedatascience.linalg
 
-import org.apache.spark.ml.linalg.{Vectors, DenseVector, SparseVector, Vector}
+import org.apache.spark.ml.linalg.{ Vectors, DenseVector, SparseVector, Vector }
 
 sealed trait VectorIterator extends Serializable {
   def hasNext: Boolean
@@ -53,7 +53,8 @@ abstract class BaseDenseVectorIterator(val underlying: DenseVector) extends Vect
   def value: Double = underlying.values(i)
 }
 
-@inline final class NegativeSparseVectorIterator(u: SparseVector) extends BaseSparseVectorIterator(u) {
+@inline final class NegativeSparseVectorIterator(u: SparseVector)
+    extends BaseSparseVectorIterator(u) {
   def value: Double = -underlying.values(i)
 }
 

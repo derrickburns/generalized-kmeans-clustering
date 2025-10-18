@@ -17,14 +17,15 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.coreset.{BregmanCoreset, CoresetConfig}
+import com.massivedatascience.clusterer.coreset.{ BregmanCoreset, CoresetConfig }
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
 /** Initialize cluster centers using coreset-based approximation.
   *
   * This is much faster than K-Means|| for large datasets because it:
-  *   1. Builds a small coreset (e.g., 1000 points) 2. Runs initialization on the coreset instead of full data
+  *   1. Builds a small coreset (e.g., 1000 points) 2. Runs initialization on the coreset instead of
+  *      full data
   *
   * Achieves 10-100x speedup for initialization with minimal quality loss.
   *
@@ -36,20 +37,20 @@ import org.slf4j.LoggerFactory
   *   Approximation quality parameter
   */
 class CoresetInitializer(
-  coresetSize: Int = 1000,
-  baseInitializer: KMeansSelector = new KMeansParallel(5),
-  epsilon: Double = 0.1
+    coresetSize: Int = 1000,
+    baseInitializer: KMeansSelector = new KMeansParallel(5),
+    epsilon: Double = 0.1
 ) extends KMeansSelector {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
   def init(
-    ops: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    numClusters: Int,
-    initialInfo: Option[KMeansSelector.InitialCondition],
-    runs: Int,
-    seed: Long
+      ops: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      numClusters: Int,
+      initialInfo: Option[KMeansSelector.InitialCondition],
+      runs: Int,
+      seed: Long
   ): Seq[IndexedSeq[BregmanCenter]] = {
 
     val dataSize = data.count()
@@ -67,7 +68,7 @@ class CoresetInitializer(
     val startTime = System.currentTimeMillis()
 
     // Step 1: Build coreset
-    val coresetConfig = CoresetConfig(
+    val coresetConfig  = CoresetConfig(
       coresetSize = coresetSize,
       epsilon = epsilon,
       seed = seed

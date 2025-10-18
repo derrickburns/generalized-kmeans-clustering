@@ -24,8 +24,8 @@ import scala.collection.mutable
 
 /** Specialized visualization utilities for co-clustering results.
   *
-  * This object provides methods to generate data in formats suitable for popular visualization libraries and tools
-  * including:
+  * This object provides methods to generate data in formats suitable for popular visualization
+  * libraries and tools including:
   *   - Heatmaps for block structure visualization
   *   - Network graphs for cluster relationships
   *   - Statistical plots for convergence and quality metrics
@@ -37,7 +37,8 @@ object CoClusteringVisualization {
 
   /** Generate heatmap data for block structure visualization.
     *
-    * This creates a matrix representation suitable for heatmap visualization tools like seaborn, matplotlib, or D3.js.
+    * This creates a matrix representation suitable for heatmap visualization tools like seaborn,
+    * matplotlib, or D3.js.
     *
     * @param model
     *   Trained co-clustering model
@@ -49,9 +50,9 @@ object CoClusteringVisualization {
     *   Heatmap data with coordinates and values
     */
   def generateHeatmapData(
-    model: BregmanCoClusteringModel,
-    entries: RDD[MatrixEntry],
-    normalizeValues: Boolean = true
+      model: BregmanCoClusteringModel,
+      entries: RDD[MatrixEntry],
+      normalizeValues: Boolean = true
   ): HeatmapData = {
 
     logger.info("Generating heatmap data for block structure visualization")
@@ -101,8 +102,8 @@ object CoClusteringVisualization {
 
   /** Generate network graph data showing relationships between clusters.
     *
-    * Creates nodes and edges for visualization in network graph libraries like NetworkX, vis.js, or D3.js
-    * force-directed layouts.
+    * Creates nodes and edges for visualization in network graph libraries like NetworkX, vis.js, or
+    * D3.js force-directed layouts.
     *
     * @param model
     *   Trained co-clustering model
@@ -114,9 +115,9 @@ object CoClusteringVisualization {
     *   Network graph data with nodes and edges
     */
   def generateNetworkGraphData(
-    model: BregmanCoClusteringModel,
-    entries: RDD[MatrixEntry],
-    minWeight: Double = 0.01
+      model: BregmanCoClusteringModel,
+      entries: RDD[MatrixEntry],
+      minWeight: Double = 0.01
   ): NetworkGraphData = {
 
     logger.info("Generating network graph data for cluster relationships")
@@ -220,8 +221,8 @@ object CoClusteringVisualization {
     *   Distribution data for various statistical plots
     */
   def generateDistributionData(
-    model: BregmanCoClusteringModel,
-    entries: RDD[MatrixEntry]
+      model: BregmanCoClusteringModel,
+      entries: RDD[MatrixEntry]
   ): DistributionData = {
 
     logger.info("Generating distribution data for statistical visualization")
@@ -329,10 +330,11 @@ object CoClusteringVisualization {
     // Convergence data
     json.append("""  "convergence": {""").append("\n")
     json.append("""    "data": [""").append("\n")
-    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach { case ((iter, obj), idx) =>
-      json.append(s"""      {"iteration": $iter, "objective": $obj}""")
-      if (idx < convergence.iterations.length - 1) json.append(",")
-      json.append("\n")
+    convergence.iterations.zip(convergence.objectives).zipWithIndex.foreach {
+      case ((iter, obj), idx) =>
+        json.append(s"""      {"iteration": $iter, "objective": $obj}""")
+        if (idx < convergence.iterations.length - 1) json.append(",")
+        json.append("\n")
     }
     json.append("""    ]""").append("\n")
     json.append("""  }""").append("\n")
@@ -353,9 +355,9 @@ object CoClusteringVisualization {
     *   Complete HTML page with interactive visualizations
     */
   def generateInteractiveHTML(
-    model: BregmanCoClusteringModel,
-    entries: RDD[MatrixEntry],
-    title: String = "Co-clustering Results"
+      model: BregmanCoClusteringModel,
+      entries: RDD[MatrixEntry],
+      title: String = "Co-clustering Results"
   ): String = {
 
     val jsonData = exportD3JSON(model, entries)
@@ -633,11 +635,11 @@ object CoClusteringVisualization {
 /** Data structure for heatmap visualization.
   */
 case class HeatmapData(
-  values: Seq[(Int, Int, Double)],
-  labels: Seq[(Int, Int, String)],
-  rowClusterNames: Seq[String],
-  colClusterNames: Seq[String],
-  valueRange: (Double, Double)
+    values: Seq[(Int, Int, Double)],
+    labels: Seq[(Int, Int, String)],
+    rowClusterNames: Seq[String],
+    colClusterNames: Seq[String],
+    valueRange: (Double, Double)
 )
 
 /** Data structure for network graph visualization.
@@ -645,39 +647,39 @@ case class HeatmapData(
 case class NetworkGraphData(nodes: Seq[GraphNode], edges: Seq[GraphEdge])
 
 case class GraphNode(
-  id: String,
-  label: String,
-  nodeType: String,
-  size: Int,
-  weight: Int,
-  metadata: Map[String, String]
+    id: String,
+    label: String,
+    nodeType: String,
+    size: Int,
+    weight: Int,
+    metadata: Map[String, String]
 )
 
 case class GraphEdge(
-  source: String,
-  target: String,
-  weight: Double,
-  label: String,
-  metadata: Map[String, String]
+    source: String,
+    target: String,
+    weight: Double,
+    label: String,
+    metadata: Map[String, String]
 )
 
 /** Data structure for convergence plot visualization.
   */
 case class ConvergencePlotData(
-  iterations: Seq[Int],
-  objectives: Seq[Double],
-  convergenceRates: Seq[Double],
-  finalObjective: Double,
-  totalIterations: Int
+    iterations: Seq[Int],
+    objectives: Seq[Double],
+    convergenceRates: Seq[Double],
+    finalObjective: Double,
+    totalIterations: Int
 )
 
 /** Data structure for distribution analysis.
   */
 case class DistributionData(
-  rowSizeDistribution: Seq[(Double, Int)],
-  colSizeDistribution: Seq[(Double, Int)],
-  blockDensityDistribution: Seq[(Double, Int)],
-  valuesByRowCluster: Map[String, Seq[Double]],
-  valuesByColCluster: Map[String, Seq[Double]],
-  overallStats: Map[String, Any]
+    rowSizeDistribution: Seq[(Double, Int)],
+    colSizeDistribution: Seq[(Double, Int)],
+    blockDensityDistribution: Seq[(Double, Int)],
+    valuesByRowCluster: Map[String, Seq[Double]],
+    valuesByColCluster: Map[String, Seq[Double]],
+    overallStats: Map[String, Any]
 )

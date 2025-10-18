@@ -17,15 +17,15 @@
 
 package com.massivedatascience.transforms
 
-import com.massivedatascience.linalg.{BLAS, WeightedVector}
-import org.apache.spark.ml.linalg.{DenseMatrix, Vectors}
+import com.massivedatascience.linalg.{ BLAS, WeightedVector }
+import org.apache.spark.ml.linalg.{ DenseMatrix, Vectors }
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
 /** Vectorized implementations of transform operations using BLAS for improved performance.
   *
-  * These implementations process multiple vectors in batches and use optimized BLAS operations to reduce overhead and
-  * improve cache efficiency.
+  * These implementations process multiple vectors in batches and use optimized BLAS operations to
+  * reduce overhead and improve cache efficiency.
   */
 object VectorizedTransforms {
 
@@ -36,7 +36,8 @@ object VectorizedTransforms {
 
   /** Vectorized Haar wavelet transform using batched BLAS operations.
     *
-    * Processes multiple vectors simultaneously to amortize BLAS call overhead and improve memory access patterns.
+    * Processes multiple vectors simultaneously to amortize BLAS call overhead and improve memory
+    * access patterns.
     *
     * @param vectors
     *   RDD of input vectors
@@ -48,9 +49,9 @@ object VectorizedTransforms {
     *   RDD of transformed vectors
     */
   def batchedHaarTransform(
-    vectors: RDD[WeightedVector],
-    levels: Int = 1,
-    batchSize: Int = DefaultBatchSize
+      vectors: RDD[WeightedVector],
+      levels: Int = 1,
+      batchSize: Int = DefaultBatchSize
   ): RDD[WeightedVector] = {
 
     require(levels > 0, "Levels must be positive")
@@ -156,10 +157,10 @@ object VectorizedTransforms {
     *   RDD of embedded vectors
     */
   def batchedRandomIndexEmbedding(
-    vectors: RDD[WeightedVector],
-    targetDimension: Int,
-    seed: Long = System.currentTimeMillis(),
-    batchSize: Int = DefaultBatchSize
+      vectors: RDD[WeightedVector],
+      targetDimension: Int,
+      seed: Long = System.currentTimeMillis(),
+      batchSize: Int = DefaultBatchSize
   ): RDD[WeightedVector] = {
 
     require(targetDimension > 0, "Target dimension must be positive")
@@ -196,8 +197,8 @@ object VectorizedTransforms {
   /** Process a batch of vectors with random index embedding using matrix multiplication.
     */
   private def vectorizedEmbedBatch(
-    batch: Seq[WeightedVector],
-    projectionMatrix: DenseMatrix
+      batch: Seq[WeightedVector],
+      projectionMatrix: DenseMatrix
   ): Seq[WeightedVector] = {
     val batchSize = batch.length
     val inputDim  = projectionMatrix.numRows
@@ -244,9 +245,9 @@ object VectorizedTransforms {
     * Uses the Johnson-Lindenstrauss lemma approach with sparse random projections.
     */
   private def generateRandomProjectionMatrix(
-    inputDim: Int,
-    outputDim: Int,
-    seed: Long
+      inputDim: Int,
+      outputDim: Int,
+      seed: Long
   ): DenseMatrix = {
     val random   = new scala.util.Random(seed)
     val sparsity = 1.0 / math.sqrt(inputDim) // Typical sparsity level
@@ -277,8 +278,8 @@ object VectorizedTransforms {
     *   RDD of normalized vectors
     */
   def batchedNormalization(
-    vectors: RDD[WeightedVector],
-    batchSize: Int = DefaultBatchSize
+      vectors: RDD[WeightedVector],
+      batchSize: Int = DefaultBatchSize
   ): RDD[WeightedVector] = {
 
     vectors.mapPartitions { vectorIter =>
@@ -295,7 +296,7 @@ object VectorizedTransforms {
               normSquared += values(i) * values(i)
               i += 1
             }
-            val norm = math.sqrt(normSquared)
+            val norm        = math.sqrt(normSquared)
 
             if (norm > 1e-12) {
               BLAS.scal(1.0 / norm, denseVector)

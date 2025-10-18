@@ -18,22 +18,24 @@
 package com.massivedatascience.divergence
 
 import com.massivedatascience.linalg.BLAS._
-import com.massivedatascience.util.{DiscreteLog, GeneralLog, MathLog, ValidationUtils}
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import com.massivedatascience.util.{ DiscreteLog, GeneralLog, MathLog, ValidationUtils }
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 /** Bregman Divergence defines a convex function F and its gradient.
   *
-  * For convenience, we also provide methods for evaluating F and its gradient when points are provided using
-  * homogeneous coordinates. Evaluating F and gradient of F on homogeneous coordinates is often more efficient that
-  * mapping the homogeneous coordinates to inhomogeneous coordinates and then evaluating F and gradient F.
+  * For convenience, we also provide methods for evaluating F and its gradient when points are
+  * provided using homogeneous coordinates. Evaluating F and gradient of F on homogeneous
+  * coordinates is often more efficient that mapping the homogeneous coordinates to inhomogeneous
+  * coordinates and then evaluating F and gradient F.
   *
   * @see
   *   <a href="http://en.wikipedia.org/wiki/Bregman_divergence">Definition</a>
   * @see
-  *   <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle introduction</a>
+  *   <a href="http://mark.reid.name/blog/meet-the-bregman-divergences.html">A gentle
+  *   introduction</a>
   * @see
-  *   <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with Bregman
-  *   Divergences</a>
+  *   <a href="http://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf">Clustering with
+  *   Bregman Divergences</a>
   */
 
 trait BregmanDivergence extends Serializable {
@@ -80,8 +82,8 @@ trait BregmanDivergence extends Serializable {
 
 /** The Kullback-Leibler divergence is defined on points on a simplex in R+ ** n
   *
-  * If we know that the points are on the simplex, then we may simplify the implementation of KL divergence. This trait
-  * implements that simplification.
+  * If we know that the points are on the simplex, then we may simplify the implementation of KL
+  * divergence. This trait implements that simplification.
   *
   * @see
   *   <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">Definition</a>
@@ -315,7 +317,8 @@ object BregmanDivergence {
 
   /** Create a Bregman Divergence from
     * @param f
-    *   any continuously-differentiable real-valued and strictly convex function defined on a closed convex set in R^^N
+    *   any continuously-differentiable real-valued and strictly convex function defined on a closed
+    *   convex set in R^^N
     * @param gradientF
     *   the gradient of f
     * @return

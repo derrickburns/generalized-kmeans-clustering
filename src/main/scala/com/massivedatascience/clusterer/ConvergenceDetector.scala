@@ -32,12 +32,12 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
     *   the previous assignments
     */
   def update(
-    pointOps: BregmanPointOps,
-    round: Int,
-    currentCenters: IndexedSeq[CenterWithHistory],
-    previousCenters: IndexedSeq[CenterWithHistory],
-    currentAssignments: RDD[Assignment],
-    previousAssignments: RDD[Assignment]
+      pointOps: BregmanPointOps,
+      round: Int,
+      currentCenters: IndexedSeq[CenterWithHistory],
+      previousCenters: IndexedSeq[CenterWithHistory],
+      currentAssignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]
   ): Boolean = {
 
     require(currentAssignments.getStorageLevel.useMemory)
@@ -67,8 +67,8 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
   }
 
   private[this] def updateClusterStats(
-    centers: IndexedSeq[CenterWithHistory],
-    assignments: RDD[Assignment]
+      centers: IndexedSeq[CenterWithHistory],
+      assignments: RDD[Assignment]
   ): Unit = {
 
     val clusterCounts = countByCluster(assignments)
@@ -90,8 +90,8 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
   }
 
   private[this] def updatePointStats(
-    currentAssignments: RDD[Assignment],
-    previousAssignments: RDD[Assignment]
+      currentAssignments: RDD[Assignment],
+      previousAssignments: RDD[Assignment]
   ): Unit = {
 
     stats.reassignedPoints.reset()
@@ -113,9 +113,9 @@ private[clusterer] class ConvergenceDetector(sc: SparkContext) extends Serializa
   }
 
   private[this] def updateCenterStats(
-    pointOps: BregmanPointOps,
-    currentCenters: IndexedSeq[CenterWithHistory],
-    previousCenters: IndexedSeq[CenterWithHistory]
+      pointOps: BregmanPointOps,
+      currentCenters: IndexedSeq[CenterWithHistory],
+      previousCenters: IndexedSeq[CenterWithHistory]
   ): Unit = {
 
     stats.movement.reset()

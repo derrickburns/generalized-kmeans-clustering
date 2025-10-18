@@ -1,7 +1,7 @@
 package com.massivedatascience.clusterer.ml.df
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
@@ -27,27 +27,27 @@ trait AssignmentStrategy extends Serializable {
     *   DataFrame with additional "cluster" column (Int)
     */
   def assign(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      kernel: BregmanKernel
   ): DataFrame
 }
 
 /** Broadcast UDF assignment strategy.
   *
-  * Broadcasts centers to executors and uses UDF to compute assignments. Works with any Bregman divergence but may be
-  * slower than expression-based approaches.
+  * Broadcasts centers to executors and uses UDF to compute assignments. Works with any Bregman
+  * divergence but may be slower than expression-based approaches.
   */
 class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
   override def assign(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      kernel: BregmanKernel
   ): DataFrame = {
 
     logDebug(s"BroadcastUDFAssignment: assigning ${centers.length} clusters")
@@ -80,17 +80,17 @@ class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
 /** Squared Euclidean cross-join assignment strategy.
   *
-  * Uses DataFrame cross-join with expression-based distance computation. Much faster than UDF for Squared Euclidean,
-  * but only works with SE kernel.
+  * Uses DataFrame cross-join with expression-based distance computation. Much faster than UDF for
+  * Squared Euclidean, but only works with SE kernel.
   */
 class SECrossJoinAssignment extends AssignmentStrategy with Logging {
 
   override def assign(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      kernel: BregmanKernel
   ): DataFrame = {
 
     require(
@@ -108,7 +108,7 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
         (idx, Vectors.dense(center))
       }
     )
-    val centersDF = spark.createDataFrame(centersRDD).toDF("clusterId", "center")
+    val centersDF  = spark.createDataFrame(centersRDD).toDF("clusterId", "center")
 
     // Cross-join and compute squared distances using expressions
     val joined = df.crossJoin(centersDF)
@@ -127,8 +127,7 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
       sum * 0.5
     }
 
-    val withDistances = joined
-      .withColumn("distance", distanceUDF(col(featuresCol), col("center")))
+    val withDistances = joined.withColumn("distance", distanceUDF(col(featuresCol), col("center")))
 
     // Find minimum distance cluster for each point
     // Use window function for efficiency
@@ -147,25 +146,24 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
 
 /** Chunked broadcast assignment strategy.
   *
-  * Processes centers in chunks to avoid OOM when k×dim is large.
-  * Trades off multiple scans for reduced memory footprint.
+  * Processes centers in chunks to avoid OOM when k×dim is large. Trades off multiple scans for
+  * reduced memory footprint.
   *
   * Algorithm:
-  * 1. Split centers into chunks of size chunkSize
-  * 2. For each chunk: broadcast chunk, compute local min distance & cluster ID
-  * 3. Reduce across chunks to find global minimum
+  *   1. Split centers into chunks of size chunkSize 2. For each chunk: broadcast chunk, compute
+  *      local min distance & cluster ID 3. Reduce across chunks to find global minimum
   *
-  * Memory: O(chunkSize × dim) broadcast per executor
-  * Scans: ceil(k / chunkSize) passes over the data
+  * Memory: O(chunkSize × dim) broadcast per executor Scans: ceil(k / chunkSize) passes over the
+  * data
   */
 class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrategy with Logging {
 
   override def assign(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      kernel: BregmanKernel
   ): DataFrame = {
 
     val k = centers.length
@@ -188,22 +186,22 @@ class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrateg
     var result = withId
 
     chunks.foreach { case (chunk, chunkIdx) =>
-      val chunkStart = chunkIdx * chunkSize
-      val bcChunk = spark.sparkContext.broadcast(chunk)
-      val bcKernel = spark.sparkContext.broadcast(kernel)
+      val chunkStart   = chunkIdx * chunkSize
+      val bcChunk      = spark.sparkContext.broadcast(chunk)
+      val bcKernel     = spark.sparkContext.broadcast(kernel)
       val bcChunkStart = spark.sparkContext.broadcast(chunkStart)
 
       // Compute local minimum for this chunk
       val chunkMinUDF = udf { (features: Vector) =>
-        val ctrs = bcChunk.value
-        val kern = bcKernel.value
-        val offset = bcChunkStart.value
+        val ctrs    = bcChunk.value
+        val kern    = bcKernel.value
+        val offset  = bcChunkStart.value
         var minDist = Double.PositiveInfinity
-        var minIdx = 0
-        var i = 0
+        var minIdx  = 0
+        var i       = 0
         while (i < ctrs.length) {
           val center = Vectors.dense(ctrs(i))
-          val dist = kern.divergence(features, center)
+          val dist   = kern.divergence(features, center)
           if (dist < minDist) {
             minDist = dist
             minIdx = offset + i
@@ -223,15 +221,15 @@ class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrateg
     }
 
     // Find global minimum across all chunks
-    val numChunks = chunks.size
+    val numChunks    = chunks.size
     val globalMinUDF = udf { (row: org.apache.spark.sql.Row) =>
-      var minDist = Double.PositiveInfinity
+      var minDist    = Double.PositiveInfinity
       var minCluster = 0
-      var i = 0
+      var i          = 0
       while (i < numChunks) {
         val chunkResult = row.getStruct(row.fieldIndex(s"_chunk_$i"))
-        val clusterId = chunkResult.getInt(0)
-        val dist = chunkResult.getDouble(1)
+        val clusterId   = chunkResult.getInt(0)
+        val dist        = chunkResult.getDouble(1)
         if (dist < minDist) {
           minDist = dist
           minCluster = clusterId
@@ -242,7 +240,7 @@ class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrateg
     }
 
     // Collect all chunk columns into a struct for the UDF
-    val chunkCols = (0 until numChunks).map(i => col(s"_chunk_$i"))
+    val chunkCols  = (0 until numChunks).map(i => col(s"_chunk_$i"))
     val withStruct = result.withColumn("_all_chunks", struct(chunkCols: _*))
 
     // Apply global minimum UDF
@@ -261,39 +259,47 @@ class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrateg
   * Chooses between BroadcastUDF, SECrossJoin, and Chunked based on kernel, data size, and k×dim.
   *
   * Strategy selection:
-  * - SE kernel → SECrossJoin (most efficient for Squared Euclidean)
-  * - Non-SE, k×dim < threshold → BroadcastUDF (fast, low memory overhead)
-  * - Non-SE, k×dim >= threshold → ChunkedBroadcast (multiple scans, avoids OOM)
+  *   - SE kernel → SECrossJoin (most efficient for Squared Euclidean)
+  *   - Non-SE, k×dim < threshold → BroadcastUDF (fast, low memory overhead)
+  *   - Non-SE, k×dim >= threshold → ChunkedBroadcast (multiple scans, avoids OOM)
   *
   * Default threshold: 200,000 elements (~1.5MB of doubles)
   */
-class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSize: Int = 100) extends AssignmentStrategy with Logging {
+class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSize: Int = 100)
+    extends AssignmentStrategy
+    with Logging {
 
   private val broadcastStrategy = new BroadcastUDFAssignment()
   private val seStrategy        = new SECrossJoinAssignment()
   private val chunkedStrategy   = new ChunkedBroadcastAssignment(chunkSize)
 
   override def assign(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      kernel: BregmanKernel
   ): DataFrame = {
 
-    val k = centers.length
-    val dim = centers.headOption.map(_.length).getOrElse(0)
+    val k         = centers.length
+    val dim       = centers.headOption.map(_.length).getOrElse(0)
     val kTimesDim = k * dim
 
     if (kernel.supportsExpressionOptimization) {
       logInfo(s"AutoAssignment: strategy=SECrossJoin (kernel=${kernel.name})")
       seStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     } else if (kTimesDim < broadcastThresholdElems) {
-      logInfo(s"AutoAssignment: strategy=BroadcastUDF (kernel=${kernel.name}, k×dim=$kTimesDim < $broadcastThresholdElems)")
+      logInfo(
+        s"AutoAssignment: strategy=BroadcastUDF (kernel=${kernel.name}, k×dim=$kTimesDim < $broadcastThresholdElems)"
+      )
       broadcastStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     } else {
-      logWarning(s"AutoAssignment: k×dim=$kTimesDim exceeds threshold=$broadcastThresholdElems, using ChunkedBroadcast to avoid OOM")
-      logInfo(s"AutoAssignment: strategy=ChunkedBroadcast (kernel=${kernel.name}, k=$k, dim=$dim, chunkSize=$chunkSize)")
+      logWarning(
+        s"AutoAssignment: k×dim=$kTimesDim exceeds threshold=$broadcastThresholdElems, using ChunkedBroadcast to avoid OOM"
+      )
+      logInfo(
+        s"AutoAssignment: strategy=ChunkedBroadcast (kernel=${kernel.name}, k=$k, dim=$dim, chunkSize=$chunkSize)"
+      )
       chunkedStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     }
   }
@@ -321,11 +327,11 @@ trait UpdateStrategy extends Serializable {
     *   new cluster centers (may have fewer than k if some clusters are empty)
     */
   def update(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    k: Int,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      k: Int,
+      kernel: BregmanKernel
   ): Array[Array[Double]]
 }
 
@@ -336,11 +342,11 @@ trait UpdateStrategy extends Serializable {
 class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
 
   override def update(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    k: Int,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      k: Int,
+      kernel: BregmanKernel
   ): Array[Array[Double]] = {
 
     logDebug(s"GradMeanUDAFUpdate: computing centers for k=$k clusters")
@@ -357,27 +363,24 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
     val withGrad = assigned.withColumn("gradient", gradUDF(col(featuresCol)))
 
     // Add weight column if not present
-    val withWeight = weightCol match {
+    val withWeight      = weightCol match {
       case Some(col) => withGrad
       case None      => withGrad.withColumn("weight", lit(1.0))
     }
     val actualWeightCol = weightCol.getOrElse("weight")
 
     // Aggregate using RDD for weighted vector sum
-    val withWeightRDD = withWeight
-      .select("cluster", "gradient", actualWeightCol)
-      .rdd
-      .map { row =>
-        val cluster = row.getInt(0)
-        val grad    = row.getAs[Vector](1)
-        val weight  = row.getDouble(2)
-        (cluster, (grad, weight))
-      }
+    val withWeightRDD = withWeight.select("cluster", "gradient", actualWeightCol).rdd.map { row =>
+      val cluster = row.getInt(0)
+      val grad    = row.getAs[Vector](1)
+      val weight  = row.getDouble(2)
+      (cluster, (grad, weight))
+    }
 
     val clusterSums = withWeightRDD
       .aggregateByKey((Array.empty[Double], 0.0))(
         seqOp = { case ((gradSum, weightSum), (grad, weight)) =>
-          val gArr = grad.toArray
+          val gArr       = grad.toArray
           val newGradSum = if (gradSum.isEmpty) {
             gArr.map(_ * weight)
           } else {
@@ -414,19 +417,19 @@ class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
 
 /** Median update strategy for K-Medians clustering.
   *
-  * Computes component-wise weighted median for each cluster instead of gradient-based mean. More robust to outliers
-  * than mean-based methods.
+  * Computes component-wise weighted median for each cluster instead of gradient-based mean. More
+  * robust to outliers than mean-based methods.
   *
   * Note: This should be paired with L1Kernel (Manhattan distance).
   */
 class MedianUpdateStrategy extends UpdateStrategy with Logging {
 
   override def update(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    k: Int,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      k: Int,
+      kernel: BregmanKernel
   ): Array[Array[Double]] = {
 
     logDebug(s"MedianUpdateStrategy: computing medians for k=$k clusters")
@@ -434,7 +437,7 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
     val numFeatures = assigned.select(featuresCol).first().getAs[Vector](0).size
 
     // Add weight column if not present
-    val withWeight = weightCol match {
+    val withWeight      = weightCol match {
       case Some(col) => assigned
       case None      => assigned.withColumn("weight", lit(1.0))
     }
@@ -477,10 +480,10 @@ class MedianUpdateStrategy extends UpdateStrategy with Logging {
     *   weighted median value
     */
   private def computeWeightedMedian(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: String,
-    dimension: Int
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: String,
+      dimension: Int
   ): Double = {
 
     // Extract dimension values with weights
@@ -551,26 +554,28 @@ trait EmptyClusterHandler extends Serializable {
     *   (final centers with k elements, number of empty clusters handled)
     */
   def handle(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    originalDF: DataFrame,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      originalDF: DataFrame,
+      kernel: BregmanKernel
   ): (Array[Array[Double]], Int)
 }
 
 /** Reseed empty clusters with random points.
   */
-class ReseedRandomHandler(seed: Long = System.currentTimeMillis()) extends EmptyClusterHandler with Logging {
+class ReseedRandomHandler(seed: Long = System.currentTimeMillis())
+    extends EmptyClusterHandler
+    with Logging {
 
   override def handle(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    originalDF: DataFrame,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      originalDF: DataFrame,
+      kernel: BregmanKernel
   ): (Array[Array[Double]], Int) = {
 
     val k = centers.length
@@ -585,7 +590,7 @@ class ReseedRandomHandler(seed: Long = System.currentTimeMillis()) extends Empty
 
     // Sample random points to fill empty clusters
     val fraction = math.min(1.0, (numEmpty * 10.0) / originalDF.count().toDouble)
-    val samples = originalDF
+    val samples  = originalDF
       .sample(withReplacement = false, fraction, seed)
       .select(featuresCol)
       .limit(numEmpty)
@@ -602,12 +607,12 @@ class ReseedRandomHandler(seed: Long = System.currentTimeMillis()) extends Empty
 class DropEmptyClustersHandler extends EmptyClusterHandler with Logging {
 
   override def handle(
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    centers: Array[Array[Double]],
-    originalDF: DataFrame,
-    kernel: BregmanKernel
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      centers: Array[Array[Double]],
+      originalDF: DataFrame,
+      kernel: BregmanKernel
   ): (Array[Array[Double]], Int) = {
 
     (centers, 0) // Just return what we have
@@ -636,12 +641,12 @@ trait ConvergenceCheck extends Serializable {
     *   (max center movement, total distortion)
     */
   def check(
-    oldCenters: Array[Array[Double]],
-    newCenters: Array[Array[Double]],
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      oldCenters: Array[Array[Double]],
+      newCenters: Array[Array[Double]],
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): (Double, Double)
 }
 
@@ -652,17 +657,17 @@ trait ConvergenceCheck extends Serializable {
 class MovementConvergence extends ConvergenceCheck with Logging {
 
   override def check(
-    oldCenters: Array[Array[Double]],
-    newCenters: Array[Array[Double]],
-    assigned: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      oldCenters: Array[Array[Double]],
+      newCenters: Array[Array[Double]],
+      assigned: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): (Double, Double) = {
 
     // Compute max movement (only for centers that exist in both arrays)
     val minLength = math.min(oldCenters.length, newCenters.length)
-    val movement = if (minLength > 0) {
+    val movement  = if (minLength > 0) {
       (0 until minLength).map { i =>
         val diff = oldCenters(i).zip(newCenters(i)).map { case (a, b) => a - b }
         math.sqrt(diff.map(d => d * d).sum)
@@ -690,7 +695,7 @@ class MovementConvergence extends ConvergenceCheck with Logging {
     }
 
     val actualWeightCol = weightCol.getOrElse("weight")
-    val withWeight = if (assigned.columns.contains(actualWeightCol)) {
+    val withWeight      = if (assigned.columns.contains(actualWeightCol)) {
       assigned
     } else {
       assigned.withColumn(actualWeightCol, lit(1.0))
@@ -724,10 +729,10 @@ trait InputValidator extends Serializable {
     *   if validation fails
     */
   def validate(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): Unit
 }
 
@@ -736,10 +741,10 @@ trait InputValidator extends Serializable {
 class StandardInputValidator extends InputValidator with Logging {
 
   override def validate(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): Unit = {
 
     require(

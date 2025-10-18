@@ -24,8 +24,8 @@ import org.apache.spark.SparkException
 /** A KMeansSelector that creates cluster centers from pre-assigned cluster indices.
   *
   * @param assignments
-  *   RDD containing the cluster index for each point in the dataset. Cluster indices should be in the range [0,
-  *   numClusters).
+  *   RDD containing the cluster index for each point in the dataset. Cluster indices should be in
+  *   the range [0, numClusters).
   * @throws java.lang.IllegalArgumentException
   *   if the number of unique clusters in assignments doesn't match numClusters
   */
@@ -51,12 +51,12 @@ class AssignmentSelector(assignments: RDD[Int]) extends KMeansSelector {
     *   if the number of unique clusters in assignments doesn't match numClusters
     */
   def init(
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    numClusters: Int,
-    initialInfo: Option[InitialCondition] = None,
-    runs: Int,
-    seed: Long
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      numClusters: Int,
+      initialInfo: Option[InitialCondition] = None,
+      runs: Int,
+      seed: Long
   ): Seq[IndexedSeq[BregmanCenter]] = {
 
     // Count the number of unique clusters in the assignments

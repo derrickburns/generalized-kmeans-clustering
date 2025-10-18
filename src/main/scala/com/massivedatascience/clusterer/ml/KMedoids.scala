@@ -2,17 +2,22 @@ package com.massivedatascience.clusterer.ml
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 
 /** Parameters for K-Medoids clustering.
   */
-trait KMedoidsParams extends Params with HasFeaturesCol with HasPredictionCol with HasMaxIter with HasSeed {
+trait KMedoidsParams
+    extends Params
+    with HasFeaturesCol
+    with HasPredictionCol
+    with HasMaxIter
+    with HasSeed {
 
   /** Number of clusters (k). Must be > 1.
     */
@@ -36,10 +41,10 @@ trait KMedoidsParams extends Params with HasFeaturesCol with HasPredictionCol wi
   def getDistanceFunction: String = $(distanceFunction)
 
   setDefault(
-    k -> 2,
-    featuresCol -> "features",
-    predictionCol -> "prediction",
-    maxIter -> 20,
+    k                -> 2,
+    featuresCol      -> "features",
+    predictionCol    -> "prediction",
+    maxIter          -> 20,
     distanceFunction -> "euclidean"
   )
 
@@ -54,16 +59,16 @@ trait KMedoidsParams extends Params with HasFeaturesCol with HasPredictionCol wi
 
 /** K-Medoids clustering using PAM (Partitioning Around Medoids) algorithm.
   *
-  * K-Medoids is a clustering algorithm that uses actual data points as cluster centers
-  * (called medoids) instead of computed centroids like K-Means. This makes it:
+  * K-Medoids is a clustering algorithm that uses actual data points as cluster centers (called
+  * medoids) instead of computed centroids like K-Means. This makes it:
   *   - More robust to outliers
   *   - More interpretable (medoids are real data points)
   *   - Works with any distance function (not just Euclidean)
   *   - More computationally expensive than K-Means
   *
   * The algorithm consists of two phases:
-  *   1. BUILD: Greedily select k initial medoids to minimize total cost
-  *   2. SWAP: Iteratively swap medoids with non-medoids to minimize cost
+  *   1. BUILD: Greedily select k initial medoids to minimize total cost 2. SWAP: Iteratively swap
+  *      medoids with non-medoids to minimize cost
   *
   * Time Complexity: O(k(n-k)²) per iteration
   *
@@ -78,7 +83,8 @@ trait KMedoidsParams extends Params with HasFeaturesCol with HasPredictionCol wi
   * val predictions = model.transform(data)
   * }}}
   *
-  * @param uid unique identifier
+  * @param uid
+  *   unique identifier
   */
 class KMedoids(override val uid: String)
     extends Estimator[KMedoidsModel]
@@ -91,12 +97,18 @@ class KMedoids(override val uid: String)
   override def fit(dataset: Dataset[_]): KMedoidsModel = {
     transformSchema(dataset.schema, logging = true)
 
-    val df = dataset.toDF()
-    val data = df.select($(featuresCol)).rdd.map { row =>
-      row.getAs[Vector](0)
-    }.collect()
+    val df   = dataset.toDF()
+    val data = df
+      .select($(featuresCol))
+      .rdd
+      .map { row =>
+        row.getAs[Vector](0)
+      }
+      .collect()
 
-    logInfo(s"K-Medoids with k=${$(k)}, maxIter=${$(maxIter)}, distanceFunction=${$(distanceFunction)}")
+    logInfo(
+      s"K-Medoids with k=${$(k)}, maxIter=${$(maxIter)}, distanceFunction=${$(distanceFunction)}"
+    )
     logInfo(s"Dataset size: ${data.length} points")
 
     // Create distance function
@@ -112,37 +124,41 @@ class KMedoids(override val uid: String)
 
     // Create model
     val medoidVectors = finalMedoidIndices.map(data)
-    new KMedoidsModel(uid, medoidVectors, finalMedoidIndices, $(distanceFunction))
-      .setParent(this)
+    new KMedoidsModel(uid, medoidVectors, finalMedoidIndices, $(distanceFunction)).setParent(this)
   }
 
   /** BUILD phase: Greedily select k medoids to minimize total cost.
     *
     * Algorithm:
-    *   1. Select first medoid as the point with minimum sum of distances to all other points
-    *   2. For i = 2 to k:
+    *   1. Select first medoid as the point with minimum sum of distances to all other points 2. For
+    *      i = 2 to k:
     *      - For each non-medoid point o:
     *        - Compute cost reduction if o becomes the next medoid
     *      - Select point with maximum cost reduction
     *
-    * @param data all data points
-    * @param k number of medoids
-    * @param distFn distance function
-    * @param seed random seed
-    * @return indices of selected medoids
+    * @param data
+    *   all data points
+    * @param k
+    *   number of medoids
+    * @param distFn
+    *   distance function
+    * @param seed
+    *   random seed
+    * @return
+    *   indices of selected medoids
     */
   protected def buildPhase(
-    data: Array[Vector],
-    k: Int,
-    distFn: (Vector, Vector) => Double,
-    seed: Long
+      data: Array[Vector],
+      k: Int,
+      distFn: (Vector, Vector) => Double,
+      seed: Long
   ): Array[Int] = {
-    val n = data.length
+    val n             = data.length
     val medoidIndices = new Array[Int](k)
-    val isMedoid = new Array[Boolean](n)
+    val isMedoid      = new Array[Boolean](n)
 
     // Step 1: Select first medoid (point with minimum total distance to all others)
-    var minCost = Double.PositiveInfinity
+    var minCost     = Double.PositiveInfinity
     var firstMedoid = 0
 
     (0 until n).foreach { i =>
@@ -165,7 +181,7 @@ class KMedoids(override val uid: String)
 
     // Step 2: Greedily select remaining k-1 medoids
     (1 until k).foreach { medoidCount =>
-      var maxGain = Double.NegativeInfinity
+      var maxGain       = Double.NegativeInfinity
       var bestCandidate = -1
 
       // For each non-medoid point
@@ -209,34 +225,39 @@ class KMedoids(override val uid: String)
     * Algorithm:
     *   1. For each medoid m and each non-medoid point o:
     *      - Compute cost change if m is swapped with o
-    *   2. Perform the swap with the largest cost reduction
-    *   3. Repeat until no improvement is possible or maxIter is reached
+    *      2. Perform the swap with the largest cost reduction 3. Repeat until no improvement is
+    *      possible or maxIter is reached
     *
-    * @param data all data points
-    * @param initialMedoidIndices initial medoid indices from BUILD phase
-    * @param maxIter maximum number of iterations
-    * @param distFn distance function
-    * @return final medoid indices
+    * @param data
+    *   all data points
+    * @param initialMedoidIndices
+    *   initial medoid indices from BUILD phase
+    * @param maxIter
+    *   maximum number of iterations
+    * @param distFn
+    *   distance function
+    * @return
+    *   final medoid indices
     */
   protected def swapPhase(
-    data: Array[Vector],
-    initialMedoidIndices: Array[Int],
-    maxIter: Int,
-    distFn: (Vector, Vector) => Double
+      data: Array[Vector],
+      initialMedoidIndices: Array[Int],
+      maxIter: Int,
+      distFn: (Vector, Vector) => Double
   ): Array[Int] = {
-    val n = data.length
-    val k = initialMedoidIndices.length
+    val n             = data.length
+    val k             = initialMedoidIndices.length
     val medoidIndices = initialMedoidIndices.clone()
-    val isMedoid = new Array[Boolean](n)
+    val isMedoid      = new Array[Boolean](n)
     medoidIndices.foreach(i => isMedoid(i) = true)
 
-    var improved = true
+    var improved  = true
     var iteration = 0
 
     while (improved && iteration < maxIter) {
       improved = false
-      var bestSwapGain = 0.0
-      var bestMedoidToSwap = -1
+      var bestSwapGain        = 0.0
+      var bestMedoidToSwap    = -1
       var bestNonMedoidToSwap = -1
 
       // For each medoid
@@ -263,8 +284,9 @@ class KMedoids(override val uid: String)
                 // If current closest medoid is the one being swapped
                 if (math.abs(currentDist - distToSwappedMedoid) < 1e-10) {
                   // New distance is minimum of (second closest current medoid, new medoid)
-                  val secondClosest = medoidIndices.filter(_ != medoid).map(m => distFn(data(j), data(m))).min
-                  val newDist = math.min(secondClosest, distToNewMedoid)
+                  val secondClosest =
+                    medoidIndices.filter(_ != medoid).map(m => distFn(data(j), data(m))).min
+                  val newDist       = math.min(secondClosest, distToNewMedoid)
                   totalCostChange += (newDist - currentDist)
                 } else {
                   // New distance is minimum of (current distance, new medoid)
@@ -293,7 +315,9 @@ class KMedoids(override val uid: String)
         improved = true
         iteration += 1
 
-        logInfo(f"Iteration $iteration: Swapped medoid $oldMedoid with $bestNonMedoidToSwap (cost reduction: ${-bestSwapGain}%.4f)")
+        logInfo(
+          f"Iteration $iteration: Swapped medoid $oldMedoid with $bestNonMedoidToSwap (cost reduction: ${-bestSwapGain}%.4f)"
+        )
       }
     }
 
@@ -313,7 +337,7 @@ class KMedoids(override val uid: String)
       case "euclidean" =>
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             val d = v1(i) - v2(i)
             sum += d * d
@@ -325,7 +349,7 @@ class KMedoids(override val uid: String)
       case "manhattan" =>
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             sum += math.abs(v1(i) - v2(i))
             i += 1
@@ -335,10 +359,10 @@ class KMedoids(override val uid: String)
 
       case "cosine" =>
         (v1: Vector, v2: Vector) => {
-          var dot = 0.0
+          var dot   = 0.0
           var norm1 = 0.0
           var norm2 = 0.0
-          var i = 0
+          var i     = 0
           while (i < v1.size) {
             dot += v1(i) * v2(i)
             norm1 += v1(i) * v1(i)
@@ -352,7 +376,7 @@ class KMedoids(override val uid: String)
         logWarning(s"Unknown distance function $name, using Euclidean")
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             val d = v1(i) - v2(i)
             sum += d * d
@@ -364,12 +388,12 @@ class KMedoids(override val uid: String)
   }
 
   // Parameter setters
-  def setK(value: Int): this.type = set(k, value)
-  def setMaxIter(value: Int): this.type = set(maxIter, value)
+  def setK(value: Int): this.type                   = set(k, value)
+  def setMaxIter(value: Int): this.type             = set(maxIter, value)
   def setDistanceFunction(value: String): this.type = set(distanceFunction, value)
-  def setSeed(value: Long): this.type = set(seed, value)
-  def setFeaturesCol(value: String): this.type = set(featuresCol, value)
-  def setPredictionCol(value: String): this.type = set(predictionCol, value)
+  def setSeed(value: Long): this.type               = set(seed, value)
+  def setFeaturesCol(value: String): this.type      = set(featuresCol, value)
+  def setPredictionCol(value: String): this.type    = set(predictionCol, value)
 
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)
@@ -384,16 +408,20 @@ object KMedoids extends DefaultParamsReadable[KMedoids] {
 
 /** Model produced by K-Medoids clustering.
   *
-  * @param uid unique identifier
-  * @param medoids cluster medoid vectors
-  * @param medoidIndices indices of medoids in the original dataset (if available)
-  * @param distanceFunctionName name of the distance function used
+  * @param uid
+  *   unique identifier
+  * @param medoids
+  *   cluster medoid vectors
+  * @param medoidIndices
+  *   indices of medoids in the original dataset (if available)
+  * @param distanceFunctionName
+  *   name of the distance function used
   */
 class KMedoidsModel(
-  override val uid: String,
-  val medoids: Array[Vector],
-  val medoidIndices: Array[Int],
-  val distanceFunctionName: String
+    override val uid: String,
+    val medoids: Array[Vector],
+    val medoidIndices: Array[Int],
+    val distanceFunctionName: String
 ) extends org.apache.spark.ml.Model[KMedoidsModel]
     with KMedoidsParams
     with org.apache.spark.ml.util.MLWritable
@@ -420,10 +448,10 @@ class KMedoidsModel(
 
     // UDF to find nearest medoid
     val predictUDF = udf { (features: Vector) =>
-      val meds = bcMedoids.value
+      val meds    = bcMedoids.value
       var minDist = Double.PositiveInfinity
-      var minIdx = 0
-      var i = 0
+      var minIdx  = 0
+      var i       = 0
       while (i < meds.length) {
         val dist = distFn(features, meds(i))
         if (dist < minDist) {
@@ -442,15 +470,18 @@ class KMedoidsModel(
   /** Compute total cost (sum of distances from points to their assigned medoids).
     */
   def computeCost(dataset: Dataset[_]): Double = {
-    val df = dataset.toDF()
-    val distFn = createDistanceFunction(distanceFunctionName)
+    val df        = dataset.toDF()
+    val distFn    = createDistanceFunction(distanceFunctionName)
     val bcMedoids = df.sparkSession.sparkContext.broadcast(medoids)
 
-    df.select($(featuresCol)).rdd.map { row =>
-      val features = row.getAs[Vector](0)
-      val meds = bcMedoids.value
-      meds.map(m => distFn(features, m)).min
-    }.sum()
+    df.select($(featuresCol))
+      .rdd
+      .map { row =>
+        val features = row.getAs[Vector](0)
+        val meds     = bcMedoids.value
+        meds.map(m => distFn(features, m)).min
+      }
+      .sum()
   }
 
   /** Create distance function from name.
@@ -460,7 +491,7 @@ class KMedoidsModel(
       case "euclidean" =>
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             val d = v1(i) - v2(i)
             sum += d * d
@@ -472,7 +503,7 @@ class KMedoidsModel(
       case "manhattan" =>
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             sum += math.abs(v1(i) - v2(i))
             i += 1
@@ -482,10 +513,10 @@ class KMedoidsModel(
 
       case "cosine" =>
         (v1: Vector, v2: Vector) => {
-          var dot = 0.0
+          var dot   = 0.0
           var norm1 = 0.0
           var norm2 = 0.0
-          var i = 0
+          var i     = 0
           while (i < v1.size) {
             dot += v1(i) * v2(i)
             norm1 += v1(i) * v1(i)
@@ -498,7 +529,7 @@ class KMedoidsModel(
       case _ =>
         (v1: Vector, v2: Vector) => {
           var sum = 0.0
-          var i = 0
+          var i   = 0
           while (i < v1.size) {
             val d = v1(i) - v2(i)
             sum += d * d
@@ -514,11 +545,13 @@ class KMedoidsModel(
   }
 
   override def copy(extra: ParamMap): KMedoidsModel = {
-    val copied = new KMedoidsModel(uid, medoids.map(_.copy), medoidIndices.clone(), distanceFunctionName)
+    val copied =
+      new KMedoidsModel(uid, medoids.map(_.copy), medoidIndices.clone(), distanceFunctionName)
     copyValues(copied, extra).setParent(parent)
   }
 
-  override def write: org.apache.spark.ml.util.MLWriter = new KMedoidsModel.KMedoidsModelWriter(this)
+  override def write: org.apache.spark.ml.util.MLWriter =
+    new KMedoidsModel.KMedoidsModelWriter(this)
 }
 
 object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] {
@@ -527,7 +560,9 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
 
   override def load(path: String): KMedoidsModel = super.load(path)
 
-  private class KMedoidsModelWriter(instance: KMedoidsModel) extends org.apache.spark.ml.util.MLWriter with Logging {
+  private class KMedoidsModelWriter(instance: KMedoidsModel)
+      extends org.apache.spark.ml.util.MLWriter
+      with Logging {
 
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
@@ -552,36 +587,36 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
 
       // Collect all model parameters
       val params = Map(
-        "k" -> instance.getOrDefault(instance.k),
-        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
-        "predictionCol" -> instance.getOrDefault(instance.predictionCol),
-        "maxIter" -> instance.getOrDefault(instance.maxIter),
-        "seed" -> instance.getOrDefault(instance.seed),
+        "k"                -> instance.getOrDefault(instance.k),
+        "featuresCol"      -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol"    -> instance.getOrDefault(instance.predictionCol),
+        "maxIter"          -> instance.getOrDefault(instance.maxIter),
+        "seed"             -> instance.getOrDefault(instance.seed),
         "distanceFunction" -> instance.distanceFunctionName,
-        "medoidIndices" -> instance.medoidIndices.toSeq  // Store original indices
+        "medoidIndices"    -> instance.medoidIndices.toSeq // Store original indices
       )
 
-      val k = instance.numClusters
+      val k   = instance.numClusters
       val dim = instance.numFeatures
 
       // Build metadata object
       implicit val formats = DefaultFormats
-      val metaObj = Map(
-        "layoutVersion" -> LayoutVersion,
-        "algo" -> "KMedoidsModel",
-        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+      val metaObj          = Map(
+        "layoutVersion"      -> LayoutVersion,
+        "algo"               -> "KMedoidsModel",
+        "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
         "scalaBinaryVersion" -> getScalaBinaryVersion,
-        "divergence" -> instance.distanceFunctionName,  // Use distance function as divergence
-        "k" -> k,
-        "dim" -> dim,
-        "uid" -> instance.uid,
-        "params" -> params,
-        "centers" -> Map(
-          "count" -> k,
+        "divergence"         -> instance.distanceFunctionName, // Use distance function as divergence
+        "k"                  -> k,
+        "dim"                -> dim,
+        "uid"                -> instance.uid,
+        "params"             -> params,
+        "centers"            -> Map(
+          "count"    -> k,
           "ordering" -> "center_id ASC (0..k-1)",
-          "storage" -> "parquet"
+          "storage"  -> "parquet"
         ),
-        "checksums" -> Map(
+        "checksums"          -> Map(
           "centersParquetSHA256" -> centersHash
         )
       )
@@ -596,7 +631,9 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
     }
   }
 
-  private class KMedoidsModelReader extends org.apache.spark.ml.util.MLReader[KMedoidsModel] with Logging {
+  private class KMedoidsModelReader
+      extends org.apache.spark.ml.util.MLReader[KMedoidsModel]
+      with Logging {
 
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
@@ -608,22 +645,24 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       logInfo(s"Loading KMedoidsModel from $path")
 
       // Read metadata
-      val metaStr = readMetadata(path)
+      val metaStr          = readMetadata(path)
       implicit val formats = DefaultFormats
-      val metaJ = JsonMethods.parse(metaStr)
+      val metaJ            = JsonMethods.parse(metaStr)
 
       // Extract and validate layout version
-      val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
-      val k = (metaJ \ "k").extract[Int]
-      val dim = (metaJ \ "dim").extract[Int]
-      val uid = (metaJ \ "uid").extract[String]
+      val layoutVersion    = (metaJ \ "layoutVersion").extract[Int]
+      val k                = (metaJ \ "k").extract[Int]
+      val dim              = (metaJ \ "dim").extract[Int]
+      val uid              = (metaJ \ "uid").extract[String]
       val distanceFunction = (metaJ \ "divergence").extract[String]
 
-      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, distanceFunction=$distanceFunction")
+      logInfo(
+        s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, distanceFunction=$distanceFunction"
+      )
 
       // Read centers
       val centersDF = readCenters(spark, path)
-      val rows = centersDF.collect()
+      val rows      = centersDF.collect()
 
       // Validate metadata
       validateMetadata(layoutVersion, k, dim, rows.length)
@@ -634,7 +673,7 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       }
 
       // Extract parameters
-      val paramsJ = metaJ \ "params"
+      val paramsJ       = metaJ \ "params"
       val medoidIndices = (paramsJ \ "medoidIndices").extract[Seq[Int]].toArray
 
       // Reconstruct model
@@ -657,8 +696,8 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
   */
 trait CLARAParams extends KMedoidsParams {
 
-  /** Number of samples to draw from the dataset.
-    * Each sample is clustered independently and the best result is selected.
+  /** Number of samples to draw from the dataset. Each sample is clustered independently and the
+    * best result is selected.
     */
   final val numSamples = new IntParam(
     this,
@@ -669,8 +708,7 @@ trait CLARAParams extends KMedoidsParams {
 
   def getNumSamples: Int = $(numSamples)
 
-  /** Sample size for each sample.
-    * Default: 40 + 2*k (as recommended in the original CLARA paper)
+  /** Sample size for each sample. Default: 40 + 2*k (as recommended in the original CLARA paper)
     * Set to -1 for automatic sizing (40 + 2*k)
     */
   final val sampleSize = new IntParam(
@@ -684,17 +722,16 @@ trait CLARAParams extends KMedoidsParams {
 
   setDefault(
     numSamples -> 5,
-    sampleSize -> -1  // -1 means auto (40 + 2*k)
+    sampleSize -> -1 // -1 means auto (40 + 2*k)
   )
 }
 
 /** CLARA (Clustering Large Applications) - Sampling-based K-Medoids for large datasets.
   *
   * CLARA is a more scalable version of PAM that works on large datasets by:
-  *   1. Drawing multiple samples from the full dataset
-  *   2. Running PAM on each sample
-  *   3. For each sample result, computing the cost on the full dataset
-  *   4. Selecting the medoids with the lowest total cost
+  *   1. Drawing multiple samples from the full dataset 2. Running PAM on each sample 3. For each
+  *      sample result, computing the cost on the full dataset 4. Selecting the medoids with the
+  *      lowest total cost
   *
   * Time Complexity: O(numSamples * k(s-k)²) where s is the sample size
   *
@@ -716,7 +753,8 @@ trait CLARAParams extends KMedoidsParams {
   * val predictions = model.transform(largeDataset)
   * }}}
   *
-  * @param uid unique identifier
+  * @param uid
+  *   unique identifier
   */
 class CLARA(override val uid: String)
     extends KMedoids(uid)
@@ -729,12 +767,16 @@ class CLARA(override val uid: String)
   override def fit(dataset: Dataset[_]): KMedoidsModel = {
     transformSchema(dataset.schema, logging = true)
 
-    val df = dataset.toDF()
-    val data = df.select($(featuresCol)).rdd.map { row =>
-      row.getAs[Vector](0)
-    }.collect()
+    val df   = dataset.toDF()
+    val data = df
+      .select($(featuresCol))
+      .rdd
+      .map { row =>
+        row.getAs[Vector](0)
+      }
+      .collect()
 
-    val n = data.length
+    val n           = data.length
     val numClusters = $(k)
 
     // Determine sample size
@@ -748,14 +790,16 @@ class CLARA(override val uid: String)
     logInfo(s"Dataset size: $n points")
 
     if (actualSampleSize >= n * 0.9) {
-      logWarning(s"Sample size ($actualSampleSize) is >= 90% of dataset ($n). Consider using PAM instead of CLARA.")
+      logWarning(
+        s"Sample size ($actualSampleSize) is >= 90% of dataset ($n). Consider using PAM instead of CLARA."
+      )
     }
 
     // Create distance function
     val distFn = createDistanceFunction($(distanceFunction))
 
     var bestMedoidIndices: Array[Int] = null
-    var bestCost = Double.PositiveInfinity
+    var bestCost                      = Double.PositiveInfinity
 
     // Try multiple samples
     val rng = new scala.util.Random($(seed))
@@ -765,10 +809,10 @@ class CLARA(override val uid: String)
 
       // Draw random sample
       val sampleIndices = rng.shuffle((0 until n).toList).take(actualSampleSize).toArray
-      val sample = sampleIndices.map(data)
+      val sample        = sampleIndices.map(data)
 
       // Run PAM on sample
-      val sampleMedoidIndices = buildPhase(sample, numClusters, distFn, $(seed) + sampleIdx)
+      val sampleMedoidIndices      = buildPhase(sample, numClusters, distFn, $(seed) + sampleIdx)
       val finalSampleMedoidIndices = swapPhase(sample, sampleMedoidIndices, $(maxIter), distFn)
 
       // Map sample medoid indices back to original dataset indices
@@ -796,8 +840,7 @@ class CLARA(override val uid: String)
 
     // Create model
     val medoidVectors = bestMedoidIndices.map(data)
-    new KMedoidsModel(uid, medoidVectors, bestMedoidIndices, $(distanceFunction))
-      .setParent(this)
+    new KMedoidsModel(uid, medoidVectors, bestMedoidIndices, $(distanceFunction)).setParent(this)
   }
 
   // Parameter setters
@@ -810,4 +853,3 @@ class CLARA(override val uid: String)
 object CLARA extends DefaultParamsReadable[CLARA] {
   override def load(path: String): CLARA = super.load(path)
 }
-

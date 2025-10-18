@@ -3,10 +3,10 @@ package com.massivedatascience.clusterer.ml
 import com.massivedatascience.clusterer.ml.df._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Model
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util._
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 
@@ -40,9 +40,9 @@ import org.apache.spark.sql.types.StructType
   *   name of the Bregman kernel used during training (e.g., "SquaredEuclidean", "KL")
   */
 class GeneralizedKMeansModel(
-  override val uid: String,
-  val clusterCenters: Array[Array[Double]],
-  val kernelName: String
+    override val uid: String,
+    val clusterCenters: Array[Array[Double]],
+    val kernelName: String
 ) extends Model[GeneralizedKMeansModel]
     with GeneralizedKMeansParams
     with MLWritable
@@ -156,8 +156,8 @@ class GeneralizedKMeansModel(
 
   /** Compute the clustering cost (sum of divergences from points to their assigned centers).
     *
-    * This is equivalent to the Within-Cluster Sum of Squares (WCSS) for Squared Euclidean divergence. Lower cost
-    * indicates tighter, more compact clusters.
+    * This is equivalent to the Within-Cluster Sum of Squares (WCSS) for Squared Euclidean
+    * divergence. Lower cost indicates tighter, more compact clusters.
     *
     * @param dataset
     *   input dataset with features column
@@ -232,7 +232,7 @@ class GeneralizedKMeansModel(
       case name if name.startsWith("GeneralizedI(") => new GeneralizedIDivergenceKernel(smoothing)
       case name if name.startsWith("LogisticLoss(") => new LogisticLossKernel(smoothing)
       case "L1"                                     => new L1Kernel()
-      case _ => throw new IllegalArgumentException(s"Unknown kernel: $kernelName")
+      case _                                        => throw new IllegalArgumentException(s"Unknown kernel: $kernelName")
     }
   }
 
@@ -250,7 +250,7 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
   override def load(path: String): GeneralizedKMeansModel = super.load(path)
 
   private[GeneralizedKMeansModel] class GeneralizedKMeansModelWriter(
-    instance: GeneralizedKMeansModel
+      instance: GeneralizedKMeansModel
   ) extends MLWriter
       with Logging {
 
@@ -290,7 +290,7 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
         "predictionCol"        -> instance.getOrDefault(instance.predictionCol),
         "distanceCol"          -> (if (instance.hasDistanceCol) instance.getDistanceCol else ""),
         "weightCol"            -> (if (instance.hasWeightCol) instance.getWeightCol else ""),
-        "checkpointDir" -> (if (instance.hasCheckpointDir) instance.getCheckpointDir else "")
+        "checkpointDir"        -> (if (instance.hasCheckpointDir) instance.getCheckpointDir else "")
       )
 
       // Create metadata object
@@ -305,14 +305,14 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
         "uid"                -> instance.uid,
         "kernelName"         -> instance.kernelName,
         "params"             -> params,
-        "centers" -> Map(
+        "centers"            -> Map(
           "count"    -> instance.numClusters,
           "ordering" -> "center_id ASC (0..k-1)",
           "storage"  -> "parquet"
         ),
-        "checksums" -> Map(
-          "centersParquetSHA256"     -> centersHash,
-          "metadataCanonicalSHA256"  -> ""
+        "checksums"          -> Map(
+          "centersParquetSHA256"    -> centersHash,
+          "metadataCanonicalSHA256" -> ""
         )
       )
 
@@ -328,7 +328,7 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
           "metadataCanonicalSHA256" -> metaHash
         )
       )
-      val json2 = Serialization.write(metaObj2)
+      val json2    = Serialization.write(metaObj2)
       writeMetadata(path, json2)
 
       logInfo(s"Successfully saved GeneralizedKMeansModel to $path")
@@ -448,17 +448,17 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
   *   max center movement at each iteration
   */
 class GeneralizedKMeansSummary(
-  val predictions: DataFrame,
-  val predictionCol: String,
-  val featuresCol: String,
-  val clusterCenters: Array[Array[Double]],
-  val kernel: BregmanKernel,
-  val numClusters: Int,
-  val numFeatures: Int,
-  val numIter: Int,
-  val converged: Boolean,
-  val distortionHistory: Array[Double],
-  val movementHistory: Array[Double]
+    val predictions: DataFrame,
+    val predictionCol: String,
+    val featuresCol: String,
+    val clusterCenters: Array[Array[Double]],
+    val kernel: BregmanKernel,
+    val numClusters: Int,
+    val numFeatures: Int,
+    val numIter: Int,
+    val converged: Boolean,
+    val distortionHistory: Array[Double],
+    val movementHistory: Array[Double]
 ) extends Serializable
     with Logging {
 
@@ -466,11 +466,13 @@ class GeneralizedKMeansSummary(
     */
   lazy val numPoints: Long = predictions.count()
 
-  /** Final distortion (sum of distances to assigned centers). Also known as Within-Cluster Sum of Squares (WCSS).
+  /** Final distortion (sum of distances to assigned centers). Also known as Within-Cluster Sum of
+    * Squares (WCSS).
     */
   lazy val finalDistortion: Double = distortionHistory.lastOption.getOrElse(Double.NaN)
 
-  /** Within-Cluster Sum of Squares (WCSS). Measures compactness of clusters. Lower values indicate tighter clusters.
+  /** Within-Cluster Sum of Squares (WCSS). Measures compactness of clusters. Lower values indicate
+    * tighter clusters.
     */
   lazy val wcss: Double = finalDistortion
 
@@ -487,8 +489,8 @@ class GeneralizedKMeansSummary(
     (0 until numClusters).map(i => sizesMap.getOrElse(i, 0L)).toArray
   }
 
-  /** Between-Cluster Sum of Squares (BCSS). Measures separation between clusters. Higher values indicate better
-    * separation.
+  /** Between-Cluster Sum of Squares (BCSS). Measures separation between clusters. Higher values
+    * indicate better separation.
     */
   lazy val bcss: Double = {
     val spark    = predictions.sparkSession
@@ -499,14 +501,11 @@ class GeneralizedKMeansSummary(
     if (totalWeight == 0.0) {
       0.0
     } else {
-      val overallCentroid = clusterCenters.zipWithIndex
-        .map { case (center, idx) =>
-          center.map(_ * clusterSizes(idx))
-        }
-        .reduce { (a, b) =>
-          a.zip(b).map { case (x, y) => x + y }
-        }
-        .map(_ / totalWeight)
+      val overallCentroid = clusterCenters.zipWithIndex.map { case (center, idx) =>
+        center.map(_ * clusterSizes(idx))
+      }.reduce { (a, b) =>
+        a.zip(b).map { case (x, y) => x + y }
+      }.map(_ / totalWeight)
 
       // BCSS = Σ n_i * D(μ_i, μ_overall)
       val bcssValue = clusterCenters.zipWithIndex.map { case (center, idx) =>
@@ -526,8 +525,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Calinski-Harabasz Index (Variance Ratio Criterion). Ratio of between-cluster to within-cluster variance. Higher
-    * values indicate better-defined clusters.
+  /** Calinski-Harabasz Index (Variance Ratio Criterion). Ratio of between-cluster to within-cluster
+    * variance. Higher values indicate better-defined clusters.
     *
     * CH = (BCSS / (k-1)) / (WCSS / (n-k))
     */
@@ -542,11 +541,11 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Davies-Bouldin Index. Measures average similarity between each cluster and its most similar cluster. Lower values
-    * indicate better clustering (0 is best).
+  /** Davies-Bouldin Index. Measures average similarity between each cluster and its most similar
+    * cluster. Lower values indicate better clustering (0 is best).
     *
-    * Computed as: DB = (1/k) * Σ_i max_j(R_ij) where R_ij = (s_i + s_j) / d_ij s_i = average distance within cluster i
-    * d_ij = distance between cluster centers i and j
+    * Computed as: DB = (1/k) * Σ_i max_j(R_ij) where R_ij = (s_i + s_j) / d_ij s_i = average
+    * distance within cluster i d_ij = distance between cluster centers i and j
     */
   lazy val daviesBouldinIndex: Double = {
     if (numClusters <= 1) {
@@ -586,7 +585,7 @@ class GeneralizedKMeansSummary(
         if (clusterSizes(i) == 0) {
           0.0
         } else {
-          val s_i = avgDistances.getOrElse(i, 0.0)
+          val s_i      = avgDistances.getOrElse(i, 0.0)
           val maxRatio = (0 until numClusters)
             .filter(_ != i)
             .map { j =>
@@ -606,8 +605,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Dunn Index. Ratio of minimum inter-cluster distance to maximum intra-cluster distance. Higher values indicate
-    * better clustering (more compact and well-separated).
+  /** Dunn Index. Ratio of minimum inter-cluster distance to maximum intra-cluster distance. Higher
+    * values indicate better clustering (more compact and well-separated).
     *
     * Dunn = min_ij(d(C_i, C_j)) / max_k(diam(C_k))
     */
@@ -654,8 +653,8 @@ class GeneralizedKMeansSummary(
     }
   }
 
-  /** Mean Silhouette Coefficient (sampled for efficiency). Measures how similar points are to their own cluster vs
-    * other clusters. Values range from -1 to 1:
+  /** Mean Silhouette Coefficient (sampled for efficiency). Measures how similar points are to their
+    * own cluster vs other clusters. Values range from -1 to 1:
     *   - Close to 1: point is well-matched to its cluster
     *   - Close to 0: point is on the border between clusters
     *   - Close to -1: point may be assigned to wrong cluster

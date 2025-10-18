@@ -22,16 +22,16 @@ import org.apache.spark.rdd.RDD
 
 /** Configuration for annealed (deterministic annealing) k-means clustering.
   *
-  * Annealed k-means gradually transitions from soft to hard clustering by increasing the inverse temperature parameter
-  * (beta) according to an annealing schedule.
+  * Annealed k-means gradually transitions from soft to hard clustering by increasing the inverse
+  * temperature parameter (beta) according to an annealing schedule.
   *
   * @param initialBeta
   *   Starting inverse temperature (low = soft, high = hard)
   * @param finalBeta
   *   Ending inverse temperature
   * @param annealingSchedule
-  *   Strategy for increasing beta: "exponential" - β_new = β_old * annealingRate "linear" - β_new = β_old +
-  *   annealingRate
+  *   Strategy for increasing beta: "exponential" - β_new = β_old * annealingRate "linear" - β_new =
+  *   β_old + annealingRate
   * @param annealingRate
   *   Rate at which beta increases
   * @param stepsPerTemperature
@@ -44,14 +44,14 @@ import org.apache.spark.rdd.RDD
   *   Minimum membership probability (from BregmanSoftKMeansConfig)
   */
 case class AnnealedKMeansConfig(
-  initialBeta: Double = 0.1,
-  finalBeta: Double = 100.0,
-  annealingSchedule: String = "exponential",
-  annealingRate: Double = 1.5,
-  stepsPerTemperature: Int = 5,
-  maxTemperatures: Int = 20,
-  convergenceThreshold: Double = 1e-4,
-  minMembership: Double = 1e-10
+    initialBeta: Double = 0.1,
+    finalBeta: Double = 100.0,
+    annealingSchedule: String = "exponential",
+    annealingRate: Double = 1.5,
+    stepsPerTemperature: Int = 5,
+    maxTemperatures: Int = 20,
+    convergenceThreshold: Double = 1e-4,
+    minMembership: Double = 1e-10
 ) extends ConfigValidator {
 
   requirePositive(initialBeta, "Initial beta")
@@ -65,8 +65,8 @@ case class AnnealedKMeansConfig(
 
 /** Annealed (deterministic annealing) k-means clustering implementation.
   *
-  * This algorithm gradually transitions from soft to hard clustering using a temperature parameter, providing several
-  * benefits over standard k-means:
+  * This algorithm gradually transitions from soft to hard clustering using a temperature parameter,
+  * providing several benefits over standard k-means:
   *
   * Benefits:
   *   - Better escape from local minima (starts globally, refines locally)
@@ -75,9 +75,10 @@ case class AnnealedKMeansConfig(
   *   - Works with any Bregman divergence
   *
   * Algorithm:
-  *   1. Start with low beta (high temperature) = very soft clustering 2. Run soft k-means (BregmanSoftKMeans) for a few
-  *      iterations 3. Increase beta (decrease temperature) = make clustering sharper 4. Repeat until beta is high (low
-  *      temperature) = hard clustering 5. Final result approaches standard k-means
+  *   1. Start with low beta (high temperature) = very soft clustering 2. Run soft k-means
+  *      (BregmanSoftKMeans) for a few iterations 3. Increase beta (decrease temperature) = make
+  *      clustering sharper 4. Repeat until beta is high (low temperature) = hard clustering 5.
+  *      Final result approaches standard k-means
   *
   * The annealing schedule controls how quickly we transition from soft to hard:
   *   - Exponential: β_t+1 = rate * β_t (faster)
@@ -91,13 +92,15 @@ case class AnnealedKMeansConfig(
   * @param config
   *   Configuration parameters
   */
-class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig()) extends MultiKMeansClusterer with Logging {
+class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig())
+    extends MultiKMeansClusterer
+    with Logging {
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion] = {
 
     logger.info(s"Starting annealed k-means with ${centers.size} initial center sets")
@@ -113,9 +116,9 @@ class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig()) exte
   /** Train annealed k-means on a single initial center set.
     */
   private def trainAnnealed(
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    initialCenters: IndexedSeq[BregmanCenter]
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      initialCenters: IndexedSeq[BregmanCenter]
   ): ClusteringWithDistortion = {
 
     val k = initialCenters.length
@@ -171,7 +174,7 @@ class AnnealedKMeans(config: AnnealedKMeansConfig = AnnealedKMeansConfig()) exte
     )
 
     val finalSoftKMeans = new BregmanSoftKMeans(finalConfig)
-    val finalResult =
+    val finalResult     =
       finalSoftKMeans.clusterSoft(config.stepsPerTemperature, pointOps, data, currentCenters)
 
     totalIterations += finalResult.iterations

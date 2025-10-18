@@ -20,20 +20,21 @@ package com.massivedatascience.clusterer
 import com.massivedatascience.linalg.WeightedVector
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 /** Abstraction for storing and managing cluster centers.
   *
-  * This trait provides a stable, testable API for center management, replacing direct array manipulation. Key benefits:
-  * - Stable ordering guarantees for deterministic behavior
-  * - Support for both array and DataFrame representations
-  * - Encapsulation of center lifecycle (creation, update, filtering)
-  * - Easy to mock for testing
+  * This trait provides a stable, testable API for center management, replacing direct array
+  * manipulation. Key benefits:
+  *   - Stable ordering guarantees for deterministic behavior
+  *   - Support for both array and DataFrame representations
+  *   - Encapsulation of center lifecycle (creation, update, filtering)
+  *   - Easy to mock for testing
   *
   * Design principles:
-  * - Centers are indexed 0 to (count-1) with stable ordering
-  * - Immutable API: operations return new CenterStore instances
-  * - Support for empty center filtering (common in k-means)
+  *   - Centers are indexed 0 to (count-1) with stable ordering
+  *   - Immutable API: operations return new CenterStore instances
+  *   - Support for empty center filtering (common in k-means)
   *
   * Example usage:
   * {{{
@@ -110,7 +111,11 @@ trait CenterStore extends Serializable {
     * @return
     *   DataFrame with (id, center) rows
     */
-  def toDataFrame(spark: org.apache.spark.sql.SparkSession, idCol: String = "cluster_id", centerCol: String = "center"): DataFrame
+  def toDataFrame(
+      spark: org.apache.spark.sql.SparkSession,
+      idCol: String = "cluster_id",
+      centerCol: String = "center"
+  ): DataFrame
 
   /** Map a function over all centers.
     *
@@ -144,8 +149,8 @@ trait CenterStore extends Serializable {
 
 /** Simple array-based implementation of CenterStore.
   *
-  * This implementation wraps an IndexedSeq of centers and provides stable indexing. It's the default implementation for
-  * most use cases.
+  * This implementation wraps an IndexedSeq of centers and provides stable indexing. It's the
+  * default implementation for most use cases.
   *
   * @param centers
   *   indexed sequence of centers in stable order
@@ -173,9 +178,9 @@ case class ArrayCenterStore(centers: IndexedSeq[BregmanCenter]) extends CenterSt
   }
 
   override def toDataFrame(
-    spark: org.apache.spark.sql.SparkSession,
-    idCol: String = "cluster_id",
-    centerCol: String = "center"
+      spark: org.apache.spark.sql.SparkSession,
+      idCol: String = "cluster_id",
+      centerCol: String = "center"
   ): DataFrame = {
     import spark.implicits._
 
@@ -237,22 +242,19 @@ object CenterStore {
     *   new CenterStore with centers from DataFrame
     */
   def fromDataFrame(
-    df: DataFrame,
-    ops: BregmanPointOps,
-    idCol: String = "cluster_id",
-    centerCol: String = "center"
+      df: DataFrame,
+      ops: BregmanPointOps,
+      idCol: String = "cluster_id",
+      centerCol: String = "center"
   ): CenterStore = {
     import df.sparkSession.implicits._
 
-    val centers = df
-      .select(col(idCol), col(centerCol))
-      .orderBy(col(idCol))
-      .as[(Int, Vector)]
-      .collect()
-      .map { case (_, vector) =>
-        // Create a center with weight 1.0 from the vector
-        val weightedVec = WeightedVector.fromInhomogeneousWeighted(vector, 1.0)
-        ops.toCenter(weightedVec)
+    val centers =
+      df.select(col(idCol), col(centerCol)).orderBy(col(idCol)).as[(Int, Vector)].collect().map {
+        case (_, vector) =>
+          // Create a center with weight 1.0 from the vector
+          val weightedVec = WeightedVector.fromInhomogeneousWeighted(vector, 1.0)
+          ops.toCenter(weightedVec)
       }
 
     ArrayCenterStore(centers.toIndexedSeq)

@@ -49,7 +49,7 @@ object ValidationUtils {
             throw new IllegalArgumentException(s"$context must be positive, found: $value")
           }
         }
-      case _ =>
+      case _                                               =>
         val values = vector.toArray
         values.foreach { value =>
           if (value <= 0.0) {

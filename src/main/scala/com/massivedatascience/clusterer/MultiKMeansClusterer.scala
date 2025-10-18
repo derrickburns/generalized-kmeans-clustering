@@ -23,17 +23,17 @@ import org.apache.spark.rdd.RDD
 trait MultiKMeansClusterer extends Serializable {
 
   def cluster(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): Seq[ClusteringWithDistortion]
 
   def best(
-    maxIterations: Int,
-    pointOps: BregmanPointOps,
-    data: RDD[BregmanPoint],
-    centers: Seq[IndexedSeq[BregmanCenter]]
+      maxIterations: Int,
+      pointOps: BregmanPointOps,
+      data: RDD[BregmanPoint],
+      centers: Seq[IndexedSeq[BregmanCenter]]
   ): ClusteringWithDistortion = {
     cluster(maxIterations, pointOps, data, centers).minBy(_.distortion)
   }
@@ -78,14 +78,14 @@ object MultiKMeansClusterer {
 
   def apply(clustererName: String): MultiKMeansClusterer = {
     clustererName match {
-      case SIMPLE          => new ColumnTrackingKMeans
-      case TRACKING        => new ColumnTrackingKMeans
-      case COLUMN_TRACKING => new ColumnTrackingKMeans
-      case CHANGE_TRACKING =>
+      case SIMPLE               => new ColumnTrackingKMeans
+      case TRACKING             => new ColumnTrackingKMeans
+      case COLUMN_TRACKING      => new ColumnTrackingKMeans
+      case CHANGE_TRACKING      =>
         new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(addOnly = false))
-      case MINI_BATCH_10 =>
+      case MINI_BATCH_10        =>
         new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(updateRate = 0.10))
-      case RESEED =>
+      case RESEED               =>
         new ColumnTrackingKMeans(new SimpleKMeansConfig().copy(maxRoundsToBackfill = 5))
 
       // Coreset variants

@@ -19,8 +19,8 @@ package com.massivedatascience.clusterer
 
 /** Trait providing standardized configuration validation methods.
   *
-  * This trait eliminates duplicate validation logic across configuration case classes and provides consistent error
-  * messages.
+  * This trait eliminates duplicate validation logic across configuration case classes and provides
+  * consistent error messages.
   */
 trait ConfigValidator {
 

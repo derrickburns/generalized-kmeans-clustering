@@ -3,10 +3,10 @@ package com.massivedatascience.clusterer.ml
 import com.massivedatascience.clusterer.ml.df._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.{DefaultParamsReadable, DefaultParamsWritable, Identifiable}
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable }
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 
@@ -14,7 +14,8 @@ import org.apache.spark.sql.types.StructType
   */
 trait BisectingKMeansParams extends GeneralizedKMeansParams {
 
-  /** Minimum divisible cluster size. Clusters with fewer points than this will not be split. Must be >= 1. Default: 1
+  /** Minimum divisible cluster size. Clusters with fewer points than this will not be split. Must
+    * be >= 1. Default: 1
     */
   final val minDivisibleClusterSize = new IntParam(
     this,
@@ -31,8 +32,8 @@ trait BisectingKMeansParams extends GeneralizedKMeansParams {
 /** Bisecting K-Means clustering with pluggable Bregman divergences.
   *
   * This is a hierarchical divisive clustering algorithm that:
-  *   1. Starts with all points in one cluster 2. Repeatedly selects the largest cluster and splits it into two using
-  *      k=2 clustering 3. Continues until reaching target k clusters
+  *   1. Starts with all points in one cluster 2. Repeatedly selects the largest cluster and splits
+  *      it into two using k=2 clustering 3. Continues until reaching target k clusters
   *
   * Benefits over standard k-means:
   *   - More deterministic (less sensitive to initialization)
@@ -141,21 +142,21 @@ class BisectingKMeans(override val uid: String)
     *   Array of cluster centers
     */
   private def bisect(
-    df: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      df: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): Array[Array[Double]] = {
 
     val targetK = $(k)
     val spark   = df.sparkSession
 
     // Start with all data in cluster 0
-    var clusteredDF = df.withColumn("cluster", lit(0))
+    var clusteredDF    = df.withColumn("cluster", lit(0))
     var clusterCenters = Map[Int, Array[Double]](
       0 -> computeCenter(clusteredDF.filter(col("cluster") === 0), featuresCol, weightCol, kernel)
     )
-    var nextClusterId = 1
+    var nextClusterId  = 1
 
     // Cache for performance
     clusteredDF.cache()
@@ -170,8 +171,9 @@ class BisectingKMeans(override val uid: String)
         .map(row => (row.getInt(0), row.getLong(1)))
         .toMap
 
-      val divisibleClusters = clusterSizes
-        .filter { case (_, size) => size >= $(minDivisibleClusterSize) }
+      val divisibleClusters = clusterSizes.filter { case (_, size) =>
+        size >= $(minDivisibleClusterSize)
+      }
 
       val largestClusterId = if (divisibleClusters.nonEmpty) {
         Some(divisibleClusters.maxBy(_._2)._1)
@@ -259,10 +261,10 @@ class BisectingKMeans(override val uid: String)
     *   Tuple of (center1, center2)
     */
   private def splitCluster(
-    clusterData: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      clusterData: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): (Array[Double], Array[Double]) = {
 
     // Drop the "cluster" column if it exists to avoid conflicts with assignment strategy
@@ -324,10 +326,10 @@ class BisectingKMeans(override val uid: String)
   /** Compute the center of a cluster.
     */
   private def computeCenter(
-    data: DataFrame,
-    featuresCol: String,
-    weightCol: Option[String],
-    kernel: BregmanKernel
+      data: DataFrame,
+      featuresCol: String,
+      weightCol: Option[String],
+      kernel: BregmanKernel
   ): Array[Double] = {
 
     val updater = createUpdateStrategy($(divergence))

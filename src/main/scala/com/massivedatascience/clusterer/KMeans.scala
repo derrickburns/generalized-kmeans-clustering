@@ -47,8 +47,8 @@ object KMeans extends SparkHelper with Logging {
       s"RunConfig(numClusters=$numClusters, runs=$runs, seed=$seed, maxIterations=$maxIterations)"
   }
 
-  /** Train a K-Means model using Lloyd's algorithm using a signature that is similar to the one provided for the Spark
-    * 1.1.0 K-Means Batch clusterer.
+  /** Train a K-Means model using Lloyd's algorithm using a signature that is similar to the one
+    * provided for the Spark 1.1.0 K-Means Batch clusterer.
     *
     * @param data
     *   input data
@@ -70,14 +70,14 @@ object KMeans extends SparkHelper with Logging {
     *   K-Means model
     */
   def train(
-    data: RDD[Vector],
-    k: Int,
-    maxIterations: Int = KMeans.defaultMaxIterations,
-    runs: Int = KMeans.defaultNumRuns,
-    mode: String = KMeansSelector.K_MEANS_PARALLEL,
-    distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
-    clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
-    embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)
+      data: RDD[Vector],
+      k: Int,
+      maxIterations: Int = KMeans.defaultMaxIterations,
+      runs: Int = KMeans.defaultNumRuns,
+      mode: String = KMeansSelector.K_MEANS_PARALLEL,
+      distanceFunctionNames: Seq[String] = Seq(BregmanPointOps.EUCLIDEAN),
+      clustererName: String = MultiKMeansClusterer.COLUMN_TRACKING,
+      embeddingNames: List[String] = List(Embedding.IDENTITY_EMBEDDING)
   ): KMeansModel = {
 
     // Validate input parameters
@@ -90,11 +90,12 @@ object KMeans extends SparkHelper with Logging {
     val clusterer = MultiKMeansClusterer(clustererName)
     val runConfig = RunConfig(k, runs, 0, maxIterations)
 
-    withCached[WeightedVector, KMeansModel]("weighted vectors", data.map(x => WeightedVector(x))) { data =>
-      val ops         = distanceFunctionNames.map(BregmanPointOps.apply)
-      val initializer = KMeansSelector(mode)
-      val embeddings  = embeddingNames.map(Embedding.apply)
-      trainWeighted(runConfig, data, initializer, ops, embeddings, clusterer)
+    withCached[WeightedVector, KMeansModel]("weighted vectors", data.map(x => WeightedVector(x))) {
+      data =>
+        val ops         = distanceFunctionNames.map(BregmanPointOps.apply)
+        val initializer = KMeansSelector(mode)
+        val embeddings  = embeddingNames.map(Embedding.apply)
+        trainWeighted(runConfig, data, initializer, ops, embeddings, clusterer)
     }
   }
 
@@ -117,12 +118,12 @@ object KMeans extends SparkHelper with Logging {
     */
 
   def trainWeighted(
-    runConfig: RunConfig,
-    data: RDD[WeightedVector],
-    initializer: KMeansSelector,
-    pointOps: Seq[BregmanPointOps],
-    embeddings: Seq[Embedding],
-    clusterer: MultiKMeansClusterer
+      runConfig: RunConfig,
+      data: RDD[WeightedVector],
+      initializer: KMeansSelector,
+      pointOps: Seq[BregmanPointOps],
+      embeddings: Seq[Embedding],
+      clusterer: MultiKMeansClusterer
   ): KMeansModel = {
 
     require(pointOps.length == embeddings.length)
@@ -154,13 +155,13 @@ object KMeans extends SparkHelper with Logging {
     *   K-Means model
     */
   def trainViaSubsampling(
-    runConfig: RunConfig,
-    data: RDD[WeightedVector],
-    pointOps: BregmanPointOps,
-    initializer: KMeansSelector,
-    embedding: Embedding,
-    clusterer: MultiKMeansClusterer,
-    depth: Int = 2
+      runConfig: RunConfig,
+      data: RDD[WeightedVector],
+      pointOps: BregmanPointOps,
+      initializer: KMeansSelector,
+      embedding: Embedding,
+      clusterer: MultiKMeansClusterer,
+      depth: Int = 2
   ): KMeansModel = {
 
     val samples = subsample(data, pointOps, depth, embedding)
@@ -190,11 +191,11 @@ object KMeans extends SparkHelper with Logging {
     *   K-Means model
     */
   def simpleTrain(
-    runConfig: RunConfig,
-    data: RDD[BregmanPoint],
-    pointOps: BregmanPointOps,
-    initializer: KMeansSelector,
-    clusterer: MultiKMeansClusterer
+      runConfig: RunConfig,
+      data: RDD[BregmanPoint],
+      pointOps: BregmanPointOps,
+      initializer: KMeansSelector,
+      clusterer: MultiKMeansClusterer
   ): KMeansModel = {
 
     logger.info(s"runConfig = $runConfig")
@@ -203,15 +204,15 @@ object KMeans extends SparkHelper with Logging {
     logger.info(s"clusterer implementation = $clusterer")
 
     require(data.getStorageLevel.useMemory)
-    val initialCenters =
+    val initialCenters                            =
       initializer.init(pointOps, data, runConfig.numClusters, None, runConfig.runs, runConfig.seed)
     val ClusteringWithDistortion(_, finalCenters) =
       clusterer.best(runConfig.maxIterations, pointOps, data, initialCenters)
     new KMeansModel(pointOps, finalCenters)
   }
 
-  /** Iteratively train using low dimensional embedding of the high dimensional sparse input data using the same
-    * distance function.
+  /** Iteratively train using low dimensional embedding of the high dimensional sparse input data
+    * using the same distance function.
     *
     * @param runConfig
     *   run configuration
@@ -229,16 +230,16 @@ object KMeans extends SparkHelper with Logging {
     *   KMeansModel
     */
   def sparseTrain(
-    runConfig: RunConfig,
-    data: RDD[WeightedVector],
-    initializer: KMeansSelector,
-    pointOps: BregmanPointOps,
-    clusterer: MultiKMeansClusterer,
-    embeddings: Seq[Embedding] = Seq(
-      Embedding(LOW_DIMENSIONAL_RI),
-      Embedding(MEDIUM_DIMENSIONAL_RI),
-      Embedding(HIGH_DIMENSIONAL_RI)
-    )
+      runConfig: RunConfig,
+      data: RDD[WeightedVector],
+      initializer: KMeansSelector,
+      pointOps: BregmanPointOps,
+      clusterer: MultiKMeansClusterer,
+      embeddings: Seq[Embedding] = Seq(
+        Embedding(LOW_DIMENSIONAL_RI),
+        Embedding(MEDIUM_DIMENSIONAL_RI),
+        Embedding(HIGH_DIMENSIONAL_RI)
+      )
   ): KMeansModel = {
 
     val distances = Seq.fill(embeddings.length)(pointOps)
@@ -263,15 +264,15 @@ object KMeans extends SparkHelper with Logging {
     *   KMeansModel
     */
   def timeSeriesTrain(
-    runConfig: RunConfig,
-    data: RDD[WeightedVector],
-    initializer: KMeansSelector,
-    pointOps: BregmanPointOps,
-    clusterer: MultiKMeansClusterer,
-    embedding: Embedding = Embedding(HAAR_EMBEDDING)
+      runConfig: RunConfig,
+      data: RDD[WeightedVector],
+      initializer: KMeansSelector,
+      pointOps: BregmanPointOps,
+      clusterer: MultiKMeansClusterer,
+      embedding: Embedding = Embedding(HAAR_EMBEDDING)
   ): KMeansModel = {
 
-    val dim = data.first().homogeneous.toArray.length
+    val dim      = data.first().homogeneous.toArray.length
     require(dim > 0)
     val maxDepth = Math.floor(Math.log(dim) / Math.log(2.0)).toInt
     val target   = Math.max(maxDepth - 4, 0)
@@ -286,8 +287,9 @@ object KMeans extends SparkHelper with Logging {
     )
   }
 
-  /** Train on a series of data sets, where the data sets were derived from the same original data set via embeddings.
-    * Use the cluster assignments of one stage to initialize the clusters of the next stage.
+  /** Train on a series of data sets, where the data sets were derived from the same original data
+    * set via embeddings. Use the cluster assignments of one stage to initialize the clusters of the
+    * next stage.
     *
     * @param runConfig
     *   run configuration
@@ -302,11 +304,11 @@ object KMeans extends SparkHelper with Logging {
     * @return
     */
   def iterativelyTrain(
-    runConfig: RunConfig,
-    pointOps: Seq[BregmanPointOps],
-    dataSets: Seq[RDD[BregmanPoint]],
-    initializer: KMeansSelector,
-    clusterer: MultiKMeansClusterer
+      runConfig: RunConfig,
+      pointOps: Seq[BregmanPointOps],
+      dataSets: Seq[RDD[BregmanPoint]],
+      initializer: KMeansSelector,
+      clusterer: MultiKMeansClusterer
   ): KMeansModel = {
 
     require(dataSets.nonEmpty)
@@ -318,16 +320,17 @@ object KMeans extends SparkHelper with Logging {
         simpleTrain(runConfig, initialData, ops, initializer, clusterer)
 
       case Seq((initialData, ops), y @ _*) =>
-        y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) { case (model, (data, op)) =>
-          withNamed("assignments", model.predictBregman(data)) { assignments =>
-            simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
-          }
+        y.foldLeft(simpleTrain(runConfig, initialData, ops, initializer, clusterer)) {
+          case (model, (data, op)) =>
+            withNamed("assignments", model.predictBregman(data)) { assignments =>
+              simpleTrain(runConfig, data, op, new AssignmentSelector(assignments), clusterer)
+            }
         }
     }
   }
 
-  /** Sub-sampled data from lowest dimension to highest dimension, repeatedly applying the same embedding. Data is
-    * returned cached.
+  /** Sub-sampled data from lowest dimension to highest dimension, repeatedly applying the same
+    * embedding. Data is returned cached.
     *
     * @param input
     *   input data set to embed
@@ -340,10 +343,10 @@ object KMeans extends SparkHelper with Logging {
     * @return
     */
   private[this] def subsample(
-    input: RDD[WeightedVector],
-    pointOps: BregmanPointOps,
-    depth: Int,
-    embedding: Embedding
+      input: RDD[WeightedVector],
+      pointOps: BregmanPointOps,
+      depth: Int,
+      embedding: Embedding
   ): List[RDD[BregmanPoint]] = {
     val subs = (0 until depth).foldLeft(List(input)) { case (data @ List(first, _), e) =>
       first.map(embedding.embed) :: data
@@ -361,9 +364,9 @@ object KMeans extends SparkHelper with Logging {
     */
 
   private[this] def resample(
-    input: RDD[WeightedVector],
-    ops: Seq[BregmanPointOps],
-    embeddings: Seq[Embedding]
+      input: RDD[WeightedVector],
+      ops: Seq[BregmanPointOps],
+      embeddings: Seq[Embedding]
   ): Seq[RDD[BregmanPoint]] = {
 
     embeddings.zip(ops).map { case (x, o) => input.map(x.embed).map(o.toPoint) }
@@ -372,8 +375,8 @@ object KMeans extends SparkHelper with Logging {
   /** Train using coreset approximation with optional refinement.
     *
     * This method provides a convenient API for coreset-based clustering that:
-    *   1. Builds a small coreset from the full dataset 2. Clusters the coreset (fast, in-memory) 3. Optionally refines
-    *      centers on the full dataset
+    *   1. Builds a small coreset from the full dataset 2. Clusters the coreset (fast, in-memory) 3.
+    *      Optionally refines centers on the full dataset
     *
     * @param data
     *   Input data
@@ -395,14 +398,14 @@ object KMeans extends SparkHelper with Logging {
     *   K-Means model
     */
   def trainWithCoreset(
-    data: RDD[Vector],
-    k: Int,
-    compressionRatio: Double = 0.01,
-    enableRefinement: Boolean = true,
-    maxIterations: Int = 50,
-    runs: Int = 1,
-    mode: String = KMeansSelector.CORESET_INIT,
-    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN
+      data: RDD[Vector],
+      k: Int,
+      compressionRatio: Double = 0.01,
+      enableRefinement: Boolean = true,
+      maxIterations: Int = 50,
+      runs: Int = 1,
+      mode: String = KMeansSelector.CORESET_INIT,
+      distanceFunctionName: String = BregmanPointOps.EUCLIDEAN
   ): KMeansModel = {
 
     require(k > 0, "Number of clusters must be positive")
@@ -460,8 +463,9 @@ object KMeans extends SparkHelper with Logging {
 
   /** Automatically choose the best clustering strategy based on data size.
     *
-    * Small data (< 10K points): Standard k-means with K-Means|| initialization Medium data (10K - 1M points): Coreset
-    * with refinement Large data (> 1M points): Fast coreset with aggressive compression
+    * Small data (< 10K points): Standard k-means with K-Means|| initialization Medium data (10K -
+    * 1M points): Coreset with refinement Large data (> 1M points): Fast coreset with aggressive
+    * compression
     *
     * @param data
     *   Input data
@@ -475,10 +479,10 @@ object KMeans extends SparkHelper with Logging {
     *   K-Means model
     */
   def trainSmart(
-    data: RDD[Vector],
-    k: Int,
-    maxIterations: Int = 50,
-    distanceFunctionName: String = BregmanPointOps.EUCLIDEAN
+      data: RDD[Vector],
+      k: Int,
+      maxIterations: Int = 50,
+      distanceFunctionName: String = BregmanPointOps.EUCLIDEAN
   ): KMeansModel = {
 
     require(k > 0, "Number of clusters must be positive")

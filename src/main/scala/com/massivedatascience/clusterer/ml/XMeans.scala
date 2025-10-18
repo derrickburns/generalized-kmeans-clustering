@@ -61,7 +61,8 @@ trait XMeansParams extends GeneralizedKMeansParams {
 
   def getCriterion: String = $(criterion)
 
-  /** Minimum improvement in criterion score to continue trying larger k. Default: -1.0 (always continue)
+  /** Minimum improvement in criterion score to continue trying larger k. Default: -1.0 (always
+    * continue)
     */
   final val improvementThreshold = new DoubleParam(
     this,
@@ -72,11 +73,11 @@ trait XMeansParams extends GeneralizedKMeansParams {
   def getImprovementThreshold: Double = $(improvementThreshold)
 
   setDefault(
-    minK -> 2,
-    maxK -> 20,
-    criterion -> "bic",
+    minK                 -> 2,
+    maxK                 -> 20,
+    criterion            -> "bic",
     improvementThreshold -> -1.0,
-    k -> 2 // Initial k for starting, will be overridden
+    k                    -> 2 // Initial k for starting, will be overridden
   )
 }
 
@@ -85,8 +86,8 @@ trait XMeansParams extends GeneralizedKMeansParams {
   * X-means extends k-means by trying multiple values of k and selecting the best using BIC or AIC.
   *
   * Algorithm:
-  *   1. For each k from minK to maxK: a. Run GeneralizedKMeans with k clusters b. Compute BIC or AIC score c. Track
-  *      best k 2. Return model with optimal k
+  *   1. For each k from minK to maxK: a. Run GeneralizedKMeans with k clusters b. Compute BIC or
+  *      AIC score c. Track best k 2. Return model with optimal k
   *
   * Information Criteria:
   *   - BIC = -2*log-likelihood + p*log(n)
@@ -123,21 +124,21 @@ class XMeans(override val uid: String)
 
   // Parameter setters
 
-  def setMinK(value: Int): this.type = set(minK, value)
-  def setMaxK(value: Int): this.type = set(maxK, value)
-  def setCriterion(value: String): this.type = set(criterion, value)
+  def setMinK(value: Int): this.type                    = set(minK, value)
+  def setMaxK(value: Int): this.type                    = set(maxK, value)
+  def setCriterion(value: String): this.type            = set(criterion, value)
   def setImprovementThreshold(value: Double): this.type = set(improvementThreshold, value)
 
   // Inherited parameter setters
-  def setDivergence(value: String): this.type = set(divergence, value)
-  def setSmoothing(value: Double): this.type = set(smoothing, value)
-  def setFeaturesCol(value: String): this.type = set(featuresCol, value)
+  def setDivergence(value: String): this.type    = set(divergence, value)
+  def setSmoothing(value: Double): this.type     = set(smoothing, value)
+  def setFeaturesCol(value: String): this.type   = set(featuresCol, value)
   def setPredictionCol(value: String): this.type = set(predictionCol, value)
-  def setWeightCol(value: String): this.type = set(weightCol, value)
-  def setMaxIter(value: Int): this.type = set(maxIter, value)
-  def setTol(value: Double): this.type = set(tol, value)
-  def setSeed(value: Long): this.type = set(seed, value)
-  def setDistanceCol(value: String): this.type = set(distanceCol, value)
+  def setWeightCol(value: String): this.type     = set(weightCol, value)
+  def setMaxIter(value: Int): this.type          = set(maxIter, value)
+  def setTol(value: Double): this.type           = set(tol, value)
+  def setSeed(value: Long): this.type            = set(seed, value)
+  def setDistanceCol(value: String): this.type   = set(distanceCol, value)
 
   override def fit(dataset: Dataset[_]): GeneralizedKMeansModel = {
     transformSchema(dataset.schema, logging = true)
@@ -152,16 +153,16 @@ class XMeans(override val uid: String)
     // Cache data for multiple k trials
     df.cache()
 
-    val n = df.count()
+    val n        = df.count()
     val firstRow = df.select($(featuresCol)).head()
-    val d = firstRow.getAs[org.apache.spark.ml.linalg.Vector](0).size
+    val d        = firstRow.getAs[org.apache.spark.ml.linalg.Vector](0).size
 
     logInfo(s"Data: n=$n points, d=$d dimensions")
 
     // Try each value of k
     var bestModel: GeneralizedKMeansModel = null
-    var bestScore = Double.MaxValue // Lower is better
-    var bestK = $(minK)
+    var bestScore                         = Double.MaxValue // Lower is better
+    var bestK                             = $(minK)
 
     for (currentK <- $(minK) to $(maxK)) {
       logInfo(s"Trying k=$currentK...")
@@ -189,7 +190,7 @@ class XMeans(override val uid: String)
       val model = kmeans.fit(df)
 
       // Compute information criterion score
-      val cost = model.computeCost(df)
+      val cost  = model.computeCost(df)
       val score = computeScore(cost, currentK, n, d)
 
       logInfo(
@@ -206,7 +207,7 @@ class XMeans(override val uid: String)
         bestK = currentK
 
         // If improvement is below threshold, consider stopping early
-        if (currentK > $(minK) && improvement < -$(improvementThreshold)) {
+        if (currentK > $(minK) && improvement < - $(improvementThreshold)) {
           logInfo(s"Improvement below threshold")
         }
       } else {
@@ -235,14 +236,15 @@ class XMeans(override val uid: String)
     *   - p = k*d + 1 (number of parameters: k centers of d dimensions + variance)
     *   - n = number of data points
     *
-    * For k-means with squared Euclidean distance: log-likelihood ≈ -cost/(2*variance) - n*log(sigma) - n*log(2π)/2
+    * For k-means with squared Euclidean distance: log-likelihood ≈ -cost/(2*variance) -
+    * n*log(sigma) - n*log(2π)/2
     */
   private def computeScore(cost: Double, k: Int, n: Long, d: Int): Double = {
     val nDouble = n.toDouble
 
     // Estimate variance from average cost
     val variance = math.max(cost / nDouble, 1e-10) // Avoid division by zero
-    val sigma = math.sqrt(variance)
+    val sigma    = math.sqrt(variance)
 
     // Log-likelihood (simplified Gaussian assumption)
     val logLikelihood = -cost / (2 * variance) -
@@ -264,9 +266,8 @@ class XMeans(override val uid: String)
 
   override def transformSchema(schema: StructType): StructType = {
     // Delegate to GeneralizedKMeans for schema validation
-    val kmeans = new GeneralizedKMeans()
-      .setFeaturesCol($(featuresCol))
-      .setPredictionCol($(predictionCol))
+    val kmeans =
+      new GeneralizedKMeans().setFeaturesCol($(featuresCol)).setPredictionCol($(predictionCol))
 
     if (hasWeightCol) kmeans.setWeightCol($(weightCol))
     if (hasDistanceCol) kmeans.setDistanceCol($(distanceCol))

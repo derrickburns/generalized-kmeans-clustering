@@ -19,17 +19,18 @@ package com.massivedatascience.clusterer.ml.df
 
 /** Typeclass defining kernel (divergence) capabilities and optimization hints.
   *
-  * This typeclass replaces string-based kernel switching with compile-time type-safe kernel properties. It provides:
-  * - Kernel capabilities (e.g., supports squared Euclidean fast path)
-  * - Valid feature transforms for each kernel
-  * - Optimization hints (broadcast thresholds, assignment strategies)
-  * - Compile-time safety for kernel operations
+  * This typeclass replaces string-based kernel switching with compile-time type-safe kernel
+  * properties. It provides:
+  *   - Kernel capabilities (e.g., supports squared Euclidean fast path)
+  *   - Valid feature transforms for each kernel
+  *   - Optimization hints (broadcast thresholds, assignment strategies)
+  *   - Compile-time safety for kernel operations
   *
   * Design principles:
-  * - Capabilities are boolean flags, not runtime checks
-  * - Transform compatibility is explicit, not inferred
-  * - Optimization hints guide auto-selection
-  * - Each kernel has exactly one KernelOps instance
+  *   - Capabilities are boolean flags, not runtime checks
+  *   - Transform compatibility is explicit, not inferred
+  *   - Optimization hints guide auto-selection
+  *   - Each kernel has exactly one KernelOps instance
   *
   * Example usage:
   * {{{
@@ -49,15 +50,15 @@ trait KernelOps extends Serializable {
 
   /** Whether this kernel supports the squared Euclidean fast path.
     *
-    * The SE fast path uses cross-join with broadcast centers for efficient distance computation. Only valid for
-    * kernels where distance can be decomposed as: d(x,c) = ||x||^2 + ||c||^2 - 2*x'c
+    * The SE fast path uses cross-join with broadcast centers for efficient distance computation.
+    * Only valid for kernels where distance can be decomposed as: d(x,c) = ||x||^2 + ||c||^2 - 2*x'c
     */
   def supportsSEFastPath: Boolean
 
   /** Whether this kernel requires strictly positive features.
     *
-    * Kernels like KL divergence are only defined for positive values and will produce NaN/Infinity for non-positive
-    * inputs.
+    * Kernels like KL divergence are only defined for positive values and will produce NaN/Infinity
+    * for non-positive inputs.
     */
   def requiresPositiveFeatures: Boolean
 
@@ -238,13 +239,13 @@ object KernelOps {
     val normalized = kernelName.toLowerCase.replaceAll("[\\s-_]", "")
     normalized match {
       case "squaredeuclidean" | "euclidean" | "se" => SquaredEuclideanDescriptor
-      case "kl" | "kullbackleibler"                 => KLDivergenceDescriptor
-      case "generalizedi" | "gi"                    => GeneralizedIDivergenceDescriptor
+      case "kl" | "kullbackleibler"                => KLDivergenceDescriptor
+      case "generalizedi" | "gi"                   => GeneralizedIDivergenceDescriptor
       case "itakurasaito" | "is"                   => ItakuraSaitoDescriptor
-      case "logisticloss"                           => LogisticLossDescriptor
-      case "cosine"                                 => CosineDistanceDescriptor
-      case "manhattan" | "l1"                       => ManhattanDistanceDescriptor
-      case _ =>
+      case "logisticloss"                          => LogisticLossDescriptor
+      case "cosine"                                => CosineDistanceDescriptor
+      case "manhattan" | "l1"                      => ManhattanDistanceDescriptor
+      case _                                       =>
         throw new IllegalArgumentException(
           s"Unknown kernel: $kernelName. Supported: squaredEuclidean, kl, generalizedI, itakuraSaito, logisticLoss, cosine, manhattan"
         )
@@ -310,9 +311,9 @@ object KernelOps {
     kernel match {
       case KLDivergenceDescriptor | GeneralizedIDivergenceDescriptor =>
         FeatureTransform.forKL()
-      case CosineDistanceDescriptor =>
+      case CosineDistanceDescriptor                                  =>
         FeatureTransform.forSpherical()
-      case _ =>
+      case _                                                         =>
         FeatureTransform.identity
     }
   }

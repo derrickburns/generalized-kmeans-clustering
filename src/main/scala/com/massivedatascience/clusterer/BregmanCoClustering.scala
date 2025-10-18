@@ -43,13 +43,13 @@ import scala.util.Random
   *   Random seed for reproducibility
   */
 case class BregmanCoClusteringConfig(
-  numRowClusters: Int,
-  numColClusters: Int,
-  maxIterations: Int = 100,
-  tolerance: Double = 1e-6,
-  initStrategy: String = "random",
-  regularization: Double = 0.01,
-  seed: Long = System.currentTimeMillis()
+    numRowClusters: Int,
+    numColClusters: Int,
+    maxIterations: Int = 100,
+    tolerance: Double = 1e-6,
+    initStrategy: String = "random",
+    regularization: Double = 0.01,
+    seed: Long = System.currentTimeMillis()
 ) {
 
   require(numRowClusters > 0, s"Number of row clusters must be positive, got: $numRowClusters")
@@ -95,14 +95,14 @@ case class MatrixEntry(rowIndex: Long, colIndex: Long, value: Double, weight: Do
   *   History of objective values
   */
 case class BregmanCoClusteringResult(
-  rowClusters: Map[Long, Int],
-  colClusters: Map[Long, Int],
-  rowCenters: IndexedSeq[BregmanCenter],
-  colCenters: IndexedSeq[BregmanCenter],
-  blockCenters: Array[Array[BregmanCenter]],
-  iterations: Int,
-  objective: Double,
-  convergenceHistory: Seq[Double]
+    rowClusters: Map[Long, Int],
+    colClusters: Map[Long, Int],
+    rowCenters: IndexedSeq[BregmanCenter],
+    colCenters: IndexedSeq[BregmanCenter],
+    blockCenters: Array[Array[BregmanCenter]],
+    iterations: Int,
+    objective: Double,
+    convergenceHistory: Seq[Double]
 ) {
 
   /** Get the number of row clusters.
@@ -131,11 +131,11 @@ case class BregmanCoClusteringResult(
     */
   def getStats: Map[String, Double] = {
     Map(
-      "numRowClusters" -> numRowClusters.toDouble,
-      "numColClusters" -> numColClusters.toDouble,
-      "totalBlocks"    -> (numRowClusters * numColClusters).toDouble,
-      "iterations"     -> iterations.toDouble,
-      "finalObjective" -> objective,
+      "numRowClusters"  -> numRowClusters.toDouble,
+      "numColClusters"  -> numColClusters.toDouble,
+      "totalBlocks"     -> (numRowClusters * numColClusters).toDouble,
+      "iterations"      -> iterations.toDouble,
+      "finalObjective"  -> objective,
       "convergenceRate" -> {
         if (convergenceHistory.length > 1) {
           val initial    = convergenceHistory.head
@@ -149,11 +149,12 @@ case class BregmanCoClusteringResult(
 
 /** Bregman co-clustering algorithm implementation.
   *
-  * This class implements the alternating minimization algorithm for Bregman co-clustering, which simultaneously
-  * clusters rows and columns of a data matrix by minimizing the Bregman divergence between the original matrix and a
-  * block-constant approximation.
+  * This class implements the alternating minimization algorithm for Bregman co-clustering, which
+  * simultaneously clusters rows and columns of a data matrix by minimizing the Bregman divergence
+  * between the original matrix and a block-constant approximation.
   */
-class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPointOps) extends Serializable {
+class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPointOps)
+    extends Serializable {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -196,8 +197,8 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Initialize cluster assignments for rows and columns.
     */
   private def initializeClusters(
-    rowIndices: Array[Long],
-    colIndices: Array[Long]
+      rowIndices: Array[Long],
+      colIndices: Array[Long]
   ): (Map[Long, Int], Map[Long, Int]) = {
 
     val random = new Random(config.seed)
@@ -228,11 +229,11 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Perform alternating minimization to optimize co-clustering.
     */
   private def alternatingMinimization(
-    data: RDD[MatrixEntry],
-    rowIndices: Array[Long],
-    colIndices: Array[Long],
-    initialRowClusters: Map[Long, Int],
-    initialColClusters: Map[Long, Int]
+      data: RDD[MatrixEntry],
+      rowIndices: Array[Long],
+      colIndices: Array[Long],
+      initialRowClusters: Map[Long, Int],
+      initialColClusters: Map[Long, Int]
   ): BregmanCoClusteringResult = {
 
     var rowClusters        = initialRowClusters
@@ -305,9 +306,9 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Update block centers based on current cluster assignments.
     */
   private def updateBlockCenters(
-    data: RDD[MatrixEntry],
-    rowClusters: Map[Long, Int],
-    colClusters: Map[Long, Int]
+      data: RDD[MatrixEntry],
+      rowClusters: Map[Long, Int],
+      colClusters: Map[Long, Int]
   ): Array[Array[BregmanCenter]] = {
 
     // Group data by block assignments
@@ -356,9 +357,9 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Update row cluster assignments given fixed column clusters and block centers.
     */
   private def updateRowClusters(
-    data: RDD[MatrixEntry],
-    colClusters: Map[Long, Int],
-    blockCenters: Array[Array[BregmanCenter]]
+      data: RDD[MatrixEntry],
+      colClusters: Map[Long, Int],
+      blockCenters: Array[Array[BregmanCenter]]
   ): Map[Long, Int] = {
 
     // For each row, find the best row cluster assignment
@@ -370,7 +371,7 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
         entryList.map { entry =>
           val colCluster  = colClusters(entry.colIndex)
           val blockCenter = blockCenters(rowCluster)(colCluster)
-          val point =
+          val point       =
             BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
           pointOps.distance(point, blockCenter) * entry.weight
         }.sum
@@ -387,9 +388,9 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Update column cluster assignments given fixed row clusters and block centers.
     */
   private def updateColClusters(
-    data: RDD[MatrixEntry],
-    rowClusters: Map[Long, Int],
-    blockCenters: Array[Array[BregmanCenter]]
+      data: RDD[MatrixEntry],
+      rowClusters: Map[Long, Int],
+      blockCenters: Array[Array[BregmanCenter]]
   ): Map[Long, Int] = {
 
     // For each column, find the best column cluster assignment
@@ -401,7 +402,7 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
         entryList.map { entry =>
           val rowCluster  = rowClusters(entry.rowIndex)
           val blockCenter = blockCenters(rowCluster)(colCluster)
-          val point =
+          val point       =
             BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
           pointOps.distance(point, blockCenter) * entry.weight
         }.sum
@@ -418,22 +419,20 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Calculate the total objective function value.
     */
   private def calculateObjective(
-    data: RDD[MatrixEntry],
-    rowClusters: Map[Long, Int],
-    colClusters: Map[Long, Int],
-    blockCenters: Array[Array[BregmanCenter]]
+      data: RDD[MatrixEntry],
+      rowClusters: Map[Long, Int],
+      colClusters: Map[Long, Int],
+      blockCenters: Array[Array[BregmanCenter]]
   ): Double = {
 
-    val totalDistance = data
-      .map { entry =>
-        val rowCluster  = rowClusters(entry.rowIndex)
-        val colCluster  = colClusters(entry.colIndex)
-        val blockCenter = blockCenters(rowCluster)(colCluster)
-        val point =
-          BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
-        pointOps.distance(point, blockCenter) * entry.weight
-      }
-      .sum()
+    val totalDistance = data.map { entry =>
+      val rowCluster  = rowClusters(entry.rowIndex)
+      val colCluster  = colClusters(entry.colIndex)
+      val blockCenter = blockCenters(rowCluster)(colCluster)
+      val point       =
+        BregmanPoint(WeightedVector(Vectors.dense(entry.value), entry.weight), entry.value)
+      pointOps.distance(point, blockCenter) * entry.weight
+    }.sum()
 
     totalDistance
   }
@@ -441,15 +440,15 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Compute row cluster centers.
     */
   private def computeRowCenters(
-    data: RDD[MatrixEntry],
-    rowClusters: Map[Long, Int]
+      data: RDD[MatrixEntry],
+      rowClusters: Map[Long, Int]
   ): IndexedSeq[BregmanCenter] = {
 
     val rowData = data.groupBy(entry => rowClusters(entry.rowIndex))
 
     val centers = (0 until config.numRowClusters).map { cluster =>
       rowData.filter(_._1 == cluster).values.collect().flatten.toList match {
-        case Nil =>
+        case Nil     =>
           // Empty cluster
           val regularizedPoint = BregmanPoint(
             WeightedVector(Vectors.dense(config.regularization), config.regularization),
@@ -473,15 +472,15 @@ class BregmanCoClustering(config: BregmanCoClusteringConfig, pointOps: BregmanPo
   /** Compute column cluster centers.
     */
   private def computeColCenters(
-    data: RDD[MatrixEntry],
-    colClusters: Map[Long, Int]
+      data: RDD[MatrixEntry],
+      colClusters: Map[Long, Int]
   ): IndexedSeq[BregmanCenter] = {
 
     val colData = data.groupBy(entry => colClusters(entry.colIndex))
 
     val centers = (0 until config.numColClusters).map { cluster =>
       colData.filter(_._1 == cluster).values.collect().flatten.toList match {
-        case Nil =>
+        case Nil     =>
           // Empty cluster
           val regularizedPoint = BregmanPoint(
             WeightedVector(Vectors.dense(config.regularization), config.regularization),
@@ -521,10 +520,10 @@ object BregmanCoClustering {
   /** Create co-clustering with specified parameters.
     */
   def apply(
-    numRowClusters: Int,
-    numColClusters: Int,
-    pointOps: BregmanPointOps,
-    config: BregmanCoClusteringConfig = null
+      numRowClusters: Int,
+      numColClusters: Int,
+      pointOps: BregmanPointOps,
+      config: BregmanCoClusteringConfig = null
   ): BregmanCoClustering = {
 
     val finalConfig = if (config != null) config else defaultConfig(numRowClusters, numColClusters)
@@ -534,9 +533,9 @@ object BregmanCoClustering {
   /** Create co-clustering optimized for sparse data.
     */
   def forSparseData(
-    numRowClusters: Int,
-    numColClusters: Int,
-    pointOps: BregmanPointOps
+      numRowClusters: Int,
+      numColClusters: Int,
+      pointOps: BregmanPointOps
   ): BregmanCoClustering = {
 
     val config = BregmanCoClusteringConfig(
@@ -554,9 +553,9 @@ object BregmanCoClustering {
   /** Create co-clustering optimized for dense data.
     */
   def forDenseData(
-    numRowClusters: Int,
-    numColClusters: Int,
-    pointOps: BregmanPointOps
+      numRowClusters: Int,
+      numColClusters: Int,
+      pointOps: BregmanPointOps
   ): BregmanCoClustering = {
 
     val config = BregmanCoClusteringConfig(
@@ -586,10 +585,10 @@ object BregmanCoClustering {
   /** Convert sparse matrix entries back to dense matrix format.
     */
   def entriesToMatrix(
-    entries: Seq[MatrixEntry],
-    numRows: Int,
-    numCols: Int,
-    defaultValue: Double = 0.0
+      entries: Seq[MatrixEntry],
+      numRows: Int,
+      numCols: Int,
+      defaultValue: Double = 0.0
   ): Array[Array[Double]] = {
 
     val matrix = Array.ofDim[Double](numRows, numCols)

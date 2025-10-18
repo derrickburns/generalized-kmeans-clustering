@@ -17,13 +17,14 @@
 
 package com.massivedatascience.clusterer.ml.df
 
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
 /** Pure, composable feature transformation for clustering.
   *
-  * Centralizes the logic that "centers live in transformed space" and makes transform pipelines explicit and testable.
+  * Centralizes the logic that "centers live in transformed space" and makes transform pipelines
+  * explicit and testable.
   *
   * Example:
   * {{{
@@ -62,7 +63,8 @@ trait FeatureTransform extends Serializable {
 
   /** Inverse transform for cluster centers (for reporting in original space).
     *
-    * Note: Not all transforms have exact inverses. This provides best-effort back-projection for visualization.
+    * Note: Not all transforms have exact inverses. This provides best-effort back-projection for
+    * visualization.
     *
     * @param center
     *   cluster center in transformed space
@@ -87,7 +89,8 @@ trait FeatureTransform extends Serializable {
     * @return
     *   true if compatible
     */
-  def compatibleWith(divergence: String): Boolean = true // Most transforms work with all divergences
+  def compatibleWith(divergence: String): Boolean =
+    true // Most transforms work with all divergences
 }
 
 /** No-op transform (identity). */
@@ -157,7 +160,9 @@ case class EpsilonShiftTransform(epsilon: Double = 1e-10) extends FeatureTransfo
 
   override def compatibleWith(divergence: String): Boolean = {
     // Epsilon shift is specifically for divergences requiring positive values
-    Set("kl", "generalizedi", "itakurosaito").contains(divergence.toLowerCase.replaceAll("[\\s-]", ""))
+    Set("kl", "generalizedi", "itakurosaito").contains(
+      divergence.toLowerCase.replaceAll("[\\s-]", "")
+    )
   }
 }
 
@@ -196,7 +201,7 @@ case class NormalizeL2Transform(minNorm: Double = 1e-10) extends FeatureTransfor
     // L2 normalization is specifically for cosine/angular distance (via Euclidean on normalized vectors)
     divergence.toLowerCase match {
       case "squaredeuclidean" | "euclidean" | "cosine" => true
-      case _                                            => false
+      case _                                           => false
     }
   }
 }
@@ -239,8 +244,8 @@ case class NormalizeL1Transform(minNorm: Double = 1e-10) extends FeatureTransfor
 
 /** Standard scaling: (x - mean) / stddev. Centers and scales features.
   *
-  * Note: Requires computing statistics from data, so this is typically done via MLlib's StandardScaler. This
-  * implementation assumes pre-computed statistics.
+  * Note: Requires computing statistics from data, so this is typically done via MLlib's
+  * StandardScaler. This implementation assumes pre-computed statistics.
   *
   * @param mean
   *   feature means
@@ -281,7 +286,8 @@ case class StandardScalingTransform(mean: Vector, stddev: Vector) extends Featur
   * @param second
   *   second transform to apply
   */
-case class ComposedTransform(first: FeatureTransform, second: FeatureTransform) extends FeatureTransform {
+case class ComposedTransform(first: FeatureTransform, second: FeatureTransform)
+    extends FeatureTransform {
   override def name: String = s"${first.name} -> ${second.name}"
 
   override def apply(df: DataFrame, featuresCol: String, outCol: String): DataFrame = {
@@ -294,7 +300,8 @@ case class ComposedTransform(first: FeatureTransform, second: FeatureTransform) 
 
   override def apply(v: Vector): Vector = second(first(v))
 
-  override def inverseCenter(center: Vector): Vector = first.inverseCenter(second.inverseCenter(center))
+  override def inverseCenter(center: Vector): Vector =
+    first.inverseCenter(second.inverseCenter(center))
 
   override def compatibleWith(divergence: String): Boolean = {
     first.compatibleWith(divergence) && second.compatibleWith(divergence)
@@ -320,7 +327,8 @@ object FeatureTransform {
   def normalizeL1(minNorm: Double = 1e-10): FeatureTransform = NormalizeL1Transform(minNorm)
 
   /** Standard scaling with pre-computed statistics. */
-  def standardScale(mean: Vector, stddev: Vector): FeatureTransform = StandardScalingTransform(mean, stddev)
+  def standardScale(mean: Vector, stddev: Vector): FeatureTransform =
+    StandardScalingTransform(mean, stddev)
 
   /** Common transform for KL divergence: epsilon shift then log1p. */
   def forKL(epsilon: Double = 1e-10): FeatureTransform = epsilonShift(epsilon).andThen(log1p)
@@ -336,13 +344,13 @@ object FeatureTransform {
     *   corresponding transform
     */
   def fromString(name: String): FeatureTransform = name.toLowerCase match {
-    case "identity" | "none"      => NoOpTransform
-    case "log1p"                  => Log1pTransform
-    case "epsilon_shift"          => EpsilonShiftTransform()
-    case "normalize_l2" | "l2"    => NormalizeL2Transform()
-    case "normalize_l1" | "l1"    => NormalizeL1Transform()
-    case "kl"                     => forKL()
-    case "spherical"              => forSpherical()
-    case _ => throw new IllegalArgumentException(s"Unknown transform: $name")
+    case "identity" | "none"   => NoOpTransform
+    case "log1p"               => Log1pTransform
+    case "epsilon_shift"       => EpsilonShiftTransform()
+    case "normalize_l2" | "l2" => NormalizeL2Transform()
+    case "normalize_l1" | "l1" => NormalizeL1Transform()
+    case "kl"                  => forKL()
+    case "spherical"           => forSpherical()
+    case _                     => throw new IllegalArgumentException(s"Unknown transform: $name")
   }
 }

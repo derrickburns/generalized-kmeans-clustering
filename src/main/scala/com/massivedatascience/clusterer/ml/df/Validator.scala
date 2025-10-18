@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer.ml.df
 
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{ DataFrame, Row }
 import org.apache.spark.sql.functions._
 
 /** Result of validation containing any violations found.
@@ -29,8 +29,8 @@ import org.apache.spark.sql.functions._
   *   list of validation violations with details
   */
 case class ValidationResult(
-  isValid: Boolean,
-  violations: Seq[ValidationViolation]
+    isValid: Boolean,
+    violations: Seq[ValidationViolation]
 ) {
 
   /** Combine this result with another result. */
@@ -87,16 +87,16 @@ object ValidationResult {
   *   sample rows that violated the constraint (up to 5)
   */
 case class ValidationViolation(
-  message: String,
-  field: String,
-  violationType: String,
-  sampleRows: Seq[Row] = Seq.empty
+    message: String,
+    field: String,
+    violationType: String,
+    sampleRows: Seq[Row] = Seq.empty
 )
 
 /** Validator trait for composable validation rules.
   *
-  * Validators can be combined using `and` to build complex validation chains. Each validator checks a single concern
-  * and returns a ValidationResult.
+  * Validators can be combined using `and` to build complex validation chains. Each validator checks
+  * a single concern and returns a ValidationResult.
   *
   * Example usage:
   * {{{
@@ -145,7 +145,10 @@ case class NoNaNValidator(columnName: String, maxSampleRows: Int = 5) extends Va
       // For vector columns, check each element
       if (df.schema(columnName).dataType.typeName == "vector") {
         val hasNaN = df
-          .withColumn("_has_nan", udf((v: Vector) => v.toArray.exists(_.isNaN)).apply(col(columnName)))
+          .withColumn(
+            "_has_nan",
+            udf((v: Vector) => v.toArray.exists(_.isNaN)).apply(col(columnName))
+          )
           .filter(col("_has_nan"))
 
         val count = hasNaN.count()
@@ -202,7 +205,10 @@ case class FiniteValidator(columnName: String, maxSampleRows: Int = 5) extends V
       // For vector columns, check each element
       if (df.schema(columnName).dataType.typeName == "vector") {
         val hasInf = df
-          .withColumn("_has_inf", udf((v: Vector) => v.toArray.exists(_.isInfinite)).apply(col(columnName)))
+          .withColumn(
+            "_has_inf",
+            udf((v: Vector) => v.toArray.exists(_.isInfinite)).apply(col(columnName))
+          )
           .filter(col("_has_inf"))
 
         val count = hasInf.count()
@@ -251,17 +257,23 @@ case class FiniteValidator(columnName: String, maxSampleRows: Int = 5) extends V
 }
 
 /** Validator that checks if a numeric column contains only positive values. */
-case class PositiveValidator(columnName: String, strict: Boolean = false, maxSampleRows: Int = 5) extends Validator {
-  override def name: String = if (strict) s"strictlyPositive($columnName)" else s"positive($columnName)"
+case class PositiveValidator(columnName: String, strict: Boolean = false, maxSampleRows: Int = 5)
+    extends Validator {
+  override def name: String =
+    if (strict) s"strictlyPositive($columnName)" else s"positive($columnName)"
 
   override def validate(df: DataFrame): ValidationResult = {
     try {
-      val threshold = if (strict) 0.0 else -1e-10 // Allow small negative values for numerical stability
+      val threshold =
+        if (strict) 0.0 else -1e-10 // Allow small negative values for numerical stability
 
       // For vector columns, check each element
       if (df.schema(columnName).dataType.typeName == "vector") {
         val hasNegative = df
-          .withColumn("_has_neg", udf((v: Vector) => v.toArray.exists(_ <= threshold)).apply(col(columnName)))
+          .withColumn(
+            "_has_neg",
+            udf((v: Vector) => v.toArray.exists(_ <= threshold)).apply(col(columnName))
+          )
           .filter(col("_has_neg"))
 
         val count = hasNegative.count()
@@ -344,8 +356,11 @@ case class NotNullValidator(columnName: String, maxSampleRows: Int = 5) extends 
 }
 
 /** Validator that checks if vectors in a column have consistent dimensionality. */
-case class ConsistentDimensionValidator(columnName: String, expectedDim: Option[Int] = None, maxSampleRows: Int = 5)
-    extends Validator {
+case class ConsistentDimensionValidator(
+    columnName: String,
+    expectedDim: Option[Int] = None,
+    maxSampleRows: Int = 5
+) extends Validator {
 
   override def name: String = expectedDim match {
     case Some(d) => s"dimension($columnName, $d)"
@@ -382,7 +397,9 @@ case class ConsistentDimensionValidator(columnName: String, expectedDim: Option[
 
         ValidationResult.failure(
           ValidationViolation(
-            message = s"Column '$columnName' has inconsistent dimensions: ${dimCounts.map { case (d, c) => s"$d ($c rows)" }.mkString(", ")}",
+            message = s"Column '$columnName' has inconsistent dimensions: ${dimCounts.map {
+                case (d, c) => s"$d ($c rows)"
+              }.mkString(", ")}",
             field = columnName,
             violationType = "dimension"
           )
@@ -390,7 +407,8 @@ case class ConsistentDimensionValidator(columnName: String, expectedDim: Option[
       } else if (expectedDim.isDefined && dims.headOption != expectedDim) {
         ValidationResult.failure(
           ValidationViolation(
-            message = s"Column '$columnName' has dimension ${dims.headOption.getOrElse("unknown")}, expected ${expectedDim.get}",
+            message = s"Column '$columnName' has dimension ${dims.headOption
+                .getOrElse("unknown")}, expected ${expectedDim.get}",
             field = columnName,
             violationType = "dimension"
           )
@@ -471,7 +489,11 @@ object Validator {
   }
 
   /** Validate that vector column has consistent dimensionality. */
-  def consistentDimension(columnName: String, expectedDim: Option[Int] = None, maxSampleRows: Int = 5): Validator = {
+  def consistentDimension(
+      columnName: String,
+      expectedDim: Option[Int] = None,
+      maxSampleRows: Int = 5
+  ): Validator = {
     ConsistentDimensionValidator(columnName, expectedDim, maxSampleRows)
   }
 
@@ -499,10 +521,10 @@ object Validator {
 
   /** Validate full k-means input (features, optional weight, non-empty). */
   def kmeansInput(
-    featuresCol: String,
-    weightCol: Option[String] = None,
-    kernelName: String = "squaredEuclidean",
-    expectedDim: Option[Int] = None
+      featuresCol: String,
+      weightCol: Option[String] = None,
+      kernelName: String = "squaredEuclidean",
+      expectedDim: Option[Int] = None
   ): Validator = {
     val baseValidator = notEmpty and
       features(featuresCol, expectedDim) and

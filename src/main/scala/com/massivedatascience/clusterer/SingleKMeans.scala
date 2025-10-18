@@ -24,8 +24,8 @@ import scala.collection.Map
 
 import org.slf4j.LoggerFactory
 
-/** A simple k-means implementation that re-computes the closest cluster centers on each iteration and that recomputes
-  * each cluster on each iteration.
+/** A simple k-means implementation that re-computes the closest cluster centers on each iteration
+  * and that recomputes each cluster on each iteration.
   * @deprecated
   * @param pointOps
   *   distance function
@@ -36,9 +36,9 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
   val logger = LoggerFactory.getLogger(getClass.getName)
 
   def cluster(
-    data: RDD[BregmanPoint],
-    centers: Array[BregmanCenter],
-    maxIterations: Int = 20
+      data: RDD[BregmanPoint],
+      centers: Array[BregmanCenter],
+      maxIterations: Int = 20
   ): (Double, KMeansModel) = {
 
     var active        = true
@@ -58,7 +58,8 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
             s"Cluster $clusterIndex has insufficient weight (${centroid.weight}), marking for removal"
           )
         } else {
-          active = active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
+          active =
+            active || pointOps.centerMoved(pointOps.toPoint(centroid), activeCenters(clusterIndex))
           activeCenters(clusterIndex) = pointOps.toCenter(centroid)
         }
       }
@@ -69,12 +70,12 @@ class SingleKMeans(pointOps: BregmanPointOps) extends Serializable {
   }
 
   private[this] def centroids(
-    data: RDD[BregmanPoint],
-    activeCenters: Array[BregmanCenter]
+      data: RDD[BregmanPoint],
+      activeCenters: Array[BregmanCenter]
   ): Map[Int, MutableWeightedVector] = {
 
     val bcActiveCenters = data.sparkContext.broadcast(activeCenters)
-    val result = data
+    val result          = data
       .mapPartitions[(Int, MutableWeightedVector)] { points =>
         val bcCenters = bcActiveCenters.value
         val centers   = IndexedSeq.fill(bcCenters.length)(pointOps.make())

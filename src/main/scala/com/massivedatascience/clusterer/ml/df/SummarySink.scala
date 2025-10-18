@@ -21,8 +21,8 @@ import scala.collection.mutable.ArrayBuffer
 
 /** Events that occur during k-means clustering.
   *
-  * These events provide observability into the clustering process, enabling monitoring, debugging, and analysis of
-  * algorithm behavior.
+  * These events provide observability into the clustering process, enabling monitoring, debugging,
+  * and analysis of algorithm behavior.
   */
 sealed trait ClusteringEvent {
   def timestamp: Long
@@ -36,7 +36,8 @@ sealed trait ClusteringEvent {
   * @param timestamp
   *   event timestamp in milliseconds
   */
-case class IterationStarted(iteration: Int, timestamp: Long = System.currentTimeMillis()) extends ClusteringEvent {
+case class IterationStarted(iteration: Int, timestamp: Long = System.currentTimeMillis())
+    extends ClusteringEvent {
   override def eventType: String = "iteration_started"
 }
 
@@ -56,12 +57,12 @@ case class IterationStarted(iteration: Int, timestamp: Long = System.currentTime
   *   event timestamp in milliseconds
   */
 case class IterationCompleted(
-  iteration: Int,
-  cost: Double,
-  centerMovement: Double,
-  assignmentChanges: Long,
-  duration: Long,
-  timestamp: Long = System.currentTimeMillis()
+    iteration: Int,
+    cost: Double,
+    centerMovement: Double,
+    assignmentChanges: Long,
+    duration: Long,
+    timestamp: Long = System.currentTimeMillis()
 ) extends ClusteringEvent {
   override def eventType: String = "iteration_completed"
 }
@@ -75,8 +76,11 @@ case class IterationCompleted(
   * @param timestamp
   *   event timestamp in milliseconds
   */
-case class ConvergenceDetected(iteration: Int, reason: String, timestamp: Long = System.currentTimeMillis())
-    extends ClusteringEvent {
+case class ConvergenceDetected(
+    iteration: Int,
+    reason: String,
+    timestamp: Long = System.currentTimeMillis()
+) extends ClusteringEvent {
   override def eventType: String = "convergence_detected"
 }
 
@@ -92,10 +96,10 @@ case class ConvergenceDetected(iteration: Int, reason: String, timestamp: Long =
   *   event timestamp in milliseconds
   */
 case class EmptyClustersDetected(
-  iteration: Int,
-  clusterIds: Set[Int],
-  action: String,
-  timestamp: Long = System.currentTimeMillis()
+    iteration: Int,
+    clusterIds: Set[Int],
+    action: String,
+    timestamp: Long = System.currentTimeMillis()
 ) extends ClusteringEvent {
   override def eventType: String = "empty_clusters_detected"
 }
@@ -112,10 +116,10 @@ case class EmptyClustersDetected(
   *   event timestamp in milliseconds
   */
 case class WarningEvent(
-  iteration: Int,
-  message: String,
-  severity: String = "medium",
-  timestamp: Long = System.currentTimeMillis()
+    iteration: Int,
+    message: String,
+    severity: String = "medium",
+    timestamp: Long = System.currentTimeMillis()
 ) extends ClusteringEvent {
   override def eventType: String = "warning"
 }
@@ -129,8 +133,11 @@ case class WarningEvent(
   * @param timestamp
   *   event timestamp in milliseconds
   */
-case class InitializationCompleted(method: String, duration: Long, timestamp: Long = System.currentTimeMillis())
-    extends ClusteringEvent {
+case class InitializationCompleted(
+    method: String,
+    duration: Long,
+    timestamp: Long = System.currentTimeMillis()
+) extends ClusteringEvent {
   override def eventType: String = "initialization_completed"
 }
 
@@ -146,23 +153,23 @@ case class InitializationCompleted(method: String, duration: Long, timestamp: Lo
   *   event timestamp in milliseconds
   */
 case class TrainingCompleted(
-  totalIterations: Int,
-  finalCost: Double,
-  totalDuration: Long,
-  timestamp: Long = System.currentTimeMillis()
+    totalIterations: Int,
+    finalCost: Double,
+    totalDuration: Long,
+    timestamp: Long = System.currentTimeMillis()
 ) extends ClusteringEvent {
   override def eventType: String = "training_completed"
 }
 
 /** Summary of clustering run with all collected events and computed metrics.
   *
-  * This is the primary interface for accessing telemetry data after training completes. It provides both raw events and
-  * derived metrics for analysis.
+  * This is the primary interface for accessing telemetry data after training completes. It provides
+  * both raw events and derived metrics for analysis.
   */
 case class ClusteringSummary(
-  events: Seq[ClusteringEvent],
-  startTime: Long,
-  endTime: Long
+    events: Seq[ClusteringEvent],
+    startTime: Long,
+    endTime: Long
 ) {
 
   /** Get all events of a specific type. */
@@ -180,7 +187,8 @@ case class ClusteringSummary(
   def convergence: Option[ConvergenceDetected] = eventsOfType[ConvergenceDetected].headOption
 
   /** Get initialization event if present. */
-  def initialization: Option[InitializationCompleted] = eventsOfType[InitializationCompleted].headOption
+  def initialization: Option[InitializationCompleted] =
+    eventsOfType[InitializationCompleted].headOption
 
   /** Get training completion event if present. */
   def completion: Option[TrainingCompleted] = eventsOfType[TrainingCompleted].headOption
@@ -211,7 +219,7 @@ case class ClusteringSummary(
   /** Percentage cost improvement. */
   def costImprovementPercent: Option[Double] = {
     for {
-      first <- iterations.headOption
+      first       <- iterations.headOption
       improvement <- costImprovement
     } yield (improvement / first.cost) * 100.0
   }
@@ -264,8 +272,10 @@ case class ClusteringSummary(
     sb.append("\nPer-Iteration Metrics:\n")
     sb.append("Iter\tCost\t\tMovement\tChanges\tDuration\n")
     iterations.foreach { iter =>
-      sb.append(f"${iter.iteration}%4d\t${iter.cost}%.4f\t${iter.centerMovement}%.4f\t" +
-        f"${iter.assignmentChanges}%6d\t${iter.duration}%4dms\n")
+      sb.append(
+        f"${iter.iteration}%4d\t${iter.cost}%.4f\t${iter.centerMovement}%.4f\t" +
+          f"${iter.assignmentChanges}%6d\t${iter.duration}%4dms\n"
+      )
     }
 
     sb.toString()
@@ -274,8 +284,8 @@ case class ClusteringSummary(
 
 /** Sink for collecting clustering events during training.
   *
-  * This is a mutable collector that accumulates events as they occur. After training completes, call `summary()` to get
-  * an immutable summary.
+  * This is a mutable collector that accumulates events as they occur. After training completes,
+  * call `summary()` to get an immutable summary.
   *
   * Example usage:
   * {{{
@@ -287,7 +297,7 @@ case class ClusteringSummary(
   * }}}
   */
 class SummarySink extends Serializable {
-  private val events = ArrayBuffer[ClusteringEvent]()
+  private val events    = ArrayBuffer[ClusteringEvent]()
   private val startTime = System.currentTimeMillis()
 
   /** Record an event. */
@@ -328,7 +338,7 @@ object SummarySink {
 
   /** Create a no-op sink that discards all events (for performance). */
   def noop(): SummarySink = new SummarySink() {
-    override def record(event: ClusteringEvent): Unit = {} // Discard
+    override def record(event: ClusteringEvent): Unit             = {} // Discard
     override def recordAll(newEvents: Seq[ClusteringEvent]): Unit = {} // Discard
   }
 }
@@ -345,14 +355,16 @@ class IterationTracker(sink: SummarySink, iteration: Int) {
   /** Complete the iteration with metrics. */
   def complete(cost: Double, centerMovement: Double, assignmentChanges: Long): Unit = {
     val duration = System.currentTimeMillis() - startTime
-    sink.record(IterationCompleted(
-      iteration = iteration,
-      cost = cost,
-      centerMovement = centerMovement,
-      assignmentChanges = assignmentChanges,
-      duration = duration,
-      timestamp = System.currentTimeMillis()
-    ))
+    sink.record(
+      IterationCompleted(
+        iteration = iteration,
+        cost = cost,
+        centerMovement = centerMovement,
+        assignmentChanges = assignmentChanges,
+        duration = duration,
+        timestamp = System.currentTimeMillis()
+      )
+    )
   }
 }
 

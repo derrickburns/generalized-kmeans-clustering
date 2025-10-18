@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.coreset
 
-import com.massivedatascience.clusterer.{BregmanCenter, BregmanPoint, BregmanPointOps}
+import com.massivedatascience.clusterer.{ BregmanCenter, BregmanPoint, BregmanPointOps }
 import com.massivedatascience.divergence.BregmanDivergence
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
@@ -26,8 +26,8 @@ import scala.util.Random
 
 /** Trait for computing sensitivity scores for Bregman core-set construction.
   *
-  * Sensitivity measures how much a point affects the optimal clustering cost. Points with higher sensitivity are more
-  * important to include in the core-set.
+  * Sensitivity measures how much a point affects the optimal clustering cost. Points with higher
+  * sensitivity are more important to include in the core-set.
   */
 trait BregmanSensitivity extends Serializable {
 
@@ -45,19 +45,19 @@ trait BregmanSensitivity extends Serializable {
     *   Sensitivity score (higher = more important)
     */
   def computeSensitivity(
-    point: BregmanPoint,
-    allPoints: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      point: BregmanPoint,
+      allPoints: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): Double
 
-  /** Batch compute sensitivity scores for multiple points. Default implementation calls computeSensitivity for each
-    * point.
+  /** Batch compute sensitivity scores for multiple points. Default implementation calls
+    * computeSensitivity for each point.
     */
   def computeBatchSensitivity(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Double)] = {
 
     points.map(point => (point, computeSensitivity(point, points, k, pointOps)))
@@ -69,18 +69,18 @@ trait BregmanSensitivity extends Serializable {
 class UniformSensitivity extends BregmanSensitivity {
 
   def computeSensitivity(
-    point: BregmanPoint,
-    allPoints: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      point: BregmanPoint,
+      allPoints: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): Double = {
     1.0 // All points equally important
   }
 
   override def computeBatchSensitivity(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Double)] = {
     points.map(point => (point, 1.0))
   }
@@ -88,18 +88,19 @@ class UniformSensitivity extends BregmanSensitivity {
 
 /** Distance-based sensitivity using approximate nearest clusters.
   *
-  * Points that are far from potential cluster centers have higher sensitivity because they represent outliers or sparse
-  * regions that could significantly affect clustering quality.
+  * Points that are far from potential cluster centers have higher sensitivity because they
+  * represent outliers or sparse regions that could significantly affect clustering quality.
   */
-class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L) extends BregmanSensitivity {
+class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L)
+    extends BregmanSensitivity {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
   def computeSensitivity(
-    point: BregmanPoint,
-    allPoints: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      point: BregmanPoint,
+      allPoints: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): Double = {
 
     // Sample potential cluster centers
@@ -118,9 +119,9 @@ class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L) ex
   }
 
   override def computeBatchSensitivity(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Double)] = {
 
     // Sample potential centers once for all points
@@ -148,9 +149,9 @@ class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L) ex
   /** Sample potential cluster centers to estimate sensitivity.
     */
   private def samplePotentialCenters(
-    points: RDD[BregmanPoint],
-    numSamples: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      numSamples: Int,
+      pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
 
     val sampledPoints = points.takeSample(withReplacement = false, numSamples, seed)
@@ -160,17 +161,18 @@ class DistanceBasedSensitivity(numSampleCenters: Int = 100, seed: Long = 42L) ex
 
 /** Density-based sensitivity using local neighborhood analysis.
   *
-  * Points in sparse regions have higher sensitivity because they represent important boundary cases or outliers.
+  * Points in sparse regions have higher sensitivity because they represent important boundary cases
+  * or outliers.
   */
 class DensityBasedSensitivity(numNeighbors: Int = 50, seed: Long = 42L) extends BregmanSensitivity {
 
   @transient private lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
   def computeSensitivity(
-    point: BregmanPoint,
-    allPoints: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      point: BregmanPoint,
+      allPoints: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): Double = {
 
     // Sample neighbors to estimate local density
@@ -191,9 +193,9 @@ class DensityBasedSensitivity(numNeighbors: Int = 50, seed: Long = 42L) extends 
   }
 
   override def computeBatchSensitivity(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Double)] = {
 
     // Sample neighbors once for efficiency
@@ -209,7 +211,7 @@ class DensityBasedSensitivity(numNeighbors: Int = 50, seed: Long = 42L) extends 
           val sensitivity = if (neighbors.nonEmpty) {
             // Sample subset of neighbors for this point
             val pointNeighbors = random.shuffle(neighbors.toList).take(numNeighbors)
-            val avgDistance = pointNeighbors
+            val avgDistance    = pointNeighbors
               .map(neighbor => pointOps.distance(point, pointOps.toCenter(neighbor)))
               .sum / pointNeighbors.length
             math.max(avgDistance, 1e-10)
@@ -228,11 +230,11 @@ class DensityBasedSensitivity(numNeighbors: Int = 50, seed: Long = 42L) extends 
 /** Hybrid sensitivity combining distance and density measures.
   */
 class HybridSensitivity(
-  distanceWeight: Double = 0.6,
-  densityWeight: Double = 0.4,
-  numSampleCenters: Int = 100,
-  numNeighbors: Int = 50,
-  seed: Long = 42L
+    distanceWeight: Double = 0.6,
+    densityWeight: Double = 0.4,
+    numSampleCenters: Int = 100,
+    numNeighbors: Int = 50,
+    seed: Long = 42L
 ) extends BregmanSensitivity {
 
   require(
@@ -244,10 +246,10 @@ class HybridSensitivity(
   private val densitySensitivity  = new DensityBasedSensitivity(numNeighbors, seed)
 
   def computeSensitivity(
-    point: BregmanPoint,
-    allPoints: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      point: BregmanPoint,
+      allPoints: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): Double = {
 
     val distSens = distanceSensitivity.computeSensitivity(point, allPoints, k, pointOps)
@@ -257,9 +259,9 @@ class HybridSensitivity(
   }
 
   override def computeBatchSensitivity(
-    points: RDD[BregmanPoint],
-    k: Int,
-    pointOps: BregmanPointOps
+      points: RDD[BregmanPoint],
+      k: Int,
+      pointOps: BregmanPointOps
   ): RDD[(BregmanPoint, Double)] = {
 
     val distSensitivities = distanceSensitivity.computeBatchSensitivity(points, k, pointOps)
@@ -301,11 +303,11 @@ object BregmanSensitivity {
   /** Create a hybrid sensitivity combining distance and density.
     */
   def hybrid(
-    distanceWeight: Double = 0.6,
-    densityWeight: Double = 0.4,
-    numSampleCenters: Int = 100,
-    numNeighbors: Int = 50,
-    seed: Long = 42L
+      distanceWeight: Double = 0.6,
+      densityWeight: Double = 0.4,
+      numSampleCenters: Int = 100,
+      numNeighbors: Int = 50,
+      seed: Long = 42L
   ): BregmanSensitivity = {
     new HybridSensitivity(distanceWeight, densityWeight, numSampleCenters, numNeighbors, seed)
   }
