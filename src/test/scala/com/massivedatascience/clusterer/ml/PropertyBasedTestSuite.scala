@@ -32,6 +32,8 @@ class PropertyBasedTestSuite extends AnyFunSuite with ScalaCheckPropertyChecks w
       .config("spark.sql.shuffle.partitions", "4")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
+    // Set checkpoint directory for tests that use cache/persist
+    spark.sparkContext.setCheckpointDir(java.nio.file.Files.createTempDirectory("spark-checkpoint").toString)
   }
 
   override def afterAll(): Unit = {
