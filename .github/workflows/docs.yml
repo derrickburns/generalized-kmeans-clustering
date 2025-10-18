@@ -70,7 +70,7 @@ jobs:
       #   uses: actions/configure-pages@v4
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload the entire 'docs' directory which now contains
           # both the redirect and the 'api' subdirectory
