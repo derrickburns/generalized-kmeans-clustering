@@ -50,6 +50,25 @@ More recipes: see DataFrame API Examples.
 
 ⸻
 
+## What CI Validates
+
+Our comprehensive CI pipeline ensures quality across multiple dimensions:
+
+| **Validation** | **What It Checks** | **Badge** |
+|----------------|-------------------|-----------|
+| **Lint & Style** | Scalastyle compliance, code formatting | Part of main CI |
+| **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.0 & 3.5.1 (4 combinations) | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
+| **Test Matrix** | 290 tests across all Scala/Spark combinations | Part of main CI |
+| **Examples Runner** | All examples compile and run successfully:<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala)<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala)<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala)<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) | Part of main CI |
+| **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5 | Part of main CI |
+| **Performance Sanity** | Basic performance regression check (30s budget) | Part of main CI |
+| **Python Smoke Test** | PySpark wrapper installation and basic functionality | Part of main CI |
+| **Security Scanning** | CodeQL static analysis for vulnerabilities | [![CodeQL](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml) |
+
+**View live CI results:** [CI Workflow Runs](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml)
+
+⸻
+
 Feature Matrix
 
 Algorithm	DataFrame API	Use Case	Key Benefit
