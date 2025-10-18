@@ -251,69 +251,165 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
 
   private[GeneralizedKMeansModel] class GeneralizedKMeansModelWriter(
     instance: GeneralizedKMeansModel
-  ) extends MLWriter {
+  ) extends MLWriter
+      with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.Serialization
+
+    implicit val formats: DefaultFormats.type = DefaultFormats
 
     override protected def saveImpl(path: String): Unit = {
       val spark = sparkSession
-      import spark.implicits._
 
-      // Save cluster centers as Parquet
-      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
-      val centersDF = spark.sparkContext
-        .parallelize(instance.clusterCenters.zipWithIndex)
-        .map { case (center, idx) =>
-          (idx, Vectors.dense(center))
-        }
-        .toDF("clusterId", "center")
-      centersDF.write.mode("overwrite").parquet(centersPath)
+      logInfo(s"Saving GeneralizedKMeansModel to $path")
 
-      // Save kernel name and model info in metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val metadataDF = Seq(
-        (
-          instance.uid,
-          instance.kernelName,
-          instance.numClusters,
-          instance.numFeatures,
-          instance.getFeaturesCol,
-          instance.getPredictionCol
+      // Prepare centers data: (center_id, weight, vector)
+      val centersData = instance.clusterCenters.indices.map { i =>
+        val weight = 1.0 // GeneralizedKMeans doesn't use weighted centers currently
+        val vector = Vectors.dense(instance.clusterCenters(i))
+        (i, weight, vector)
+      }
+
+      // Write centers with deterministic ordering
+      val centersHash = writeCenters(spark, path, centersData)
+
+      // Collect all parameters
+      val params = Map(
+        "maxIter"              -> instance.getOrDefault(instance.maxIter),
+        "tol"                  -> instance.getOrDefault(instance.tol),
+        "seed"                 -> instance.getOrDefault(instance.seed),
+        "assignmentStrategy"   -> instance.getOrDefault(instance.assignmentStrategy),
+        "smoothing"            -> instance.getOrDefault(instance.smoothing),
+        "emptyClusterStrategy" -> instance.getOrDefault(instance.emptyClusterStrategy),
+        "checkpointInterval"   -> instance.getOrDefault(instance.checkpointInterval),
+        "initMode"             -> instance.getOrDefault(instance.initMode),
+        "initSteps"            -> instance.getOrDefault(instance.initSteps),
+        "featuresCol"          -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol"        -> instance.getOrDefault(instance.predictionCol),
+        "distanceCol"          -> (if (instance.hasDistanceCol) instance.getDistanceCol else ""),
+        "weightCol"            -> (if (instance.hasWeightCol) instance.getWeightCol else ""),
+        "checkpointDir" -> (if (instance.hasCheckpointDir) instance.getCheckpointDir else "")
+      )
+
+      // Create metadata object
+      val metaObj = Map(
+        "layoutVersion"      -> LayoutVersion,
+        "algo"               -> "GeneralizedKMeansModel",
+        "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
+        "scalaBinaryVersion" -> getScalaBinaryVersion,
+        "divergence"         -> instance.getDivergence,
+        "k"                  -> instance.numClusters,
+        "dim"                -> instance.numFeatures,
+        "uid"                -> instance.uid,
+        "kernelName"         -> instance.kernelName,
+        "params"             -> params,
+        "centers" -> Map(
+          "count"    -> instance.numClusters,
+          "ordering" -> "center_id ASC (0..k-1)",
+          "storage"  -> "parquet"
+        ),
+        "checksums" -> Map(
+          "centersParquetSHA256"     -> centersHash,
+          "metadataCanonicalSHA256"  -> ""
         )
-      ).toDF("uid", "kernelName", "numClusters", "numFeatures", "featuresCol", "predictionCol")
-      metadataDF.write.mode("overwrite").parquet(metadataPath)
+      )
+
+      // Write metadata and get hash
+      val json     = Serialization.write(metaObj)
+      val metaHash = writeMetadata(path, json)
+
+      // Update metadata with its own hash
+      val metaObj2 = metaObj.updated(
+        "checksums",
+        Map(
+          "centersParquetSHA256"    -> centersHash,
+          "metadataCanonicalSHA256" -> metaHash
+        )
+      )
+      val json2 = Serialization.write(metaObj2)
+      writeMetadata(path, json2)
+
+      logInfo(s"Successfully saved GeneralizedKMeansModel to $path")
     }
   }
 
-  private class GeneralizedKMeansModelReader extends MLReader[GeneralizedKMeansModel] {
+  private class GeneralizedKMeansModelReader extends MLReader[GeneralizedKMeansModel] with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.JsonMethods
+
+    implicit val formats: DefaultFormats.type = DefaultFormats
 
     override def load(path: String): GeneralizedKMeansModel = {
-      // Load cluster centers from Parquet
-      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
-      val centersDF   = sparkSession.read.parquet(centersPath)
+      logInfo(s"Loading GeneralizedKMeansModel from $path")
 
-      val centers = centersDF
-        .orderBy("clusterId")
-        .select("center")
-        .collect()
-        .map { row =>
-          row.getAs[Vector](0).toArray
-        }
+      // Read and parse metadata
+      val metaStr = readMetadata(path)
+      val metaJ   = JsonMethods.parse(metaStr)
 
-      // Load metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val metadataDF   = sparkSession.read.parquet(metadataPath)
-      val metadataRow  = metadataDF.first()
+      val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
+      val k             = (metaJ \ "k").extract[Int]
+      val dim           = (metaJ \ "dim").extract[Int]
+      val uid           = (metaJ \ "uid").extract[String]
+      val kernelName    = (metaJ \ "kernelName").extract[String]
+      val divergence    = (metaJ \ "divergence").extract[String]
+      val params        = (metaJ \ "params").values.asInstanceOf[Map[String, Any]]
 
-      val uid           = metadataRow.getAs[String]("uid")
-      val kernelName    = metadataRow.getAs[String]("kernelName")
-      val featuresCol   = metadataRow.getAs[String]("featuresCol")
-      val predictionCol = metadataRow.getAs[String]("predictionCol")
+      // Load centers from Parquet
+      val centersDF = readCenters(sparkSession, path)
+      val rows      = centersDF.collect().sortBy(_.getInt(0)) // center_id
+
+      // Validate metadata
+      validateMetadata(layoutVersion, k, dim, rows.length)
+
+      // Extract centers as arrays
+      val centers = rows.map { row =>
+        row.getAs[Vector]("vector").toArray
+      }
 
       // Create model instance
       val model = new GeneralizedKMeansModel(uid, centers, kernelName)
 
-      // Set parameters
-      model.set(model.featuresCol, featuresCol)
-      model.set(model.predictionCol, predictionCol)
+      // Set parameters from saved metadata
+      model.set(model.divergence, divergence)
+      model.set(model.maxIter, params("maxIter").asInstanceOf[BigInt].toInt)
+      model.set(model.tol, params("tol").asInstanceOf[Double])
+      model.set(model.seed, params("seed").asInstanceOf[BigInt].toLong)
+      model.set(model.assignmentStrategy, params("assignmentStrategy").asInstanceOf[String])
+      model.set(model.smoothing, params("smoothing").asInstanceOf[Double])
+      model.set(
+        model.emptyClusterStrategy,
+        params("emptyClusterStrategy").asInstanceOf[String]
+      )
+      model.set(
+        model.checkpointInterval,
+        params("checkpointInterval").asInstanceOf[BigInt].toInt
+      )
+      model.set(model.initMode, params("initMode").asInstanceOf[String])
+      model.set(model.initSteps, params("initSteps").asInstanceOf[BigInt].toInt)
+      model.set(model.featuresCol, params("featuresCol").asInstanceOf[String])
+      model.set(model.predictionCol, params("predictionCol").asInstanceOf[String])
+
+      // Set optional parameters if present
+      val distanceCol = params("distanceCol").asInstanceOf[String]
+      if (distanceCol.nonEmpty) {
+        model.set(model.distanceCol, distanceCol)
+      }
+
+      val weightCol = params("weightCol").asInstanceOf[String]
+      if (weightCol.nonEmpty) {
+        model.set(model.weightCol, weightCol)
+      }
+
+      val checkpointDir = params("checkpointDir").asInstanceOf[String]
+      if (checkpointDir.nonEmpty) {
+        model.set(model.checkpointDir, checkpointDir)
+      }
+
+      logInfo(s"Successfully loaded GeneralizedKMeansModel from $path")
 
       model
     }
