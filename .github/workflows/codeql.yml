@@ -1,22 +1,62 @@
 name: CodeQL
 
 on:
-  push: { branches: [ master, main ] }
-  pull_request: { branches: [ master, main ] }
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+env:
+  JAVA_VERSION: "17"
+  SCALA_VERSION: "2.13.14"
+  SPARK_VERSION: "3.5.1"
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: sbt/setup-sbt@v1
+
+      # Cache speeds up dependency resolution so CodeQL has more time to analyze.
+      - name: Cache Ivy / Coursier / SBT
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.cache/coursier
+          key: ${{ runner.os }}-codeql-${{ hashFiles('**/*.sbt', 'project/**') }}
+          restore-keys: |
+            ${{ runner.os }}-codeql-
+
+      # Initialize CodeQL for the JVM extractor (covers Java/Kotlin/Scala bytecode)
       - uses: github/codeql-action/init@v3
         with:
-          languages: scala
+          languages: java
+          queries: security-and-quality
+
+      # MANUAL BUILD: compile Scala so the extractor can see .class files
+      - name: Compile (Scala -> JVM bytecode)
+        run: |
+          sbt ++${{ env.SCALA_VERSION }} -Dspark.version=${{ env.SPARK_VERSION }} \
+              clean compile Test/compile
+
+      # Run the analysis after classes exist
       - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java"
