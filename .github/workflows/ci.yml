@@ -26,7 +26,7 @@ jobs:
     name: Lint & Style Check
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -42,7 +42,7 @@ jobs:
     name: Build JARs (2.12 & 2.13)
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -73,7 +73,7 @@ jobs:
     name: Test Scala ${{ matrix.scala }} / Spark ${{ matrix.spark }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -89,7 +89,7 @@ jobs:
     name: Run Examples
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -118,7 +118,7 @@ jobs:
     name: Cross-version Persistence
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -150,7 +150,7 @@ jobs:
     name: Performance Sanity Check
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -184,7 +184,7 @@ jobs:
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
         with:
           python-version: '3.9'
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
@@ -212,7 +212,7 @@ jobs:
     name: Coverage Report
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165  # v5.0.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
