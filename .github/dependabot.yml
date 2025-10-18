@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+
+  # Note: Dependabot doesn't natively support sbt/Scala
+  # Consider using scala-steward for Scala dependency updates
+  # https://github.com/scala-steward-org/scala-steward

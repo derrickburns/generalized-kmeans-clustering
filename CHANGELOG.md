@@ -5,136 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0] - 2025-10-15
+## [Unreleased]
 
 ### Added
-
-#### DataFrame API Algorithms
-- **Bisecting K-Means**: Hierarchical divisive clustering with tree structure
-  - Supports all Bregman divergences
-  - `minDivisibleClusterSize` parameter for controlling splits
-  - 10/10 tests passing, 178 lines of examples
-
-- **X-Means**: Automatic k selection using statistical criteria
-  - BIC and AIC information criteria
-  - `minK` and `maxK` parameters for search range
-  - 12/12 tests passing, 210 lines of examples
-
-- **Soft K-Means**: Fuzzy clustering with probabilistic memberships
-  - Boltzmann distribution for soft assignments
-  - `beta` parameter for controlling assignment sharpness
-  - `effectiveNumberOfClusters()` metric (entropy-based)
-  - Hard and soft cost computation
-  - 15/15 tests passing
-
-- **Streaming K-Means**: Real-time clustering with concept drift handling
-  - Exponential forgetting with decay factor (0.0 to 1.0)
-  - Time unit options: batches or points
-  - Half-life parameter for intuitive decay specification
-  - Automatic dying cluster handling (splits largest cluster)
-  - Structured Streaming integration via foreachBatch API
-  - 16/16 tests passing, 470 lines of examples
-
-- **K-Medoids (PAM)**: Robust clustering using actual data points as medoids
-  - BUILD phase: Greedy medoid selection
-  - SWAP phase: Iterative improvement
-  - Multiple distance functions: Euclidean, Manhattan, Cosine
-  - More robust to outliers than K-Means
-  - 16/16 PAM tests passing
-
-- **CLARA**: Sampling-based K-Medoids for large datasets
-  - 10-100x faster than PAM on large datasets (>10,000 points)
-  - Auto sample sizing: 40 + 2*k (from original CLARA paper)
-  - Configurable `numSamples` and `sampleSize` parameters
-  - 10/10 CLARA tests passing
-  - 306 lines of comprehensive examples
-
-#### Core Features
-- **K-Medians**: L1/Manhattan distance for robust clustering
-  - Implemented via `L1Kernel` and `MedianUpdateStrategy`
-  - Component-wise weighted median computation
-  - 6/6 tests passing
-
-- **PySpark Wrapper**: Python integration for DataFrame API
-  - `GeneralizedKMeans` exposed via PySpark
-  - Smoke test for CI workflow
-  - Package structure with setup.py
-
-#### Documentation
-- **DATAFRAME_API_EXAMPLES.md**: 2,013 lines of comprehensive examples
-  - Basic usage for all divergences
-  - Advanced variants with detailed examples
-  - Performance tuning guidelines
-  - When to use each algorithm
-
-- **ARCHITECTURE.md**: Deep dive into design patterns
-- **MIGRATION_GUIDE.md**: RDD → DataFrame migration path
-- **PERFORMANCE_TUNING.md**: Optimization tips and best practices
-- **ACTION_ITEMS.md**: Comprehensive project tracking
-
-### Changed
-
-#### Scala Migration
-- **Primary Scala version**: 2.13.14 (was 2.12.18)
-- **Cross-compilation**: Maintained Scala 2.12.18 support
-- Fixed all Scala 2.13 compatibility issues
-- Resolved scaladoc generation (compiler bug workaround)
-- Added parallel collections dependency
-
-#### Build & CI
-- Updated CI/CD workflows for Scala 2.13
-- Re-enabled scaladoc generation
-- Enhanced test coverage across all algorithms
-
-#### Documentation
-- Updated README.md with feature matrix table
-- Added "What's New in 0.6.0" section
-- Comprehensive feature comparison
+- Comprehensive CI validation DAG with cross-version testing
+- Production quality blockers documented in ACTION_ITEMS.md
+- SECURITY.md with vulnerability reporting guidelines
+- CONTRIBUTING.md with development guidelines
+- Test suite fixes for Scala 2.12/2.13 compatibility
 
 ### Fixed
-- Resolved Spark configuration issues in tests
-- Eliminated test warnings for clean output
-- Fixed deprecation warnings for implicit Long → Double widening in XMeans
-- Fixed BisectingKMeansSuite compilation issues (stable identifier for implicits)
+- Package name conflicts in StreamingKMeans and XMeans test suites
+- Scala 2.12 compatibility issues with `isFinite` method
+- Spark 3.4 compatibility issues with `model.summary` API
+- CollectionConverters imports for cross-version support
 
-### Performance
-- All algorithms tested with comprehensive suites
-- 95+ total tests passing across all variants
-- Proven scalability on datasets with millions of points
+## [0.6.0] - 2025-10-18
 
-### Breaking Changes
-None - Version 0.6.0 maintains full backward compatibility with existing APIs.
+### Added
+- **New Algorithms**:
+  - Bisecting K-Means with DataFrame API (10/10 tests passing)
+  - X-Means for automatic cluster count selection (BIC/AIC, 12/12 tests)
+  - Soft K-Means for probabilistic assignments (15/15 tests)
+  - Streaming K-Means for online learning (16/16 tests)
+  - K-Medoids clustering (PAM/CLARA, 26/26 tests)
+  - K-Medians (L1/Manhattan distance)
 
----
+- **Core Abstractions**:
+  - Feature Transform system
+  - CenterStore for persistence
+  - AssignmentPlan for strategy selection
+  - KernelOps for type-safe operations
+  - ReseedPolicy for empty cluster handling
+  - SummarySink for telemetry
+  - Typed error handling with GKMError
 
-## [0.5.x] - Previous Versions
+- **Cross-Version Support**:
+  - Scala 2.12.18 and 2.13.14 support
+  - Spark 3.4.x and 3.5.x compatibility
+  - Cross-version test matrix in CI
 
-See git history for changes in versions prior to 0.6.0.
+- **CI/CD**:
+  - GitHub Actions workflows
+  - Comprehensive test matrix (Scala 2.12/2.13 × Spark 3.4.x/3.5.x)
+  - Example execution validation
+  - Cross-version persistence tests
+  - Performance sanity checks
+  - Python smoke tests
+  - Scalastyle linting
 
----
+- **Testing**:
+  - 290/290 tests passing
+  - Property-based tests
+  - Edge case coverage
+  - Performance regression tests
 
-## Future Releases
+### Changed
+- Migrated from Scala 2.11 to 2.12/2.13
+- Updated from Spark 1.x to 3.4.x/3.5.x
+- Modernized build system
+- Improved parallel collections compatibility
 
-### Planned for 0.7.0 (Q1 2026)
-- Performance benchmarking suite
-- Enhanced property-based testing
-- Integration test suite
-- Documentation improvements
+### Fixed
+- KMeans++ weighted selection correctness
+- K-means|| initialization issues
+- Numerical stability improvements
+- Memory efficiency optimizations
 
-### Planned for 0.8.0 (Q2 2026)
-- Elkan's triangle inequality acceleration (3-5x speedup)
-- Performance regression tests
-- Memory profiling
+### Security
+- Updated all dependencies to latest secure versions
+- Removed Travis CI configuration
 
-### Planned for 1.0.0 (Q3 2026)
-- Production-ready stability
-- API stabilization
-- Breaking changes cleanup
+## [0.5.x] - Historical
 
----
+Earlier versions (0.1.0 - 0.5.x) were developed between 2014-2020 with:
+- Initial Bregman K-Means implementation
+- Support for multiple divergences (Euclidean, KL, Itakura-Saito, etc.)
+- RDD-based API
+- Spark 1.x compatibility
+- Basic testing infrastructure
 
-## Links
-- [GitHub Repository](https://github.com/derrickburns/generalized-kmeans-clustering)
-- [DataFrame API Examples](DATAFRAME_API_EXAMPLES.md)
-- [Architecture Guide](ARCHITECTURE.md)
-- [Migration Guide](MIGRATION_GUIDE.md)
+[Unreleased]: https://github.com/derrickburns/generalized-kmeans-clustering/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/derrickburns/generalized-kmeans-clustering/releases/tag/v0.6.0

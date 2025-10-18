@@ -1,215 +1,158 @@
 # Contributing to Generalized K-Means Clustering
 
-Thank you for your interest in contributing to this project! This document provides guidelines for contributing to the generalized K-means clustering library.
+Thank you for your interest in contributing! This document provides guidelines for contributing to this project.
 
-## Development Environment Setup
+## Table of Contents
 
-### Prerequisites
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Environment](#development-environment)
+- [Making Changes](#making-changes)
+- [Testing](#testing)
+- [Code Style](#code-style)
+- [Submitting Changes](#submitting-changes)
 
-- **Java 17** or higher
-- **SBT 1.x** (Scala Build Tool)
-- **Scala 2.12.18** (managed by SBT)
-- **Apache Spark 3.4.0** (managed by SBT)
+## Code of Conduct
 
-### Getting Started
+This project adheres to a code of conduct adapted from the [Contributor Covenant](https://www.contributor-covenant.org/).
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/derrickburns/generalized-kmeans-clustering.git
+### Our Standards
+
+- **Be respectful**: Value each other's ideas, styles, and viewpoints
+- **Be constructive**: Provide helpful feedback and be open to receiving it
+- **Be collaborative**: Work together toward the best outcome for the project
+- **Be inclusive**: Welcome newcomers and help them get oriented
+
+## Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork**:
+   \`\`\`bash
+   git clone https://github.com/YOUR-USERNAME/generalized-kmeans-clustering.git
    cd generalized-kmeans-clustering
-   ```
+   \`\`\`
+3. **Add upstream remote**:
+   \`\`\`bash
+   git remote add upstream https://github.com/derrickburns/generalized-kmeans-clustering.git
+   \`\`\`
+4. **Create a branch**:
+   \`\`\`bash
+   git checkout -b feature/your-feature-name
+   \`\`\`
 
-2. **Compile the project:**
-   ```bash
-   sbt compile
-   ```
+## Development Environment
 
-3. **Run tests:**
-   ```bash
-   sbt test
-   ```
+### Requirements
 
-4. **Check code style:**
-   ```bash
-   sbt scalastyle
-   ```
+- **Java**: JDK 17
+- **Scala**: 2.12.18 or 2.13.14 (managed by sbt)
+- **SBT**: 1.9.x or later
+- **Spark**: 3.4.0+ or 3.5.1+ (managed by sbt)
 
-## Code Style Guidelines
+### Setup
 
-### Scala Style
+\`\`\`bash
+# Compile
+sbt compile
 
-- Follow standard Scala naming conventions
-- Use 2-space indentation
-- Line length should not exceed 120 characters
-- Use meaningful variable and function names
-- Add scaladoc documentation for all public APIs
+# Run tests
+sbt test
 
-### Code Quality
+# Run style checks
+sbt scalastyle
+\`\`\`
 
-- **Linting:** Run `sbt scalastyle` before submitting
-- **Testing:** Ensure all tests pass with `sbt test`
-- **Coverage:** Maintain or improve test coverage
-- **Dependencies:** Check for dependency updates with `sbt dependencyUpdates`
+## Making Changes
 
-### Error Handling
+### Branch Naming
 
-- Use `ValidationUtils` for common validation patterns
-- Provide meaningful error messages with context
-- Handle edge cases gracefully
-- Use SLF4J logging instead of print statements
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation
+- `refactor/` - Refactoring
+- `test/` - Tests
 
-## Project Structure
+### Commit Messages
 
-```
-src/
-├── main/scala/com/massivedatascience/
-│   ├── clusterer/          # Core clustering algorithms
-│   ├── divergence/         # Bregman divergence implementations  
-│   ├── linalg/            # Linear algebra utilities
-│   ├── transforms/        # Data transformation utilities
-│   └── util/              # Common utilities and validation
-└── test/scala/com/massivedatascience/
-    └── clusterer/         # Test suites
-```
+Follow conventional commits:
 
-## Architecture Overview
+\`\`\`
+<type>(<scope>): <subject>
+\`\`\`
 
-### Core Components
-
-- **BregmanDivergence**: Defines distance functions for clustering
-- **BregmanPointOps**: Point operations and factory methods
-- **KMeansModel**: Trained model with prediction capabilities
-- **MultiKMeansClusterer**: Interface for different clustering implementations
-
-### Key Design Patterns
-
-- **Weighted Vectors**: All operations use `WeightedVector` for weighted clustering
-- **Pluggable Distance Functions**: Easy addition of new Bregman divergences
-- **Iterative Training**: Multi-stage training support
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`
 
 ## Testing
 
-### Test Requirements
-
-- All new features must include comprehensive tests
-- Tests should cover edge cases and error conditions
-- Use ScalaTest framework with the existing `LocalClusterSparkContext` trait
-- Test files should be in `src/test/scala/com/massivedatascience/clusterer/`
-
-### Running Tests
-
-```bash
+\`\`\`bash
 # Run all tests
 sbt test
 
-# Run specific test suite
+# Run specific suite
 sbt "testOnly *KMeansSuite"
 
-# Run with coverage
-sbt coverage test coverageReport
-```
+# Run for specific Scala version
+sbt ++2.13.14 test
 
-## Pull Request Process
+# With coverage
+sbt clean coverage test coverageReport
+\`\`\`
+
+### Test Requirements
+
+- Aim for >95% coverage
+- Test happy paths and edge cases
+- Include performance regression tests for critical paths
+
+## Code Style
+
+### Scalastyle
+
+\`\`\`bash
+sbt scalastyle
+sbt test:scalastyle
+\`\`\`
+
+### Guidelines
+
+- **Indentation**: 2 spaces
+- **Line length**: Max 120 characters
+- **Naming**: PascalCase for classes, camelCase for methods/vars
+- **Documentation**: All public APIs must have Scaladoc
 
 ### Before Submitting
 
-1. **Ensure all tests pass:**
-   ```bash
-   sbt test
-   ```
+- [ ] Code compiles without warnings
+- [ ] All tests pass
+- [ ] Scalastyle passes
+- [ ] Public APIs have Scaladoc
+- [ ] Commit messages follow conventions
 
-2. **Check code style:**
-   ```bash
-   sbt scalastyle
-   ```
+## Submitting Changes
 
-3. **Update documentation** if you've made API changes
+1. **Update branch**:
+   \`\`\`bash
+   git fetch upstream
+   git rebase upstream/master
+   \`\`\`
 
-4. **Add tests** for new functionality
+2. **Push**:
+   \`\`\`bash
+   git push origin feature/your-feature-name
+   \`\`\`
 
-### Pull Request Guidelines
+3. **Create Pull Request**:
+   - Descriptive title
+   - Reference issues (`Closes #123`)
+   - Describe changes
+   - Fill out PR template
 
-- **Title**: Use descriptive titles (e.g., "Add validation for negative weights in BregmanPointOps")
-- **Description**: Clearly explain what changes you made and why
-- **Testing**: Describe how you tested your changes
-- **Breaking Changes**: Clearly mark any breaking changes
-
-### Commit Message Format
-
-Use conventional commit messages:
-
-```
-type(scope): brief description
-
-Longer description if needed
-
-- List specific changes
-- Include reasoning for complex changes
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `perf`: Performance improvements
-
-## Common Development Tasks
-
-### Adding a New Bregman Divergence
-
-1. Create a new trait or object extending `BregmanDivergence`
-2. Implement required methods: `convex`, `convexHomogeneous`, `gradientOfConvex`, `gradientOfConvexHomogeneous`
-3. Use `ValidationUtils` for input validation
-4. Add comprehensive tests in the test suite
-5. Update documentation
-
-### Improving Performance
-
-1. Profile your changes using appropriate tools
-2. Add benchmarks if introducing performance-critical code
-3. Consider memory usage and garbage collection impact
-4. Test with realistic data sizes
-
-### Adding Configuration Options
-
-1. Add new options to `KMeansConfig` if applicable
-2. Ensure backward compatibility
-3. Add validation for new configuration values
-4. Document the new options
-
-## Code Review Criteria
-
-### Code Quality
-- [ ] Code follows project style guidelines
-- [ ] Error handling is appropriate and consistent
-- [ ] No code duplication
-- [ ] Performance considerations addressed
-
-### Testing
-- [ ] Adequate test coverage
-- [ ] Tests cover edge cases
-- [ ] Tests are maintainable and readable
-
-### Documentation
-- [ ] Public APIs are documented
-- [ ] Complex algorithms are explained
-- [ ] Breaking changes are clearly marked
+4. **Respond to feedback** and iterate
 
 ## Getting Help
 
-- **Issues**: Check existing [GitHub issues](https://github.com/derrickburns/generalized-kmeans-clustering/issues)
-- **Discussions**: Start a discussion for questions about implementation
-- **Code Review**: Request review from maintainers
+- **Questions**: [Discussions](https://github.com/derrickburns/generalized-kmeans-clustering/discussions)
+- **Bugs**: [Issues](https://github.com/derrickburns/generalized-kmeans-clustering/issues)
+- **Docs**: Check [README](README.md)
 
-## License
-
-By contributing to this project, you agree that your contributions will be licensed under the Apache License 2.0.
-
-## Recognition
-
-Contributors will be acknowledged in release notes and the project README.
-
-Thank you for contributing to the generalized K-means clustering library!
+Thank you for contributing! 🎉
