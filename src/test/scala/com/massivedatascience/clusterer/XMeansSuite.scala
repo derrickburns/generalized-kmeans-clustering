@@ -1,4 +1,4 @@
-package com.massivedatascience.clusterer
+package com.massivedatascience.clusterer.ml.tests
 
 import com.massivedatascience.clusterer.ml.{XMeans, GeneralizedKMeans}
 import org.apache.spark.ml.linalg.Vectors

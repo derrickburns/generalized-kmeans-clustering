@@ -1,4 +1,4 @@
-package com.massivedatascience.clusterer
+package com.massivedatascience.clusterer.ml.tests
 
 import com.massivedatascience.clusterer.ml.{StreamingKMeans, StreamingKMeansModel}
 import org.apache.spark.ml.linalg.Vectors
