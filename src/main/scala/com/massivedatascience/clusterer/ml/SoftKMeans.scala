@@ -595,66 +595,118 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
 
   override def load(path: String): SoftKMeansModel = super.load(path)
 
-  private class SoftKMeansModelWriter(instance: SoftKMeansModel) extends MLWriter {
+  private class SoftKMeansModelWriter(instance: SoftKMeansModel) extends MLWriter with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.Serialization
 
     override protected def saveImpl(path: String): Unit = {
       val spark = sparkSession
-      import spark.implicits._
 
-      // Save cluster centers as Parquet
-      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
-      val centersDF = spark.createDataFrame(
-        instance.clusterCenters.zipWithIndex.toIndexedSeq.map { case (center, idx) =>
-          (idx, center)
-        }
-      ).toDF("clusterId", "center")
-      centersDF.write.mode("overwrite").parquet(centersPath)
+      logInfo(s"Saving SoftKMeansModel to $path")
 
-      // Save metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val divergence = instance.modelDivergence
-      val smoothing = instance.modelSmoothing
+      // Prepare centers data: (center_id, weight, vector)
+      // For Soft K-Means, all centers have uniform weight (1.0)
+      val centersData = instance.clusterCenters.indices.map { i =>
+        val weight = 1.0
+        val vector = instance.clusterCenters(i)
+        (i, weight, vector)
+      }
 
-      val metadataDF = Seq(
-        (
-          instance.uid,
-          instance.betaValue,
-          instance.minMembershipValue,
-          divergence,
-          smoothing,
-          instance.getFeaturesCol,
-          instance.getPredictionCol,
-          instance.getProbabilityCol
+      // Write centers with deterministic ordering
+      val centersHash = writeCenters(spark, path, centersData)
+      logInfo(s"Centers saved with SHA-256: $centersHash")
+
+      // Collect all model parameters
+      val params = Map(
+        "k" -> instance.numClusters,
+        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol" -> instance.getOrDefault(instance.predictionCol),
+        "probabilityCol" -> instance.getOrDefault(instance.probabilityCol),
+        "beta" -> instance.betaValue,
+        "minMembership" -> instance.minMembershipValue,
+        "divergence" -> instance.modelDivergence,
+        "smoothing" -> instance.modelSmoothing
+      )
+
+      val k = instance.numClusters
+      val dim = instance.clusterCenters.headOption.map(_.size).getOrElse(0)
+
+      // Build metadata object
+      implicit val formats = DefaultFormats
+      val metaObj = Map(
+        "layoutVersion" -> LayoutVersion,
+        "algo" -> "SoftKMeansModel",
+        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+        "scalaBinaryVersion" -> getScalaBinaryVersion,
+        "divergence" -> instance.modelDivergence,
+        "k" -> k,
+        "dim" -> dim,
+        "uid" -> instance.uid,
+        "params" -> params,
+        "centers" -> Map(
+          "count" -> k,
+          "ordering" -> "center_id ASC (0..k-1)",
+          "storage" -> "parquet"
+        ),
+        "checksums" -> Map(
+          "centersParquetSHA256" -> centersHash
         )
-      ).toDF("uid", "beta", "minMembership", "divergence", "smoothing", "featuresCol", "predictionCol", "probabilityCol")
-      metadataDF.write.mode("overwrite").parquet(metadataPath)
+      )
+
+      // Serialize to JSON
+      val json = Serialization.write(metaObj)(formats)
+
+      // Write metadata
+      val metadataHash = writeMetadata(path, json)
+      logInfo(s"Metadata saved with SHA-256: $metadataHash")
+      logInfo(s"SoftKMeansModel successfully saved to $path")
     }
   }
 
-  private class SoftKMeansModelReader extends MLReader[SoftKMeansModel] {
+  private class SoftKMeansModelReader extends MLReader[SoftKMeansModel] with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.JsonMethods
 
     override def load(path: String): SoftKMeansModel = {
       val spark = sparkSession
 
-      // Load centers
-      val centersPath = new org.apache.hadoop.fs.Path(path, "centers").toString
-      val centersDF = spark.read.parquet(centersPath)
-      val centers = centersDF
-        .select("clusterId", "center")
-        .collect()
-        .sortBy(_.getInt(0))
-        .map(row => row.getAs[Vector](1))
+      logInfo(s"Loading SoftKMeansModel from $path")
 
-      // Load metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val metadataDF = spark.read.parquet(metadataPath)
-      val metadata = metadataDF.head()
+      // Read metadata
+      val metaStr = readMetadata(path)
+      implicit val formats = DefaultFormats
+      val metaJ = JsonMethods.parse(metaStr)
 
-      val uid = metadata.getAs[String]("uid")
-      val beta = metadata.getAs[Double]("beta")
-      val minMembership = metadata.getAs[Double]("minMembership")
-      val divergence = metadata.getAs[String]("divergence")
-      val smoothing = metadata.getAs[Double]("smoothing")
+      // Extract and validate layout version
+      val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
+      val k = (metaJ \ "k").extract[Int]
+      val dim = (metaJ \ "dim").extract[Int]
+      val uid = (metaJ \ "uid").extract[String]
+      val divergence = (metaJ \ "divergence").extract[String]
+
+      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, divergence=$divergence")
+
+      // Read centers
+      val centersDF = readCenters(spark, path)
+      val rows = centersDF.collect()
+
+      // Validate metadata
+      validateMetadata(layoutVersion, k, dim, rows.length)
+
+      // Extract centers (sorted by center_id)
+      val centers = rows.sortBy(_.getInt(0)).map { row =>
+        row.getAs[Vector]("vector")
+      }
+
+      // Extract parameters
+      val paramsJ = metaJ \ "params"
+      val beta = (paramsJ \ "beta").extract[Double]
+      val minMembership = (paramsJ \ "minMembership").extract[Double]
+      val smoothing = (paramsJ \ "smoothing").extract[Double]
 
       // Create kernel
       import com.massivedatascience.clusterer.ml.df._
@@ -668,12 +720,17 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
         case _                  => new SquaredEuclideanKernel()
       }
 
+      // Reconstruct model
       val model = new SoftKMeansModel(uid, centers, beta, minMembership, kernel)
       model.modelDivergence = divergence
       model.modelSmoothing = smoothing
-      model.set(model.featuresCol, metadata.getAs[String]("featuresCol"))
-      model.set(model.predictionCol, metadata.getAs[String]("predictionCol"))
-      model.set(model.probabilityCol, metadata.getAs[String]("probabilityCol"))
+
+      // Set parameters
+      model.set(model.featuresCol, (paramsJ \ "featuresCol").extract[String])
+      model.set(model.predictionCol, (paramsJ \ "predictionCol").extract[String])
+      model.set(model.probabilityCol, (paramsJ \ "probabilityCol").extract[String])
+
+      logInfo(s"SoftKMeansModel successfully loaded from $path")
       model
     }
   }

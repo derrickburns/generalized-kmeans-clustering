@@ -1,1013 +1,899 @@
-Action Items - Generalized K-Means Clustering
+# Action Items - Generalized K-Means Clustering
 
-Last Updated: 2025-10-18
-Status: CI Validation DAG Complete, Focus on Production & Educational Quality
+**Last Updated:** 2025-10-18
+**Status:** Core infrastructure complete, Production quality gaps identified
 
-⸻
+This document consolidates strategic production gaps with tactical implementation tasks, providing a unified roadmap from "research prototype" to "production-ready tool with maximum educational value."
 
-🎯 CRITICAL PATH TO PRODUCTION QUALITY
+---
 
-The following items are prioritized to transform this library from a research prototype into a production-ready tool with maximum educational value. Items are ordered by impact and dependencies.
+## 🎯 CRITICAL PATH TO PRODUCTION QUALITY
 
-⸻
+Items are prioritized by impact, dependencies, and effort. **All P0 blockers must be resolved before v1.0 release.**
 
-## PRODUCTION BLOCKERS (Must Fix Before 1.0)
+---
 
-The following items are **critical blockers** for production deployment. They address fundamental reliability, correctness, and scalability issues identified in production quality evaluation.
+## ✅ RECENTLY COMPLETED (October 2025)
 
-### A) Persistence, Compatibility, and Provenance (BLOCKER)
-**Priority: P0 - Critical for production use**
+### Persistence Infrastructure (Oct 18, 2025)
+- ✅ **PersistenceLayoutV1** - Versioned, deterministic format
+  - Commits: 9a8334f, c08d0c1
+  - SHA-256 checksums for integrity
+  - Deterministic center ordering (center_id: 0..k-1)
+  - Engine-neutral JSON + Parquet (no Scala pickling)
+  - Cross-version compatible: Spark 3.4↔3.5, Scala 2.12↔2.13
+- ✅ **GeneralizedKMeansModel** - Full MLWritable/MLReadable
+  - Saves all 15+ parameters
+  - Preserves divergence, kernel, transforms, epsilon
+  - Validates layout version on load
+- ✅ **PersistenceSuite** - 5 comprehensive tests
+- ✅ **PERSISTENCE_COMPATIBILITY.md** - Complete contract documentation
+- ✅ **PERSISTENCE_IMPLEMENTATION_STATUS.md** - Implementation tracker
 
-**Current Gaps:**
-- No versioned persistence schema guaranteed across Spark {3.4, 3.5} and Scala {2.12, 2.13}
-- Centers/params/transform metadata not fully captured (inputTransform, shiftValue, kernel/divergence identifiers, broadcast thresholds, seeds)
-- No CI job validating cross-version persistence for all algorithms
+### CI Validation DAG (Oct 18, 2025)
+- ✅ Comprehensive test matrix: Scala {2.12, 2.13} × Spark {3.4.x, 3.5.x} (290/290 tests passing)
+- ✅ Examples runner (4 algorithms validated)
+- ✅ Performance sanity checks (30s budget)
+- ✅ Python smoke test
+- ✅ Scalastyle linting
+- ✅ Fixed Java 17 compatibility issues (module opens for Kryo serialization)
+- ✅ Fixed checkpoint directory setup for property tests
 
-**Required Fixes:**
-- Introduce `layoutVersion` and uniform metadata schema:
-  - `algo`, `divergence`, `k`, `dim`, `params` (including transform settings)
-  - `trainSummary` (per-iteration cost, reseeds, elapsed time)
-  - Centers stored as Parquet/VectorUDT with deterministic order (CenterStore)
-- Add CI job: `persistence-cross` running for all algorithms (Generalized, Bisecting, X-Means, Soft, Streaming, K-Medoids)
-  - Save on Spark 3.4, load on 3.5 (and reverse)
-  - Save on Scala 2.12, load on 2.13 (and reverse)
-- Add checksum of sorted centers & params to detect silent drift
-- Create schema diff tool to report incompatible changes
+### Algorithm Implementations (Oct 2025)
+- ✅ Core Abstractions: FeatureTransform, CenterStore, AssignmentPlan, KernelOps, ReseedPolicy
+- ✅ K-Medians (L1/Manhattan distance)
+- ✅ Bisecting K-Means (10/10 tests)
+- ✅ X-Means with BIC/AIC (12/12 tests)
+- ✅ Soft K-Means (15/15 tests)
+- ✅ Streaming K-Means (16/16 tests)
+- ✅ K-Medoids PAM/CLARA (26/26 tests)
+
+### Scala 2.13 Migration (Oct 2025)
+- ✅ Migrate to Scala 2.13.14 as primary
+- ✅ Cross-compile with Scala 2.12.18
+- ✅ Fix parallel collections dependency
+- ✅ Re-enable scaladoc generation
+
+---
+
+## 🔴 PRODUCTION BLOCKERS (P0 - Must Fix Before v1.0)
+
+### A) Persistence Contract - Complete Rollout 🚧
+
+**Status:** Core ✅ Done, Extensions ⏳ Pending
+**Priority:** P0 - Critical
+**Effort:** 10-15 hours
+
+**What's Complete:**
+- ✅ PersistenceLayoutV1 infrastructure
+- ✅ GeneralizedKMeansModel persistence
+- ✅ Comprehensive documentation (PERSISTENCE_COMPATIBILITY.md)
+- ✅ Test suite with 5 roundtrip tests
+
+**What Remains:**
+1. **Extend to all models** (2-3 hours each):
+   - [ ] BisectingGeneralizedKMeansModel
+   - [ ] XMeansModel
+   - [ ] SoftGeneralizedKMeansModel
+   - [ ] StreamingGeneralizedKMeansModel
+   - [ ] KMedoidsModel
+
+2. **Create executable roundtrip examples** (30 min each):
+   ```scala
+   // src/main/scala/examples/PersistenceRoundTrip_gkm.scala
+   object PersistenceRoundTrip_gkm {
+     def main(args: Array[String]): Unit = {
+       val mode = args(0) // "save" or "load"
+       val path = args(1)
+       // ... fit, save/load, assert
+     }
+   }
+   ```
+
+3. **Add cross-version CI job**:
+   ```yaml
+   # .github/workflows/persistence-cross.yml
+   persistence-cross:
+     strategy:
+       matrix:
+         algo: [gkm, xmeans, soft, bisecting, kmedoids]
+     steps:
+       - name: Save with Spark 3.4.0 / Scala 2.12
+       - name: Load with Spark 3.5.1 / Scala 2.13
+       - name: Save with Spark 3.5.1 / Scala 2.13
+       - name: Load with Spark 3.4.0 / Scala 2.12
+   ```
 
 **Acceptance Criteria:**
-- Cross-version round trip passes for all algorithms
-- Schema diff tool reports no incompatible changes for minor releases
-- Full metadata roundtrips (transforms, divergences, seeds, etc.)
+- [ ] All 5 remaining models have persistence
+- [ ] Cross-version CI job passes for all algorithms
+- [ ] Checksums validate on load
+- [ ] Epsilon/transform settings roundtrip correctly
 
+---
+
+### B) Assignment Scalability for Non-SE Divergences ⏳
+
+**Status:** Needs implementation
+**Priority:** P0 - Critical for large-scale
+**Effort:** 8-10 hours
+
+**Current Gap:**
+- General Bregman path uses broadcast UDF
+- Fails when k × dim exceeds memory (e.g., k=1000, dim=10000)
+
+**Fix Plan:**
+
+1. **Implement chunked-centers evaluator** (6 hours):
+   ```scala
+   // src/main/scala/com/massivedatascience/clusterer/ml/df/ChunkedAssignment.scala
+   object ChunkedAssignment {
+     def assignToNearest(
+       df: DataFrame,
+       centers: Array[Array[Double]],
+       kernel: BregmanKernel,
+       chunkSize: Int = 100
+     ): DataFrame = {
+       // Split centers into chunks
+       val chunks = centers.grouped(chunkSize).zipWithIndex
+
+       // For each chunk: broadcast small subset, compute local min
+       // Reduce: find global min across chunks
+       // Multiple scans but avoids OOM
+     }
+   }
+   ```
+
+2. **Add auto-guardrails** (2 hours):
+   ```scala
+   // In GeneralizedKMeans.fit()
+   val kTimesDim = k * dim
+   val threshold = $(broadcastThresholdElems) // Default: 200K
+
+   if (divergence != "squaredEuclidean" && kTimesDim > threshold) {
+     logWarning(s"k×dim=$kTimesDim exceeds threshold, using chunked assignment")
+     strategy = "chunked"
+   }
+   ```
+
+3. **Document feasibility guidance** (2 hours):
+   ```markdown
+   ### Scalability: k × dim Feasibility
+
+   | Divergence | Strategy | Max k×dim | Memory Impact |
+   |------------|----------|-----------|---------------|
+   | SE | crossJoin | ~1M | No broadcast |
+   | Non-SE | broadcastUDF | ~200K | ~1.5MB per executor |
+   | Non-SE | chunked | ~10M | Multiple scans, no broadcast |
+   ```
+
+**Acceptance Criteria:**
+- [ ] ChunkedAssignment implementation
+- [ ] Auto-switching at threshold
+- [ ] Strategy logged: `strategy=SE-crossJoin|nonSE-chunked|nonSE-broadcast`
+- [ ] Large synthetic test (k=500, dim=1000, KL) completes without OOM
+- [ ] Documentation includes memory planning guide
+
+---
+
+### C) Determinism & Numeric Hygiene ⏳
+
+**Status:** Needs property tests and guards
+**Priority:** P0 - Critical for reproducibility
+**Effort:** 6-8 hours
+
+**Gaps:**
+- No property tests proving fixed-seed → identical centers
+- Epsilon (smoothing/shiftValue) documented but needs validation emphasis
+- NaN/Inf propagation possible with zero weights or KL/IS edge cases
+
+**Fix Plan:**
+
+1. **Add determinism property tests** (3 hours):
+   ```scala
+   // Add to PropertyBasedTestSuite
+   test("Property: same seed produces identical centers") {
+     forAll(dimGen, kGen, numPointsGen) { (dim, k, n) =>
+       val data = generateData(n, dim, seed = 42)
+
+       val model1 = new GeneralizedKMeans()
+         .setK(k).setDivergence("squaredEuclidean")
+         .setSeed(1234).fit(data)
+
+       val model2 = new GeneralizedKMeans()
+         .setK(k).setDivergence("squaredEuclidean")
+         .setSeed(1234).fit(data)
+
+       // Centers should be identical within epsilon
+       model1.clusterCenters.zip(model2.clusterCenters).foreach {
+         case (c1, c2) =>
+           c1.zip(c2).foreach { case (x1, x2) =>
+             math.abs(x1 - x2) should be < 1e-10
+           }
+       }
+     }
+   }
+
+   // Repeat for: Bisecting, XMeans, Soft, Streaming
+   ```
+
+2. **Add NaN/Inf guards** (4-5 hours):
+   ```scala
+   // src/main/scala/com/massivedatascience/clusterer/ml/df/NumericGuards.scala
+   sealed trait GKMError extends Exception
+   case class GKMNumericException(msg: String, cause: Throwable = null)
+     extends Exception(msg, cause) with GKMError
+   case class GKMDomainException(msg: String, cause: Throwable = null)
+     extends Exception(msg, cause) with GKMError
+
+   object NumericGuards {
+     def checkFinite(v: Vector, context: String): Unit = {
+       if (v.toArray.exists(x => x.isNaN || x.isInfinite)) {
+         throw GKMNumericException(
+           s"$context: Vector contains NaN or Inf: ${v.toArray.take(10).mkString(",")}"
+         )
+       }
+     }
+
+     def checkPositive(v: Vector, context: String, epsilon: Double): Unit = {
+       if (v.toArray.exists(_ < -epsilon)) {
+         throw GKMDomainException(
+           s"$context: KL/IS require positivity. Use smoothing parameter or transforms."
+         )
+       }
+     }
+   }
+   ```
+
+3. **Enhance smoothing/epsilon docs** (1 hour):
+   ```scala
+   /**
+     * Epsilon shift for domain constraints.
+     *
+     * Required for divergences with domain restrictions:
+     * - **KL divergence**: Requires P > 0, Q > 0. Default: 1e-10
+     * - **Itakura-Saito**: Requires P > 0, Q > 0. Default: 1e-10
+     * - **Logistic loss**: Requires P ∈ (0,1). Default: 1e-10
+     *
+     * This value is persisted with the model and applied to both
+     * input data and cluster centers.
+     *
+     * @group param
+     */
+   final val smoothing = ...
+   ```
+
+**Acceptance Criteria:**
+- [ ] Property tests pass for all 5 estimators (GKM, Bisecting, XMeans, Soft, Streaming)
+- [ ] NaN/Inf guards in center update logic
+- [ ] Typed errors (GKMNumericException, GKMDomainException)
+- [ ] Edge case tests: zero weights, near-zero vectors for KL/IS
+- [ ] smoothing parameter documented with use cases
+
+---
+
+### D) Executable Documentation & Truth-Linked README ⏳
+
+**Status:** Partially done (examples exist, not CI-validated)
+**Priority:** P0 - Critical for trust
+**Effort:** 4-6 hours
+
+**Current State:**
+- ✅ 4 example mains exist
+- ✅ Examples runner in CI
+- ❌ Examples don't have assertions (so drift undetected)
+- ❌ README feature matrix not linked to code/tests/examples
+
+**Fix Plan:**
+
+1. **Add assertions to examples** (2 hours):
+   ```scala
+   // src/main/scala/examples/GeneralizedKMeansExample.scala
+   object GeneralizedKMeansExample {
+     def main(args: Array[String]): Unit = {
+       val spark = SparkSession.builder()...
+       val data = ...
+       val model = new GeneralizedKMeans().setK(2).fit(data)
+       val predictions = model.transform(data)
+
+       // ASSERTIONS
+       assert(predictions.count() == 4, "Expected 4 predictions")
+       assert(model.numClusters == 2, "Expected 2 clusters")
+       assert(model.clusterCenters.length == 2, "Expected 2 centers")
+
+       println("✓ GeneralizedKMeans example passed")
+     }
+   }
+   ```
+
+2. **Update README feature matrix** (2 hours):
+   ```markdown
+   | Algorithm | DataFrame API | Class | Tests | Example |
+   |-----------|--------------|-------|-------|---------|
+   | GeneralizedKMeans | ✅ | [Code](link) | [Tests](link) | [Example](link) |
+   | Bisecting K-Means | ✅ | [Code](link) | [Tests](link) | [Example](link) |
+   | X-Means | ✅ | [Code](link) | [Tests](link) | [Example](link) |
+   ...
+   ```
+
+3. **Enhance "What CI Validates" section** (1 hour):
+   - Already added in commit 2ee16d6
+   - Just need to update with persistence-cross job when ready
+
+**Acceptance Criteria:**
+- [ ] All 6 examples have assertions
+- [ ] CI fails if examples fail
+- [ ] README feature matrix has working links
+- [ ] "What CI Validates" section up-to-date
+
+---
+
+### E) Telemetry & Model Summary ⏳
+
+**Status:** Needs implementation
+**Priority:** P0 - Critical for debugging
+**Effort:** 6-8 hours
+
+**Gap:** No uniform `model.summary` across algorithms
+
+**Fix Plan:**
+
+1. **Define TrainingSummary case class** (2 hours):
+   ```scala
+   // src/main/scala/com/massivedatascience/clusterer/ml/TrainingSummary.scala
+   case class TrainingSummary(
+     algorithm: String,
+     k: Int,
+     dim: Int,
+     numPoints: Long,
+     iterations: Int,
+     converged: Boolean,
+
+     // Per-iteration metrics
+     distortionHistory: Array[Double],
+     movementHistory: Array[Double],
+     pointsMovedHistory: Array[Int],
+     reseedEvents: Seq[ReseedEvent],
+
+     // Strategy & performance
+     assignmentStrategy: String,
+     elapsedMillis: Long,
+     iterationTimings: Array[Long],
+
+     // Quality
+     finalDistortion: Double,
+     effectiveK: Int,
+
+     trainedAt: java.time.Instant
+   ) {
+     def toDF(spark: SparkSession): DataFrame = ...
+   }
+
+   case class ReseedEvent(
+     iteration: Int,
+     emptyClusterIds: Seq[Int],
+     strategy: String
+   )
+   ```
+
+2. **Add to every model** (4-6 hours):
+   ```scala
+   class GeneralizedKMeansModel(...) {
+     private[ml] var trainingSummary: Option[TrainingSummary] = None
+
+     def summary: TrainingSummary = trainingSummary.getOrElse(
+       throw new NoSuchElementException(
+         "summary not available (model was loaded, not trained)"
+       )
+     )
+
+     def hasSummary: Boolean = trainingSummary.isDefined
+   }
+   ```
+
+3. **Persist summary snapshot** (2 hours):
+   ```scala
+   // In PersistenceLayoutV1
+   def writeSummary(path: String, summary: TrainingSummary): Unit = {
+     val json = Serialization.write(Map(
+       "iterations" -> summary.iterations,
+       "converged" -> summary.converged,
+       "distortionHistory" -> summary.distortionHistory,
+       "assignmentStrategy" -> summary.assignmentStrategy,
+       "elapsedMillis" -> summary.elapsedMillis
+     ))
+     writeJsonFile(s"$path/summary.json", json)
+   }
+   ```
+
+**Acceptance Criteria:**
+- [ ] TrainingSummary defined
+- [ ] All 6 models expose `.summary`
+- [ ] Summary includes: iterations, distortion, reseeds, strategy, timing
+- [ ] Summary persists to summary.json
+- [ ] Examples demonstrate summary usage
+
+---
+
+### F) Python UX & Packaging ⏳
+
+**Status:** Wrapper exists, no pip package
+**Priority:** P0 - Critical for Python users
+**Effort:** 6-8 hours
+
+**Fix Plan:**
+
+1. **Create PyPI package structure** (3 hours):
+   ```
+   python/
+     gkm_clustering/
+       __init__.py
+       generalized_kmeans.py
+       version.py
+     setup.py
+     README.md
+     requirements.txt
+   ```
+
+2. **setup.py with PySpark pinning** (2 hours):
+   ```python
+   setup(
+       name="gkm-clustering",
+       version="0.6.0",
+       install_requires=["pyspark>=3.4.0,<3.6.0"],
+       ...
+   )
+   ```
+
+3. **Publish workflow** (2 hours):
+   ```yaml
+   # .github/workflows/publish-python.yml
+   - name: Build and publish
+     env:
+       TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+     run: |
+       python setup.py sdist bdist_wheel
+       twine upload dist/*
+   ```
+
+4. **README PySpark quickstart** (1 hour):
+   ```python
+   # Install
+   pip install gkm-clustering
+
+   # Usage
+   from gkm_clustering import GeneralizedKMeans
+   gkm = GeneralizedKMeans(k=3, divergence="kl")
+   model = gkm.fit(df)
+   ```
+
+**Acceptance Criteria:**
+- [ ] PyPI package published
+- [ ] `pip install gkm-clustering` works
+- [ ] Version pinned to pyspark
+- [ ] README has Python quickstart
+- [ ] CI validates Python install
+
+---
+
+### G) Security & Supply-Chain Hygiene 🚧
+
+**Status:** CodeQL ✅ done, others pending
+**Priority:** P0 - Enterprise requirement
+**Effort:** 2-3 hours
+
+**Complete:**
+- ✅ CodeQL workflow (commit verified)
+- ✅ GitHub Actions pinned by SHA
+
+**Remaining:**
+
+1. **Enable Dependabot** (30 min):
+   ```yaml
+   # .github/dependabot.yml
+   version: 2
+   updates:
+     - package-ecosystem: "github-actions"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+     - package-ecosystem: "sbt"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+   ```
+
+2. **Add SECURITY.md** (30 min):
+   ```markdown
+   ## Reporting Security Issues
+
+   Please report to: security@massivedatascience.com
+   Do not open public GitHub issues.
+
+   ## Supported Versions
+   | Version | Supported |
+   |---------|-----------|
+   | 0.6.x   | ✅        |
+   | < 0.6   | ❌        |
+   ```
+
+3. **Generate SBOM** (1-2 hours):
+   - Add sbt-sbom or cyclonedx plugin
+   - Attach to releases
+
+**Acceptance Criteria:**
+- [ ] Dependabot PRs active
+- [ ] SECURITY.md in repo
+- [ ] SBOM attached to releases
+- [ ] GitHub Security tab green
+
+---
+
+### H) Performance Truth & Regression Safety ⏳
+
+**Status:** Perf sanity exists, needs enhancement
+**Priority:** P0 - Critical for claims
 **Effort:** 1 week
-**Dependencies:** Current CI infrastructure (3.1)
 
-### B) Assignment Scalability for Non-SE Divergences (BLOCKER)
-**Priority: P0 - Critical for large-scale use**
+**Current:** Basic perf-sanity job runs
 
-**Current Gaps:**
-- General Bregman path depends on broadcast UDF
-- Fails or degrades when k×dim crosses memory/broadcast limits
-- README mentions constraint but lacks actionable guardrails or fallback
+**Fix Plan:**
 
-**Required Fixes:**
-- Add **chunked center evaluation**: Split centers into batches (e.g., 50-200), compute min distance across chunks
-  - Extra scans but avoids broadcast OOM
-- Add configurable guardrails with automatic fallback:
-  - Warn when k×dim exceeds heuristic thresholds
-  - Auto-switch to chunked mode
-  - Log strategy selection: `strategy=SE-crossJoin|nonSE-chunked|nonSE-broadcast`
-- Document rule-of-thumb tables (executor memory → max k×dim)
-- Show cost/benefit of chunking in docs
+1. **Enhance perf sanity output** (2 hours):
+   ```yaml
+   - name: Performance sanity check
+     run: |
+       TIME=$(sbt "test:runMain PerfSanityCheck" | grep "perf_sanity_seconds")
+       echo "$TIME" >> $GITHUB_STEP_SUMMARY
+
+       # Fail if > 60s
+       SECONDS=$(echo "$TIME" | awk '{print $2}')
+       if [ $(echo "$SECONDS > 60" | bc) -eq 1 ]; then
+         echo "::error::Perf regression: ${SECONDS}s > 60s"
+         exit 1
+       fi
+   ```
+
+2. **Add JMH benchmark suite** (3-4 days):
+   ```scala
+   // src/benchmark/scala/com/massivedatascience/clusterer/benchmarks/
+   @State(Scope.Benchmark)
+   class LloydIterationBenchmark {
+     @Benchmark
+     def squaredEuclidean: Unit = ...
+
+     @Benchmark
+     def klDivergence: Unit = ...
+   }
+   ```
+
+3. **Create PERFORMANCE_BENCHMARKS.md** (1 day):
+   ```markdown
+   # Performance Benchmarks
+
+   ## Machine Specs
+   - CPU: Intel Xeon E5-2680 v4 @ 2.40GHz
+   - RAM: 128GB
+   - Spark 3.5.1
+
+   ## Results
+   | Algorithm | Dataset | Time (s) | Throughput |
+   |-----------|---------|----------|------------|
+   | SE | 10M pts, 100 dim | 45.2 | 220K pts/s |
+   | KL | 10M pts, 100 dim | 120.5 | 83K pts/s |
+   ```
 
 **Acceptance Criteria:**
-- Large synthetic test with non-SE divergence completes without broadcast failure
-- Summary logs show "chunked" path selection when appropriate
-- Documentation includes memory planning guide
+- [ ] CI prints `perf_sanity_seconds=X` every run
+- [ ] Regression detection fails build if >20% slower
+- [ ] JMH benchmarks documented
+- [ ] PERFORMANCE_BENCHMARKS.md committed
 
+---
+
+### I) API Clarity & Parameter Semantics ⏳
+
+**Status:** Needs internal type safety
+**Priority:** P0 - Correctness
+**Effort:** 3-4 hours
+
+**Fix Plan:**
+
+1. **Add sealed traits internally** (3 hours):
+   ```scala
+   // src/main/scala/com/massivedatascience/clusterer/ml/df/Types.scala
+   sealed trait Divergence
+   object Divergence {
+     case object SquaredEuclidean extends Divergence
+     case object KL extends Divergence
+     case object ItakuraSaito extends Divergence
+     case object L1 extends Divergence
+     case object GeneralizedI extends Divergence
+     case object LogisticLoss extends Divergence
+
+     def fromString(s: String): Divergence = s.toLowerCase match {
+       case "squaredeuclidean" | "se" => SquaredEuclidean
+       case "kl" => KL
+       case "itakurasaito" | "is" => ItakuraSaito
+       case "l1" | "manhattan" => L1
+       case "generalizedi" => GeneralizedI
+       case "logistic" => LogisticLoss
+       case _ => throw new IllegalArgumentException(s"Unknown: $s")
+     }
+   }
+
+   sealed trait InitMode
+   case object Random extends InitMode
+   case object KMeansPlusPlus extends InitMode
+   case object KMeansParallel extends InitMode
+
+   sealed trait AssignmentStrategy
+   case object CrossJoin extends AssignmentStrategy
+   case object BroadcastUDF extends AssignmentStrategy
+   case object Chunked extends AssignmentStrategy
+   ```
+
+2. **Update param docs** (1 hour):
+   ```scala
+   /**
+     * Broadcast threshold (element count, not bytes).
+     *
+     * This is k × dim, NOT the Spark broadcast byte threshold.
+     * Used to guard against OOM when broadcasting cluster centers.
+     *
+     * Default: 200,000 elements (~1.5MB for doubles)
+     *
+     * @group param
+     */
+   final val broadcastThresholdElems = ...
+   ```
+
+**Acceptance Criteria:**
+- [ ] Sealed traits enforce exhaustive matching
+- [ ] Compiler errors on missing strategy cases
+- [ ] broadcastThresholdElems clearly documented
+- [ ] All params have clear scaladoc
+
+---
+
+### J) Educational Value: Theory ↔ Code Bridge ⏳
+
+**Status:** Needs creation
+**Priority:** P1 - Learning
 **Effort:** 1 week
-**Dependencies:** None
 
-### C) Determinism & Numerical Stability (BLOCKER)
-**Priority: P0 - Critical for reproducibility**
+**Fix Plan:**
 
-**Current Gaps:**
-- Seed determinism could be broken by: tie-breakers, partition order, bisecting split selection, X-Means accept/reject
-- KL/IS require positivity; epsilon shifts not consistently persisted/tested
-- Potential NaN/Inf propagation (zero weights, zero vectors for KL/IS)
+1. **Create Divergences 101 doc** (2 days):
+   ```markdown
+   # Divergences 101
 
-**Required Fixes:**
-- **Determinism tests**: Fixed-seed tests for all estimators
-  - Double-run fit with identical seed → identical centers within tolerance
-  - Property-based tests with multiple seeds
-  - Golden tests with known outputs
-- **Epsilon management**:
-  - Add `shiftValue: DoubleParam` with default (e.g., 1e-6)
-  - Validate and persist epsilon in model metadata
-  - Test roundtrip of `kl/epsilonShift`
-- **Input validation**:
-  - Assert finite values in features
-  - Assert domain constraints (KL/IS strictly >0 after transform)
-  - Document required preprocessing
-- **NaN/Inf hardening**:
-  - Explicit guards in update math for zero/near-zero weights
-  - Fast-fail with typed errors (GKMError)
-  - Test edge cases: empty clusters, extreme values, zero weights
+   ## Domain Requirements
 
-**Acceptance Criteria:**
-- All algorithms pass fixed-seed determinism tests
-- Property-based tests cover seed stability
-- `shiftValue` parameter roundtrips correctly
-- No NaN/Inf in summaries for all tested scenarios
-- Input validation catches invalid data before processing
+   | Divergence | Domain | Transform | Common Use Cases |
+   |------------|--------|-----------|------------------|
+   | Squared Euclidean | ℝ^d | none | General clustering |
+   | KL | (0,∞)^d | log1p, epsilonShift | Probabilities, text |
+   | Itakura-Saito | (0,∞)^d | log1p | Audio spectra |
+   | L1 | ℝ^d | none | Outlier-robust |
 
-**Effort:** 1 week
-**Dependencies:** None
+   ## Common Pitfalls
 
-### D) Executable Documentation & Truth-Linked README (BLOCKER)
-**Priority: P0 - Critical for trust**
+   ### KL without transform → NaN
+   ```scala
+   // ❌ WRONG
+   val data = Seq(Vectors.dense(-0.1, 0.5, 0.6)) // negative!
+   new GeneralizedKMeans().setDivergence("kl").fit(data) // NaN!
 
-**Current Gaps:**
-- README claims breadth without executable examples in CI (drift risk high)
-- Feature matrix rows don't link to code/tests/examples
+   // ✅ RIGHT
+   val transformed = data.map(v => v.map(_ + 1e-6))
+   new GeneralizedKMeans()
+     .setDivergence("kl")
+     .setSmoothing(1e-6)
+     .fit(transformed)
+   ```
+   ```
 
-**Required Fixes:**
-- **Examples runner enhancement** (already scaffolded in CI):
-  - Every algorithm must have a minimal `runMain` with assertions
-  - Failures break PRs
-  - Run for both Spark 3.4 and 3.5
-- **README feature matrix**:
-  - For each row, add links: `class ↔ test suite ↔ example`
-  - Example: `[K-Medoids](link-to-class) | [Tests](link-to-suite) | [Example](link-to-example)`
-- **"What CI Validates" section**:
-  - Add to README with badge
-  - List all validation jobs and what they check
+2. **Create failure mode examples** (2 days):
+   - Notebook showing KL without epsilon → NaN propagation
+   - Notebook comparing SE vs L1 on outlier data
+   - Convergence curves visualization
+
+3. **Add to README** (1 day):
+   - Link to Divergences 101
+   - "When to use which divergence" decision tree
 
 **Acceptance Criteria:**
-- CI executes examples for all algorithms
-- README links resolve to correct files
-- "What CI validates" section complete with badge
+- [ ] Divergences 101 doc complete
+- [ ] 3-4 failure mode notebooks
+- [ ] README links to educational content
+- [ ] Code references key papers
 
-**Effort:** 2 days
-**Dependencies:** CI Pipeline (3.1 - Complete)
+---
 
-### E) Telemetry & Model Summary (BLOCKER)
-**Priority: P0 - Critical for production debugging**
+### K) Edge-Case & Robustness Tests ⏳
 
-**Current Gaps:**
-- No uniform `model.summary` contract across algorithms
-- Researchers need: iteration curves, reseed events, assignment strategy, effective-k
-
-**Required Fixes:**
-- **Standardize SummarySink events**:
-  - Per-iteration: distortion, delta, #points moved, timing
-  - Reseed events with cluster IDs
-  - Strategy selection (SE fast path vs chunked/broadcast)
-  - Effective-k tracking
-- **model.summary API**:
-  - Expose as case class with `toDF()` method
-  - Include: training cost history, reseed log, strategy notes
-  - Persist summary in model metadata (trimmed for size)
-- **Example logging**:
-  - Examples print short summaries
-  - Tests assert summary fields exist and make sense
-
-**Acceptance Criteria:**
-- All algorithms expose `model.summary` with consistent schema
-- Summary includes iteration metrics, reseeds, and strategy
-- Summary persists and roundtrips
-- Examples demonstrate summary usage
-
-**Effort:** 1 week
-**Dependencies:** None
-
-### F) Python UX & Packaging (BLOCKER)
-**Priority: P0 - Critical for Python users**
-
-**Current Gaps:**
-- Wrapper exists but no pip package
-- No version pinning to PySpark/JARs
-- No simple "try it" path for students
-
-**Required Fixes:**
-- **Publish `massivedatascience-gkm` on PyPI**:
-  - Minimal Python wrapper with version gating (`pyspark==3.5.*`)
-  - Helper to download matching JAR from GitHub releases
-  - Advise `--jars` usage
-  - Tiny `smoke_test()` entry point
-- **README PySpark quickstart**:
-  - 10-line example with installation
-  - Link to Python docs
-- **CI Python smoke test enhancement**:
-  - Test SE + one non-SE divergence
-  - Verify pip install works
-
-**Acceptance Criteria:**
-- PyPI package published and installable
-- `pip install massivedatascience-gkm` + local smoke test works
-- README has Python quick-start
-- CI validates Python package
-
-**Effort:** 3 days
-**Dependencies:** Maven Central publishing (1.1)
-
-### G) Security & Supply-Chain Hygiene (BLOCKER)
-**Priority: P0 - Required for enterprise adoption**
-
-**Current Gaps:**
-- No CodeQL, Dependabot, SBOM, or pinned action SHAs visible
-
-**Required Fixes:**
-- **Enable CodeQL for JVM**: Add `.github/workflows/codeql.yml`
-- **Enable Dependabot**: Add `.github/dependabot.yml` for sbt and GitHub Actions
-- **Pin GitHub Actions by SHA**: Update all `uses:` in workflows
-- **Generate SBOM**: Add to release artifacts (using sbt-sbom or cyclonedx)
-- **Add SECURITY.md**: With vulnerability reporting instructions
-
-**Acceptance Criteria:**
-- GitHub "Security" tab shows green status
-- Dependabot PRs active
-- SBOM artifact attached to releases
-- SECURITY.md in place
-
-**Effort:** 2 days
-**Dependencies:** None
-
-### H) Performance Truth & Regression Safety (BLOCKER)
-**Priority: P0 - Critical for production claims**
-
-**Current Gaps:**
-- Claims (tens of millions of points, 700+ dims) are credible but not linked to versioned benchmarks
-- No regression guard beyond unit tests
-
-**Required Fixes:**
-- **Perf sanity enhancement** (already added):
-  - Log `perf_sanity_seconds=` for SE and non-SE paths
-  - Keep history in CI artifacts
-  - Track over time
-- **JMH benchmark suite** under `src/benchmark`:
-  - Lloyd's iteration (SE vs non-SE)
-  - Initialization strategies
-  - Distance functions
-  - Assignment strategies (broadcast vs chunked)
-- **PERFORMANCE_BENCHMARKS.md**:
-  - Machine specs
-  - Dataset characteristics
-  - Results with error bars
-  - Comparison with MLlib where applicable
-- **Regression detection**:
-  - CI fails if performance degrades >20% from baseline
-  - Store baselines in git
-
-**Acceptance Criteria:**
-- CI prints perf metrics for every run
-- JMH benchmarks documented with results
-- PERFORMANCE_BENCHMARKS.md committed
-- Performance regression CI check in place
-
-**Effort:** 1 week
-**Dependencies:** CI Pipeline (3.1)
-
-### I) API Clarity & Parameter Semantics (BLOCKER)
-**Priority: P0 - Critical for correctness**
-
-**Current Gaps:**
-- String params for divergence, initMode, assignmentStrategy (fine for cross-lang, but brittle internally)
-- `broadcastThreshold` semantics could be confused with Spark's byte threshold
-
-**Required Fixes:**
-- **Internal type safety**:
-  - Map strings to sealed traits internally
-  - Exhaustive matching forces handling of new strategies
-  - Example: `sealed trait InitMode; case object Random extends InitMode; case object KMeansPP extends InitMode`
-- **Parameter documentation**:
-  - Clarify `broadcastThreshold` is element-based (k×dim), not bytes
-  - Add scaladoc with examples
-  - Document in Python docstrings too
-- **Dry-run mode**:
-  - Add `--dryRun` param (or `Param`) to materialize AssignmentPlan without executing
-  - Helps users debug strategy selection
-  - Log: "Would use strategy=SE-crossJoin with k=10, dim=100"
-
-**Acceptance Criteria:**
-- Compiler enforces handling of all strategies
-- broadcastThreshold documented unambiguously
-- Dry-run mode implemented and tested
-- All public params have clear scaladoc
-
-**Effort:** 3 days
-**Dependencies:** None
-
-### J) Educational Value: Theory ↔ Code Bridge (HIGH)
-**Priority: P1 - Critical for learning**
-
-**Current Gaps:**
-- Students need: divergence domain intuition, failure mode demos, parameter-to-behavior visuals
-
-**Required Fixes:**
-- **Notebooks** (Scala or Databricks):
-  - Convergence curves and reseed visualization
-  - KL/IS with and without transforms (positivity violation vs epsilonShift/log1p)
-  - X-Means vs fixed-k comparison
-  - Bisecting efficiency via selective retraining
-- **"Divergences 101" markdown**:
-  - Domain requirements (KL needs probabilities, IS needs spectra)
-  - Transform recommendations
-  - Common pitfalls (negative values, zeros)
-  - References to key papers
-- **Failure mode examples**:
-  - What happens without epsilon shift
-  - What happens with wrong divergence choice
-  - Impact of poor initialization
-
-**Acceptance Criteria:**
-- 3-4 notebooks runnable on sample data
-- Divergences 101 doc linked from README
-- Failure modes documented with examples
-
-**Effort:** 1 week
-**Dependencies:** Tutorials (2.1)
-
-### K) Edge-Case & Robustness Checklist (HIGH)
-**Priority: P1 - Production quality**
-
-**Current Gaps:**
-- Need comprehensive tests for edge cases
-
-**Required Fixes & Tests:**
-- **Empty clusters**:
-  - Reseed policy exercised in tests (random default, farthest optional with perf note)
-  - Document performance impact of different policies
-- **Highly skewed clusters**:
-  - Bisecting chooses split cluster deterministically
-  - Tests cover repeated splits
-  - Document selection criteria
-- **Large sparse vectors**:
-  - Ensure vector ops stay sparse where possible
-  - Document memory trade-offs
-  - Benchmark sparse vs dense performance
-- **Outliers**:
-  - K-Medians/K-Medoids examples highlight robustness differences
-  - Compare with K-Means on outlier-heavy data
-- **Streaming cold start**:
-  - Document option A: warm-start via pre-trained model
-  - Document option B: random from first micro-batch
-  - Expose snapshot writer for checkpointing
-
-**Acceptance Criteria:**
-- Tests cover all edge cases listed
-- Documentation explains handling strategies
-- Examples demonstrate outlier handling
-
+**Status:** Some coverage, needs systematic tests
+**Priority:** P1 - Production quality
 **Effort:** 4 days
-**Dependencies:** None
 
-⸻
+**Test Checklist:**
 
-## PHASE 1: RELEASE READINESS (Weeks 1-2) 🚀
+- [ ] **Empty clusters** - reseed policies tested
+- [ ] **Highly skewed clusters** - bisecting split determinism
+- [ ] **Large sparse vectors** - memory efficiency verified
+- [ ] **Outliers** - K-Medians vs K-Means comparison
+- [ ] **Streaming cold start** - warm-start and random init options
+- [ ] **Zero weights** - doesn't crash, handled gracefully
+- [ ] **Single point per cluster** - doesn't divide by zero
+- [ ] **k > n** - returns min(k, n) clusters
+- [ ] **All identical points** - converges immediately
 
-**Goal:** Establish proper release infrastructure and versioning
+**Acceptance Criteria:**
+- [ ] Suite of edge case tests (EdgeCaseTestSuite)
+- [ ] Documentation explains handling
+- [ ] Examples demonstrate outlier handling
 
-### 1.1 Release Management & Publishing (CRITICAL)
-**Priority: P0 - Blocker for adoption**
-	•	Set up Maven Central publishing (Sonatype OSSRH)
-	•	Adopt Semantic Versioning (SemVer) strategy
-	•	Create RELEASING.md with step-by-step release process
-	•	Tag current state as 0.6.0 release
-	•	Set up sbt-release plugin for automated releases
-	•	Create GitHub Release with changelog and artifacts
-	•	Update README badges with latest version
+---
 
-**Dependencies:** None
-**Impact:** High - Enables users to easily depend on the library
+## 🟡 HIGH-VALUE GAPS (P1 - Next Priority)
+
+### Release Management & Publishing
+
+**Status:** Not started
+**Priority:** P1 - Adoption blocker
 **Effort:** 2-3 days
 
-### 1.2 Contribution Guidelines (CRITICAL)
-**Priority: P0 - Blocker for community growth**
-	•	Create CONTRIBUTING.md with:
-		- Development environment setup
-		- Code style guidelines (link to scalastyle-config.xml)
-		- Testing requirements
-		- PR submission process
-		- Code of conduct
-	•	Add issue templates (bug report, feature request)
-	•	Add PR template with checklist
-	•	Document branching strategy (e.g., git-flow)
+- [ ] Maven Central setup (Sonatype OSSRH, GPG, sbt-sonatype)
+- [ ] Semantic versioning strategy
+- [ ] RELEASING.md process doc
+- [ ] Tag v0.6.0 release
+- [ ] GitHub Release with changelog
 
-**Dependencies:** None
-**Impact:** High - Removes barriers for contributors
-**Effort:** 1-2 days
+### Contribution Guidelines
 
-### 1.3 CHANGELOG & Release Notes
-**Priority: P0 - Required for releases**
-	•	Create CHANGELOG.md in Keep-a-Changelog format
-	•	Backfill releases from git history:
-		- 0.6.0: Scala 2.13, new algorithms (Bisecting, X-Means, Soft, Streaming, K-Medoids)
-		- Earlier versions from git tags
-	•	Document breaking changes clearly
-	•	Link to migration guides where applicable
+- [ ] CONTRIBUTING.md (dev setup, style, testing, PR process)
+- [ ] Issue templates (bug, feature request)
+- [ ] PR template with checklist
+- [ ] CHANGELOG.md (Keep-a-Changelog format)
 
-**Dependencies:** Release Management (1.1)
-**Impact:** High - Transparency for users
-**Effort:** 1 day
+### Test Coverage Enhancement
 
-⸻
+- [ ] scoverage setup
+- [ ] >95% coverage target
+- [ ] Coverage badge
+- [ ] Property-based tests (convergence, cost monotonicity)
 
-## PHASE 2: DOCUMENTATION OVERHAUL (Weeks 2-4) 📚
+---
 
-**Goal:** Transform documentation from "works for me" to "works for anyone"
+## 📊 PHASE-BASED ROADMAP
 
-### 2.1 Tutorial Series (CRITICAL)
-**Priority: P0 - Educational value**
-	•	Tutorial 1: Getting Started
-		- Installation via Maven/SBT
-		- Basic K-Means example with Euclidean distance
-		- Understanding the output (cluster assignments, cost)
-	•	Tutorial 2: Working with Different Data Types
-		- Probabilistic data with KL divergence
-		- Time series with Itakura-Saito divergence
-		- Directional data with spherical divergences
-	•	Tutorial 3: Advanced Features
-		- Soft K-Means for probabilistic assignments
-		- X-Means for automatic cluster count selection
-		- Streaming K-Means for online learning
-	•	Tutorial 4: Performance Tuning
-		- Mini-batch vs full-batch
-		- Initialization strategies (random vs K-Means++)
-		- Parallelization and resource tuning
+### Phase 1: Infrastructure (Weeks 1-2)
+- Persistence rollout to all models
+- Security hardening (Dependabot, SBOM, SECURITY.md)
+- Release management setup
 
-**Dependencies:** None
-**Impact:** Very High - Dramatically improves accessibility
-**Effort:** 1 week
+### Phase 2: Scalability & Reliability (Weeks 3-4)
+- Chunked assignment for non-SE
+- Determinism property tests
+- NaN/Inf guards
+- Model summaries
 
-### 2.2 Theoretical Documentation (HIGH)
-**Priority: P1 - Educational value**
-	•	Create THEORY.md with:
-		- Introduction to Bregman divergences
-		- Mathematical foundations
-		- Why generalized K-Means matters
-		- Comparison with Euclidean K-Means
-	•	Add diagrams/visualizations of different divergences
-	•	Explain when to use which divergence
-	•	Include references to key papers
+### Phase 3: Documentation & Education (Weeks 5-6)
+- Executable examples with assertions
+- Divergences 101 educational doc
+- README feature matrix links
+- Python PyPI package
 
-**Dependencies:** None
-**Impact:** High - Helps users make informed decisions
-**Effort:** 3-4 days
+### Phase 4: Quality & Performance (Weeks 7-8)
+- Performance benchmarks (JMH)
+- Edge case test suite
+- API type safety (sealed traits)
+- Test coverage >95%
 
-### 2.3 API Documentation Enhancement (HIGH)
-**Priority: P1 - Production quality**
-	•	Complete scaladoc for all public APIs
-	•	Add @example tags with code snippets
-	•	Document parameter constraints and defaults
-	•	Explain return values and side effects
-	•	Add @since tags for version tracking
-	•	Generate and publish scaladoc to GitHub Pages
+---
 
-**Dependencies:** Release Management (1.1)
-**Impact:** High - Professional polish
-**Effort:** 3-4 days
+## ✅ ACCEPTANCE GATE (Before v1.0)
 
-### 2.4 README Modernization (HIGH)
-**Priority: P1 - First impression**
-	•	Add badges: version, build status, coverage, license
-	•	Quick-start example in first 20 lines
-	•	Feature matrix with algorithm comparison table
-	•	Clear installation instructions for Maven/SBT/Gradle
-	•	Link to tutorials, examples, and theory docs
-	•	Add "Who should use this?" section
-	•	Include performance characteristics table
-	•	Add community/contribution links
-
-**Dependencies:** Tutorials (2.1), Publishing (1.1)
-**Impact:** Very High - First impression for new users
-**Effort:** 1 day
-
-⸻
-
-## PHASE 3: CI/CD & TESTING (Weeks 3-5) 🔧
-
-**Goal:** Automated, comprehensive, and trustworthy testing
-
-### 3.1 CI Pipeline Completion (COMPLETED ✅)
-**Status: Complete as of 2025-10-18**
-	•	✅ Comprehensive test matrix (Scala 2.12/2.13 × Spark 3.4.x/3.5.x)
-	•	✅ Examples runner
-	•	✅ Cross-version persistence tests
-	•	✅ Performance sanity checks
-	•	✅ Python smoke tests
-	•	✅ Scalastyle linting
-	•	✅ Fixed all compatibility issues
-
-### 3.2 Test Coverage Enhancement (HIGH)
-**Priority: P1 - Quality assurance**
-	•	Set up scoverage for code coverage reporting
-	•	Add coverage badge to README
-	•	Target >95% coverage for core algorithms
-	•	Add property-based tests for:
-		- Convergence guarantees
-		- Cost monotonicity
-		- Cluster stability
-	•	Integration tests for DataFrame variants
-	•	Edge case tests: empty data, single point, extreme k
-
-**Dependencies:** CI Pipeline (3.1 - Complete)
-**Impact:** High - Confidence in changes
-**Effort:** 1 week
-
-### 3.3 Performance Benchmarking Suite (MEDIUM)
-**Priority: P2 - Production quality**
-	•	Set up JMH benchmarks for:
-		- Core Lloyd's iteration
-		- Different divergences
-		- Initialization strategies
-	•	Benchmark against MLlib K-Means
-	•	Memory profiling with JProfiler/YourKit
-	•	Document performance characteristics
-	•	Add regression detection to CI
-
-**Dependencies:** CI Pipeline (3.1 - Complete)
-**Impact:** Medium - Helps users make decisions
-**Effort:** 1 week
-
-### 3.4 Automated Releases (MEDIUM)
-**Priority: P2 - Productivity**
-	•	Set up GitHub Actions for:
-		- Automated version bumping
-		- Changelog generation from commits
-		- Maven Central deployment
-		- GitHub Release creation
-		- Documentation publishing
-	•	Require all tests pass before release
-	•	Automated snapshot publishing on merge to main
-
-**Dependencies:** Release Management (1.1), CI Pipeline (3.1)
-**Impact:** Medium - Faster releases
-**Effort:** 2-3 days
-
-⸻
-
-## PHASE 4: COMMUNITY & ENGAGEMENT (Weeks 5-8) 👥
-
-**Goal:** Build an active, helpful community
-
-### 4.1 Example Notebooks (MEDIUM)
-**Priority: P2 - Educational value**
-	•	Create Jupyter notebooks for tutorials
-	•	Host on Binder for interactive execution
-	•	Add to documentation site
-	•	Cover:
-		- Basic usage
-		- Real-world datasets
-		- Performance comparisons
-		- Visualization techniques
-
-**Dependencies:** Tutorials (2.1)
-**Impact:** High - Interactive learning
-**Effort:** 3-4 days
-
-### 4.2 Public Roadmap (MEDIUM)
-**Priority: P2 - Transparency**
-	•	Create GitHub Project board with:
-		- Planned features
-		- In progress work
-		- Community feature requests
-	•	Link from README
-	•	Regular updates (monthly)
-	•	Solicit community input
-
-**Dependencies:** None
-**Impact:** Medium - Community engagement
-**Effort:** 1 day + ongoing
-
-### 4.3 Community Outreach (LOW)
-**Priority: P3 - Adoption**
-	•	Write blog posts about use cases
-	•	Submit talks to conferences (Spark Summit, Scala Days)
-	•	Create comparison articles (vs MLlib, vs scikit-learn)
-	•	Share on social media, Reddit, HN
-	•	Reach out to potential users in academia
-
-**Dependencies:** Documentation (Phase 2), Examples (4.1)
-**Impact:** Medium-High - Broader adoption
-**Effort:** Ongoing
-
-⸻
-
-## PHASE 5: TECHNICAL DEBT & POLISH (Weeks 6-10) 🔨
-
-**Goal:** Production-ready code quality
-
-### 5.1 Dependency Management (HIGH)
-**Priority: P1 - Security & compatibility**
-	•	Audit all dependencies for security vulnerabilities
-	•	Update to latest stable versions
-	•	Set up Dependabot for automated updates
-	•	Document dependency version constraints
-	•	Test with latest Spark 3.x versions
-
-**Dependencies:** CI Pipeline (3.1)
-**Impact:** High - Security & stability
-**Effort:** 2-3 days
-
-### 5.2 API Stability Review (HIGH)
-**Priority: P1 - Production quality**
-	•	Mark internal APIs as private[clusterer]
-	•	Review public API surface
-	•	Document any planned breaking changes for 1.0
-	•	Add @deprecated for old APIs
-	•	Create migration guide for breaking changes
-	•	Ensure consistent naming conventions
-
-**Dependencies:** None
-**Impact:** High - User trust
-**Effort:** 3-4 days
-
-### 5.3 Code Quality Improvements (MEDIUM)
-**Priority: P2 - Maintainability**
-	•	Fix remaining scalastyle warnings (61 remaining):
-		- Eliminate return statements (24 files)
-		- Reduce cyclomatic complexity (11 warnings)
-		- Fix method length issues (4 warnings)
-		- Replace null usage (6 warnings)
-		- Document println usage in examples (11 warnings)
-	•	Add ScalaFmt for consistent formatting
-	•	Enable Scalafix for automated refactoring
-	•	Add WartRemover for additional checks
-
-**Dependencies:** None
-**Impact:** Medium - Code quality
-**Effort:** 1 week
-
-### 5.4 RDD/DataFrame Deduplication (LOW)
-**Priority: P3 - Tech debt**
-	•	Document RDD API as legacy
-	•	Recommend DataFrame API for new code
-	•	Evaluate removing RDD code for 1.0
-	•	Or: keep minimal RDD support for backward compatibility
-
-**Dependencies:** API Stability (5.2)
-**Impact:** Low-Medium - Reduced maintenance
-**Effort:** 1 week
-
-⸻
-
-✅ Recently Completed (October 2025)
-
-CI Validation DAG (October 18, 2025)
-	•	Comprehensive test matrix: Scala {2.12, 2.13} × Spark {3.4.x, 3.5.x} → ✅
-	•	Examples runner with all 4 examples → ✅
-	•	Cross-version persistence validation → ✅
-	•	Performance sanity checks (30s budget) → ✅
-	•	Python smoke test → ✅
-	•	Scalastyle linting → ✅
-	•	Fixed all Scala 2.12/Spark 3.4 compatibility issues → ✅
-
-Earlier Completions
-    •   Examples as executable tests → ✅
-	•	Cross-version persistence → ✅
-	•	Perf sanity metric → ✅
-	•	Travis removal → ✅
-
-Scala 2.13 Migration (October 2025) → ✅
-	•	✅ Migrate to Scala 2.13.14 as default version
-	•	✅ Fix all Scala 2.13 compatibility issues
-	•	✅ Re-enable scaladoc generation (resolved compiler bug)
-	•	✅ Update CI/CD workflows for Scala 2.13
-	•	✅ Add parallel collections dependency
-
-Algorithm Implementations (October 2025) → ✅
-	•	✅ Core Abstractions: FeatureTransform, CenterStore, AssignmentPlan, KernelOps, ReseedPolicy, etc.
-	•	✅ K-Medians (L1/Manhattan distance)
-	•	✅ Bisecting K-Means (DataFrame API, 10/10 tests)
-	•	✅ X-Means (DataFrame API, BIC/AIC, 12/12 tests)
-	•	✅ Soft K-Means (DataFrame API, probabilistic assignments, 15/15 tests)
-	•	✅ Streaming K-Means (DataFrame API, 16/16 tests)
-	•	✅ K-Medoids (PAM/CLARA, 26/26 tests)
-
-Bug Fixes & Quality (October 2025) → ✅
-	•	✅ KMeans++ weighted-selection correctness
-	•	✅ k-means|| initialization fixes
-	•	✅ Property test improvements
-	•	✅ 290/290 tests passing
-
-⸻
-
-## FUTURE ALGORITHM ENHANCEMENTS (Post-1.0)
-
-These are deferred until after production readiness is achieved.
-
-### Elkan's Triangle Inequality Acceleration
-**Priority: P3 - Performance optimization**
-	•	Optional assignment strategy for Euclidean distance
-	•	Benchmarks & guidance on when to use
-	•	May provide 2-3x speedup for high-dimensional data
-
-**Dependencies:** Phase 3 (Benchmarking)
-**Effort:** 2 weeks
-
-### Yinyang K-Means
-**Priority: P3 - Performance optimization**
-	•	Global/local filtering acceleration for large k
-	•	Benchmarks vs Elkan/Lloyd
-	•	Useful for k > 10
-
-**Dependencies:** Elkan (if implemented)
-**Effort:** 3 weeks
-
-### GPU Acceleration
-**Priority: P4 - Research/experimental**
-	•	Evaluate RAPIDS/cuML feasibility
-	•	GPU assignment kernel prototype
-	•	Benchmarks vs CPU
-	•	May not be practical given Spark's CPU focus
-
-**Dependencies:** Phase 3 (Benchmarking)
-**Effort:** 1-2 months
-
-### Additional Divergences
-**Priority: P3 - Feature completeness**
-	•	Mahalanobis (for correlated features)
-	•	Cosine similarity as divergence
-	•	Hellinger distance
-	•	Jensen-Shannon divergence
-
-**Dependencies:** None
-**Effort:** 1-2 days per divergence
-
-⸻
-
-## REVISED RELEASE PLAN
-
-The release plan has been restructured to prioritize production quality and educational value.
-
-### 0.6.0 (Tag Current State)
-**Timeline:** Week 1
-**Goal:** Official baseline release
-	•	Tag current master as 0.6.0
-	•	Create GitHub Release with basic changelog
-	•	Publish to Maven Central (basic setup)
-	•	All features completed, 290/290 tests passing
-
-**Includes:**
-	•	Scala 2.12 & 2.13 support
-	•	Spark 3.4.x & 3.5.x compatibility
-	•	All algorithms: K-Means, Bisecting, X-Means, Soft, Streaming, K-Medoids, K-Medians
-	•	Core abstractions: FeatureTransform, CenterStore, KernelOps, etc.
-	•	Comprehensive CI validation DAG
-
-### 0.7.0 (Documentation & Community)
-**Timeline:** Weeks 2-5
-**Goal:** Production-ready documentation and community infrastructure
-
-**Must Have (Phase 1 & 2):**
-	•	✅ Maven Central publishing
-	•	✅ CONTRIBUTING.md
-	•	✅ CHANGELOG.md
-	•	✅ Tutorial series (4 tutorials)
-	•	✅ THEORY.md
-	•	✅ README modernization
-	•	✅ API documentation complete
-
-**Nice to Have:**
-	•	Test coverage reporting
-	•	Example notebooks
-	•	Public roadmap
-
-**Success Criteria:**
-	•	Users can install via standard dependency management
-	•	Clear path for contributors
-	•	Comprehensive getting-started guide
-
-### 0.8.0 (Testing & Quality)
-**Timeline:** Weeks 6-8
-**Goal:** Confidence through comprehensive testing
-
-**Must Have (Phase 3 & 5):**
-	•	✅ >95% test coverage
-	•	✅ Performance benchmarks published
-	•	✅ Dependency audit complete
-	•	✅ API stability review
-	•	✅ Scalastyle warnings resolved
-
-**Nice to Have:**
-	•	Automated releases
-	•	Property-based tests expanded
-	•	Performance regression detection
-
-**Success Criteria:**
-	•	High confidence in code quality
-	•	Performance characteristics documented
-	•	Clean public API
-
-### 1.0.0 (Production Ready)
-**Timeline:** Weeks 10-12
-**Goal:** Production-quality library with active community
-
-**Must Have:**
-	•	✅ All Phase 1-5 items complete
-	•	✅ Stable public API (no breaking changes planned)
-	•	✅ Comprehensive documentation
-	•	✅ Active community (contributors, issues, discussions)
-	•	✅ Published benchmarks
-	•	✅ Real-world case studies
-
-**Success Criteria:**
-	•	Library used in production by external organizations
-	•	Active contributor base
-	•	Clear documentation and examples
-	•	Performance competitive with alternatives
-
-⸻
-
-## SUCCESS METRICS
-
-### Code Quality (Target: 1.0.0)
-	•	>95% test coverage → Currently ~85%
-	•	0 critical scalastyle violations → 61 warnings remaining
-	•	>90% scaladoc coverage → Currently ~40%
-	•	No known security vulnerabilities
-	•	Clean separation of public/private APIs
-
-### Performance (Target: 0.8.0)
-	•	Benchmarks published on GitHub Pages
-	•	Performance regression budget enforced in CI
-	•	Memory profiles documented
-	•	Comparison with MLlib K-Means
-	•	Known performance characteristics for all divergences
-
-### Adoption (Target: 1.0.0)
-	•	Published to Maven Central → Not yet
-	•	>100 stars on GitHub → Currently ~20
-	•	>10 external contributors → Currently ~2
-	•	Featured in blog posts/talks → None yet
-	•	Used in academic papers → Unknown
-	•	Example Jupyter notebooks → None yet
-
-### Community (Target: 1.0.0)
-	•	Active issue discussions
-	•	Regular pull requests
-	•	CONTRIBUTING.md in place → Not yet
-	•	Clear project roadmap → This document
-	•	Responsive maintainers → Yes
-
-⸻
-
-## CRITICAL GAPS ANALYSIS
-
-Based on the production quality review, here are the current critical gaps:
-
-### HIGH IMPACT GAPS (Blockers for Adoption)
-1. **No Maven Central Publishing** → Phase 1.1 (P0)
-   - Users cannot easily depend on the library
-   - Requires manual JAR building
-
-2. **Incomplete Documentation** → Phase 2 (P0)
-   - No getting-started guide
-   - Theory not explained
-   - API docs sparse
-
-3. **No Contribution Guide** → Phase 1.2 (P0)
-   - High barrier for contributors
-   - No clear process
-
-### MEDIUM IMPACT GAPS (Quality & Trust)
-4. **Test Coverage Not Measured** → Phase 3.2 (P1)
-   - Unknown confidence level
-   - Coverage badge missing
-
-5. **No Performance Benchmarks** → Phase 3.3 (P1)
-   - Users don't know performance characteristics
-   - Can't compare with alternatives
-
-6. **API Stability Unclear** → Phase 5.2 (P1)
-   - No clear public API boundary
-   - Breaking changes not documented
-
-### LOW IMPACT GAPS (Polish)
-7. **Scalastyle Warnings** → Phase 5.3 (P2)
-   - 61 warnings remaining
-   - Code quality perception
-
-8. **No Community Infrastructure** → Phase 4 (P2-P3)
-   - No issue templates
-   - No PR templates
-   - No roadmap visibility
-
-⸻
-
-## QUICK WINS (High Impact, Low Effort)
-
-These items have high impact and can be completed quickly to improve professionalism:
-
-1. **Tag 0.6.0 Release** (1 hour)
-   - Create git tag
-   - Basic GitHub Release
-
-2. **Create CONTRIBUTING.md** (4 hours)
-   - Copy template
-   - Customize for this project
-
-3. **Basic CHANGELOG.md** (2 hours)
-   - Keep-a-Changelog format
-   - Backfill from git history
-
-4. **Maven Central Setup** (1 day)
-   - Sonatype OSSRH account
-   - GPG setup
-   - sbt-sonatype plugin
-
-5. **README Quick-Start** (2 hours)
-   - Add installation instructions
-   - Simple example in first 20 lines
-
-6. **Issue/PR Templates** (1 hour)
-   - GitHub template files
-   - Basic checklist
-
-7. **Add Strategy Selection Logging** (2 hours)
-   - Log one-line: `strategy=SE-crossJoin|nonSE-chunked|nonSE-broadcast` in every fit
-   - Helps users understand what's happening
-   - From Blocker B & I
-
-8. **Add Checksum to Persistence** (3 hours)
-   - Quick drift detection for model changes
-   - From Blocker A
-
-9. **README: Build/CI Validates Badge** (1 hour)
-   - Show what CI validates
-   - Link to workflow runs
-   - From Blocker D
-
-**Total: 2-3 days for massive improvement in professionalism and production readiness**
-
-⸻
-
-## FINAL ACCEPTANCE GATE (Before 1.0 Release)
-
-All items below must be complete before calling this production-quality:
+**All 18 items must be checked:**
 
 ### Technical Completeness
-1. **All CI jobs green**: matrix tests, examples runner, persistence cross-version, perf sanity, python smoke, coverage ✅
-2. **Persistence spec documented and versioned**: cross-version tests pass for every algorithm you ship (Blocker A)
-3. **Determinism + numerical guards tested**: no NaN/Inf; KL/IS domain enforced; epsilon persisted (Blocker C)
-4. **Scalability guardrails**: chunked path for large k×dim; logged strategy selection (Blocker B, I)
-5. **Telemetry/summaries consistent**: model.summary exists across algorithms (Blocker E)
+1. [ ] All CI jobs green (matrix tests, examples, persistence-cross, perf, coverage)
+2. [ ] Persistence spec versioned, cross-version tests pass for all 6 algorithms
+3. [ ] Determinism + numeric guards tested (no NaN/Inf, epsilon persisted)
+4. [ ] Scalability guardrails (chunked path, logged strategy selection)
+5. [ ] Telemetry/summaries consistent (model.summary across algorithms)
 
 ### User Experience
-6. **Python package usable**: single snippet install; version pinning enforced (Blocker F)
-7. **Security hygiene enabled**: CodeQL, Dependabot, SBOM, pinned actions (Blocker G)
-8. **Performance benchmarks**: JMH suite with PERFORMANCE_BENCHMARKS.md committed (Blocker H)
-9. **Documentation complete**: tutorials, theory, API docs, examples all linked and tested (Phase 2)
-10. **README truth-linked**: every feature → class + test + example (Blocker D)
+6. [ ] Python package on PyPI, version pinning enforced
+7. [ ] Security hygiene (CodeQL, Dependabot, SBOM, SECURITY.md)
+8. [ ] Performance benchmarks (JMH + PERFORMANCE_BENCHMARKS.md)
+9. [ ] Documentation complete (tutorials, theory, API docs, examples linked)
+10. [ ] README truth-linked (every feature → class + test + example)
 
 ### Production Quality
-11. **Edge cases tested and documented**: empty clusters, sparse vectors, outliers, streaming (Blocker K)
-12. **API stability review complete**: public/private boundaries clear; deprecation policy (Phase 5.2)
-13. **Test coverage >95%**: scoverage reporting enabled (Phase 3.2)
-14. **All scalastyle warnings resolved**: clean code quality (Phase 5.3)
+11. [ ] Edge cases tested (empty clusters, sparse vectors, outliers, streaming)
+12. [ ] API stability review (public/private boundaries, deprecation policy)
+13. [ ] Test coverage >95% (scoverage reporting)
+14. [ ] Code quality (scalastyle warnings resolved)
 
 ### Community
-15. **CONTRIBUTING.md**: clear path for contributors (Phase 1.2)
-16. **Maven Central publishing**: users can depend easily (Phase 1.1)
-17. **CHANGELOG.md**: Keep-a-Changelog format with all releases (Phase 1.3)
-18. **Example notebooks**: interactive learning experiences (Phase 4.1)
+15. [ ] CONTRIBUTING.md (clear contributor path)
+16. [ ] Maven Central publishing (easy dependency)
+17. [ ] CHANGELOG.md (Keep-a-Changelog format)
+18. [ ] Example notebooks (interactive learning)
 
-**When all 18 items are checked, the library is ready for 1.0 and production use.**
+---
 
-⸻
+## 📈 SUCCESS METRICS
 
-## ARCHITECTURE NOTES
+### Code Quality (Target: v1.0)
+- Test coverage: >95% (currently ~85%)
+- Scalastyle: 0 violations (currently 61 warnings)
+- Scaladoc: >90% (currently ~40%)
+- Public/private API boundaries: Clear
 
-The following architectural patterns are implemented and should be maintained:
+### Performance (Target: v0.8)
+- Benchmarks published
+- Regression detection in CI
+- Memory profiles documented
+- Comparison with MLlib
 
-	•	**Declarative LloydsIterator**: AssignmentPlan + interpreter pattern
-	•	**Composable Transforms**: FeatureTransform with inverses; centers in transformed space
-	•	**Type-Safe Operations**: KernelOps drives strategy selection
-	•	**Pluggable Policies**: ReseedPolicy, MiniBatchScheduler, SeedingService
-	•	**Typed Errors**: Validator & GKMError for precise failure handling
-	•	**Telemetry**: SummarySink for per-iteration metrics
-	•	**Scalable Assignment**: RowIdProvider enables groupBy(rowId).min(distance)
+### Adoption (Target: v1.0)
+- Maven Central: Published
+- GitHub stars: >100 (currently ~20)
+- Contributors: >10 external (currently ~2)
+- Blog posts/talks
+- Example notebooks
 
-⸻
+---
 
-## PROJECT STRUCTURE
+## 🎯 QUICK WINS (High Impact, Low Effort)
 
-	•	**RDD API**: `src/main/scala/com/massivedatascience/clusterer/` (legacy, stable)
-	•	**DataFrame API**: `src/main/scala/com/massivedatascience/clusterer/ml/` (recommended)
-	•	**Tests**: `src/test/scala/com/massivedatascience/clusterer/`
-	•	**Python**: `python/massivedatascience/` (PySpark wrapper)
-	•	**Documentation**: Root markdown files
-	•	**Examples**: `src/main/scala/examples/`
-	•	**CI**: `.github/workflows/ci.yml`
+These can be completed in 2-3 days for massive professionalism improvement:
 
-⸻
+1. **Tag v0.6.0 release** (1 hour)
+2. **Create CONTRIBUTING.md** (4 hours)
+3. **Basic CHANGELOG.md** (2 hours)
+4. **Maven Central setup** (1 day)
+5. **README quick-start** (2 hours)
+6. **Issue/PR templates** (1 hour)
+7. **Strategy logging** (2 hours) - Log `strategy=SE-crossJoin|nonSE-chunked` in fit
+8. **README "What CI Validates" enhancement** (1 hour)
 
-## NEXT IMMEDIATE ACTIONS
+**Total: 2-3 days for major perception boost**
 
-If you're ready to start, here's the recommended order:
+---
 
-**Week 1: Release Infrastructure**
-1. Set up Maven Central publishing (1.1)
-2. Create CONTRIBUTING.md (1.2)
-3. Create CHANGELOG.md (1.3)
-4. Tag 0.6.0 release
+## 📝 ARCHITECTURE NOTES
 
-**Week 2-3: Documentation Sprint**
-5. Write Tutorial 1: Getting Started (2.1)
-6. Write Tutorial 2: Different Data Types (2.1)
-7. Modernize README with badges and quick-start (2.4)
-8. Start THEORY.md with Bregman divergence intro (2.2)
+Maintain these patterns:
+- **Declarative LloydsIterator**: AssignmentPlan + interpreter
+- **Composable Transforms**: FeatureTransform with inverses
+- **Type-Safe Operations**: KernelOps drives strategy
+- **Pluggable Policies**: ReseedPolicy, MiniBatchScheduler, SeedingService
+- **Typed Errors**: Validator & GKMError
+- **Telemetry**: SummarySink for metrics
+- **Scalable Assignment**: RowIdProvider enables groupBy(rowId).min(distance)
 
-**Week 4-5: Complete Documentation**
-9. Write Tutorial 3: Advanced Features (2.1)
-10. Write Tutorial 4: Performance Tuning (2.1)
-11. Complete THEORY.md (2.2)
-12. Enhance API documentation with examples (2.3)
+---
 
-**Week 6: Release 0.7.0**
-13. Test all documentation
-14. Publish 0.7.0 to Maven Central
-15. Announce on social media, mailing lists
+## 🔄 NEXT IMMEDIATE ACTIONS
 
-This plan transforms the library from "works for me" to "works for anyone" in 6 weeks.
+**Today/This Week:**
+1. Merge this consolidated plan ✅
+2. Complete remaining persistence models (Bisecting, XMeans, Soft, Streaming, KMedoids)
+3. Add determinism property tests
+4. Implement chunked assignment
+
+**Week 1-2:**
+5. Create executable examples with assertions
+6. Add model.summary to all models
+7. Security hardening (Dependabot, SECURITY.md, SBOM)
+
+**Week 3-4:**
+8. Python PyPI package
+9. Performance benchmarks (JMH)
+10. Divergences 101 educational doc
+
+This plan bridges the gap from "research prototype" to "production-ready, educational tool that teams can deploy with confidence."

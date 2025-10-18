@@ -527,59 +527,128 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
 
   override def load(path: String): KMedoidsModel = super.load(path)
 
-  private class KMedoidsModelWriter(instance: KMedoidsModel) extends org.apache.spark.ml.util.MLWriter {
+  private class KMedoidsModelWriter(instance: KMedoidsModel) extends org.apache.spark.ml.util.MLWriter with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.Serialization
 
     override protected def saveImpl(path: String): Unit = {
       val spark = sparkSession
-      import spark.implicits._
 
-      // Save medoids
-      val medoidsPath = new org.apache.hadoop.fs.Path(path, "medoids").toString
-      val medoidsDF = instance.medoids.zipWithIndex.map { case (medoid, idx) =>
-        (idx, medoid.toArray)
-      }.toSeq.toDF("medoidId", "medoid")
-      medoidsDF.write.mode("overwrite").parquet(medoidsPath)
+      logInfo(s"Saving KMedoidsModel to $path")
 
-      // Save medoid indices
-      val indicesPath = new org.apache.hadoop.fs.Path(path, "indices").toString
-      val indicesDF = instance.medoidIndices.zipWithIndex.map { case (idx, medoidId) =>
-        (medoidId, idx)
-      }.toSeq.toDF("medoidId", "originalIndex")
-      indicesDF.write.mode("overwrite").parquet(indicesPath)
+      // Prepare centers data: (center_id, weight, vector)
+      // For K-Medoids, medoids have uniform weight (1.0)
+      val centersData = instance.medoids.indices.map { i =>
+        val weight = 1.0
+        val vector = instance.medoids(i)
+        (i, weight, vector)
+      }
 
-      // Save metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val metadataDF = Seq((instance.uid, instance.distanceFunctionName)).toDF("uid", "distanceFunction")
-      metadataDF.write.mode("overwrite").parquet(metadataPath)
+      // Write centers with deterministic ordering
+      val centersHash = writeCenters(spark, path, centersData)
+      logInfo(s"Centers saved with SHA-256: $centersHash")
+
+      // Collect all model parameters
+      val params = Map(
+        "k" -> instance.getOrDefault(instance.k),
+        "featuresCol" -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol" -> instance.getOrDefault(instance.predictionCol),
+        "maxIter" -> instance.getOrDefault(instance.maxIter),
+        "seed" -> instance.getOrDefault(instance.seed),
+        "distanceFunction" -> instance.distanceFunctionName,
+        "medoidIndices" -> instance.medoidIndices.toSeq  // Store original indices
+      )
+
+      val k = instance.numClusters
+      val dim = instance.numFeatures
+
+      // Build metadata object
+      implicit val formats = DefaultFormats
+      val metaObj = Map(
+        "layoutVersion" -> LayoutVersion,
+        "algo" -> "KMedoidsModel",
+        "sparkMLVersion" -> org.apache.spark.SPARK_VERSION,
+        "scalaBinaryVersion" -> getScalaBinaryVersion,
+        "divergence" -> instance.distanceFunctionName,  // Use distance function as divergence
+        "k" -> k,
+        "dim" -> dim,
+        "uid" -> instance.uid,
+        "params" -> params,
+        "centers" -> Map(
+          "count" -> k,
+          "ordering" -> "center_id ASC (0..k-1)",
+          "storage" -> "parquet"
+        ),
+        "checksums" -> Map(
+          "centersParquetSHA256" -> centersHash
+        )
+      )
+
+      // Serialize to JSON
+      val json = Serialization.write(metaObj)(formats)
+
+      // Write metadata
+      val metadataHash = writeMetadata(path, json)
+      logInfo(s"Metadata saved with SHA-256: $metadataHash")
+      logInfo(s"KMedoidsModel successfully saved to $path")
     }
   }
 
-  private class KMedoidsModelReader extends org.apache.spark.ml.util.MLReader[KMedoidsModel] {
+  private class KMedoidsModelReader extends org.apache.spark.ml.util.MLReader[KMedoidsModel] with Logging {
+
+    import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
+    import org.json4s.DefaultFormats
+    import org.json4s.jackson.JsonMethods
 
     override def load(path: String): KMedoidsModel = {
       val spark = sparkSession
-      import spark.implicits._
 
-      // Load medoids
-      val medoidsPath = new org.apache.hadoop.fs.Path(path, "medoids").toString
-      val medoidsDF = spark.read.parquet(medoidsPath)
-      val medoids = medoidsDF.as[(Int, Array[Double])].collect()
-        .sortBy(_._1)
-        .map { case (_, arr) => Vectors.dense(arr) }
+      logInfo(s"Loading KMedoidsModel from $path")
 
-      // Load medoid indices
-      val indicesPath = new org.apache.hadoop.fs.Path(path, "indices").toString
-      val indicesDF = spark.read.parquet(indicesPath)
-      val medoidIndices = indicesDF.as[(Int, Int)].collect()
-        .sortBy(_._1)
-        .map(_._2)
+      // Read metadata
+      val metaStr = readMetadata(path)
+      implicit val formats = DefaultFormats
+      val metaJ = JsonMethods.parse(metaStr)
 
-      // Load metadata
-      val metadataPath = new org.apache.hadoop.fs.Path(path, "metadata").toString
-      val metadataDF = spark.read.parquet(metadataPath)
-      val (uid, distanceFunction) = metadataDF.as[(String, String)].head()
+      // Extract and validate layout version
+      val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
+      val k = (metaJ \ "k").extract[Int]
+      val dim = (metaJ \ "dim").extract[Int]
+      val uid = (metaJ \ "uid").extract[String]
+      val distanceFunction = (metaJ \ "divergence").extract[String]
 
-      new KMedoidsModel(uid, medoids, medoidIndices, distanceFunction)
+      logInfo(s"Model metadata: layoutVersion=$layoutVersion, k=$k, dim=$dim, distanceFunction=$distanceFunction")
+
+      // Read centers
+      val centersDF = readCenters(spark, path)
+      val rows = centersDF.collect()
+
+      // Validate metadata
+      validateMetadata(layoutVersion, k, dim, rows.length)
+
+      // Extract medoids (sorted by center_id)
+      val medoids = rows.sortBy(_.getInt(0)).map { row =>
+        row.getAs[Vector]("vector")
+      }
+
+      // Extract parameters
+      val paramsJ = metaJ \ "params"
+      val medoidIndices = (paramsJ \ "medoidIndices").extract[Seq[Int]].toArray
+
+      // Reconstruct model
+      val model = new KMedoidsModel(uid, medoids, medoidIndices, distanceFunction)
+
+      // Set parameters
+      model.set(model.k, (paramsJ \ "k").extract[Int])
+      model.set(model.featuresCol, (paramsJ \ "featuresCol").extract[String])
+      model.set(model.predictionCol, (paramsJ \ "predictionCol").extract[String])
+      model.set(model.maxIter, (paramsJ \ "maxIter").extract[Int])
+      model.set(model.seed, (paramsJ \ "seed").extract[Long])
+
+      logInfo(s"KMedoidsModel successfully loaded from $path")
+      model
     }
   }
 }
