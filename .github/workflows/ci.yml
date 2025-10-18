@@ -61,3 +61,166 @@ jobs:
             target/scala-2.13/*.jar
           if-no-files-found: error
 
+  # Job 2: Core test matrix (Scala 2.12/2.13 × Spark 3.4.x/3.5.x)
+  test-matrix:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        scala: ["2.12.18", "2.13.14"]
+        spark: ["3.4.0", "3.5.1"]
+    name: Test Scala ${{ matrix.scala }} / Spark ${{ matrix.spark }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Run tests
+        run: sbt ++${{ matrix.scala }} -Dspark.version=${{ matrix.spark }} test
+
+  # Job 3: Examples runner (verify examples compile and run as tests)
+  examples-run:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Run Examples
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: target
+      - name: Run BisectingExample
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.BisectingExample"
+      - name: Run SoftKMeansExample
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.SoftKMeansExample"
+      - name: Run XMeansExample
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.XMeansExample"
+      - name: Run PersistenceRoundTrip
+        run: sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip"
+
+  # Job 4: Cross-version persistence test (save in 2.12, load in 2.13, vice versa)
+  persistence-cross:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Cross-version Persistence
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: target
+      - name: Save model with Scala 2.12
+        run: |
+          mkdir -p /tmp/persistence-test
+          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-212"
+      - name: Load model with Scala 2.13
+        run: |
+          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-212"
+      - name: Save model with Scala 2.13
+        run: |
+          sbt ++${{ env.SCALA_213 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-213"
+      - name: Load model with Scala 2.12
+        run: |
+          sbt ++${{ env.SCALA_212 }} "runMain examples.PersistenceRoundTrip /tmp/persistence-test/model-213"
+
+  # Job 5: Performance sanity check (ensure no major regression)
+  perf-sanity:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Performance Sanity Check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: target
+      - name: Run performance test
+        run: |
+          # Run a simple performance test and log results
+          sbt ++${{ env.SCALA_213 }} "Test/runMain com.massivedatascience.clusterer.PerformanceSanityCheck"
+        continue-on-error: true
+      - name: Upload performance logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-logs
+          path: target/perf-*.log
+          if-no-files-found: ignore
+
+  # Job 6: Python smoke test
+  python-smoke:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Python Smoke Test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: target
+      - name: Install PySpark
+        run: pip install pyspark==${{ env.PYSPARK_PIN }}
+      - name: Install Python package
+        run: |
+          cd python
+          pip install -e .
+      - name: Run smoke test
+        run: python python/tests/smoke_test.py
+
+  # Job 7: Coverage (optional, runs on main branch only)
+  coverage:
+    runs-on: ubuntu-latest
+    needs: test-matrix
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    name: Coverage Report
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Run coverage
+        run: sbt ++${{ env.SCALA_213 }} clean coverage test coverageReport
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: target/scala-2.13/scoverage-report/scoverage.xml
+          fail_ci_if_error: false
+
