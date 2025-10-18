@@ -25,13 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint & Style Check
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Check Style
         run: sbt ++${{ env.SCALA_213 }} scalastyle
 
@@ -41,19 +41,19 @@ jobs:
     needs: lint
     name: Build JARs (2.12 & 2.13)
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Package 2.12 (Spark ${{ env.DEFAULT_SPARK }})
         run: sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.DEFAULT_SPARK }} clean package
       - name: Package 2.13 (Spark ${{ env.DEFAULT_SPARK }})
         run: sbt ++${{ env.SCALA_213 }} -Dspark.version=${{ env.DEFAULT_SPARK }} clean package
       - name: Upload JARs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
         with:
           name: jars
           path: |
@@ -72,13 +72,13 @@ jobs:
         spark: ["3.4.0", "3.5.1"]
     name: Test Scala ${{ matrix.scala }} / Spark ${{ matrix.spark }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Run tests
         run: sbt ++${{ matrix.scala }} -Dspark.version=${{ matrix.spark }} test
 
@@ -88,15 +88,15 @@ jobs:
     needs: build
     name: Run Examples
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Download JARs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
           name: jars
           path: target
@@ -117,15 +117,15 @@ jobs:
     needs: build
     name: Cross-version Persistence
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Download JARs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
           name: jars
           path: target
@@ -149,15 +149,15 @@ jobs:
     needs: build
     name: Performance Sanity Check
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Download JARs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
           name: jars
           path: target
@@ -167,7 +167,7 @@ jobs:
           sbt ++${{ env.SCALA_213 }} "Test/runMain com.massivedatascience.clusterer.PerformanceSanityCheck"
         continue-on-error: true
       - name: Upload performance logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.5.0
         if: always()
         with:
           name: perf-logs
@@ -180,18 +180,18 @@ jobs:
     needs: build
     name: Python Smoke Test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
         with:
           python-version: '3.9'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Download JARs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
           name: jars
           path: target
@@ -211,17 +211,17 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     name: Coverage Report
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b  # v4.5.0
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@v1
+      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
       - name: Run coverage
         run: sbt ++${{ env.SCALA_213 }} clean coverage test coverageReport
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a  # v5.0.2
         with:
           files: target/scala-2.13/scoverage-report/scoverage.xml
           fail_ci_if_error: false
