@@ -221,7 +221,7 @@ jobs:
       - name: Run coverage
         run: sbt ++${{ env.SCALA_213 }} clean coverage test coverageReport
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a  # v5.0.2
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7  # v5.5.1
         with:
           files: target/scala-2.13/scoverage-report/scoverage.xml
           fail_ci_if_error: false
