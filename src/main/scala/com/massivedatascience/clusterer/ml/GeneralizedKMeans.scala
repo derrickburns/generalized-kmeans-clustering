@@ -127,6 +127,11 @@ class GeneralizedKMeans(override val uid: String)
     val convergence  = new MovementConvergence()
     val validator    = new StandardInputValidator()
 
+    logInfo(
+      s"Strategy selection: assignment=${assigner.getClass.getSimpleName}, " +
+        s"update=${updater.getClass.getSimpleName}, emptyHandler=${emptyHandler.getClass.getSimpleName}"
+    )
+
     // Create config
     val config = LloydsConfig(
       k = $(k),
