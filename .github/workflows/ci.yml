@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Check Style
         run: sbt ++${{ env.SCALA_213 }} scalastyle
 
@@ -47,7 +47,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Package 2.12 (Spark ${{ env.DEFAULT_SPARK }})
         run: sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.DEFAULT_SPARK }} clean package
       - name: Package 2.13 (Spark ${{ env.DEFAULT_SPARK }})
@@ -78,7 +78,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Run tests
         run: sbt ++${{ matrix.scala }} -Dspark.version=${{ matrix.spark }} test
 
@@ -94,7 +94,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Download JARs
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
@@ -123,7 +123,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Download JARs
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
@@ -155,7 +155,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Download JARs
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
@@ -189,7 +189,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Download JARs
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
@@ -217,7 +217,7 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: sbt
-      - uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      - uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
       - name: Run coverage
         run: sbt ++${{ env.SCALA_213 }} clean coverage test coverageReport
       - name: Upload coverage to Codecov

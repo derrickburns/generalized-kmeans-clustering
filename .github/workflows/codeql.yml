@@ -37,7 +37,7 @@ jobs:
         cache: 'sbt'
 
     - name: Set up SBT
-      uses: sbt/setup-sbt@c53b681797b9dd5dbbb68a48b5c37e532c092a57  # v1.0.2
+      uses: sbt/setup-sbt@7106bdca9eae3f592a8baeccf57b5a3e06c0de5f  # v1.1.14
 
     # Initializes the CodeQL tools for scanning
     - name: Initialize CodeQL
