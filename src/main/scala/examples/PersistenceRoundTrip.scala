@@ -37,10 +37,23 @@ object PersistenceRoundTrip {
 
       case "load" =>
         val loaded = com.massivedatascience.clusterer.ml.GeneralizedKMeansModel.load(path)
+
+        // Assertions to verify roundtrip correctness
+        assert(loaded.numClusters == 2, s"Expected k=2, got ${loaded.numClusters}")
+        assert(loaded.clusterCenters.length == 2, s"Expected 2 centers, got ${loaded.clusterCenters.length}")
+        assert(loaded.numFeatures == 2, s"Expected dim=2, got ${loaded.numFeatures}")
+
+        // Verify predictions work
         val preds = loaded.transform(df)
         val n = preds.count()
         assert(n == 4, s"expected 4 rows after load, got $n")
-        println(s"Loaded model from $path; predictions=$n")
+
+        // Verify center values are reasonable (should be near (0.5, 0.5) and (9.5, 9.5))
+        val centers = loaded.clusterCenters.sortBy(_.apply(0))
+        assert(math.abs(centers(0)(0) - 0.5) < 1.0, s"Center 0 x-coord should be near 0.5, got ${centers(0)(0)}")
+        assert(math.abs(centers(1)(0) - 9.5) < 1.0, s"Center 1 x-coord should be near 9.5, got ${centers(1)(0)}")
+
+        println(s"✅ Loaded model from $path; predictions=$n; all assertions passed")
       case other =>
         sys.error(s"Unknown mode: $other")
     }
