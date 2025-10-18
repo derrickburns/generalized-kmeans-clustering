@@ -58,57 +58,39 @@ Items are prioritized by impact, dependencies, and effort. **All P0 blockers mus
 
 ## 🔴 PRODUCTION BLOCKERS (P0 - Must Fix Before v1.0)
 
-### A) Persistence Contract - Complete Rollout 🚧
+### A) Persistence Contract - Complete Rollout ✅
 
-**Status:** Core ✅ Done, Extensions ⏳ Pending
+**Status:** COMPLETE (Oct 18, 2025)
 **Priority:** P0 - Critical
-**Effort:** 10-15 hours
+**Effort:** Completed
 
 **What's Complete:**
-- ✅ PersistenceLayoutV1 infrastructure
-- ✅ GeneralizedKMeansModel persistence
+- ✅ PersistenceLayoutV1 infrastructure (Oct 18, 2025 - commits 9a8334f, c08d0c1)
+- ✅ GeneralizedKMeansModel persistence (Oct 18, 2025)
+- ✅ KMedoidsModel persistence (Oct 18, 2025 - commit 3fecb41)
+- ✅ SoftKMeansModel persistence (Oct 18, 2025 - commit 3fecb41)
+- ✅ StreamingKMeansModel persistence (Oct 18, 2025 - commit 7ba783f)
 - ✅ Comprehensive documentation (PERSISTENCE_COMPATIBILITY.md)
 - ✅ Test suite with 5 roundtrip tests
+- ✅ Executable roundtrip examples for all 4 models (Oct 18, 2025 - commit 04a9ffc)
+  - PersistenceRoundTrip.scala (GeneralizedKMeans)
+  - PersistenceRoundTripKMedoids.scala
+  - PersistenceRoundTripSoftKMeans.scala
+  - PersistenceRoundTripStreamingKMeans.scala
+  - All include comprehensive assertions
+- ✅ Cross-version CI job for all models (Oct 18, 2025 - commit 6265cec)
+  - Tests Scala 2.12 ↔ 2.13 compatibility (bidirectional)
+  - Tests Spark 3.4.0 ↔ 3.5.1 compatibility (bidirectional)
+  - Matrix covers all 4 model types
 
-**What Remains:**
-1. **Extend to all models** (2-3 hours each):
-   - [ ] BisectingGeneralizedKMeansModel
-   - [ ] XMeansModel
-   - [ ] SoftGeneralizedKMeansModel
-   - [ ] StreamingGeneralizedKMeansModel
-   - [ ] KMedoidsModel
-
-2. **Create executable roundtrip examples** (30 min each):
-   ```scala
-   // src/main/scala/examples/PersistenceRoundTrip_gkm.scala
-   object PersistenceRoundTrip_gkm {
-     def main(args: Array[String]): Unit = {
-       val mode = args(0) // "save" or "load"
-       val path = args(1)
-       // ... fit, save/load, assert
-     }
-   }
-   ```
-
-3. **Add cross-version CI job**:
-   ```yaml
-   # .github/workflows/persistence-cross.yml
-   persistence-cross:
-     strategy:
-       matrix:
-         algo: [gkm, xmeans, soft, bisecting, kmedoids]
-     steps:
-       - name: Save with Spark 3.4.0 / Scala 2.12
-       - name: Load with Spark 3.5.1 / Scala 2.13
-       - name: Save with Spark 3.5.1 / Scala 2.13
-       - name: Load with Spark 3.4.0 / Scala 2.12
-   ```
+**Note:** XMeans returns GeneralizedKMeansModel, BisectingKMeans not yet implemented as separate estimator
 
 **Acceptance Criteria:**
-- [ ] All 5 remaining models have persistence
-- [ ] Cross-version CI job passes for all algorithms
-- [ ] Checksums validate on load
-- [ ] Epsilon/transform settings roundtrip correctly
+- ✅ All 4 models have persistence
+- ✅ Cross-version CI job passes for all algorithms
+- ✅ Checksums validate on load
+- ✅ Epsilon/transform settings roundtrip correctly
+- ✅ Model-specific state preserved (medoids, weights, soft params)
 
 ---
 
