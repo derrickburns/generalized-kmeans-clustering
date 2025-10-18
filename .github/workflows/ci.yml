@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -8,45 +7,28 @@ on:
     branches: [ master, main ]
   workflow_dispatch:
 
-# Cancel older runs of the same branch/PR to save minutes.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  # Centralize versions in one place
+  JAVA_VERSION: "17"
   SCALA_213: "2.13.14"
   SCALA_212: "2.12.18"
-  SPARK_34: "3.4.3"
-  SPARK_35: "3.5.1"
-  JAVA_VERSION: "17"
-
-  # SBT non-interactive + faster classpath resolution
+  SPARK_35:  "3.5.1"
+  SPARK_34:  "3.4.3"
   SBT_OPTS: "-Dsbt.ci=true -Dsbt.log.noformat=true"
 
-  # Disable Spark UI in CI; use local master for speed in examples
-  SPARK_LOCAL_master: "local[*]"
-  SPARK_UI: "false"
-
 jobs:
-  # ----------------------------
-  # Lint / Style (fast gate)
-  # ----------------------------
   lint:
     runs-on: ubuntu-latest
     name: Lint & Style
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - uses: sbt/setup-sbt@v1
-
-      - name: Cache Ivy / Coursier / SBT
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -55,33 +37,21 @@ jobs:
           key: ${{ runner.os }}-lint-${{ hashFiles('**/*.sbt', '**/project/**') }}
           restore-keys: |
             ${{ runner.os }}-lint-
-
       - name: Scalafmt & Scalastyle
         run: |
           sbt ++${{ env.SCALA_213 }} scalafmtCheckAll
-          # If scalastyle is configured; otherwise no-op
           sbt ++${{ env.SCALA_213 }} scalastyle || true
 
-  # -----------------------------------------
-  # Build once for both Scala lines (artifacts)
-  # -----------------------------------------
   build:
     runs-on: ubuntu-latest
     name: Build & Package (2.13 + 2.12)
     needs: lint
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - uses: sbt/setup-sbt@v1
-
-      - name: Cache Ivy / Coursier / SBT
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -90,14 +60,11 @@ jobs:
           key: ${{ runner.os }}-build-${{ hashFiles('**/*.sbt', '**/project/**') }}
           restore-keys: |
             ${{ runner.os }}-build-
-
       - name: Package (Scala 2.13, Spark 3.5)
         run: sbt ++${{ env.SCALA_213 }} -Dspark.version=${{ env.SPARK_35 }} clean package
-
       - name: Package (Scala 2.12, Spark 3.5) for PySpark
         run: sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.SPARK_35 }} clean package
-
-      - name: Upload JARs (artifacts)
+      - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
           name: jars
@@ -107,37 +74,24 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # ----------------------------------------------------
-  # Matrix JVM tests (Validation DAG — parallel runners)
-  # ----------------------------------------------------
   test-jvm:
     runs-on: ubuntu-latest
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        scala: [ "2.13.14", "2.12.18" ]
-        spark: [ "3.4.3", "3.5.1" ]
         include:
-          - scala: "2.13.14"
-            spark: "3.5.1"
-          - scala: "2.12.18"
-            spark: "3.4.3"
-          - scala: "2.12.18"
-            spark: "3.5.1"
-        # NOTE: We intentionally do NOT pair Scala 2.13 with Spark 3.4
-        # because upstream Spark 3.4 artifacts are 2.12 only.
+          # Legal pairs only. Spark 3.4 ships Scala 2.12 artifacts, not 2.13.
+          - { scala: "2.13.14", spark: "3.5.1" }
+          - { scala: "2.12.18", spark: "3.4.3" }
+          - { scala: "2.12.18", spark: "3.5.1" }
     name: Test (Scala ${{ matrix.scala }}, Spark ${{ matrix.spark }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - uses: sbt/setup-sbt@v1
-
-      - name: Cache Ivy / Coursier / SBT
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -146,28 +100,19 @@ jobs:
           key: ${{ runner.os }}-test-${{ matrix.scala }}-${{ matrix.spark }}-${{ hashFiles('**/*.sbt', '**/project/**') }}
           restore-keys: |
             ${{ runner.os }}-test-${{ matrix.scala }}-${{ matrix.spark }}-
-
-      - name: Run unit & integration tests
+      - name: Run tests
         run: sbt ++${{ matrix.scala }} -Dspark.version=${{ matrix.spark }} test
 
-  # ----------------------------------------------------
-  # Examples runner (keeps docs executable)
-  # Skips cleanly if examples task not present.
-  # ----------------------------------------------------
   examples:
     runs-on: ubuntu-latest
     needs: build
-    name: Examples (Scala 2.13, Spark 3.5)
+    name: Examples (keep docs executable)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - uses: sbt/setup-sbt@v1
-
-      - name: Cache Ivy / Coursier / SBT
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -176,11 +121,8 @@ jobs:
           key: ${{ runner.os }}-examples-${{ hashFiles('**/*.sbt', '**/project/**') }}
           restore-keys: |
             ${{ runner.os }}-examples-
-
-      - name: Run documented examples (no-op if task missing)
+      - name: Run documented examples (skip if none)
         run: |
-          # Prefer a dedicated examples:test or scripted task if you added one.
-          # Fallback: run a minimal example suite by name if present; otherwise skip gracefully.
           set -e
           if sbt ++${{ env.SCALA_213 }} -Dspark.version=${{ env.SPARK_35 }} "show Test / definedTests" | grep -qi Examples; then
             sbt ++${{ env.SCALA_213 }} -Dspark.version=${{ env.SPARK_35 }} "testOnly *Examples*"
@@ -188,65 +130,43 @@ jobs:
             echo "No *Examples* tests detected; skipping."
           fi
 
-  # ----------------------------------------------------
-  # Python (PySpark) smoke test with 2.12 jar
-  # ----------------------------------------------------
   test-python:
     runs-on: ubuntu-latest
     needs: build
-    name: PySpark Smoke (non-SE & SE)
+    name: PySpark Smoke (SE + non-SE)
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-
       - uses: actions/download-artifact@v4
-        with:
-          name: jars
-          path: jars
-
+        with: { name: jars, path: jars }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - name: Install PySpark
         run: |
           python -m pip install --upgrade pip
           pip install pyspark==${{ env.SPARK_35 }}
-
-      - name: Run smoke test (uses 2.12 jar)
-        env:
-          SPARK_UI: "false"
+      - name: Run smoke test with 2.12 JAR
+        env: { PYTHONUNBUFFERED: "1" }
         run: |
-          JAR_212=$(ls jars/target/scala-2.12/*.jar | head -n1 || true)
+          JAR_212=$(ls jars/target/scala-2.12/*.jar 2>/dev/null | head -n1 || true)
           if [ -z "$JAR_212" ]; then
-            # Fallback path if artifact layout differs
             JAR_212=$(ls jars/*scala-2.12*.jar | head -n1)
           fi
           echo "Using jar: $JAR_212"
           test -f python/smoke_test.py
           spark-submit --conf spark.ui.enabled=false --jars "$JAR_212" python/smoke_test.py
 
-  # ----------------------------------------------------
-  # Coverage (scoverage), once (2.12 or 2.13 is fine)
-  # ----------------------------------------------------
   coverage:
     runs-on: ubuntu-latest
-    needs: [ test-jvm ]
+    needs: test-jvm
     name: Coverage (scoverage)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+        with: { distribution: temurin, java-version: ${{ env.JAVA_VERSION }} }
       - uses: sbt/setup-sbt@v1
-
-      - name: Cache Ivy / Coursier / SBT
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.ivy2/cache
@@ -255,50 +175,38 @@ jobs:
           key: ${{ runner.os }}-coverage-${{ hashFiles('**/*.sbt', '**/project/**') }}
           restore-keys: |
             ${{ runner.os }}-coverage-
-
-      - name: Run coverage
+      - name: Run scoverage
         run: |
           sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.SPARK_35 }} coverage test coverageReport
-          echo "perf_sanity_seconds=$(grep -hR --only-matching --line-number -E 'perf_sanity_seconds=\S+' target || true)"
-
+          # Optional perf sanity line for log scraping:
+          echo "perf_sanity_seconds=$(grep -hR --only-matching -E 'perf_sanity_seconds=[0-9.]+' target || true)"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: scoverage-report
           path: target/**/scoverage-report/*
           retention-days: 7
-
       - name: Upload to Codecov (optional)
         uses: codecov/codecov-action@v4
         with:
           files: ./target/scala-2.12/scoverage-report/scoverage.xml
           fail_ci_if_error: false
 
-  # ----------------------------------------------------
-  # Gate: release-like meta stage (only runs if all pass)
-  # ----------------------------------------------------
   all-green:
     runs-on: ubuntu-latest
-    needs:
-      - test-jvm
-      - examples
-      - test-python
-      - coverage
-    if: ${{ always() }}
+    needs: [ test-jvm, examples, test-python, coverage ]
     steps:
-      - name: Final status
+      - name: Gate
         run: |
+          echo "test-jvm:     ${{ needs.test-jvm.result }}"
+          echo "examples:     ${{ needs.examples.result }}"
+          echo "test-python:  ${{ needs.test-python.result }}"
+          echo "coverage:     ${{ needs.coverage.result }}"
           if [ "${{ needs.test-jvm.result }}" = "success" ] &&
              [ "${{ needs.examples.result }}" = "success" ] &&
              [ "${{ needs.test-python.result }}" = "success" ] &&
              [ "${{ needs.coverage.result }}" = "success" ]; then
             echo "All validations passed ✅"
-            exit 0
           else
-            echo "Some validations failed ❌"
-            echo "test-jvm:     ${{ needs.test-jvm.result }}"
-            echo "examples:     ${{ needs.examples.result }}"
-            echo "test-python:  ${{ needs.test-python.result }}"
-            echo "coverage:     ${{ needs.coverage.result }}"
-            exit 1
+            echo "Validations failed ❌" && exit 1
           fi
