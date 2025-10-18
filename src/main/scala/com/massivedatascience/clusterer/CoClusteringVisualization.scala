@@ -378,7 +378,7 @@ object CoClusteringVisualization {
        |</head>
        |<body>
        |  <h1>$title</h1>
-       |  
+       |
        |  <div class="panel summary">
        |    <h2>Model Summary</h2>
        |    <div class="metric">Row Clusters: ${summary.numRowClusters}</div>
@@ -387,53 +387,53 @@ object CoClusteringVisualization {
        |    <div class="metric">Reconstruction Error: ${f"${summary.reconstructionError}%.6f"}</div>
        |    <div class="metric">Iterations: ${summary.iterations}</div>
        |  </div>
-       |  
+       |
        |  <div class="container">
        |    <div class="panel">
        |      <h2>Block Structure Heatmap</h2>
        |      <div id="heatmap"></div>
        |    </div>
-       |    
+       |
        |    <div class="panel">
        |      <h2>Convergence Plot</h2>
        |      <div id="convergence"></div>
        |    </div>
-       |    
+       |
        |    <div class="panel">
        |      <h2>Cluster Network</h2>
        |      <div id="network"></div>
        |    </div>
        |  </div>
-       |  
+       |
        |  <script>
        |    const data = $jsonData;
-       |    
+       |
        |    // Heatmap visualization
        |    function createHeatmap() {
        |      const margin = {top: 30, right: 30, bottom: 30, left: 50};
        |      const width = 400 - margin.left - margin.right;
        |      const height = 300 - margin.bottom - margin.top;
-       |      
+       |
        |      const svg = d3.select("#heatmap")
        |        .append("svg")
        |        .attr("width", width + margin.left + margin.right)
        |        .attr("height", height + margin.top + margin.bottom)
        |        .append("g")
        |        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-       |      
+       |
        |      const xScale = d3.scaleBand()
        |        .domain(d3.range(data.heatmap.numCols))
        |        .range([0, width])
        |        .padding(0.1);
-       |      
+       |
        |      const yScale = d3.scaleBand()
        |        .domain(d3.range(data.heatmap.numRows))
        |        .range([0, height])
        |        .padding(0.1);
-       |      
+       |
        |      const colorScale = d3.scaleSequential(d3.interpolateBlues)
        |        .domain(data.heatmap.valueRange);
-       |      
+       |
        |      svg.selectAll(".heatmap-cell")
        |        .data(data.heatmap.data)
        |        .enter()
@@ -446,56 +446,56 @@ object CoClusteringVisualization {
        |        .attr("fill", d => colorScale(d.value))
        |        .append("title")
        |        .text(d => "Block (" + d.row + ", " + d.col + "): " + d.value.toFixed(3));
-       |      
+       |
        |      // Add axes
        |      svg.append("g")
        |        .attr("transform", "translate(0," + height + ")")
        |        .call(d3.axisBottom(xScale));
-       |      
+       |
        |      svg.append("g")
        |        .call(d3.axisLeft(yScale));
        |    }
-       |    
+       |
        |    // Convergence plot
        |    function createConvergencePlot() {
        |      const margin = {top: 20, right: 30, bottom: 40, left: 60};
        |      const width = 400 - margin.left - margin.right;
        |      const height = 300 - margin.top - margin.bottom;
-       |      
+       |
        |      const svg = d3.select("#convergence")
        |        .append("svg")
        |        .attr("width", width + margin.left + margin.right)
        |        .attr("height", height + margin.top + margin.bottom)
        |        .append("g")
        |        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-       |      
+       |
        |      const xScale = d3.scaleLinear()
        |        .domain(d3.extent(data.convergence.data, d => d.iteration))
        |        .range([0, width]);
-       |      
+       |
        |      const yScale = d3.scaleLinear()
        |        .domain(d3.extent(data.convergence.data, d => d.objective))
        |        .range([height, 0]);
-       |      
+       |
        |      const line = d3.line()
        |        .x(d => xScale(d.iteration))
        |        .y(d => yScale(d.objective));
-       |      
+       |
        |      svg.append("path")
        |        .datum(data.convergence.data)
        |        .attr("fill", "none")
        |        .attr("stroke", "steelblue")
        |        .attr("stroke-width", 2)
        |        .attr("d", line);
-       |      
+       |
        |      // Add axes
        |      svg.append("g")
        |        .attr("transform", "translate(0," + height + ")")
        |        .call(d3.axisBottom(xScale));
-       |      
+       |
        |      svg.append("g")
        |        .call(d3.axisLeft(yScale));
-       |      
+       |
        |      // Add labels
        |      svg.append("text")
        |        .attr("transform", "rotate(-90)")
@@ -504,28 +504,28 @@ object CoClusteringVisualization {
        |        .attr("dy", "1em")
        |        .style("text-anchor", "middle")
        |        .text("Objective Value");
-       |      
+       |
        |      svg.append("text")
        |        .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
        |        .style("text-anchor", "middle")
        |        .text("Iteration");
        |    }
-       |    
+       |
        |    // Network visualization (simplified)
        |    function createNetwork() {
        |      const width = 400;
        |      const height = 300;
-       |      
+       |
        |      const svg = d3.select("#network")
        |        .append("svg")
        |        .attr("width", width)
        |        .attr("height", height);
-       |      
+       |
        |      const simulation = d3.forceSimulation(data.network.nodes)
        |        .force("link", d3.forceLink(data.network.edges).id(d => d.id).distance(50))
        |        .force("charge", d3.forceManyBody().strength(-100))
        |        .force("center", d3.forceCenter(width / 2, height / 2));
-       |      
+       |
        |      const link = svg.append("g")
        |        .selectAll("line")
        |        .data(data.network.edges)
@@ -533,7 +533,7 @@ object CoClusteringVisualization {
        |        .attr("stroke", "#999")
        |        .attr("stroke-opacity", 0.6)
        |        .attr("stroke-width", d => Math.sqrt(d.weight));
-       |      
+       |
        |      const node = svg.append("g")
        |        .selectAll("circle")
        |        .data(data.network.nodes)
@@ -544,40 +544,40 @@ object CoClusteringVisualization {
        |          .on("start", dragstarted)
        |          .on("drag", dragged)
        |          .on("end", dragended));
-       |      
+       |
        |      node.append("title")
        |        .text(d => d.label);
-       |      
+       |
        |      simulation.on("tick", () => {
        |        link
        |          .attr("x1", d => d.source.x)
        |          .attr("y1", d => d.source.y)
        |          .attr("x2", d => d.target.x)
        |          .attr("y2", d => d.target.y);
-       |        
+       |
        |        node
        |          .attr("cx", d => d.x)
        |          .attr("cy", d => d.y);
        |      });
-       |      
+       |
        |      function dragstarted(event) {
        |        if (!event.active) simulation.alphaTarget(0.3).restart();
        |        event.subject.fx = event.subject.x;
        |        event.subject.fy = event.subject.y;
        |      }
-       |      
+       |
        |      function dragged(event) {
        |        event.subject.fx = event.x;
        |        event.subject.fy = event.y;
        |      }
-       |      
+       |
        |      function dragended(event) {
        |        if (!event.active) simulation.alphaTarget(0);
        |        event.subject.fx = null;
        |        event.subject.fy = null;
        |      }
        |    }
-       |    
+       |
        |    // Initialize visualizations
        |    createHeatmap();
        |    createConvergencePlot();

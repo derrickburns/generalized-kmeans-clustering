@@ -274,23 +274,23 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
     val totalWeight = weights.sum
 
     if (totalWeight <= 0.0) {
-      return Seq(rand.nextInt(n))
-    }
-
-    // Build alias table using Vose's algorithm
-    val (alias, prob) = buildAliasTable(weights)
-
-    // Sample using alias method
-    val uniformIndex = rand.nextInt(n)
-    val uniformProb  = rand.nextDouble()
-
-    val selectedIndex = if (uniformProb < prob(uniformIndex)) {
-      uniformIndex
+      Seq(rand.nextInt(n))
     } else {
-      alias(uniformIndex)
-    }
+      // Build alias table using Vose's algorithm
+      val (alias, prob) = buildAliasTable(weights)
 
-    Seq(selectedIndex)
+      // Sample using alias method
+      val uniformIndex = rand.nextInt(n)
+      val uniformProb  = rand.nextDouble()
+
+      val selectedIndex = if (uniformProb < prob(uniformIndex)) {
+        uniformIndex
+      } else {
+        alias(uniformIndex)
+      }
+
+      Seq(selectedIndex)
+    }
   }
 
   /** Build alias table for O(1) sampling using Vose's algorithm.

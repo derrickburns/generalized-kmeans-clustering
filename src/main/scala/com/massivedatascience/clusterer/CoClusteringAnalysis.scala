@@ -298,7 +298,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
       |  <div class="metric">Non-empty Blocks: ${patterns.totalNonEmptyBlocks}</div>
       |  <div class="metric">Block Density: ${f"${patterns.blockDensity}%.3f"}</div>
       |  <div class="metric">Connectivity: ${f"${patterns.connectivity}%.3f"}</div>
-      |  
+      |
       |  <h3>Pattern Distribution</h3>
       |  <table class="pattern-table">
       |    <tr><th>Pattern Type</th><th>Count</th></tr>
@@ -310,7 +310,7 @@ class CoClusteringAnalysis(model: BregmanCoClusteringModel) extends Serializable
 
     html.append("""
       |  </table>
-      |  
+      |
       |  <h3>Top Dominant Blocks</h3>
       |  <table class="pattern-table">
       |    <tr><th>Row Cluster</th><th>Column Cluster</th><th>Significance Score</th></tr>
