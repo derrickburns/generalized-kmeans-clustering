@@ -42,8 +42,9 @@
     Test / testOptions += Tests.Argument("-Dlog4j.configurationFile=log4j2.properties")
     Test / fork := true
     Test / javaOptions ++= Seq(
+      "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
       "--add-opens=java.base/java.nio=ALL-UNNAMED",
-      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",  
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
       "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
       "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED",
       "-Djava.awt.headless=true",
