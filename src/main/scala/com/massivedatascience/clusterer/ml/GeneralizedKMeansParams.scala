@@ -47,12 +47,44 @@ trait GeneralizedKMeansParams
 
   def getDivergence: String = $(divergence)
 
-  /** Smoothing parameter for divergences that need it (KL, IS, etc.). Must be > 0. Default: 1e-10
+  /** Smoothing parameter (epsilon shift) for divergences with domain constraints.
+    *
+    * Required for divergences with strict domain requirements:
+    *   - '''KL divergence''': Requires P > 0, Q > 0. Smoothing adds epsilon to ensure strict
+    *     positivity: `x' = x + epsilon`. Recommended: 1e-6 to 1e-10 depending on data scale.
+    *   - '''Itakura-Saito''': Requires P > 0, Q > 0. Same epsilon shift as KL. Recommended: 1e-10
+    *   - '''Logistic loss''': Requires P ∈ (0,1). Smoothing ensures values stay in open interval:
+    *     `x' = clip(x, epsilon, 1-epsilon)`. Recommended: 1e-10
+    *   - '''Squared Euclidean, L1''': No domain constraints, smoothing not needed (ignored if set)
+    *
+    * The smoothing value is:
+    *   - Applied to both input data and cluster centers
+    *   - Persisted with the model for consistent inference
+    *   - Used in all distance calculations
+    *
+    * '''Choosing the right value:'''
+    *   - Too small (< 1e-12): May not prevent numerical issues
+    *   - Too large (> 1e-3): May distort clustering results
+    *   - Recommended range: 1e-10 to 1e-6
+    *   - When in doubt, use default 1e-10
+    *
+    * '''Troubleshooting:'''
+    *   - If you see NaN in results: Increase smoothing to 1e-6
+    *   - If you see "negative value" errors: Check input data has correct domain, increase smoothing
+    *   - If results seem biased: Smoothing may be too large, try 1e-10
+    *
+    * Must be > 0.
+    *
+    * Default: 1e-10
+    *
+    * @group param
+    * @see
+    *   [[NumericGuards]] for validation of domain constraints
     */
   final val smoothing = new DoubleParam(
     this,
     "smoothing",
-    "Smoothing parameter for divergences",
+    "Smoothing parameter (epsilon shift) for divergences with domain constraints",
     ParamValidators.gt(0.0)
   )
 
