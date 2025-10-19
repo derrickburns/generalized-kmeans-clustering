@@ -224,9 +224,8 @@ class KMedoids(override val uid: String)
     *
     * Algorithm:
     *   1. For each medoid m and each non-medoid point o:
-    *      - Compute cost change if m is swapped with o
-    *      2. Perform the swap with the largest cost reduction 3. Repeat until no improvement is
-    *      possible or maxIter is reached
+    *      - Compute cost change if m is swapped with o 2. Perform the swap with the largest cost
+    *        reduction 3. Repeat until no improvement is possible or maxIter is reached
     *
     * @param data
     *   all data points
