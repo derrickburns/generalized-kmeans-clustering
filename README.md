@@ -71,17 +71,27 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 
 Feature Matrix
 
-Algorithm	DataFrame API	Use Case	Key Benefit
-GeneralizedKMeans	✅	General clustering	5+ Bregman divergences
-Bisecting K-Means	✅	Hierarchical/divisive	Tree structure; no k tuning
-X-Means	✅	Unknown k	Automatic k via BIC/AIC
-Soft K-Means	✅	Fuzzy	Probabilistic memberships
-Streaming K-Means	✅	Real-time	Exponential forgetting
-K-Medoids (PAM/CLARA)	✅	Outlier-robust	Medoids; custom distances
-K-Medians	✅	Robust	L1/Manhattan divergence
-Constrained K-Means	⚠️ RDD only	Balance/capacity	Size constraints
-Mini-Batch K-Means	⚠️ RDD only	Massive datasets	Sampling-based
-Coreset K-Means	⚠️ RDD only	Massive datasets	Approximation/acceleration
+Truth-linked to code, tests, and examples for full transparency:
+
+| Algorithm | API | Code | Tests | Example | Use Case |
+|-----------|-----|------|-------|---------|----------|
+| **GeneralizedKMeans** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GKMSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | General clustering with 6+ divergences |
+| **Bisecting K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BisectingGeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/BisectingKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | Hierarchical/divisive clustering |
+| **X-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/XMeansSuite.scala) | [Example](src/main/scala/examples/XMeansExample.scala) | Automatic k via BIC/AIC |
+| **Soft K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/SoftKMeansSuite.scala) | [Example](src/main/scala/examples/SoftKMeansExample.scala) | Fuzzy/probabilistic memberships |
+| **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
+| **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
+| **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/divergence/L1Divergence.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GKMSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
+| Constrained K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Balance/capacity constraints |
+| Mini-Batch K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Massive datasets via sampling |
+| Coreset K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Approximation/acceleration |
+
+**Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss
+
+All DataFrame API algorithms include:
+- ✅ Model persistence (save/load across Spark 3.4↔3.5, Scala 2.12↔2.13)
+- ✅ Comprehensive test coverage (592 tests, 100% passing on Spark 3.4.3)
+- ✅ CI validation on every commit
 
 
 ⸻
