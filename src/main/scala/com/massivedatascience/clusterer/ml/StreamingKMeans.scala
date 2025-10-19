@@ -564,7 +564,7 @@ object StreamingKMeansModel extends MLReadable[StreamingKMeansModel] {
       val dim = currentCenters.headOption.map(_.size).getOrElse(0)
 
       // Build metadata object (explicitly typed to avoid Any inference)
-      implicit val formats = DefaultFormats
+      implicit val formats          = DefaultFormats
       val metaObj: Map[String, Any] = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "StreamingKMeansModel",

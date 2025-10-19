@@ -599,7 +599,7 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       val dim = instance.numFeatures
 
       // Build metadata object (explicitly typed to avoid Any inference)
-      implicit val formats = DefaultFormats
+      implicit val formats          = DefaultFormats
       val metaObj: Map[String, Any] = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "KMedoidsModel",
