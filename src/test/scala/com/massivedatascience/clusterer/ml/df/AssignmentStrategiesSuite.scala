@@ -12,10 +12,10 @@ import com.massivedatascience.clusterer.ml.df._
 /** Tests for assignment strategies.
   *
   * These tests verify:
-  * - BroadcastUDFAssignment works correctly
-  * - ChunkedBroadcastAssignment produces identical results to broadcast
-  * - AutoAssignment selects correct strategy based on k×dim threshold
-  * - All strategies handle edge cases (small k, large k×dim)
+  *   - BroadcastUDFAssignment works correctly
+  *   - ChunkedBroadcastAssignment produces identical results to broadcast
+  *   - AutoAssignment selects correct strategy based on k×dim threshold
+  *   - All strategies handle edge cases (small k, large k×dim)
   */
 class AssignmentStrategiesSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
@@ -58,12 +58,12 @@ class AssignmentStrategiesSuite extends AnyFunSuite with Matchers with BeforeAnd
   }
 
   test("BroadcastUDFAssignment: assigns points correctly") {
-    val df = testDF()
+    val df      = testDF()
     val centers = Array(
-      Array(0.5, 0.5),  // Center 0: near (0,0), (0.5,0.5), (1,1)
-      Array(9.5, 9.5)   // Center 1: near (9,9), (9.5,9.5), (10,10)
+      Array(0.5, 0.5), // Center 0: near (0,0), (0.5,0.5), (1,1)
+      Array(9.5, 9.5)  // Center 1: near (9,9), (9.5,9.5), (10,10)
     )
-    val kernel = new SquaredEuclideanKernel()
+    val kernel  = new SquaredEuclideanKernel()
 
     val strategy = new BroadcastUDFAssignment()
     val assigned = strategy.assign(df, "features", None, centers, kernel)
@@ -81,12 +81,12 @@ class AssignmentStrategiesSuite extends AnyFunSuite with Matchers with BeforeAnd
   }
 
   test("ChunkedBroadcastAssignment: produces same results as BroadcastUDF") {
-    val df = testDF()
+    val df      = testDF()
     val centers = Array(
       Array(0.5, 0.5),
       Array(9.5, 9.5)
     )
-    val kernel = new GeneralizedIDivergenceKernel(1e-10)
+    val kernel  = new GeneralizedIDivergenceKernel(1e-10)
 
     val broadcast = new BroadcastUDFAssignment()
     val chunked   = new ChunkedBroadcastAssignment(chunkSize = 1) // Force chunking even with k=2
@@ -160,12 +160,12 @@ class AssignmentStrategiesSuite extends AnyFunSuite with Matchers with BeforeAnd
   }
 
   test("AutoAssignment: selects BroadcastUDF for non-SE with small k×dim") {
-    val df = testDF()
+    val df      = testDF()
     val centers = Array(
       Array(0.5, 0.5),
       Array(9.5, 9.5)
     )
-    val kernel = new GeneralizedIDivergenceKernel(1e-10) // Non-SE kernel
+    val kernel  = new GeneralizedIDivergenceKernel(1e-10) // Non-SE kernel
 
     // k×dim = 2×2 = 4, which is << 200000
     val auto = new AutoAssignment(broadcastThresholdElems = 200000, chunkSize = 100)

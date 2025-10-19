@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "massivedatascience-clusterer"
+version = "0.6.0"
+description = "Generalized K-Means clustering for PySpark with Bregman divergences"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "MassiveDataScience", email = "support@massivedatascience.com"}
+]
+maintainers = [
+    {name = "MassiveDataScience", email = "support@massivedatascience.com"}
+]
+keywords = [
+    "pyspark",
+    "clustering",
+    "kmeans",
+    "machine-learning",
+    "bregman-divergence",
+    "data-science",
+    "big-data"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "pyspark>=3.4.0",
+    "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "isort>=5.10.0",
+]
+docs = [
+    "sphinx>=4.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "nbsphinx>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/derrickburns/generalized-kmeans-clustering"
+Documentation = "https://github.com/derrickburns/generalized-kmeans-clustering#readme"
+Repository = "https://github.com/derrickburns/generalized-kmeans-clustering"
+"Bug Tracker" = "https://github.com/derrickburns/generalized-kmeans-clustering/issues"
+Changelog = "https://github.com/derrickburns/generalized-kmeans-clustering/blob/master/CHANGELOG.md"
+
+[tool.setuptools]
+packages = ["massivedatascience", "massivedatascience.clusterer"]
+
+[tool.setuptools.package-data]
+massivedatascience = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py37", "py38", "py39", "py310", "py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=massivedatascience --cov-report=term-missing"

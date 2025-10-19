@@ -105,3 +105,11 @@ ScalaUnidoc / unidoc / scalacOptions ++= Seq(
   "-implicits",
   "-no-link-warnings"
 )
+
+// SBOM (Software Bill of Materials) and vulnerability scanning
+// Run with: sbt dependencyCheck
+// Generates: target/dependency-check-report.html and dependency-check-report.json
+// The JSON report serves as SBOM
+dependencyCheckFormats := Seq("HTML", "JSON")
+dependencyCheckAssemblyAnalyzerEnabled := Some(false)
+dependencyCheckSuppressionFile := Some(baseDirectory.value / ".dependency-check-suppressions.xml")

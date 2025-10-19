@@ -70,7 +70,8 @@ trait GeneralizedKMeansParams
     *
     * '''Troubleshooting:'''
     *   - If you see NaN in results: Increase smoothing to 1e-6
-    *   - If you see "negative value" errors: Check input data has correct domain, increase smoothing
+    *   - If you see "negative value" errors: Check input data has correct domain, increase
+    *     smoothing
     *   - If results seem biased: Smoothing may be too large, try 1e-10
     *
     * Must be > 0.

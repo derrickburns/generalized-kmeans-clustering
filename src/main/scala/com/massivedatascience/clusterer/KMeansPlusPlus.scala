@@ -25,9 +25,6 @@ import com.massivedatascience.util.XORShiftRandom
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
-// Cross-version parallel collections support via compat package
-import com.massivedatascience.clusterer.compat._
-
 /** This implements the <a href="http://ilpubs.stanford.edu:8090/778/1/2006-13.pdf">KMeans++
   * initialization algorithm</a>
   *
@@ -152,11 +149,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
           centers ++= uniformSample.distinct.map(candidateCenters)
         } else {
           val cumulative = cumulativeWeights(weightedDistances)
-          val selected   = (0 until perRound).par.flatMap { _ =>
+          // Use sequential execution to ensure deterministic selection with same seed
+          val selected   = (0 until perRound).flatMap { _ =>
             pickWeighted(rand, cumulative).iterator
           }
 
-          val uniqueSelected = selected.seq.toSeq.distinct
+          val uniqueSelected = selected.distinct
           logger.debug(
             s"Selected ${uniqueSelected.size} unique centers from ${selected.size} samples"
           )
@@ -245,10 +243,12 @@ class KMeansPlusPlus(ops: BregmanPointOps) extends Serializable with Logging {
       centers: IndexedSeq[BregmanCenter]
   ): IndexedSeq[Double] = {
 
-    val newDistances = points.zip(distances).par.map { case (p, d) =>
+    // Use sequential execution to ensure deterministic behavior with same seed
+    // Parallel execution can cause non-deterministic ordering in subsequent random selections
+    val newDistances = points.zip(distances).map { case (p, d) =>
       Math.min(ops.pointCost(centers, p), d)
     }
-    newDistances.toIndexedSeq
+    newDistances
   }
 
   def cumulativeWeights(weights: IndexedSeq[Double]): IndexedSeq[Double] =

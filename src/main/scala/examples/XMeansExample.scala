@@ -15,11 +15,25 @@ object XMeansExample extends App {
     Tuple1(Vectors.dense(10.0, 10.0))
   ).toDF("features")
 
-  val xm     = new XMeans().setMinK(1).setMaxK(3).setDivergence("squaredEuclidean").setSeed(7)
+  val xm     = new XMeans().setMinK(2).setMaxK(3).setDivergence("squaredEuclidean").setSeed(7)
   val model  = xm.fit(df)
   val kFound = model.getK
-  assert(kFound >= 1 && kFound <= 3, s"XMeans returned invalid k=$kFound")
+  assert(kFound >= 2 && kFound <= 3, s"XMeans returned invalid k=$kFound")
 
-  println(s"examples.XMeansExample OK (k=$kFound)")
+  // Demonstrate training summary usage (summary is from final k value)
+  if (model.hasSummary) {
+    val summary = model.summary
+    println(s"\nTraining Summary (for optimal k=$kFound):")
+    println(s"  Algorithm: ${summary.algorithm}")
+    println(s"  Clusters: ${summary.effectiveK}/${summary.k}")
+    println(s"  Iterations: ${summary.iterations} (converged=${summary.converged})")
+    println(s"  Final distortion: ${summary.finalDistortion}")
+    println(s"  Training time: ${summary.elapsedMillis}ms")
+
+    assert(summary.k == kFound, s"summary k should match found k")
+    assert(summary.iterations >= 1, "should have at least 1 iteration")
+  }
+
+  println(s"\nexamples.XMeansExample OK (k=$kFound)")
   spark.stop()
 }

@@ -1,0 +1,16 @@
+# Include license and readme
+include LICENSE
+include README.md
+
+# Include documentation
+recursive-include docs *.md *.rst
+recursive-include examples *.py *.ipynb *.md
+
+# Include test files
+recursive-include tests *.py
+
+# Exclude compiled files
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .DS_Store

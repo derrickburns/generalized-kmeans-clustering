@@ -112,14 +112,38 @@ class BisectingKMeans(override val uid: String)
     // Create kernel
     val kernel = createKernel($(divergence), $(smoothing))
 
-    // Bisecting algorithm
-    val finalCenters = bisect(df, $(featuresCol), getWeightColOpt, kernel)
+    // Bisecting algorithm with timing
+    val startTime                 = System.currentTimeMillis()
+    val (finalCenters, numSplits) = bisectWithHistory(df, $(featuresCol), getWeightColOpt, kernel)
+    val elapsedMillis             = System.currentTimeMillis() - startTime
 
-    logInfo(s"BisectingKMeans completed with ${finalCenters.length} clusters")
+    logInfo(s"BisectingKMeans completed with ${finalCenters.length} clusters in $numSplits splits")
 
     // Create model
     val model = new GeneralizedKMeansModel(uid, finalCenters, kernel.name)
     copyValues(model)
+
+    // Create training summary
+    // Note: For bisecting k-means, "iterations" represents the number of splits performed
+    val numFeatures = finalCenters.headOption.map(_.length).getOrElse(0)
+    val summary     = TrainingSummary(
+      algorithm = "BisectingKMeans",
+      k = $(k),
+      effectiveK = finalCenters.length,
+      dim = numFeatures,
+      numPoints = df.count(),
+      iterations = numSplits,
+      converged = finalCenters.length == $(k), // Converged if we reached target k
+      distortionHistory =
+        Array.empty[Double],                   // Not tracked for bisecting (would need per-split tracking)
+      movementHistory = Array.empty[Double],   // Not tracked for bisecting
+      assignmentStrategy = "Bisecting",
+      divergence = $(divergence),
+      elapsedMillis = elapsedMillis
+    )
+
+    model.trainingSummary = Some(summary)
+    model
   }
 
   /** Get weight column as Option.
@@ -128,25 +152,17 @@ class BisectingKMeans(override val uid: String)
     if (hasWeightCol) Some($(weightCol)) else None
   }
 
-  /** Bisecting clustering algorithm.
+  /** Bisecting clustering algorithm with split tracking.
     *
-    * @param df
-    *   Input DataFrame
-    * @param featuresCol
-    *   Name of features column
-    * @param weightCol
-    *   Optional weight column
-    * @param kernel
-    *   Bregman kernel
     * @return
-    *   Array of cluster centers
+    *   Tuple of (cluster centers, number of splits performed)
     */
-  private def bisect(
+  private def bisectWithHistory(
       df: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
       kernel: BregmanKernel
-  ): Array[Array[Double]] = {
+  ): (Array[Array[Double]], Int) = {
 
     val targetK = $(k)
     val spark   = df.sparkSession
@@ -157,6 +173,7 @@ class BisectingKMeans(override val uid: String)
       0 -> computeCenter(clusteredDF.filter(col("cluster") === 0), featuresCol, weightCol, kernel)
     )
     var nextClusterId  = 1
+    var numSplits      = 0
 
     // Cache for performance
     clusteredDF.cache()
@@ -188,7 +205,7 @@ class BisectingKMeans(override val uid: String)
               s"Stopping with ${clusterCenters.size} clusters."
           )
           clusteredDF.unpersist()
-          return clusterCenters.values.toArray
+          return ((0 until clusterCenters.size).map(i => clusterCenters(i)).toArray, numSplits)
 
         case Some(clusterId) =>
           val clusterSize = clusterSizes(clusterId)
@@ -233,18 +250,19 @@ class BisectingKMeans(override val uid: String)
           clusteredDF.cache()
           oldClusteredDF.unpersist()
 
-          // Update centers
+          // Update centers and increment split count
           clusterCenters = clusterCenters + (clusterId -> center1) + (nextClusterId -> center2)
           nextClusterId += 1
+          numSplits += 1
       }
     }
 
     clusteredDF.unpersist()
 
-    logInfo(s"Bisecting completed with ${clusterCenters.size} clusters")
+    logInfo(s"Bisecting completed with ${clusterCenters.size} clusters after $numSplits splits")
 
-    // Return centers in order
-    (0 until clusterCenters.size).map(i => clusterCenters(i)).toArray
+    // Return centers in order with split count
+    ((0 until clusterCenters.size).map(i => clusterCenters(i)).toArray, numSplits)
   }
 
   /** Split a cluster into two using k=2 clustering.

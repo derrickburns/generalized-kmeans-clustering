@@ -7,11 +7,11 @@ import org.scalatest.matchers.should.Matchers
 /** Tests for NumericGuards utility.
   *
   * These tests verify that numeric guards correctly detect and report:
-  * - NaN values
-  * - Inf values
-  * - Negative values (for divergences requiring positivity)
-  * - Out-of-range probability values
-  * - Invalid weights
+  *   - NaN values
+  *   - Inf values
+  *   - Negative values (for divergences requiring positivity)
+  *   - Out-of-range probability values
+  *   - Invalid weights
   */
 class NumericGuardsSuite extends AnyFunSuite with Matchers {
 
@@ -21,7 +21,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkFinite rejects NaN values") {
-    val v = Vectors.dense(1.0, Double.NaN, 3.0)
+    val v  = Vectors.dense(1.0, Double.NaN, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkFinite(v, "test context")
     }
@@ -31,7 +31,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkFinite rejects Inf values") {
-    val v = Vectors.dense(1.0, Double.PositiveInfinity, 3.0)
+    val v  = Vectors.dense(1.0, Double.PositiveInfinity, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkFinite(v, "test context")
     }
@@ -41,7 +41,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkFinite rejects negative Inf") {
-    val v = Vectors.dense(1.0, Double.NegativeInfinity, 3.0)
+    val v  = Vectors.dense(1.0, Double.NegativeInfinity, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkFinite(v, "test context")
     }
@@ -59,7 +59,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkPositive rejects negative values") {
-    val v = Vectors.dense(1.0, -0.1, 3.0)
+    val v  = Vectors.dense(1.0, -0.1, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkPositive(v, "test context")
     }
@@ -75,7 +75,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkPositive error message includes solutions") {
-    val v = Vectors.dense(1.0, -1.0, 3.0)
+    val v  = Vectors.dense(1.0, -1.0, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkPositive(v, "center update")
     }
@@ -89,7 +89,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkProbability rejects 0.0") {
-    val v = Vectors.dense(0.5, 0.0, 0.9)
+    val v  = Vectors.dense(0.5, 0.0, 0.9)
     val ex = intercept[Exception] {
       NumericGuards.checkProbability(v, "test context")
     }
@@ -98,7 +98,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkProbability rejects 1.0") {
-    val v = Vectors.dense(0.5, 1.0, 0.9)
+    val v  = Vectors.dense(0.5, 1.0, 0.9)
     val ex = intercept[Exception] {
       NumericGuards.checkProbability(v, "test context")
     }
@@ -107,7 +107,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkProbability rejects values > 1") {
-    val v = Vectors.dense(0.5, 1.1, 0.9)
+    val v  = Vectors.dense(0.5, 1.1, 0.9)
     val ex = intercept[Exception] {
       NumericGuards.checkProbability(v, "test context")
     }
@@ -115,7 +115,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkProbability rejects negative values") {
-    val v = Vectors.dense(0.5, -0.1, 0.9)
+    val v  = Vectors.dense(0.5, -0.1, 0.9)
     val ex = intercept[Exception] {
       NumericGuards.checkProbability(v, "test context")
     }
@@ -235,7 +235,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("error messages include vector preview for small vectors") {
-    val v = Vectors.dense(1.0, Double.NaN, 3.0)
+    val v  = Vectors.dense(1.0, Double.NaN, 3.0)
     val ex = intercept[Exception] {
       NumericGuards.checkFinite(v, "test")
     }
@@ -253,7 +253,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkFinite provides actionable guidance for NaN") {
-    val v = Vectors.dense(1.0, Double.NaN)
+    val v  = Vectors.dense(1.0, Double.NaN)
     val ex = intercept[Exception] {
       NumericGuards.checkFinite(v, "test")
     }
@@ -262,7 +262,7 @@ class NumericGuardsSuite extends AnyFunSuite with Matchers {
   }
 
   test("checkPositive provides actionable guidance") {
-    val v = Vectors.dense(1.0, -1.0)
+    val v  = Vectors.dense(1.0, -1.0)
     val ex = intercept[Exception] {
       NumericGuards.checkPositive(v, "test")
     }

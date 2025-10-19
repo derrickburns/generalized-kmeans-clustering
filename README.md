@@ -1,10 +1,13 @@
 # Generalized K-Means Clustering
 
 [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Scala 2.13](https://img.shields.io/badge/scala-2.13.14-red.svg)](https://www.scala-lang.org/)
 [![Scala 2.12](https://img.shields.io/badge/scala-2.12.18-red.svg)](https://www.scala-lang.org/)
 [![Spark 3.5](https://img.shields.io/badge/spark-3.5.1-orange.svg)](https://spark.apache.org/)
+
+> **Security**: This project follows security best practices. See [SECURITY.md](SECURITY.md) for vulnerability reporting and [dependabot.yml](.github/dependabot.yml) for automated dependency updates.
 
 🆕 DataFrame API (Spark ML) is the default.
 Version 0.6.0 introduces a modern, RDD-free DataFrame-native API with Spark ML integration.
@@ -57,12 +60,12 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 | **Validation** | **What It Checks** | **Badge** |
 |----------------|-------------------|-----------|
 | **Lint & Style** | Scalastyle compliance, code formatting | Part of main CI |
-| **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.0 & 3.5.1 (4 combinations) | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
-| **Test Matrix** | 290 tests across all Scala/Spark combinations | Part of main CI |
-| **Examples Runner** | All examples compile and run successfully:<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala)<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala)<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala)<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) | Part of main CI |
+| **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.3 & 3.5.1 (4 combinations) | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
+| **Test Matrix** | 730 tests across all Scala/Spark combinations<br/>• 62 kernel accuracy tests (divergence formulas, gradients, inverse gradients)<br/>• 19 Lloyd's iterator tests (core k-means loop)<br/>• Determinism, edge cases, numerical stability | Part of main CI |
+| **Executable Documentation** | All examples run with assertions that verify correctness ([ExamplesSuite](src/test/scala/examples/ExamplesSuite.scala)):<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala) - validates cluster count<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala) - validates probability columns<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala) - validates automatic k selection<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) - validates save/load with center accuracy<br/>• [PersistenceRoundTripKMedoids](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) - validates medoid preservation | Part of main CI |
 | **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5 | Part of main CI |
 | **Performance Sanity** | Basic performance regression check (30s budget) | Part of main CI |
-| **Python Smoke Test** | PySpark wrapper installation and basic functionality | Part of main CI |
+| **Python Smoke Test** | PySpark wrapper with both SE and non-SE divergences | Part of main CI |
 | **Security Scanning** | CodeQL static analysis for vulnerabilities | [![CodeQL](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml) |
 
 **View live CI results:** [CI Workflow Runs](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml)
@@ -75,13 +78,13 @@ Truth-linked to code, tests, and examples for full transparency:
 
 | Algorithm | API | Code | Tests | Example | Use Case |
 |-----------|-----|------|-------|---------|----------|
-| **GeneralizedKMeans** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GKMSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | General clustering with 6+ divergences |
-| **Bisecting K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BisectingGeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/BisectingKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | Hierarchical/divisive clustering |
-| **X-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/XMeansSuite.scala) | [Example](src/main/scala/examples/XMeansExample.scala) | Automatic k via BIC/AIC |
-| **Soft K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/SoftKMeansSuite.scala) | [Example](src/main/scala/examples/SoftKMeansExample.scala) | Fuzzy/probabilistic memberships |
-| **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
-| **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
-| **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/divergence/L1Divergence.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GKMSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
+| **GeneralizedKMeans** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTrip.scala) | General clustering with 6+ divergences |
+| **Bisecting K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BisectingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | Hierarchical/divisive clustering |
+| **X-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala) | [Example](src/main/scala/examples/XMeansExample.scala) | Automatic k via BIC/AIC |
+| **Soft K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala) | [Example](src/main/scala/examples/SoftKMeansExample.scala) + [Persistence](src/main/scala/examples/PersistenceRoundTripSoftKMeans.scala) | Fuzzy/probabilistic memberships |
+| **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
+| **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
+| **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/L1Kernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
 | Constrained K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Balance/capacity constraints |
 | Mini-Batch K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Massive datasets via sampling |
 | Coreset K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Approximation/acceleration |
@@ -90,7 +93,9 @@ Truth-linked to code, tests, and examples for full transparency:
 
 All DataFrame API algorithms include:
 - ✅ Model persistence (save/load across Spark 3.4↔3.5, Scala 2.12↔2.13)
-- ✅ Comprehensive test coverage (592 tests, 100% passing on Spark 3.4.3)
+- ✅ Comprehensive test coverage (740 tests, 100% passing)
+- ✅ Executable documentation with assertions (8 examples validate correctness in CI)
+- ✅ Deterministic behavior (same seed → identical results)
 - ✅ CI validation on every commit
 
 

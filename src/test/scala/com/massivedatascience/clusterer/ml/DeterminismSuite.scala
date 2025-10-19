@@ -12,11 +12,11 @@ import org.scalatest.matchers.should.Matchers
   * seed, which is critical for reproducibility in production environments.
   *
   * Tests cover all 5 main estimators:
-  * - GeneralizedKMeans
-  * - BisectingGeneralizedKMeans
-  * - XMeans
-  * - SoftKMeans
-  * - StreamingKMeans
+  *   - GeneralizedKMeans
+  *   - BisectingGeneralizedKMeans
+  *   - XMeans
+  *   - SoftKMeans
+  *   - StreamingKMeans
   */
 class DeterminismSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
@@ -255,6 +255,34 @@ class DeterminismSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
     model1.clusterCenters.length shouldBe model2.clusterCenters.length
     model1.clusterCenters.zip(model2.clusterCenters).foreach { case (c1, c2) =>
       c1.zip(c2).foreach { case (x1, x2) =>
+        math.abs(x1 - x2) should be < 1e-10
+      }
+    }
+
+    // Predictions should be identical
+    val pred1 = model1.transform(df).select("prediction").collect().map(_.getInt(0))
+    val pred2 = model2.transform(df).select("prediction").collect().map(_.getInt(0))
+    pred1 should contain theSameElementsInOrderAs pred2
+  }
+
+  test("KMedoids: same seed produces identical medoids") {
+    val df = testDF()
+
+    val model1 =
+      new KMedoids().setK(2).setDistanceFunction("euclidean").setSeed(6789).setMaxIter(10).fit(df)
+
+    val model2 =
+      new KMedoids().setK(2).setDistanceFunction("euclidean").setSeed(6789).setMaxIter(10).fit(df)
+
+    // Medoid indices should be identical
+    model1.medoidIndices.length shouldBe model2.medoidIndices.length
+    model1.medoidIndices.zip(model2.medoidIndices).foreach { case (i1, i2) =>
+      i1 shouldBe i2
+    }
+
+    // Medoid vectors should be identical
+    model1.medoids.zip(model2.medoids).foreach { case (m1, m2) =>
+      m1.toArray.zip(m2.toArray).foreach { case (x1, x2) =>
         math.abs(x1 - x2) should be < 1e-10
       }
     }

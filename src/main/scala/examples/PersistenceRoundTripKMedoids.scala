@@ -34,8 +34,26 @@ object PersistenceRoundTripKMedoids {
       case "save" =>
         val kmedoids = new KMedoids().setK(2).setMaxIter(10).setSeed(456)
         val model    = kmedoids.fit(df)
+
+        // Demonstrate training summary usage
+        if (model.hasSummary) {
+          val summary = model.summary
+          println(s"\nTraining Summary:")
+          println(s"  Algorithm: ${summary.algorithm}")
+          println(s"  Clusters: ${summary.effectiveK}/${summary.k}")
+          println(s"  Iterations: ${summary.iterations} (converged=${summary.converged})")
+          println(s"  Final cost: ${summary.finalDistortion}")
+          println(s"  Training time: ${summary.elapsedMillis}ms")
+          println(s"  Assignment strategy: ${summary.assignmentStrategy}")
+          println(s"  Distance function: ${summary.divergence}")
+
+          assert(summary.iterations >= 0, "should have at least 0 iterations")
+          assert(summary.effectiveK == summary.k, "KMedoids should maintain k clusters")
+          assert(summary.assignmentStrategy == "PAM", "should use PAM strategy")
+        }
+
         model.write.overwrite().save(path)
-        println(s"Saved KMedoids model to $path")
+        println(s"\nSaved KMedoids model to $path")
         println(s"  Medoids: ${model.medoids.mkString(", ")}")
         println(s"  Medoid indices: ${model.medoidIndices.mkString(", ")}")
 

@@ -44,3 +44,7 @@ addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+
+// SBOM generation (Software Bill of Materials)
+// Using dependency-check for vulnerability scanning and SBOM generation
+addSbtPlugin("net.vonbuchholtz" % "sbt-dependency-check" % "5.1.0")

@@ -48,6 +48,15 @@ class GeneralizedKMeansModel(
     with MLWritable
     with Logging {
 
+  /** Training summary (only available for models trained in current session).
+    *
+    * Contains diagnostic information about the training process including convergence metrics,
+    * iteration history, and performance statistics.
+    *
+    * Note: This field is not persisted. Models loaded from disk will have trainingSummary = None.
+    */
+  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
+
   /** Constructs a model with a random UID.
     *
     * @param clusterCenters
@@ -72,6 +81,33 @@ class GeneralizedKMeansModel(
     *   array of k cluster center vectors
     */
   def clusterCentersAsVectors: Array[Vector] = clusterCenters.map(Vectors.dense)
+
+  /** Get training summary.
+    *
+    * Contains diagnostic information about the training process including convergence metrics,
+    * iteration history, and performance statistics.
+    *
+    * @throws NoSuchElementException
+    *   if summary is not available (e.g., model was loaded from disk)
+    * @return
+    *   training summary
+    */
+  def summary: TrainingSummary = trainingSummary.getOrElse(
+    throw new NoSuchElementException(
+      "Training summary not available. Summary is only available for models trained " +
+        "in the current session, not for models loaded from disk."
+    )
+  )
+
+  /** Check if training summary is available.
+    *
+    * Summary is only available for models trained in the current session. Models loaded from disk
+    * will have hasSummary = false.
+    *
+    * @return
+    *   true if summary is available
+    */
+  def hasSummary: Boolean = trainingSummary.isDefined
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     transformSchema(dataset.schema, logging = true)

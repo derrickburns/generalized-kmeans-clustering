@@ -139,6 +139,10 @@ class StreamingKMeans(override val uid: String)
       decayFactorValue = getEffectiveDecayFactor,
       timeUnitValue = $(timeUnit)
     )
+
+    // Copy training summary from base model
+    model.trainingSummary = baseModel.trainingSummary
+
     model.setParent(this)
     model
   }

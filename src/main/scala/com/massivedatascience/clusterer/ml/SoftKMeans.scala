@@ -164,10 +164,13 @@ class SoftKMeans(override val uid: String)
       logInfo(s"Initialized ${initialCenters.length} centers")
 
       // Convert to Vector objects
-      var centers      = initialCenters.map(Vectors.dense)
-      var previousCost = Double.MaxValue
-      var iteration    = 0
-      var converged    = false
+      var centers           = initialCenters.map(Vectors.dense)
+      var previousCost      = Double.MaxValue
+      var iteration         = 0
+      var converged         = false
+      val distortionHistory = scala.collection.mutable.ArrayBuffer[Double]()
+      val movementHistory   = scala.collection.mutable.ArrayBuffer[Double]()
+      val startTime         = System.currentTimeMillis()
 
       while (iteration < $(maxIter) && !converged) {
         iteration += 1
@@ -179,11 +182,23 @@ class SoftKMeans(override val uid: String)
         // M-step: Update centers using soft assignments
         val newCenters = computeSoftCenters(memberships, centers.length, kernel)
 
+        // Track center movement
+        val maxMovement = centers
+          .zip(newCenters)
+          .map { case (old, newC) =>
+            math.sqrt(old.toArray.zip(newC.toArray).map { case (a, b) => (a - b) * (a - b) }.sum)
+          }
+          .max
+        movementHistory += maxMovement
+
         // Check convergence
         val cost        = computeSoftCost(memberships, newCenters, kernel)
+        distortionHistory += cost
         val improvement = (previousCost - cost) / math.max(math.abs(previousCost), 1e-10)
 
-        logDebug(f"Iteration $iteration: cost = $cost%.6f, improvement = $improvement%.8f")
+        logDebug(
+          f"Iteration $iteration: cost = $cost%.6f, improvement = $improvement%.8f, maxMovement = $maxMovement%.6f"
+        )
 
         if (improvement < $(tol)) {
           converged = true
@@ -194,6 +209,8 @@ class SoftKMeans(override val uid: String)
         centers = newCenters
       }
 
+      val elapsed = System.currentTimeMillis() - startTime
+
       if (!converged) {
         logWarning(s"Soft K-Means did not converge after ${$(maxIter)} iterations")
       }
@@ -203,6 +220,28 @@ class SoftKMeans(override val uid: String)
       model.modelDivergence = $(divergence)
       model.modelSmoothing = $(smoothing)
       copyValues(model.setParent(this))
+
+      // Attach training summary
+      val dim     = centers.headOption.map(_.size).getOrElse(0)
+      val summary = TrainingSummary(
+        algorithm = "SoftKMeans",
+        k = $(k),
+        effectiveK = centers.length,
+        dim = dim,
+        numPoints = df.count(),
+        iterations = iteration,
+        converged = converged,
+        distortionHistory = distortionHistory.toArray,
+        movementHistory = movementHistory.toArray,
+        assignmentStrategy = "SoftEM",
+        divergence = $(divergence),
+        elapsedMillis = elapsed
+      )
+      model.trainingSummary = Some(summary)
+
+      logInfo(s"Training summary:\n${summary.convergenceReport}")
+
+      model
 
     } finally {
       df.unpersist()
@@ -423,7 +462,37 @@ class SoftKMeansModel(
     with MLWritable
     with Logging {
 
+  /** Training summary (only available for models trained in current session).
+    *
+    * Contains diagnostic information about the training process including convergence metrics,
+    * iteration history, and performance statistics.
+    *
+    * Note: This field is not persisted. Models loaded from disk will have trainingSummary = None.
+    */
+  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
+
   def numClusters: Int = clusterCenters.length
+
+  /** Get training summary.
+    *
+    * @throws NoSuchElementException
+    *   if summary is not available
+    * @return
+    *   training summary
+    */
+  def summary: TrainingSummary = trainingSummary.getOrElse(
+    throw new NoSuchElementException(
+      "Training summary not available. Summary is only available for models trained " +
+        "in the current session, not for models loaded from disk."
+    )
+  )
+
+  /** Check if training summary is available.
+    *
+    * @return
+    *   true if summary is available
+    */
+  def hasSummary: Boolean = trainingSummary.isDefined
 
   /** Transform dataset by adding prediction and probability columns.
     */

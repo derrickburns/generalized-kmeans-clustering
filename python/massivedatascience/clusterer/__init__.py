@@ -34,6 +34,24 @@ Example:
     >>> predictions.show()
 """
 
-from .kmeans import GeneralizedKMeans, GeneralizedKMeansModel, GeneralizedKMeansSummary
+from .kmeans import (
+    GeneralizedKMeans,
+    GeneralizedKMeansModel,
+    TrainingSummary,
+    XMeans,
+    SoftKMeans,
+    BisectingKMeans,
+    KMedoids,
+    StreamingKMeans,
+)
 
-__all__ = ["GeneralizedKMeans", "GeneralizedKMeansModel", "GeneralizedKMeansSummary"]
+__all__ = [
+    "GeneralizedKMeans",
+    "GeneralizedKMeansModel",
+    "TrainingSummary",
+    "XMeans",
+    "SoftKMeans",
+    "BisectingKMeans",
+    "KMedoids",
+    "StreamingKMeans",
+]

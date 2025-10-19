@@ -149,17 +149,37 @@ class GeneralizedKMeans(override val uid: String)
     )
 
     // Run Lloyd's algorithm
-    val iterator = new DefaultLloydsIterator()
-    val result   = iterator.run(df, $(featuresCol), getWeightColOpt, initialCenters, config)
+    val iterator  = new DefaultLloydsIterator()
+    val startTime = System.currentTimeMillis()
+    val result    = iterator.run(df, $(featuresCol), getWeightColOpt, initialCenters, config)
+    val elapsed   = System.currentTimeMillis() - startTime
 
     logInfo(
       s"Training completed: iterations=${result.iterations}, " +
-        s"converged=${result.converged}, finalDistortion=${result.distortionHistory.last}"
+        s"converged=${result.converged}, finalDistortion=${result.distortionHistory.lastOption.getOrElse(0.0)}, " +
+        s"elapsed=${elapsed}ms"
     )
 
     // Create model
     val model = new GeneralizedKMeansModel(uid, result.centers, kernel.name)
     copyValues(model)
+
+    // Attach training summary
+    val summary = TrainingSummary.fromLloydResult(
+      algorithm = "GeneralizedKMeans",
+      result = result,
+      k = $(k),
+      dim = numFeatures,
+      numPoints = df.count(),
+      assignmentStrategy = assigner.getClass.getSimpleName,
+      divergence = $(divergence),
+      elapsedMillis = elapsed
+    )
+    model.trainingSummary = Some(summary)
+
+    logInfo(s"Training summary:\n${summary.convergenceReport}")
+
+    model
   }
 
   override def transformSchema(schema: StructType): StructType = {
@@ -184,7 +204,11 @@ class GeneralizedKMeans(override val uid: String)
       case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
       case "logistic"         => new LogisticLossKernel(smooth)
       case "l1" | "manhattan" => new L1Kernel()
-      case _                  => throw new IllegalArgumentException(s"Unknown divergence: $divName")
+      case _                  =>
+        throw new IllegalArgumentException(
+          s"Unknown divergence: '$divName'. " +
+            s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan"
+        )
     }
   }
 
@@ -195,7 +219,10 @@ class GeneralizedKMeans(override val uid: String)
       case "broadcast" => new BroadcastUDFAssignment()
       case "crossJoin" => new SECrossJoinAssignment()
       case "auto"      => new AutoAssignment()
-      case _           => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
+      case _           =>
+        throw new IllegalArgumentException(
+          s"Unknown assignment strategy: '$strategy'. Valid options: auto, broadcast, crossJoin"
+        )
     }
   }
 
@@ -215,7 +242,10 @@ class GeneralizedKMeans(override val uid: String)
     strategy match {
       case "reseedRandom" => new ReseedRandomHandler(seed)
       case "drop"         => new DropEmptyClustersHandler()
-      case _              => throw new IllegalArgumentException(s"Unknown empty cluster strategy: $strategy")
+      case _              =>
+        throw new IllegalArgumentException(
+          s"Unknown empty cluster strategy: '$strategy'. Valid options: reseedRandom, drop"
+        )
     }
   }
 
@@ -232,7 +262,10 @@ class GeneralizedKMeans(override val uid: String)
       case "random"    => initializeRandom(df, featuresCol, $(k), $(seed))
       case "k-means||" =>
         initializeKMeansPlusPlus(df, featuresCol, weightCol, $(k), $(initSteps), $(seed), kernel)
-      case _           => throw new IllegalArgumentException(s"Unknown init mode: ${$(initMode)}")
+      case _           =>
+        throw new IllegalArgumentException(
+          s"Unknown init mode: '${$(initMode)}'. Valid options: random, k-means||"
+        )
     }
   }
 
@@ -273,7 +306,10 @@ class GeneralizedKMeans(override val uid: String)
 
     // Step 1: Select first center uniformly at random
     val allPoints = df.select(featuresCol).collect()
-    require(allPoints.nonEmpty, "Dataset is empty")
+    require(
+      allPoints.nonEmpty,
+      s"Dataset is empty. Cannot initialize k-means|| with k=$k on an empty dataset."
+    )
 
     val firstCenter = allPoints(rand.nextInt(allPoints.length)).getAs[Vector](0).toArray
 

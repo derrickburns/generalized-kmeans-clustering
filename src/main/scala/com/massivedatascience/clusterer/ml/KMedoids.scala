@@ -115,16 +115,41 @@ class KMedoids(override val uid: String)
     val distFn = createDistanceFunction($(distanceFunction))
 
     // BUILD phase: Initialize medoids
+    val startTime            = System.currentTimeMillis()
     val initialMedoidIndices = buildPhase(data, $(k), distFn, $(seed))
     logInfo(s"BUILD phase completed. Initial medoids: ${initialMedoidIndices.mkString(", ")}")
 
     // SWAP phase: Iteratively improve medoids
-    val finalMedoidIndices = swapPhase(data, initialMedoidIndices, $(maxIter), distFn)
+    val (finalMedoidIndices, swapIterations, costHistory) =
+      swapPhaseWithHistory(data, initialMedoidIndices, $(maxIter), distFn)
+    val elapsedMillis                                     = System.currentTimeMillis() - startTime
+
     logInfo(s"SWAP phase completed. Final medoids: ${finalMedoidIndices.mkString(", ")}")
 
     // Create model
     val medoidVectors = finalMedoidIndices.map(data)
-    new KMedoidsModel(uid, medoidVectors, finalMedoidIndices, $(distanceFunction)).setParent(this)
+    val model         =
+      new KMedoidsModel(uid, medoidVectors, finalMedoidIndices, $(distanceFunction)).setParent(this)
+
+    // Create training summary
+    val converged = swapIterations < $(maxIter)
+    val summary   = TrainingSummary(
+      algorithm = "KMedoids",
+      k = $(k),
+      effectiveK = $(k),                     // K-Medoids always maintains k clusters
+      dim = data.headOption.map(_.size).getOrElse(0),
+      numPoints = data.length.toLong,
+      iterations = swapIterations,
+      converged = converged,
+      distortionHistory = costHistory,
+      movementHistory = Array.empty[Double], // Not tracked for swap-based algorithm
+      assignmentStrategy = "PAM",
+      divergence = $(distanceFunction),
+      elapsedMillis = elapsedMillis
+    )
+
+    model.trainingSummary = Some(summary)
+    model
   }
 
   /** BUILD phase: Greedily select k medoids to minimize total cost.
@@ -218,6 +243,121 @@ class KMedoids(override val uid: String)
     }
 
     medoidIndices
+  }
+
+  /** SWAP phase with history tracking for training summary.
+    *
+    * @return
+    *   (final medoid indices, number of iterations, cost history)
+    */
+  protected def swapPhaseWithHistory(
+      data: Array[Vector],
+      initialMedoidIndices: Array[Int],
+      maxIter: Int,
+      distFn: (Vector, Vector) => Double
+  ): (Array[Int], Int, Array[Double]) = {
+    val costHistory = scala.collection.mutable.ArrayBuffer[Double]()
+
+    // Compute initial cost
+    def computeCost(medoidIndices: Array[Int]): Double = {
+      var totalCost = 0.0
+      data.foreach { point =>
+        val minDist = medoidIndices.map(i => distFn(point, data(i))).min
+        totalCost += minDist
+      }
+      totalCost
+    }
+
+    val initialCost = computeCost(initialMedoidIndices)
+    costHistory += initialCost
+
+    val n             = data.length
+    val k             = initialMedoidIndices.length
+    val medoidIndices = initialMedoidIndices.clone()
+    val isMedoid      = new Array[Boolean](n)
+    medoidIndices.foreach(i => isMedoid(i) = true)
+
+    var improved  = true
+    var iteration = 0
+
+    while (improved && iteration < maxIter) {
+      improved = false
+      var bestSwapGain        = 0.0
+      var bestMedoidToSwap    = -1
+      var bestNonMedoidToSwap = -1
+
+      // For each medoid
+      (0 until k).foreach { medoidIdx =>
+        val medoid = medoidIndices(medoidIdx)
+
+        // For each non-medoid
+        (0 until n).foreach { nonMedoid =>
+          if (!isMedoid(nonMedoid)) {
+            // Compute cost change if we swap this medoid with this non-medoid
+            var totalCostChange = 0.0
+
+            (0 until n).foreach { j =>
+              if (!isMedoid(j) && j != nonMedoid) {
+                // Current distance: minimum distance to current medoids
+                val currentDist = medoidIndices.map(m => distFn(data(j), data(m))).min
+
+                // Distance to current medoid being considered for swap
+                val distToSwappedMedoid = distFn(data(j), data(medoid))
+
+                // Distance to potential new medoid
+                val distToNewMedoid = distFn(data(j), data(nonMedoid))
+
+                // If current closest medoid is the one being swapped
+                if (math.abs(currentDist - distToSwappedMedoid) < 1e-10) {
+                  // New distance is minimum of (second closest current medoid, new medoid)
+                  val secondClosest =
+                    medoidIndices.filter(_ != medoid).map(m => distFn(data(j), data(m))).min
+                  val newDist       = math.min(secondClosest, distToNewMedoid)
+                  totalCostChange += (newDist - currentDist)
+                } else {
+                  // New distance is minimum of (current distance, new medoid)
+                  val newDist = math.min(currentDist, distToNewMedoid)
+                  totalCostChange += (newDist - currentDist)
+                }
+              }
+            }
+
+            // Negative cost change means improvement
+            if (totalCostChange < bestSwapGain) {
+              bestSwapGain = totalCostChange
+              bestMedoidToSwap = medoidIdx
+              bestNonMedoidToSwap = nonMedoid
+            }
+          }
+        }
+      }
+
+      // Perform the best swap if it improves the clustering
+      if (bestSwapGain < -1e-10) {
+        val oldMedoid = medoidIndices(bestMedoidToSwap)
+        medoidIndices(bestMedoidToSwap) = bestNonMedoidToSwap
+        isMedoid(oldMedoid) = false
+        isMedoid(bestNonMedoidToSwap) = true
+        improved = true
+        iteration += 1
+
+        // Track cost after swap
+        val currentCost = computeCost(medoidIndices)
+        costHistory += currentCost
+
+        logInfo(
+          f"Iteration $iteration: Swapped medoid $oldMedoid with $bestNonMedoidToSwap (cost: $currentCost%.4f, reduction: ${-bestSwapGain}%.4f)"
+        )
+      }
+    }
+
+    if (iteration == 0) {
+      logInfo("SWAP phase: No swaps performed (already optimal)")
+    } else {
+      logInfo(s"SWAP phase converged after $iteration iterations")
+    }
+
+    (medoidIndices, iteration, costHistory.toArray)
   }
 
   /** SWAP phase: Iteratively swap medoids with non-medoids to minimize cost.
@@ -425,6 +565,21 @@ class KMedoidsModel(
     with KMedoidsParams
     with org.apache.spark.ml.util.MLWritable
     with Logging {
+
+  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
+
+  /** Training summary (only available for models trained in the current session).
+    */
+  def summary: TrainingSummary = trainingSummary.getOrElse(
+    throw new NoSuchElementException(
+      "Training summary not available. Summary is only available for models trained " +
+        "in the current session, not for models loaded from disk."
+    )
+  )
+
+  /** Returns true if training summary is available.
+    */
+  def hasSummary: Boolean = trainingSummary.isDefined
 
   /** Number of clusters.
     */

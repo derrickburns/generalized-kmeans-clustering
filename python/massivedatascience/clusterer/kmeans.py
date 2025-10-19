@@ -548,99 +548,125 @@ class GeneralizedKMeansModel(JavaModel, GeneralizedKMeansParams, JavaMLReadable,
         """
         return self._call_java("computeCost", dataset)
 
+    def hasSummary(self) -> bool:
+        """
+        Check if training summary is available.
+
+        Returns
+        -------
+        bool
+            True if summary is available (model trained in current session).
+        """
+        return self._call_java("hasSummary")
+
+    @property
     def summary(self):
         """
         Get the training summary.
 
         Returns
         -------
-        GeneralizedKMeansSummary
-            Training summary with quality metrics.
+        TrainingSummary
+            Training summary with detailed metrics.
 
         Examples
         --------
-        >>> summary = model.summary
-        >>> print(f"WCSS: {summary.wcss}")
-        >>> print(f"BCSS: {summary.bcss}")
-        >>> print(f"Calinski-Harabasz: {summary.calinskiHarabaszIndex}")
+        >>> if model.hasSummary():
+        ...     summary = model.summary
+        ...     print(f"Algorithm: {summary.algorithm}")
+        ...     print(f"Iterations: {summary.iterations}")
+        ...     print(f"Converged: {summary.converged}")
+        ...     print(f"Final distortion: {summary.finalDistortion}")
         """
-        return GeneralizedKMeansSummary(self._call_java("summary"))
+        return TrainingSummary(self._call_java("summary"))
 
 
-class GeneralizedKMeansSummary(JavaParams):
+class TrainingSummary(JavaParams):
     """
-    Summary of GeneralizedKMeans training with quality metrics.
+    Training summary with detailed metrics about the clustering process.
 
-    This class provides comprehensive clustering quality metrics including
-    within-cluster and between-cluster statistics, and various clustering
-    validation indices.
+    This class provides comprehensive information about model training including
+    iterations, convergence, distortion history, and performance metrics.
 
     Attributes
     ----------
-    numClusters : int
-        Number of clusters.
+    algorithm : str
+        Algorithm name (e.g., "GeneralizedKMeans", "XMeans", "SoftKMeans").
 
-    numFeatures : int
-        Number of features.
+    k : int
+        Requested number of clusters.
 
-    numIter : int
+    effectiveK : int
+        Actual number of non-empty clusters.
+
+    dim : int
+        Feature dimensionality.
+
+    numPoints : int
+        Number of training points.
+
+    iterations : int
         Number of iterations performed.
 
     converged : bool
         Whether the algorithm converged.
 
-    wcss : float
-        Within-cluster sum of squares.
+    finalDistortion : float
+        Final clustering cost/distortion.
 
-    bcss : float
-        Between-cluster sum of squares.
+    assignmentStrategy : str
+        Assignment strategy used (e.g., "CrossJoin", "BroadcastUDF", "PAM").
 
-    calinskiHarabaszIndex : float
-        Calinski-Harabasz index (variance ratio criterion).
-        Higher values indicate better-defined clusters.
+    divergence : str
+        Divergence function used.
 
-    daviesBouldinIndex : float
-        Davies-Bouldin index (average similarity between clusters).
-        Lower values indicate better cluster separation.
-
-    dunnIndex : float
-        Dunn index (ratio of min inter-cluster to max intra-cluster distance).
-        Higher values indicate better cluster separation.
+    elapsedMillis : int
+        Training time in milliseconds.
 
     Examples
     --------
-    >>> summary = model.summary
-    >>> print(f"Converged: {summary.converged}")
-    >>> print(f"Iterations: {summary.numIter}")
-    >>> print(f"WCSS: {summary.wcss:.2f}")
-    >>> print(f"BCSS: {summary.bcss:.2f}")
-    >>> print(f"Calinski-Harabasz: {summary.calinskiHarabaszIndex:.2f}")
-    >>> print(f"Davies-Bouldin: {summary.daviesBouldinIndex:.2f}")
-    >>> print(f"Dunn Index: {summary.dunnIndex:.2f}")
-    >>>
-    >>> # Compute silhouette (expensive, uses sampling)
-    >>> silhouette = summary.silhouette(sampleFraction=0.1)
-    >>> print(f"Mean Silhouette: {silhouette:.3f}")
+    >>> if model.hasSummary():
+    ...     summary = model.summary
+    ...     print(f"Algorithm: {summary.algorithm}")
+    ...     print(f"Converged in {summary.iterations} iterations")
+    ...     print(f"Final distortion: {summary.finalDistortion:.4f}")
+    ...     print(f"Training time: {summary.elapsedMillis}ms")
+    ...     print(f"Average per iteration: {summary.avgIterationMillis:.1f}ms")
     """
 
     def __init__(self, java_obj):
-        super(GeneralizedKMeansSummary, self).__init__()
+        super(TrainingSummary, self).__init__()
         self._java_obj = java_obj
 
     @property
-    def numClusters(self) -> int:
-        """Number of clusters."""
-        return self._call_java("numClusters")
+    def algorithm(self) -> str:
+        """Algorithm name."""
+        return self._call_java("algorithm")
 
     @property
-    def numFeatures(self) -> int:
-        """Number of features."""
-        return self._call_java("numFeatures")
+    def k(self) -> int:
+        """Requested number of clusters."""
+        return self._call_java("k")
 
     @property
-    def numIter(self) -> int:
+    def effectiveK(self) -> int:
+        """Actual number of non-empty clusters."""
+        return self._call_java("effectiveK")
+
+    @property
+    def dim(self) -> int:
+        """Feature dimensionality."""
+        return self._call_java("dim")
+
+    @property
+    def numPoints(self) -> int:
+        """Number of training points."""
+        return self._call_java("numPoints")
+
+    @property
+    def iterations(self) -> int:
         """Number of iterations performed."""
-        return self._call_java("numIter")
+        return self._call_java("iterations")
 
     @property
     def converged(self) -> bool:
@@ -648,64 +674,463 @@ class GeneralizedKMeansSummary(JavaParams):
         return self._call_java("converged")
 
     @property
-    def wcss(self) -> float:
-        """Within-cluster sum of squares."""
-        return self._call_java("wcss")
+    def finalDistortion(self) -> float:
+        """Final clustering cost/distortion."""
+        return self._call_java("finalDistortion")
 
     @property
-    def bcss(self) -> float:
-        """Between-cluster sum of squares."""
-        return self._call_java("bcss")
+    def assignmentStrategy(self) -> str:
+        """Assignment strategy used."""
+        return self._call_java("assignmentStrategy")
 
     @property
-    def calinskiHarabaszIndex(self) -> float:
-        """
-        Calinski-Harabasz index (variance ratio criterion).
-        Higher values indicate better-defined clusters.
-        """
-        return self._call_java("calinskiHarabaszIndex")
+    def divergence(self) -> str:
+        """Divergence function used."""
+        return self._call_java("divergence")
 
     @property
-    def daviesBouldinIndex(self) -> float:
-        """
-        Davies-Bouldin index (average similarity ratio).
-        Lower values indicate better cluster separation.
-        """
-        return self._call_java("daviesBouldinIndex")
+    def elapsedMillis(self) -> int:
+        """Training time in milliseconds."""
+        return self._call_java("elapsedMillis")
 
     @property
-    def dunnIndex(self) -> float:
-        """
-        Dunn index (min separation / max diameter).
-        Higher values indicate better cluster separation.
-        """
-        return self._call_java("dunnIndex")
+    def avgIterationMillis(self) -> float:
+        """Average time per iteration in milliseconds."""
+        return self._call_java("avgIterationMillis")
 
-    def silhouette(self, sampleFraction: float = 0.1) -> float:
-        """
-        Compute mean silhouette coefficient.
+    def convergenceReport(self) -> str:
+        """Get a detailed convergence report as a string."""
+        return self._call_java("convergenceReport")
 
-        This metric measures how similar each point is to its own cluster
-        compared to other clusters. Values range from -1 to 1, where:
-        - 1: Point is well-matched to its cluster
-        - 0: Point is on the border between clusters
-        - -1: Point may be assigned to the wrong cluster
+
+# Keep old class name for backward compatibility
+GeneralizedKMeansSummary = TrainingSummary
+
+
+class XMeans(JavaEstimator, GeneralizedKMeansParams, JavaMLReadable, JavaMLWritable):
+    """
+    X-Means clustering with automatic k selection using BIC/AIC.
+
+    X-Means automatically determines the optimal number of clusters by
+    iteratively splitting clusters and evaluating model quality using
+    information criteria (BIC or AIC).
+
+    Parameters
+    ----------
+    minK : int, default=2
+        Minimum number of clusters to consider.
+
+    maxK : int, default=10
+        Maximum number of clusters to consider.
+
+    criterion : str, default="bic"
+        Information criterion for model selection ("bic" or "aic").
+
+    Examples
+    --------
+    >>> from massivedatascience.clusterer import XMeans
+    >>> xmeans = XMeans(minK=2, maxK=5, criterion="bic")
+    >>> model = xmeans.fit(data)
+    >>> print(f"Optimal k: {model.numClusters}")
+    """
+
+    minK = Param(
+        Params._dummy(),
+        "minK",
+        "Minimum number of clusters",
+        typeConverter=TypeConverters.toInt,
+    )
+
+    maxK = Param(
+        Params._dummy(),
+        "maxK",
+        "Maximum number of clusters",
+        typeConverter=TypeConverters.toInt,
+    )
+
+    criterion = Param(
+        Params._dummy(),
+        "criterion",
+        "Information criterion: bic or aic",
+        typeConverter=TypeConverters.toString,
+    )
+
+    @keyword_only
+    def __init__(
+        self,
+        *,
+        minK: int = 2,
+        maxK: int = 10,
+        criterion: str = "bic",
+        divergence: str = "squaredEuclidean",
+        **kwargs
+    ):
+        super(XMeans, self).__init__()
+        self._java_obj = self._new_java_obj(
+            "com.massivedatascience.clusterer.ml.XMeans", self.uid
+        )
+        self._setDefault(minK=2, maxK=10, criterion="bic")
+        self.setParams(minK=minK, maxK=maxK, criterion=criterion, divergence=divergence, **kwargs)
+
+    @keyword_only
+    def setParams(self, **kwargs):
+        return self._set(**kwargs)
+
+    def setMinK(self, value: int):
+        return self._set(minK=value)
+
+    def setMaxK(self, value: int):
+        return self._set(maxK=value)
+
+    def setCriterion(self, value: str):
+        return self._set(criterion=value)
+
+    def _create_model(self, java_model):
+        return GeneralizedKMeansModel(java_model)
+
+
+class SoftKMeans(JavaEstimator, GeneralizedKMeansParams, JavaMLReadable, JavaMLWritable):
+    """
+    Soft (Fuzzy) K-Means clustering with probabilistic cluster assignments.
+
+    Unlike standard k-means, Soft K-Means assigns each point to multiple clusters
+    with probabilities, providing a more nuanced view of cluster membership.
+
+    Parameters
+    ----------
+    k : int, default=2
+        Number of clusters.
+
+    beta : float, default=1.0
+        Temperature parameter controlling soft assignment fuzziness.
+        Higher values make assignments more deterministic.
+
+    Examples
+    --------
+    >>> from massivedatascience.clusterer import SoftKMeans
+    >>> soft = SoftKMeans(k=3, beta=2.0)
+    >>> model = soft.fit(data)
+    >>> predictions = model.transform(data)
+    >>> # predictions DataFrame includes "probabilities" column
+    """
+
+    beta = Param(
+        Params._dummy(),
+        "beta",
+        "Temperature parameter for soft assignments",
+        typeConverter=TypeConverters.toFloat,
+    )
+
+    @keyword_only
+    def __init__(self, *, k: int = 2, beta: float = 1.0, **kwargs):
+        super(SoftKMeans, self).__init__()
+        self._java_obj = self._new_java_obj(
+            "com.massivedatascience.clusterer.ml.SoftKMeans", self.uid
+        )
+        self._setDefault(beta=1.0)
+        self.setParams(k=k, beta=beta, **kwargs)
+
+    @keyword_only
+    def setParams(self, **kwargs):
+        return self._set(**kwargs)
+
+    def setBeta(self, value: float):
+        return self._set(beta=value)
+
+    def _create_model(self, java_model):
+        return GeneralizedKMeansModel(java_model)
+
+
+class BisectingKMeans(JavaEstimator, GeneralizedKMeansParams, JavaMLReadable, JavaMLWritable):
+    """
+    Bisecting K-Means clustering using hierarchical divisive approach.
+
+    Bisecting K-Means starts with all points in one cluster and iteratively
+    splits the largest cluster until reaching k clusters. This approach is:
+    - More deterministic than random initialization
+    - Often faster for large k
+    - Better at handling imbalanced cluster sizes
+
+    Parameters
+    ----------
+    k : int, default=2
+        Number of leaf clusters to create.
+
+    minDivisibleClusterSize : int, default=1
+        Minimum size for a cluster to be divisible.
+
+    Examples
+    --------
+    >>> from massivedatascience.clusterer import BisectingKMeans
+    >>> bisecting = BisectingKMeans(k=10, minDivisibleClusterSize=5)
+    >>> model = bisecting.fit(data)
+    """
+
+    minDivisibleClusterSize = Param(
+        Params._dummy(),
+        "minDivisibleClusterSize",
+        "Minimum divisible cluster size",
+        typeConverter=TypeConverters.toInt,
+    )
+
+    @keyword_only
+    def __init__(self, *, k: int = 2, minDivisibleClusterSize: int = 1, **kwargs):
+        super(BisectingKMeans, self).__init__()
+        self._java_obj = self._new_java_obj(
+            "com.massivedatascience.clusterer.ml.BisectingKMeans", self.uid
+        )
+        self._setDefault(minDivisibleClusterSize=1)
+        self.setParams(k=k, minDivisibleClusterSize=minDivisibleClusterSize, **kwargs)
+
+    @keyword_only
+    def setParams(self, **kwargs):
+        return self._set(**kwargs)
+
+    def setMinDivisibleClusterSize(self, value: int):
+        return self._set(minDivisibleClusterSize=value)
+
+    def _create_model(self, java_model):
+        return GeneralizedKMeansModel(java_model)
+
+
+class KMedoids(JavaEstimator, JavaMLReadable, JavaMLWritable):
+    """
+    K-Medoids clustering using PAM (Partitioning Around Medoids) algorithm.
+
+    K-Medoids uses actual data points as cluster centers (medoids) instead of
+    computed centroids. This makes it:
+    - More robust to outliers
+    - More interpretable (medoids are real data points)
+    - Works with any distance function
+
+    Parameters
+    ----------
+    k : int, default=2
+        Number of clusters.
+
+    distanceFunction : str, default="euclidean"
+        Distance function ("euclidean", "manhattan", "cosine").
+
+    maxIter : int, default=20
+        Maximum number of swap iterations.
+
+    Examples
+    --------
+    >>> from massivedatascience.clusterer import KMedoids
+    >>> kmedoids = KMedoids(k=3, distanceFunction="manhattan")
+    >>> model = kmedoids.fit(data)
+    >>> # model.medoidIndices contains indices of selected medoids
+    """
+
+    k = Param(
+        Params._dummy(),
+        "k",
+        "Number of clusters",
+        typeConverter=TypeConverters.toInt,
+    )
+
+    distanceFunction = Param(
+        Params._dummy(),
+        "distanceFunction",
+        "Distance function: euclidean, manhattan, cosine",
+        typeConverter=TypeConverters.toString,
+    )
+
+    maxIter = Param(
+        Params._dummy(),
+        "maxIter",
+        "Maximum iterations",
+        typeConverter=TypeConverters.toInt,
+    )
+
+    @keyword_only
+    def __init__(
+        self,
+        *,
+        k: int = 2,
+        distanceFunction: str = "euclidean",
+        maxIter: int = 20,
+        seed: Optional[int] = None,
+        featuresCol: str = "features",
+        predictionCol: str = "prediction",
+    ):
+        super(KMedoids, self).__init__()
+        self._java_obj = self._new_java_obj(
+            "com.massivedatascience.clusterer.ml.KMedoids", self.uid
+        )
+        self._setDefault(k=2, distanceFunction="euclidean", maxIter=20)
+        kwargs = self._input_kwargs
+        self.setParams(**kwargs)
+
+    @keyword_only
+    def setParams(self, **kwargs):
+        return self._set(**kwargs)
+
+    def setK(self, value: int):
+        return self._set(k=value)
+
+    def setDistanceFunction(self, value: str):
+        return self._set(distanceFunction=value)
+
+    def setMaxIter(self, value: int):
+        return self._set(maxIter=value)
+
+    def setSeed(self, value: int):
+        return self._set(seed=value)
+
+    def setFeaturesCol(self, value: str):
+        return self._set(featuresCol=value)
+
+    def setPredictionCol(self, value: str):
+        return self._set(predictionCol=value)
+
+    def _create_model(self, java_model):
+        return KMedoidsModel(java_model)
+
+
+class KMedoidsModel(JavaModel, JavaMLReadable, JavaMLWritable):
+    """
+    Model fitted by KMedoids.
+
+    Attributes
+    ----------
+    medoids : np.ndarray
+        Array of medoid vectors.
+
+    medoidIndices : List[int]
+        Indices of medoids in the original dataset.
+    """
+
+    @property
+    def medoids(self) -> np.ndarray:
+        """Get medoid vectors as NumPy array."""
+        java_medoids = self._call_java("medoids")
+        return np.array([[float(x) for x in medoid] for medoid in java_medoids])
+
+    @property
+    def medoidIndices(self) -> List[int]:
+        """Get indices of medoids in original dataset."""
+        return list(self._call_java("medoidIndices"))
+
+    def hasSummary(self) -> bool:
+        """Check if training summary is available."""
+        return self._call_java("hasSummary")
+
+    @property
+    def summary(self):
+        """Get training summary."""
+        return TrainingSummary(self._call_java("summary"))
+
+
+class StreamingKMeans(JavaEstimator, GeneralizedKMeansParams, JavaMLReadable, JavaMLWritable):
+    """
+    Streaming K-Means for incremental online clustering.
+
+    Updates cluster centers incrementally as new batches of data arrive,
+    using exponential forgetting to handle concept drift.
+
+    Parameters
+    ----------
+    k : int, default=2
+        Number of clusters.
+
+    decayFactor : float, default=1.0
+        Exponential decay factor (0.0 to 1.0).
+        - 1.0: No forgetting (all batches weighted equally)
+        - 0.0: Complete forgetting (only current batch matters)
+
+    halfLife : float, optional
+        Alternative to decayFactor. Time for weight to decay to 50%.
+
+    Examples
+    --------
+    >>> from massivedatascience.clusterer import StreamingKMeans
+    >>> streaming = StreamingKMeans(k=3, decayFactor=0.9)
+    >>> model = streaming.fit(initial_batch)
+    >>> # Update with new batch
+    >>> updated_model = model.update(new_batch)
+    """
+
+    decayFactor = Param(
+        Params._dummy(),
+        "decayFactor",
+        "Exponential decay factor",
+        typeConverter=TypeConverters.toFloat,
+    )
+
+    halfLife = Param(
+        Params._dummy(),
+        "halfLife",
+        "Half-life for decay",
+        typeConverter=TypeConverters.toFloat,
+    )
+
+    timeUnit = Param(
+        Params._dummy(),
+        "timeUnit",
+        "Time unit: batches or points",
+        typeConverter=TypeConverters.toString,
+    )
+
+    @keyword_only
+    def __init__(
+        self,
+        *,
+        k: int = 2,
+        decayFactor: float = 1.0,
+        halfLife: Optional[float] = None,
+        timeUnit: str = "batches",
+        **kwargs
+    ):
+        super(StreamingKMeans, self).__init__()
+        self._java_obj = self._new_java_obj(
+            "com.massivedatascience.clusterer.ml.StreamingKMeans", self.uid
+        )
+        self._setDefault(decayFactor=1.0, timeUnit="batches")
+        self.setParams(k=k, decayFactor=decayFactor, halfLife=halfLife, timeUnit=timeUnit, **kwargs)
+
+    @keyword_only
+    def setParams(self, **kwargs):
+        return self._set(**kwargs)
+
+    def setDecayFactor(self, value: float):
+        return self._set(decayFactor=value)
+
+    def setHalfLife(self, value: float):
+        return self._set(halfLife=value)
+
+    def setTimeUnit(self, value: str):
+        return self._set(timeUnit=value)
+
+    def _create_model(self, java_model):
+        return StreamingKMeansModel(java_model)
+
+
+class StreamingKMeansModel(GeneralizedKMeansModel):
+    """
+    Model fitted by StreamingKMeans.
+
+    Supports incremental updates with new data batches.
+    """
+
+    def update(self, dataset: DataFrame):
+        """
+        Update model with new batch of data.
 
         Parameters
         ----------
-        sampleFraction : float, default=0.1
-            Fraction of data to sample for computation (0 to 1).
-            Silhouette is expensive to compute, so sampling is recommended.
+        dataset : DataFrame
+            New batch of data to incorporate.
 
         Returns
         -------
-        float
-            Mean silhouette coefficient.
-
-        Examples
-        --------
-        >>> # Sample 10% of data
-        >>> silhouette = summary.silhouette(sampleFraction=0.1)
-        >>> print(f"Mean Silhouette: {silhouette:.3f}")
+        StreamingKMeansModel
+            Updated model (same object, mutated in place).
         """
-        return self._call_java("silhouette", sampleFraction)
+        self._call_java("update", dataset)
+        return self
+
+    @property
+    def currentWeights(self) -> List[float]:
+        """Get current cluster weights."""
+        return list(self._call_java("currentWeights"))

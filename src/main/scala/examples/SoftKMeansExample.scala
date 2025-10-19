@@ -21,6 +21,22 @@ object SoftKMeansExample extends App {
   assert(pred.columns.contains("probabilities"), "probabilities column missing")
   assert(pred.columns.contains("prediction"), "prediction column missing")
 
-  println("examples.SoftKMeansExample OK")
+  // Demonstrate training summary usage
+  if (model.hasSummary) {
+    val summary = model.summary
+    println(s"\nTraining Summary:")
+    println(s"  Algorithm: ${summary.algorithm}")
+    println(s"  Clusters: ${summary.effectiveK}/${summary.k}")
+    println(s"  Iterations: ${summary.iterations} (converged=${summary.converged})")
+    println(s"  Final distortion: ${summary.finalDistortion}")
+    println(s"  Training time: ${summary.elapsedMillis}ms")
+    println(s"  Assignment strategy: ${summary.assignmentStrategy}")
+
+    assert(summary.iterations >= 1, "should have at least 1 iteration")
+    assert(summary.effectiveK <= summary.k, "effective k should be <= requested k")
+    assert(summary.assignmentStrategy == "SoftEM", "should use SoftEM strategy")
+  }
+
+  println("\nexamples.SoftKMeansExample OK")
   spark.stop()
 }

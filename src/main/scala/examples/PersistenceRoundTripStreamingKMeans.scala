@@ -44,7 +44,22 @@ object PersistenceRoundTripStreamingKMeans {
 
         // Initialize model with first batch
         val model1 = streamingKMeans.fit(df1)
-        println(s"After batch 1 - Centers: ${model1.clusterCenters.mkString(", ")}")
+
+        // Demonstrate training summary (from initial fit)
+        if (model1.hasSummary) {
+          val summary = model1.summary
+          println(s"\nInitial Training Summary (from batch 1):")
+          println(s"  Algorithm: ${summary.algorithm}")
+          println(s"  Clusters: ${summary.effectiveK}/${summary.k}")
+          println(s"  Iterations: ${summary.iterations} (converged=${summary.converged})")
+          println(s"  Final distortion: ${summary.finalDistortion}")
+          println(s"  Training time: ${summary.elapsedMillis}ms")
+
+          assert(summary.iterations >= 1, "should have at least 1 iteration")
+          assert(summary.effectiveK <= summary.k, "effective k should be <= requested k")
+        }
+
+        println(s"\nAfter batch 1 - Centers: ${model1.clusterCenters.mkString(", ")}")
         println(s"After batch 1 - Weights: ${model1.currentWeights.mkString(", ")}")
 
         // Simulate streaming update with second batch

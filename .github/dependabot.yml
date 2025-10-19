@@ -15,6 +15,20 @@ updates:
       prefix-development: "chore"
       include: "scope"
 
+  # Enable version updates for Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/python"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
   # Note: Dependabot doesn't natively support sbt/Scala
-  # Consider using scala-steward for Scala dependency updates
+  # Scala dependency updates are managed via Scala Steward
   # https://github.com/scala-steward-org/scala-steward

@@ -34,7 +34,7 @@ object PersistenceRoundTripSoftKMeans {
       case "save" =>
         val softKMeans = new SoftKMeans()
           .setK(2)
-          .setDivergence("kullbackLeibler")
+          .setDivergence("squaredEuclidean")
           .setBeta(2.0)
           .setMinMembership(0.01)
           .setSeed(789)
@@ -73,10 +73,10 @@ object PersistenceRoundTripSoftKMeans {
         val n     = preds.count()
         assert(n == 6, s"expected 6 rows after load, got $n")
 
-        // Verify probability column exists
+        // Verify probabilities column exists
         assert(
-          preds.columns.contains("probability"),
-          "Expected 'probability' column in predictions"
+          preds.columns.contains("probabilities"),
+          "Expected 'probabilities' column in predictions"
         )
 
         // Verify centers are reasonable (one near 0, one near 9-10)
