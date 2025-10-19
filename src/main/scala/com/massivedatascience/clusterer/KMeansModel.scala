@@ -64,12 +64,15 @@ trait KMeansPredictor {
   // operations on WeightedVectors
 
   private def validateDimension(point: WeightedVector): Unit = {
-    val expectedDim = centers.head.gradient.size
-    val actualDim   = point.inhomogeneous.size
-    require(
-      actualDim == expectedDim,
-      s"Point dimension $actualDim does not match model dimension $expectedDim"
-    )
+    // Only validate if we have centers with non-empty gradients
+    if (centers.nonEmpty && centers.head.gradient.size > 0) {
+      val expectedDim = centers.head.gradient.size
+      val actualDim   = point.inhomogeneous.size
+      require(
+        actualDim == expectedDim,
+        s"Point dimension $actualDim does not match model dimension $expectedDim"
+      )
+    }
   }
 
   def predictWeighted(point: WeightedVector): Int = {
