@@ -1,10 +1,12 @@
 name: CodeQL
 
 on:
-  push:
-    branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
+  # Disabled for push/PR due to Scala/SBT compatibility issues with CodeQL tracer
+  # See: https://github.com/github/codeql-action/issues/859
+  # push:
+  #   branches: [ master, main ]
+  # pull_request:
+  #   branches: [ master, main ]
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
