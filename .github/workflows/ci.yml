@@ -164,7 +164,8 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           ls -la jars/ || true
-          JAR_212=$(find jars -name "*scala-2.12*.jar" -type f | head -n1)
+          ls -la jars/scala-2.12/ || true
+          JAR_212=$(find jars -name "*.jar" -type f -path "*/scala-2.12/*" | head -n1)
           if [ -z "$JAR_212" ]; then
             echo "ERROR: No Scala 2.12 JAR found in jars/"
             exit 1
