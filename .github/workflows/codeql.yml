@@ -49,10 +49,10 @@ jobs:
         with:
           languages: java
           queries: security-and-quality
-          # Use none build-mode for Scala projects with manual build
-          build-mode: none
+          # Use manual build-mode for Scala to avoid autobuild
+          build-mode: manual
 
-      # MANUAL BUILD: compile Scala so the extractor can see .class files
+      # MANUAL BUILD: compile Scala so the CodeQL tracer can extract the build
       - name: Compile (Scala -> JVM bytecode)
         run: |
           sbt ++${{ env.SCALA_VERSION }} -Dspark.version=${{ env.SPARK_VERSION }} \
