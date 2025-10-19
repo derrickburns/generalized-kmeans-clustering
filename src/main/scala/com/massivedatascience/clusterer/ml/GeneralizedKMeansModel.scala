@@ -275,8 +275,8 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
       // Write centers with deterministic ordering
       val centersHash = writeCenters(spark, path, centersData)
 
-      // Collect all parameters
-      val params = Map(
+      // Collect all parameters (explicitly typed to avoid Any inference)
+      val params: Map[String, Any] = Map(
         "maxIter"              -> instance.getOrDefault(instance.maxIter),
         "tol"                  -> instance.getOrDefault(instance.tol),
         "seed"                 -> instance.getOrDefault(instance.seed),
@@ -293,8 +293,8 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
         "checkpointDir"        -> (if (instance.hasCheckpointDir) instance.getCheckpointDir else "")
       )
 
-      // Create metadata object
-      val metaObj = Map(
+      // Create metadata object (explicitly typed to avoid Any inference)
+      val metaObj: Map[String, Any] = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "GeneralizedKMeansModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -305,12 +305,12 @@ object GeneralizedKMeansModel extends MLReadable[GeneralizedKMeansModel] {
         "uid"                -> instance.uid,
         "kernelName"         -> instance.kernelName,
         "params"             -> params,
-        "centers"            -> Map(
+        "centers"            -> Map[String, Any](
           "count"    -> instance.numClusters,
           "ordering" -> "center_id ASC (0..k-1)",
           "storage"  -> "parquet"
         ),
-        "checksums"          -> Map(
+        "checksums"          -> Map[String, String](
           "centersParquetSHA256"    -> centersHash,
           "metadataCanonicalSHA256" -> ""
         )

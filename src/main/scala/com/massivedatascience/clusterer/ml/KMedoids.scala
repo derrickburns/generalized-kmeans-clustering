@@ -584,8 +584,8 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       val centersHash = writeCenters(spark, path, centersData)
       logInfo(s"Centers saved with SHA-256: $centersHash")
 
-      // Collect all model parameters
-      val params = Map(
+      // Collect all model parameters (explicitly typed to avoid Any inference)
+      val params: Map[String, Any] = Map(
         "k"                -> instance.getOrDefault(instance.k),
         "featuresCol"      -> instance.getOrDefault(instance.featuresCol),
         "predictionCol"    -> instance.getOrDefault(instance.predictionCol),
@@ -598,9 +598,9 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       val k   = instance.numClusters
       val dim = instance.numFeatures
 
-      // Build metadata object
+      // Build metadata object (explicitly typed to avoid Any inference)
       implicit val formats = DefaultFormats
-      val metaObj          = Map(
+      val metaObj: Map[String, Any] = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "KMedoidsModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -610,12 +610,12 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
         "dim"                -> dim,
         "uid"                -> instance.uid,
         "params"             -> params,
-        "centers"            -> Map(
+        "centers"            -> Map[String, Any](
           "count"    -> k,
           "ordering" -> "center_id ASC (0..k-1)",
           "storage"  -> "parquet"
         ),
-        "checksums"          -> Map(
+        "checksums"          -> Map[String, String](
           "centersParquetSHA256" -> centersHash
         )
       )

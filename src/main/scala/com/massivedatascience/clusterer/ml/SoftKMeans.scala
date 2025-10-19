@@ -615,8 +615,8 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
       val centersHash = writeCenters(spark, path, centersData)
       logInfo(s"Centers saved with SHA-256: $centersHash")
 
-      // Collect all model parameters
-      val params = Map(
+      // Collect all model parameters (explicitly typed to avoid Any inference)
+      val params: Map[String, Any] = Map(
         "k"              -> instance.numClusters,
         "featuresCol"    -> instance.getOrDefault(instance.featuresCol),
         "predictionCol"  -> instance.getOrDefault(instance.predictionCol),
@@ -630,9 +630,9 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
       val k   = instance.numClusters
       val dim = instance.clusterCenters.headOption.map(_.size).getOrElse(0)
 
-      // Build metadata object
+      // Build metadata object (explicitly typed to avoid Any inference)
       implicit val formats = DefaultFormats
-      val metaObj          = Map(
+      val metaObj: Map[String, Any] = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "SoftKMeansModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -642,12 +642,12 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
         "dim"                -> dim,
         "uid"                -> instance.uid,
         "params"             -> params,
-        "centers"            -> Map(
+        "centers"            -> Map[String, Any](
           "count"    -> k,
           "ordering" -> "center_id ASC (0..k-1)",
           "storage"  -> "parquet"
         ),
-        "checksums"          -> Map(
+        "checksums"          -> Map[String, String](
           "centersParquetSHA256" -> centersHash
         )
       )

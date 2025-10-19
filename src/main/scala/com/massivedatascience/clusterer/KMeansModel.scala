@@ -78,11 +78,17 @@ trait KMeansPredictor {
   }
 
   /** Maps given points to their cluster indices. */
-  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] =
+  def predictWeighted(points: RDD[WeightedVector]): RDD[Int] = {
+    // Validate dimension on first element to catch mismatches early
+    points.take(1).headOption.foreach(validateDimension)
     predictBregman(points.map(pointOps.toPoint))
+  }
 
-  def computeCostWeighted(data: RDD[WeightedVector]): Double =
+  def computeCostWeighted(data: RDD[WeightedVector]): Double = {
+    // Validate dimension on first element to catch mismatches early
+    data.take(1).headOption.foreach(validateDimension)
     computeCostBregman(data.map(pointOps.toPoint))
+  }
 
   def predictClusterAndDistanceWeighted(point: WeightedVector): (Int, Double) = {
     validateDimension(point)
