@@ -202,7 +202,7 @@ jobs:
           path: target/**/scoverage-report/*
           retention-days: 7
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./target/scala-2.12/scoverage-report/scoverage.xml
           fail_ci_if_error: false
