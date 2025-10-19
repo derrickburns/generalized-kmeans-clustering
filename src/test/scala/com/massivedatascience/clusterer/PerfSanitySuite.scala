@@ -8,11 +8,15 @@ import org.apache.spark.ml.linalg.Vectors
 class PerfSanitySuite extends AnyFunSuite {
 
   private def withSpark[T](name: String)(f: SparkSession => T): T = {
-    val spark = SparkSession.builder().appName(name).master("local[*]")
+    val spark = SparkSession
+      .builder()
+      .appName(name)
+      .master("local[*]")
       .config("spark.ui.enabled", "false")
       .config("spark.sql.shuffle.partitions", "2")
       .getOrCreate()
-    try f(spark) finally spark.stop()
+    try f(spark)
+    finally spark.stop()
   }
 
   test("perf sanity - SE and KL paths") {
@@ -23,16 +27,17 @@ class PerfSanitySuite extends AnyFunSuite {
         Tuple1(Vectors.dense(base + (i % 5) * 0.1, base + (i % 7) * 0.1))
       }.toDF("features")
 
-      val t0 = System.nanoTime()
-      val se = new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(1)
+      val t0  = System.nanoTime()
+      val se  =
+        new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(1)
       val mSe = se.fit(data)
-      val _ = mSe.transform(data).count()
-      val t1 = System.nanoTime()
+      val _   = mSe.transform(data).count()
+      val t1  = System.nanoTime()
 
-      val kl = new GeneralizedKMeans().setK(2).setDivergence("kl").setMaxIter(3).setSeed(2)
+      val kl  = new GeneralizedKMeans().setK(2).setDivergence("kl").setMaxIter(3).setSeed(2)
       val mKl = kl.fit(data)
-      val _2 = mKl.transform(data).count()
-      val t2 = System.nanoTime()
+      val _2  = mKl.transform(data).count()
+      val t2  = System.nanoTime()
 
       val seSec = (t1 - t0) / 1e9
       val klSec = (t2 - t1) / 1e9

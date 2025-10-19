@@ -26,8 +26,8 @@ import java.nio.file.Files
 
 /** Tests for model persistence (save/load) across Spark and Scala versions.
   *
-  * These tests verify that models can be saved and loaded correctly, maintaining
-  * all parameters and cluster centers.
+  * These tests verify that models can be saved and loaded correctly, maintaining all parameters and
+  * cluster centers.
   */
 class PersistenceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
@@ -70,14 +70,11 @@ class PersistenceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
   test("GeneralizedKMeans save-load roundtrip with Squared Euclidean") {
     val df = tinyDF()
 
-    val gkm = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setSeed(42)
-      .setMaxIter(10)
+    val gkm =
+      new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setSeed(42).setMaxIter(10)
 
     val model = gkm.fit(df)
-    val tmp = Files.createTempDirectory("gkm-model-se").toFile.getCanonicalPath
+    val tmp   = Files.createTempDirectory("gkm-model-se").toFile.getCanonicalPath
 
     // Save model
     model.write.overwrite().save(tmp)
@@ -200,10 +197,7 @@ class PersistenceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
   test("GeneralizedKMeans metadata JSON structure") {
     val df = tinyDF()
 
-    val gkm = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setSeed(42)
+    val gkm = new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setSeed(42)
 
     val model = gkm.fit(df)
     val tmp   = Files.createTempDirectory("gkm-metadata-test").toFile.getCanonicalPath
@@ -232,10 +226,7 @@ class PersistenceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
   test("GeneralizedKMeans centers.parquet structure") {
     val df = tinyDF()
 
-    val gkm = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setSeed(42)
+    val gkm = new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setSeed(42)
 
     val model = gkm.fit(df)
     val tmp   = Files.createTempDirectory("gkm-centers-test").toFile.getCanonicalPath

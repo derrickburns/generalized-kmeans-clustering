@@ -19,7 +19,7 @@ class BregmanTestSuite extends AnyFunSuite {
     def g(d: Vector): Vector = {
       Vectors.dense(d.toArray.map { _ * 2.0 })
     }
-    val div = BregmanDivergence(f, g)
+    val div                  = BregmanDivergence(f, g)
 
     val input = Vectors.dense(1.0, 2.0, 4.0)
 

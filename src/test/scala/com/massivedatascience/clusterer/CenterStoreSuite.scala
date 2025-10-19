@@ -53,9 +53,9 @@ class CenterStoreSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
   // Helper to create centers - directly construct BregmanCenter
   // For testing purposes, we use simple Euclidean-like values
   def makeCenter(values: Array[Double], weight: Double = 1.0): BregmanCenter = {
-    val homogeneous = Vectors.dense(values.map(_ * weight))
-    val gradient = Vectors.dense(values)  // For Euclidean: gradient = inhomogeneous
-    val dotGradMinusF = 0.5 * values.map(x => x * x).sum  // For Euclidean: F(x) = 0.5 ||x||^2
+    val homogeneous   = Vectors.dense(values.map(_ * weight))
+    val gradient      = Vectors.dense(values)            // For Euclidean: gradient = inhomogeneous
+    val dotGradMinusF = 0.5 * values.map(x => x * x).sum // For Euclidean: F(x) = 0.5 ||x||^2
     BregmanCenter(homogeneous, weight, dotGradMinusF, gradient)
   }
 
@@ -103,9 +103,9 @@ class CenterStoreSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
       makeCenter(Array(3.0, 4.0))
     )
 
-    val store      = ArrayCenterStore(centers)
-    val newCenter  = makeCenter(Array(10.0, 20.0))
-    val newStore   = store.updated(0, newCenter)
+    val store     = ArrayCenterStore(centers)
+    val newCenter = makeCenter(Array(10.0, 20.0))
+    val newStore  = store.updated(0, newCenter)
 
     assert(newStore(0) == newCenter)
     assert(newStore(1) == centers(1))
@@ -173,7 +173,7 @@ class CenterStoreSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
       makeCenter(Array(3.0, 4.0), weight = 2.0)
     )
 
-    val store = ArrayCenterStore(centers)
+    val store  = ArrayCenterStore(centers)
     val mapped = store.map { c =>
       // Double the weight
       makeCenter(c.inhomogeneous.toArray, c.weight * 2.0)

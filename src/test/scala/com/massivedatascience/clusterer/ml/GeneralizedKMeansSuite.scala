@@ -1,7 +1,7 @@
 package com.massivedatascience.clusterer.ml
 
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
 
@@ -124,11 +124,8 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("model with distance column") {
     val df = createSimpleDataset()
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
-      .setDistanceCol("distance")
+    val kmeans =
+      new GeneralizedKMeans().setK(3).setMaxIter(10).setSeed(42).setDistanceCol("distance")
 
     val model       = kmeans.fit(df)
     val predictions = model.transform(df)
@@ -136,19 +133,14 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(predictions.columns.contains("distance"))
 
     // All distances should be non-negative
-    val negativeDistances = predictions
-      .filter("distance < 0")
-      .count()
+    val negativeDistances = predictions.filter("distance < 0").count()
     assert(negativeDistances === 0)
   }
 
   test("predict single point") {
     val df = createSimpleDataset()
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmeans = new GeneralizedKMeans().setK(3).setMaxIter(10).setSeed(42)
 
     val model = kmeans.fit(df)
 
@@ -171,10 +163,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("compute cost") {
     val df = createSimpleDataset()
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmeans = new GeneralizedKMeans().setK(3).setMaxIter(10).setSeed(42)
 
     val model = kmeans.fit(df)
     val cost  = model.computeCost(df)
@@ -216,11 +205,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("random initialization") {
     val df = createSimpleDataset()
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(3)
-      .setInitMode("random")
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmeans = new GeneralizedKMeans().setK(3).setInitMode("random").setMaxIter(10).setSeed(42)
 
     val model = kmeans.fit(df)
     assert(model.numClusters === 3)
@@ -251,11 +236,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       (Vectors.dense(5.1, 5.1), 10.0)
     ).toDF("features", "weight")
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(2)
-      .setWeightCol("weight")
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmeans = new GeneralizedKMeans().setK(2).setWeightCol("weight").setMaxIter(10).setSeed(42)
 
     val model = kmeans.fit(weightedData)
     assert(model.numClusters === 2)
@@ -267,10 +248,7 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   test("model toString") {
     val df = createSimpleDataset()
 
-    val kmeans = new GeneralizedKMeans()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmeans = new GeneralizedKMeans().setK(3).setMaxIter(10).setSeed(42)
 
     val model = kmeans.fit(df)
     val str   = model.toString
@@ -330,11 +308,8 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = createSimpleDataset()
 
     Seq("squaredEuclidean", "kl").foreach { divergence =>
-      val kmeans = new GeneralizedKMeans()
-        .setK(2)
-        .setDivergence(divergence)
-        .setMaxIter(5)
-        .setSeed(42)
+      val kmeans =
+        new GeneralizedKMeans().setK(2).setDivergence(divergence).setMaxIter(5).setSeed(42)
 
       val originalModel = kmeans.fit(df)
 

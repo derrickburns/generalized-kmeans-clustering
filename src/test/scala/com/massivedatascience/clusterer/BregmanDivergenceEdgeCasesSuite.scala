@@ -280,8 +280,9 @@ class BregmanDivergenceEdgeCasesSuite extends AnyFunSuite {
     val expectedInhomogeneous = Vectors.dense(1.0, 2.0) // (2.0, 4.0) / 2.0
     val actualInhomogeneous   = point.inhomogeneous
 
-    assert(expectedInhomogeneous.toArray.zip(actualInhomogeneous.toArray).forall { case (expected, actual) =>
-      math.abs(expected - actual) < 1e-8
+    assert(expectedInhomogeneous.toArray.zip(actualInhomogeneous.toArray).forall {
+      case (expected, actual) =>
+        math.abs(expected - actual) < 1e-8
     })
   }
 
@@ -304,7 +305,7 @@ class BregmanDivergenceEdgeCasesSuite extends AnyFunSuite {
   test("sparse vector handling") {
     val ops          = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val sparseVector = WeightedVector(Vectors.sparse(10, Seq((1, 2.0), (5, 3.0), (9, 1.0))), 1.0)
-    val denseVector =
+    val denseVector  =
       WeightedVector(Vectors.dense(0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 1.0), 1.0)
 
     val sparsePoint  = ops.toPoint(sparseVector)

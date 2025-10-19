@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.ml.{CLARA, KMedoids, KMedoidsModel}
+import com.massivedatascience.clusterer.ml.{ CLARA, KMedoids, KMedoidsModel }
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
@@ -50,11 +50,8 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedoids = new KMedoids()
-      .setK(2)
-      .setMaxIter(20)
-      .setDistanceFunction("euclidean")
-      .setSeed(42)
+    val kmedoids =
+      new KMedoids().setK(2).setMaxIter(20).setDistanceFunction("euclidean").setSeed(42)
 
     val model = kmedoids.fit(df)
 
@@ -84,11 +81,8 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedoids = new KMedoids()
-      .setK(2)
-      .setMaxIter(20)
-      .setDistanceFunction("manhattan")
-      .setSeed(42)
+    val kmedoids =
+      new KMedoids().setK(2).setMaxIter(20).setDistanceFunction("manhattan").setSeed(42)
 
     val model = kmedoids.fit(df)
 
@@ -114,11 +108,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedoids = new KMedoids()
-      .setK(2)
-      .setMaxIter(20)
-      .setDistanceFunction("cosine")
-      .setSeed(42)
+    val kmedoids = new KMedoids().setK(2).setMaxIter(20).setDistanceFunction("cosine").setSeed(42)
 
     val model = kmedoids.fit(df)
 
@@ -153,10 +143,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedoids = new KMedoids()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
+    val kmedoids = new KMedoids().setK(3).setMaxIter(10).setSeed(42)
 
     val model = kmedoids.fit(df)
 
@@ -183,17 +170,9 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model1 = new KMedoids()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model1 = new KMedoids().setK(3).setMaxIter(10).setSeed(42).fit(df)
 
-    val model2 = new KMedoids()
-      .setK(3)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model2 = new KMedoids().setK(3).setMaxIter(10).setSeed(42).fit(df)
 
     // Same seed should produce same medoids
     (0 until 3).foreach { i =>
@@ -213,17 +192,9 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model1 = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model1 = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
-    val model2 = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(123)
-      .fit(df)
+    val model2 = new KMedoids().setK(2).setMaxIter(10).setSeed(123).fit(df)
 
     // Different seeds may produce different medoids
     // (not guaranteed, but likely for this data)
@@ -244,11 +215,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     assert(model.numClusters === 2)
     assert(model.numFeatures === 1)
@@ -258,7 +225,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("KMedoids should handle high-dimensional data") {
-    val dim = 50
+    val dim  = 50
     val data = Seq(
       Vectors.dense(Array.fill(dim)(0.0)),
       Vectors.dense(Array.fill(dim)(0.1)),
@@ -268,11 +235,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     assert(model.numClusters === 2)
     assert(model.numFeatures === dim)
@@ -294,11 +257,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Even with low maxIter, should not fail
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(1)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(1).setSeed(42).fit(df)
 
     assert(model.numClusters === 2)
 
@@ -322,11 +281,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(3)
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(3).setMaxIter(20).setSeed(42).fit(df)
 
     // Outlier should form its own cluster or join nearest cluster
     // Medoids should be actual points (not affected by outlier like centroid would be)
@@ -346,11 +301,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     val originalPredictions = model.transform(df).select("prediction").collect().map(_.getInt(0))
 
@@ -367,7 +318,8 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
       }
 
       // Verify predictions match
-      val loadedPredictions = loadedModel.transform(df).select("prediction").collect().map(_.getInt(0))
+      val loadedPredictions =
+        loadedModel.transform(df).select("prediction").collect().map(_.getInt(0))
       assert(originalPredictions.sameElements(loadedPredictions))
 
       // Verify distance function
@@ -390,11 +342,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     assert(model.numClusters === 2)
 
@@ -410,11 +358,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     val copied = model.copy(org.apache.spark.ml.param.ParamMap.empty)
 
@@ -443,11 +387,8 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
 
     // Valid parameters should not throw
-    val kmedoids = new KMedoids()
-      .setK(3)
-      .setMaxIter(50)
-      .setDistanceFunction("manhattan")
-      .setSeed(123)
+    val kmedoids =
+      new KMedoids().setK(3).setMaxIter(50).setDistanceFunction("manhattan").setSeed(123)
 
     assert(kmedoids.getK === 3)
     assert(kmedoids.getMaxIter === 50)
@@ -466,11 +407,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new KMedoids()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val model = new KMedoids().setK(2).setMaxIter(20).setSeed(42).fit(df)
 
     val cost = model.computeCost(df)
 
@@ -501,12 +438,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val clara = new CLARA()
-      .setK(2)
-      .setNumSamples(3)
-      .setSampleSize(6)
-      .setMaxIter(10)
-      .setSeed(42)
+    val clara = new CLARA().setK(2).setNumSamples(3).setSampleSize(6).setMaxIter(10).setSeed(42)
 
     val model = clara.fit(df)
 
@@ -532,7 +464,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
     val clara = new CLARA()
       .setK(3)
       .setNumSamples(5)
-      .setSampleSize(30)  // Sample size << dataset size
+      .setSampleSize(30) // Sample size << dataset size
       .setMaxIter(10)
       .setSeed(42)
 
@@ -600,21 +532,11 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model1 = new CLARA()
-      .setK(3)
-      .setNumSamples(3)
-      .setSampleSize(10)
-      .setMaxIter(5)
-      .setSeed(42)
-      .fit(df)
+    val model1 =
+      new CLARA().setK(3).setNumSamples(3).setSampleSize(10).setMaxIter(5).setSeed(42).fit(df)
 
-    val model2 = new CLARA()
-      .setK(3)
-      .setNumSamples(3)
-      .setSampleSize(10)
-      .setMaxIter(5)
-      .setSeed(42)
-      .fit(df)
+    val model2 =
+      new CLARA().setK(3).setNumSamples(3).setSampleSize(10).setMaxIter(5).setSeed(42).fit(df)
 
     // Same seed should produce same medoids
     (0 until 3).foreach { i =>
@@ -641,27 +563,17 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // With more samples, should find better clustering
-    val claraFewSamples = new CLARA()
-      .setK(3)
-      .setNumSamples(1)
-      .setSampleSize(6)
-      .setMaxIter(5)
-      .setSeed(42)
-      .fit(df)
+    val claraFewSamples =
+      new CLARA().setK(3).setNumSamples(1).setSampleSize(6).setMaxIter(5).setSeed(42).fit(df)
 
-    val claraManySamples = new CLARA()
-      .setK(3)
-      .setNumSamples(10)
-      .setSampleSize(6)
-      .setMaxIter(5)
-      .setSeed(42)
-      .fit(df)
+    val claraManySamples =
+      new CLARA().setK(3).setNumSamples(10).setSampleSize(6).setMaxIter(5).setSeed(42).fit(df)
 
-    val costFew = claraFewSamples.computeCost(df)
+    val costFew  = claraFewSamples.computeCost(df)
     val costMany = claraManySamples.computeCost(df)
 
     // More samples should generally find better or equal solution
-    assert(costMany <= costFew * 1.5)  // Allow some variance
+    assert(costMany <= costFew * 1.5) // Allow some variance
   }
 
   test("CLARA parameter validation") {
@@ -701,7 +613,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
     val clara = new CLARA()
       .setK(3)
       .setNumSamples(2)
-      .setSampleSize(3)  // Same as dataset size
+      .setSampleSize(3) // Same as dataset size
       .setMaxIter(5)
       .setSeed(42)
 
@@ -725,12 +637,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val clara = new CLARA()
-      .setK(2)
-      .setNumSamples(2)
-      .setSampleSize(3)
-      .setMaxIter(5)
-      .setSeed(42)
+    val clara = new CLARA().setK(2).setNumSamples(2).setSampleSize(3).setMaxIter(5).setSeed(42)
 
     val model = clara.fit(df)
 
@@ -749,7 +656,8 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
       }
 
       // Verify predictions match
-      val loadedPredictions = loadedModel.transform(df).select("prediction").collect().map(_.getInt(0))
+      val loadedPredictions =
+        loadedModel.transform(df).select("prediction").collect().map(_.getInt(0))
       assert(originalPredictions.sameElements(loadedPredictions))
     } finally {
       // Clean up
@@ -760,12 +668,7 @@ class KMedoidsSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("CLARA copy should work correctly") {
-    val clara = new CLARA()
-      .setK(3)
-      .setNumSamples(5)
-      .setSampleSize(20)
-      .setMaxIter(10)
-      .setSeed(42)
+    val clara = new CLARA().setK(3).setNumSamples(5).setSampleSize(20).setMaxIter(10).setSeed(42)
 
     val copied = clara.copy(org.apache.spark.ml.param.ParamMap.empty)
 

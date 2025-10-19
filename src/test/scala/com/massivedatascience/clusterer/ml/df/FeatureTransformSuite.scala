@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml.df
 
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
@@ -67,7 +67,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   test("NoOpTransform on DataFrame should work") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(3.0, 4.0))
     ).toDF("features")
@@ -103,11 +103,11 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   }
 
   test("EpsilonShiftTransform should be invertible") {
-    val epsilon  = 0.01
-    val v        = Vectors.dense(1.0, 2.0, 3.0)
+    val epsilon   = 0.01
+    val v         = Vectors.dense(1.0, 2.0, 3.0)
     val transform = EpsilonShiftTransform(epsilon)
-    val result   = transform(v)
-    val inverted = transform.inverseCenter(result)
+    val result    = transform(v)
+    val inverted  = transform.inverseCenter(result)
 
     assert(vectorsEqual(v, inverted, tol = 1e-9))
   }
@@ -145,8 +145,8 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   }
 
   test("StandardScalingTransform should center and scale") {
-    val mean   = Vectors.dense(1.0, 2.0)
-    val stddev = Vectors.dense(0.5, 1.0)
+    val mean      = Vectors.dense(1.0, 2.0)
+    val stddev    = Vectors.dense(0.5, 1.0)
     val transform = StandardScalingTransform(mean, stddev)
 
     val v      = Vectors.dense(1.5, 4.0)
@@ -159,8 +159,8 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   }
 
   test("StandardScalingTransform should be invertible") {
-    val mean   = Vectors.dense(1.0, 2.0)
-    val stddev = Vectors.dense(0.5, 1.0)
+    val mean      = Vectors.dense(1.0, 2.0)
+    val stddev    = Vectors.dense(0.5, 1.0)
     val transform = StandardScalingTransform(mean, stddev)
 
     val v        = Vectors.dense(1.5, 4.0)
@@ -171,7 +171,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   }
 
   test("ComposedTransform should apply transforms sequentially") {
-    val epsilon = 0.01
+    val epsilon  = 0.01
     val composed = EpsilonShiftTransform(epsilon).andThen(Log1pTransform)
 
     val v      = Vectors.dense(0.0, 1.0)
@@ -184,7 +184,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   }
 
   test("ComposedTransform should invert correctly") {
-    val epsilon = 0.01
+    val epsilon  = 0.01
     val composed = EpsilonShiftTransform(epsilon).andThen(Log1pTransform)
 
     val v        = Vectors.dense(1.0, 2.0)
@@ -229,7 +229,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   test("Transform on DataFrame should preserve row count") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(3.0, 4.0)),
       Tuple1(Vectors.dense(5.0, 6.0))
@@ -243,7 +243,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   test("In-place transform should work") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0))
     ).toDF("features")
 
@@ -255,7 +255,7 @@ class FeatureTransformSuite extends AnyFunSuite with Matchers with BeforeAndAfte
   test("Composed transform on DataFrame should work") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0))
     ).toDF("features")
 

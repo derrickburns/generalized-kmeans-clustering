@@ -165,7 +165,7 @@ class OnlineAnnealedKMeansTestSuite extends AnyFunSuite with LocalClusterSparkCo
     val schedules = Seq("exponential", "linear")
 
     schedules.foreach { schedule =>
-      val config = AnnealedKMeansConfig(
+      val config    = AnnealedKMeansConfig(
         initialBeta = 0.1,
         finalBeta = 10.0,
         annealingSchedule = schedule,

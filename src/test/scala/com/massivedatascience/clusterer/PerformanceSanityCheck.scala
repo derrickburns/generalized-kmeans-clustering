@@ -21,17 +21,17 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.linalg.Vectors
 import com.massivedatascience.clusterer.ml.GeneralizedKMeans
 
-/**
- * Performance sanity check for CI.
- *
- * This test runs a simple K-Means clustering task and verifies that it completes
- * within a reasonable time budget. It's designed to catch major performance regressions
- * without requiring extensive benchmarking infrastructure.
- */
+/** Performance sanity check for CI.
+  *
+  * This test runs a simple K-Means clustering task and verifies that it completes within a
+  * reasonable time budget. It's designed to catch major performance regressions without requiring
+  * extensive benchmarking infrastructure.
+  */
 object PerformanceSanityCheck {
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder()
+    val spark = SparkSession
+      .builder()
       .appName("PerformanceSanityCheck")
       .master("local[*]")
       .config("spark.ui.enabled", "false")
@@ -41,11 +41,11 @@ object PerformanceSanityCheck {
 
     try {
       // Test parameters
-      val numPoints = 10000
-      val numClusters = 10
+      val numPoints     = 10000
+      val numClusters   = 10
       val numDimensions = 20
       val maxIterations = 20
-      val timeBudgetMs = 30000 // 30 seconds
+      val timeBudgetMs  = 30000 // 30 seconds
 
       System.out.println(s"Starting performance sanity check:")
       System.out.println(s"  Points: $numPoints")
@@ -70,10 +70,10 @@ object PerformanceSanityCheck {
         .setPredictionCol("cluster")
         .setSeed(42L)
 
-      val model = kmeans.fit(data)
-      val predictions = model.transform(data)
+      val model        = kmeans.fit(data)
+      val predictions  = model.transform(data)
       val clusterCount = predictions.select("cluster").distinct().count()
-      val cost = model.computeCost(data)
+      val cost         = model.computeCost(data)
 
       val elapsedTime = System.currentTimeMillis() - startTime
 

@@ -49,11 +49,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Test K-Medians with L1 distance
-    val kmedians = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setMaxIter(20)
-      .setSeed(42)
+    val kmedians = new GeneralizedKMeans().setK(2).setDivergence("l1").setMaxIter(20).setSeed(42)
 
     val medianModel   = kmedians.fit(df)
     val medianCenters = medianModel.clusterCenters
@@ -62,7 +58,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(medianCenters.length === 2)
 
     // Check that we have centers near both clusters
-    val hasClusterNear1 = medianCenters.exists { c =>
+    val hasClusterNear1  = medianCenters.exists { c =>
       math.abs(c(0) - 1.0) < 2.0 && math.abs(c(1) - 1.0) < 2.0
     }
     val hasClusterNear10 = medianCenters.exists { c =>
@@ -79,11 +75,8 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // Compare with K-Means (Euclidean)
-    val kmeans = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(20)
-      .setSeed(42)
+    val kmeans =
+      new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(20).setSeed(42)
 
     val meansModel   = kmeans.fit(df)
     val meansCenters = meansModel.clusterCenters
@@ -139,12 +132,8 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedians = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setMaxIter(20)
-      .setTol(1e-4)
-      .setSeed(42)
+    val kmedians =
+      new GeneralizedKMeans().setK(2).setDivergence("l1").setMaxIter(20).setTol(1e-4).setSeed(42)
 
     val model = kmedians.fit(df)
 
@@ -196,11 +185,8 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Should accept "manhattan" as alias for "l1"
-    val kmedians = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("manhattan")
-      .setMaxIter(20)
-      .setSeed(42)
+    val kmedians =
+      new GeneralizedKMeans().setK(2).setDivergence("manhattan").setMaxIter(20).setSeed(42)
 
     val model = kmedians.fit(df)
     assert(model.numClusters === 2)
@@ -216,11 +202,7 @@ class KMediansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val kmedians = new GeneralizedKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setMaxIter(20)
-      .setSeed(42)
+    val kmedians = new GeneralizedKMeans().setK(2).setDivergence("l1").setMaxIter(20).setSeed(42)
 
     val model         = kmedians.fit(df)
     val originalPreds = model.transform(df).select("prediction").collect().map(_.getInt(0))

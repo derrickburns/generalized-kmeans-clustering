@@ -249,7 +249,9 @@ class TransformEdgeCasesSuite extends AnyFunSuite {
       assert(tinyResult.weight == Double.MinPositiveValue)
       // Allow non-finite values with extreme weights
       assert(
-        tinyResult.inhomogeneous.toArray.forall(x => java.lang.Double.isFinite(x) || x.isNaN || x.isInfinity)
+        tinyResult.inhomogeneous.toArray.forall(x =>
+          java.lang.Double.isFinite(x) || x.isNaN || x.isInfinity
+        )
       )
     } catch {
       case _: Exception =>

@@ -101,7 +101,7 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val timeSeries = sc.parallelize((0 until 50).map { i =>
       // Create time series with different patterns
       val pattern = i % 3
-      val values = (0 until 16).map { t =>
+      val values  = (0 until 16).map { t =>
         pattern match {
           case 0 => math.sin(t * 0.5) + scala.util.Random.nextGaussian() * 0.1
           case 1 => math.cos(t * 0.3) + scala.util.Random.nextGaussian() * 0.1
@@ -175,13 +175,15 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0 && java.lang.Double.isFinite(cost))
     } catch {
-      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException
+          if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable if extreme conditions cause invalid centers
         succeed
       case e: IllegalArgumentException if e.getMessage.contains("requirement failed") =>
         // Acceptable if RDD caching requirement fails during multi-stage training
         succeed
-      case e: org.apache.spark.SparkException if e.getMessage.contains("does not match requested numClusters") =>
+      case e: org.apache.spark.SparkException
+          if e.getMessage.contains("does not match requested numClusters") =>
         // Acceptable if fewer unique clusters are produced due to data characteristics
         succeed
     } finally {
@@ -280,8 +282,7 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       .groupBy(_._1) // Group by predicted cluster
       .mapValues { pairs =>
         // Find the most common true label in this predicted cluster
-        pairs
-          .map { case (_, idx) => trueLabels(idx) }
+        pairs.map { case (_, idx) => trueLabels(idx) }
           .groupBy(identity)
           .mapValues(_.length)
           .maxBy(_._2)
@@ -292,7 +293,7 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val correctAssignments = predictions.zipWithIndex.count { case (prediction, index) =>
       clusterToTrueLabel.get(prediction).contains(trueLabels(index))
     }
-    val accuracy = correctAssignments.toDouble / numPoints
+    val accuracy           = correctAssignments.toDouble / numPoints
     assert(accuracy > 0.5, s"Poor clustering accuracy: $accuracy")
   }
 

@@ -29,7 +29,7 @@ import scala.util.Random
 import org.scalatest._
 import funsuite._
 
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
 import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.BregmanPointOps._
@@ -267,7 +267,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
   }
 
   test("no distinct points") {
-    val data = sc.parallelize[Vector](
+    val data   = sc.parallelize[Vector](
       Array(
         Vectors.dense(1.0, 2.0, 3.0),
         Vectors.dense(1.0, 2.0, 3.0),
@@ -297,7 +297,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       Vectors.dense(1.0, 3.0, 0.0),
       Vectors.dense(1.0, 4.0, 6.0)
     )
-    val data = sc.parallelize[Vector]((1 to 100).flatMap(_ => smallData), 4)
+    val data      = sc.parallelize[Vector]((1 to 100).flatMap(_ => smallData), 4)
 
     // No matter how many runs or iterations we use, we should get one cluster,
     // centered at the mean of the points
@@ -329,7 +329,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("single cluster with sparse data") {
 
-    val n = 10000
+    val n    = 10000
     val data = sc.parallelize[Vector](
       (1 to 100).flatMap { i =>
         val x = i / 1000.0
@@ -425,7 +425,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       Vectors.dense(1.0, 0.0, 1.0),
       Vectors.dense(1.0, 1.0, 1.0)
     )
-    val rdd = sc.parallelize[Vector](points)
+    val rdd    = sc.parallelize[Vector](points)
 
     // K-means|| initialization should place all clusters into distinct centers because
     // it will make at least five passes, and it will give non-zero probability to each
@@ -468,7 +468,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       Vectors.dense(9.0, 0.2),
       Vectors.dense(9.2, 0.0)
     )
-    val rdd = sc.parallelize[Vector](points, 3)
+    val rdd    = sc.parallelize[Vector](points, 3)
 
     for (initMode <- Seq(RANDOM, K_MEANS_PARALLEL)) {
       // Two iterations are sufficient no matter where the initial centers are.
@@ -493,7 +493,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
     // Train models with different distance functions
     val euclideanModel =
       KMeans.train(rdd, k = 3, maxIterations = 10, distanceFunctionNames = Seq(EUCLIDEAN))
-    val klModel =
+    val klModel        =
       KMeans.train(rdd, k = 3, maxIterations = 10, distanceFunctionNames = Seq(RELATIVE_ENTROPY))
 
     // Verify that predictions are consistent for each model
@@ -661,7 +661,7 @@ class KMeansSuite extends AnyFunSuite with LocalClusterSparkContext {
       Vectors.dense(9.0, 9.0),
       Vectors.dense(9.1, 9.1)
     )
-    val rdd = sc.parallelize(points, 2)
+    val rdd    = sc.parallelize(points, 2)
 
     // Train model
     val model = KMeans.train(rdd, k = 2, maxIterations = 5)

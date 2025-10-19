@@ -2,7 +2,7 @@ package com.massivedatascience.clusterer
 
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
-import org.apache.spark.ml.linalg.{DenseVector, Vectors}
+import org.apache.spark.ml.linalg.{ DenseVector, Vectors }
 import org.scalatest._
 import funsuite._
 

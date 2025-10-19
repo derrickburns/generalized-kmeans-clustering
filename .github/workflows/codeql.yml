@@ -49,6 +49,8 @@ jobs:
         with:
           languages: java
           queries: security-and-quality
+          # Use none build-mode for Scala projects with manual build
+          build-mode: none
 
       # MANUAL BUILD: compile Scala so the extractor can see .class files
       - name: Compile (Scala -> JVM bytecode)

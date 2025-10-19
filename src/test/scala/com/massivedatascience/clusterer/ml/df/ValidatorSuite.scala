@@ -69,7 +69,7 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
       field = "testField",
       violationType = "test"
     )
-    val result = ValidationResult.failure(violation)
+    val result    = ValidationResult.failure(violation)
 
     assert(!result.isValid)
     assert(result.violations.size == 1)
@@ -104,10 +104,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("NoNaNValidator should pass for valid vectors") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
     val validator = Validator.noNaN("features")
     val result    = validator.validate(df)
@@ -116,11 +118,13 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("NoNaNValidator should fail for vectors with NaN") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(Double.NaN, 5.0, 6.0),
-      Vectors.dense(4.0, Double.NaN, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(Double.NaN, 5.0, 6.0),
+        Vectors.dense(4.0, Double.NaN, 6.0)
+      )
+    )
 
     val validator = Validator.noNaN("features")
     val result    = validator.validate(df)
@@ -142,10 +146,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("FiniteValidator should pass for finite vectors") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(-1.0, 0.0, 100.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(-1.0, 0.0, 100.0)
+      )
+    )
 
     val validator = Validator.finite("features")
     val result    = validator.validate(df)
@@ -154,10 +160,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("FiniteValidator should fail for infinite vectors") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(Double.PositiveInfinity, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(Double.PositiveInfinity, 5.0, 6.0)
+      )
+    )
 
     val validator = FiniteValidator("features")
     val result    = validator.validate(df)
@@ -167,10 +175,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("PositiveValidator should pass for positive vectors") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(0.1, 0.5, 100.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(0.1, 0.5, 100.0)
+      )
+    )
 
     val validator = Validator.positive("features")
     val result    = validator.validate(df)
@@ -179,10 +189,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("PositiveValidator should fail for negative vectors") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(-1.0, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(-1.0, 5.0, 6.0)
+      )
+    )
 
     val validator = Validator.positive("features", strict = true)
     val result    = validator.validate(df)
@@ -192,10 +204,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("PositiveValidator with strict=false should allow small negatives") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(-1e-15, 5.0, 6.0) // Very small negative (numerical error)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(-1e-15, 5.0, 6.0) // Very small negative (numerical error)
+      )
+    )
 
     val validator = Validator.positive("features", strict = false)
     val result    = validator.validate(df)
@@ -204,10 +218,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("NotNullValidator should pass for non-null values") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0),
-      Vectors.dense(3.0, 4.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0),
+        Vectors.dense(3.0, 4.0)
+      )
+    )
 
     val validator = Validator.notNull("features")
     val result    = validator.validate(df)
@@ -216,11 +232,13 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("ConsistentDimensionValidator should pass for consistent dimensions") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0),
-      Vectors.dense(7.0, 8.0, 9.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0),
+        Vectors.dense(7.0, 8.0, 9.0)
+      )
+    )
 
     val validator = Validator.consistentDimension("features")
     val result    = validator.validate(df)
@@ -229,11 +247,13 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("ConsistentDimensionValidator should fail for inconsistent dimensions") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0), // Wrong dimension
-      Vectors.dense(7.0, 8.0, 9.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0), // Wrong dimension
+        Vectors.dense(7.0, 8.0, 9.0)
+      )
+    )
 
     val validator = Validator.consistentDimension("features")
     val result    = validator.validate(df)
@@ -243,10 +263,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("ConsistentDimensionValidator with expected dimension should validate") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
     val validatorCorrect = Validator.consistentDimension("features", Some(3))
     assert(validatorCorrect.validate(df).isValid)
@@ -275,10 +297,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("KernelCompatibilityValidator should pass for Euclidean with any features") {
-    val df = makeDF(Seq(
-      Vectors.dense(-1.0, 2.0, 3.0),
-      Vectors.dense(4.0, -5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(-1.0, 2.0, 3.0),
+        Vectors.dense(4.0, -5.0, 6.0)
+      )
+    )
 
     val validator = Validator.kernelCompatibility("squaredEuclidean", "features")
     val result    = validator.validate(df)
@@ -287,15 +311,19 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("KernelCompatibilityValidator should require positive features for KL") {
-    val dfValid = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val dfValid = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
-    val dfInvalid = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(-1.0, 5.0, 6.0) // Negative value
-    ))
+    val dfInvalid = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(-1.0, 5.0, 6.0) // Negative value
+      )
+    )
 
     val validator = Validator.kernelCompatibility("kl", "features")
 
@@ -304,10 +332,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Validator.and should combine validators") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
     val validator = Validator.notNull("features") and
       Validator.finite("features") and
@@ -318,15 +348,19 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Validator.features should validate features column") {
-    val dfValid = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val dfValid = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
-    val dfInvalid = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(Double.NaN, 5.0, 6.0)
-    ))
+    val dfInvalid = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(Double.NaN, 5.0, 6.0)
+      )
+    )
 
     val validator = Validator.features("features")
 
@@ -374,10 +408,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Validator.kmeansInput should work without weight column") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(4.0, 5.0, 6.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(4.0, 5.0, 6.0)
+      )
+    )
 
     val validator = Validator.kmeansInput(featuresCol = "features")
     val result    = validator.validate(df)
@@ -386,10 +422,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Validator.kmeansInput should validate kernel compatibility") {
-    val dfNegative = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(-1.0, 5.0, 6.0)
-    ))
+    val dfNegative = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(-1.0, 5.0, 6.0)
+      )
+    )
 
     val validatorKL = Validator.kmeansInput(
       featuresCol = "features",
@@ -407,11 +445,13 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("ValidationViolation should include sample rows") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0, 3.0),
-      Vectors.dense(Double.NaN, 5.0, 6.0),
-      Vectors.dense(7.0, Double.NaN, 9.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0, 3.0),
+        Vectors.dense(Double.NaN, 5.0, 6.0),
+        Vectors.dense(7.0, Double.NaN, 9.0)
+      )
+    )
 
     val validator = Validator.noNaN("features", maxSampleRows = 2)
     val result    = validator.validate(df)
@@ -434,10 +474,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("CombinedValidator should report all violations") {
-    val df = makeDF(Seq(
-      Vectors.dense(Double.NaN, 2.0, 3.0), // NaN
-      Vectors.dense(4.0, Double.PositiveInfinity, 6.0) // Infinite
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(Double.NaN, 2.0, 3.0),             // NaN
+        Vectors.dense(4.0, Double.PositiveInfinity, 6.0) // Infinite
+      )
+    )
 
     val validator = Validator.noNaN("features") and FiniteValidator("features")
     val result    = validator.validate(df)
@@ -450,10 +492,12 @@ class ValidatorSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Validator error messages should be clear") {
-    val df = makeDF(Seq(
-      Vectors.dense(1.0, 2.0),
-      Vectors.dense(Double.NaN, 4.0)
-    ))
+    val df = makeDF(
+      Seq(
+        Vectors.dense(1.0, 2.0),
+        Vectors.dense(Double.NaN, 4.0)
+      )
+    )
 
     val validator = Validator.noNaN("features")
     val result    = validator.validate(df)

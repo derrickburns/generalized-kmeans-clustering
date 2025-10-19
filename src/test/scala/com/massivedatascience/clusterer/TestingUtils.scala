@@ -27,9 +27,9 @@ object TestingUtils {
   val ABS_TOL_MSG = " using absolute tolerance"
   val REL_TOL_MSG = " using relative tolerance"
 
-  /** Private helper function for comparing two values using relative tolerance. Note that if x or y is extremely close
-    * to zero, i.e., smaller than Double.MinPositiveValue, the relative tolerance is meaningless, so the exception will
-    * be raised to warn users.
+  /** Private helper function for comparing two values using relative tolerance. Note that if x or y
+    * is extremely close to zero, i.e., smaller than Double.MinPositiveValue, the relative tolerance
+    * is meaningless, so the exception will be raised to warn users.
     */
   private def RelativeErrorComparison(x: Double, y: Double, eps: Double): Boolean = {
     val absX = math.abs(x)
@@ -54,10 +54,10 @@ object TestingUtils {
   }
 
   case class CompareDoubleRightSide(
-    fun: (Double, Double, Double) => Boolean,
-    y: Double,
-    eps: Double,
-    method: String
+      fun: (Double, Double, Double) => Boolean,
+      y: Double,
+      eps: Double,
+      method: String
   )
 
   /** Implicit class for comparing two double values using relative tolerance or absolute tolerance.
@@ -72,7 +72,8 @@ object TestingUtils {
       */
     def !~=(r: CompareDoubleRightSide): Boolean = !r.fun(x, r.y, r.eps)
 
-    /** Throws exception when the difference of two values are NOT within eps; otherwise, returns true.
+    /** Throws exception when the difference of two values are NOT within eps; otherwise, returns
+      * true.
       */
     def ~==(r: CompareDoubleRightSide): Boolean = {
       if (!r.fun(x, r.y, r.eps)) {
@@ -110,10 +111,10 @@ object TestingUtils {
   }
 
   case class CompareVectorRightSide(
-    fun: (Vector, Vector, Double) => Boolean,
-    y: Vector,
-    eps: Double,
-    method: String
+      fun: (Vector, Vector, Double) => Boolean,
+      y: Vector,
+      eps: Double,
+      method: String
   )
 
   /** Implicit class for comparing two vectors using relative tolerance or absolute tolerance.
@@ -128,7 +129,8 @@ object TestingUtils {
       */
     def !~=(r: CompareVectorRightSide): Boolean = !r.fun(x, r.y, r.eps)
 
-    /** Throws exception when the difference of two vectors are NOT within eps; otherwise, returns true.
+    /** Throws exception when the difference of two vectors are NOT within eps; otherwise, returns
+      * true.
       */
     def ~==(r: CompareVectorRightSide): Boolean = {
       if (!r.fun(x, r.y, r.eps)) {
@@ -163,8 +165,8 @@ object TestingUtils {
       ABS_TOL_MSG
     )
 
-    /** Comparison using relative tolerance. Note that comparing against sparse vector with elements having value of
-      * zero will raise exception because it involves with comparing against zero.
+    /** Comparison using relative tolerance. Note that comparing against sparse vector with elements
+      * having value of zero will raise exception because it involves with comparing against zero.
       */
     def relTol(eps: Double): CompareVectorRightSide = CompareVectorRightSide(
       (x: Vector, y: Vector, eps: Double) => {

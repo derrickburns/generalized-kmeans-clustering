@@ -26,7 +26,7 @@ import org.scalatest.matchers.should.Matchers
 
 class SeedingServiceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
-  @transient var spark: SparkSession = _
+  @transient var spark: SparkSession  = _
   @transient var ops: BregmanPointOps = _
 
   override def beforeAll(): Unit = {
@@ -374,9 +374,11 @@ class SeedingServiceSuite extends AnyFunSuite with Matchers with BeforeAndAfterA
   test("SeedingService should handle single data point") {
     val seeding = RandomSeeding(k = 3, seed = 42)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0))
+      )
+    )
 
     val centers = seeding.selectInitialCenters(data, ops)
     assert(centers.size == 1)
@@ -385,9 +387,11 @@ class SeedingServiceSuite extends AnyFunSuite with Matchers with BeforeAndAfterA
   test("SeedingService should handle duplicate points") {
     val seeding = KMeansPlusPlusSeeding(k = 3, seed = 42)
 
-    val data = spark.sparkContext.parallelize(Seq.fill(20)(
-      makePoint(Array(1.0, 2.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq.fill(20)(
+        makePoint(Array(1.0, 2.0))
+      )
+    )
 
     val centers = seeding.selectInitialCenters(data, ops)
     assert(centers.size <= 3)

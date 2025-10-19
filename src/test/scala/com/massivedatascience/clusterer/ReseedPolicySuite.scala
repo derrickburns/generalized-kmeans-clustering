@@ -26,7 +26,7 @@ import org.scalatest.matchers.should.Matchers
 
 class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
-  @transient var spark: SparkSession = _
+  @transient var spark: SparkSession  = _
   @transient var ops: BregmanPointOps = _
 
   override def beforeAll(): Unit = {
@@ -71,10 +71,12 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
     assert(!policy.requiresFullScan)
     assert(policy.costCategory == ReseedCostCategory.Constant)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0)),
-      makePoint(Array(3.0, 4.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0)),
+        makePoint(Array(3.0, 4.0))
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(0.0, 0.0)),
@@ -100,11 +102,13 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
     assert(!policy.requiresFullScan)
     assert(policy.costCategory == ReseedCostCategory.Linear)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0)),
-      makePoint(Array(3.0, 4.0)),
-      makePoint(Array(5.0, 6.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0)),
+        makePoint(Array(3.0, 4.0)),
+        makePoint(Array(5.0, 6.0))
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(0.0, 0.0)),
@@ -130,10 +134,12 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("RandomReseedPolicy should handle multiple empty clusters") {
     val policy = RandomReseedPolicy(sampleSize = 10)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0)),
-      makePoint(Array(3.0, 4.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0)),
+        makePoint(Array(3.0, 4.0))
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(0.0, 0.0)),
@@ -183,11 +189,13 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("FarthestPointReseedPolicy should reseed with outliers") {
     val policy = FarthestPointReseedPolicy(numCandidates = 3)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 1.0)),
-      makePoint(Array(2.0, 2.0)),
-      makePoint(Array(100.0, 100.0)) // Outlier
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 1.0)),
+        makePoint(Array(2.0, 2.0)),
+        makePoint(Array(100.0, 100.0)) // Outlier
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(1.5, 1.5)),
@@ -263,11 +271,13 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("ReseedPolicy with same seed should be deterministic") {
     val policy = RandomReseedPolicy(sampleSize = 10)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0)),
-      makePoint(Array(3.0, 4.0)),
-      makePoint(Array(5.0, 6.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0)),
+        makePoint(Array(3.0, 4.0)),
+        makePoint(Array(5.0, 6.0))
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(0.0, 0.0)),
@@ -283,12 +293,14 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("ReseedPolicy with different seeds should vary") {
     val policy = RandomReseedPolicy(sampleSize = 10)
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0)),
-      makePoint(Array(3.0, 4.0)),
-      makePoint(Array(5.0, 6.0)),
-      makePoint(Array(7.0, 8.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0)),
+        makePoint(Array(3.0, 4.0)),
+        makePoint(Array(5.0, 6.0)),
+        makePoint(Array(7.0, 8.0))
+      )
+    )
 
     val centers = IndexedSeq(
       makeCenter(Array(0.0, 0.0)),
@@ -333,9 +345,11 @@ class ReseedPolicySuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("ReseedPolicy should handle no empty clusters") {
     val policy = RandomReseedPolicy()
 
-    val data = spark.sparkContext.parallelize(Seq(
-      makePoint(Array(1.0, 2.0))
-    ))
+    val data = spark.sparkContext.parallelize(
+      Seq(
+        makePoint(Array(1.0, 2.0))
+      )
+    )
 
     val centers = IndexedSeq(makeCenter(Array(0.0, 0.0)))
 

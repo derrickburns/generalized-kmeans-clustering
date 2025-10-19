@@ -1,8 +1,8 @@
 package com.massivedatascience.clusterer.ml.tests
 
-import com.massivedatascience.clusterer.ml.{StreamingKMeans, StreamingKMeansModel}
+import com.massivedatascience.clusterer.ml.{ StreamingKMeans, StreamingKMeansModel }
 import org.apache.spark.ml.linalg.Vectors
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
 
@@ -47,11 +47,8 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val streamingKMeans = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.9)
-      .setSeed(42)
+    val streamingKMeans =
+      new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.9).setSeed(42)
 
     val model = streamingKMeans.fit(df)
 
@@ -74,12 +71,9 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(initialData.map(Tuple1.apply)).toDF("features")
 
-    val streamingKMeans = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
+    val streamingKMeans = new StreamingKMeans().setK(2).setMaxIter(10).setSeed(42)
 
-    val model = streamingKMeans.fit(df)
+    val model         = streamingKMeans.fit(df)
     val centersBefore = model.currentCenters.map(_.copy)
 
     // Update with new batch (similar distribution)
@@ -115,23 +109,15 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(initialData.map(Tuple1.apply)).toDF("features")
 
     // High decay = more forgetting
-    val highDecay = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.1)
-      .setSeed(42)
-      .fit(df)
+    val highDecay =
+      new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.1).setSeed(42).fit(df)
 
     // Low decay = less forgetting
-    val lowDecay = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.9)
-      .setSeed(42)
-      .fit(df)
+    val lowDecay =
+      new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.9).setSeed(42).fit(df)
 
     val centersHighBefore = highDecay.currentCenters.map(_.copy)
-    val centersLowBefore = lowDecay.currentCenters.map(_.copy)
+    val centersLowBefore  = lowDecay.currentCenters.map(_.copy)
 
     // Update both with new batch (different distribution)
     val newBatch = Seq(
@@ -146,18 +132,27 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     lowDecay.update(batchDF)
 
     val centersHighAfter = highDecay.currentCenters
-    val centersLowAfter = lowDecay.currentCenters
+    val centersLowAfter  = lowDecay.currentCenters
 
     // High decay should move centers more toward new data
-    val highShift = centersHighBefore.zip(centersHighAfter).map { case (before, after) =>
-      (0 until before.size).map { i => math.abs(before(i) - after(i)) }.sum
-    }.sum
+    val highShift = centersHighBefore
+      .zip(centersHighAfter)
+      .map { case (before, after) =>
+        (0 until before.size).map { i => math.abs(before(i) - after(i)) }.sum
+      }
+      .sum
 
-    val lowShift = centersLowBefore.zip(centersLowAfter).map { case (before, after) =>
-      (0 until before.size).map { i => math.abs(before(i) - after(i)) }.sum
-    }.sum
+    val lowShift = centersLowBefore
+      .zip(centersLowAfter)
+      .map { case (before, after) =>
+        (0 until before.size).map { i => math.abs(before(i) - after(i)) }.sum
+      }
+      .sum
 
-    assert(highShift > lowShift * 1.1, s"High decay ($highShift) should shift more than low decay ($lowShift)")
+    assert(
+      highShift > lowShift * 1.1,
+      s"High decay ($highShift) should shift more than low decay ($lowShift)"
+    )
   }
 
   test("StreamingKMeans should support half-life parameter") {
@@ -170,11 +165,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val streamingKMeans = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setHalfLife(5.0)
-      .setSeed(42)
+    val streamingKMeans = new StreamingKMeans().setK(2).setMaxIter(10).setHalfLife(5.0).setSeed(42)
 
     val model = streamingKMeans.fit(df)
 
@@ -217,7 +208,8 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(pointUnit.timeUnitValue === "points")
 
     // Both should work for updates
-    val batch = spark.createDataFrame(Seq(Vectors.dense(1.0, 1.0)).map(Tuple1.apply)).toDF("features")
+    val batch =
+      spark.createDataFrame(Seq(Vectors.dense(1.0, 1.0)).map(Tuple1.apply)).toDF("features")
     batchUnit.update(batch)
     pointUnit.update(batch)
 
@@ -236,18 +228,15 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Test with L1 divergence
-    val l1Model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDivergence("l1")
-      .setSeed(42)
-      .fit(df)
+    val l1Model =
+      new StreamingKMeans().setK(2).setMaxIter(10).setDivergence("l1").setSeed(42).fit(df)
 
     assert(l1Model.divergenceName === "l1")
     assert(l1Model.clusterCenters.length === 2)
 
     // Update should work
-    val batch = spark.createDataFrame(Seq(Vectors.dense(1.2, 2.2)).map(Tuple1.apply)).toDF("features")
+    val batch =
+      spark.createDataFrame(Seq(Vectors.dense(1.2, 2.2)).map(Tuple1.apply)).toDF("features")
     l1Model.update(batch)
 
     val predictions = l1Model.transform(df)
@@ -264,11 +253,8 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data).toDF("features", "weight")
 
-    val streamingKMeans = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setWeightCol("weight")
-      .setSeed(42)
+    val streamingKMeans =
+      new StreamingKMeans().setK(2).setMaxIter(10).setWeightCol("weight").setSeed(42)
 
     val model = streamingKMeans.fit(df)
 
@@ -297,12 +283,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.9)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.9).setSeed(42).fit(df)
 
     val weightsBefore = model.currentWeights.clone()
 
@@ -335,16 +316,13 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     val centersBefore = model.currentCenters.map(_.copy)
 
     // Update with empty batch
-    val emptyBatch = spark.createDataFrame(Seq.empty[Tuple1[org.apache.spark.ml.linalg.Vector]]).toDF("features")
+    val emptyBatch =
+      spark.createDataFrame(Seq.empty[Tuple1[org.apache.spark.ml.linalg.Vector]]).toDF("features")
     model.update(emptyBatch)
 
     val centersAfter = model.currentCenters
@@ -366,16 +344,11 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(3)
-      .setMaxIter(10)
-      .setDecayFactor(0.5)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(3).setMaxIter(10).setDecayFactor(0.5).setSeed(42).fit(df)
 
     // Force one cluster to die by repeatedly updating with data from other clusters
     (1 to 20).foreach { _ =>
-      val batch = Seq(
+      val batch   = Seq(
         Vectors.dense(0.0, 0.0),
         Vectors.dense(0.1, 0.1)
       )
@@ -384,7 +357,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     }
 
     // All clusters should still have reasonable weights (dying cluster gets split)
-    val weights = model.currentWeights
+    val weights   = model.currentWeights
     val maxWeight = weights.max
     val minWeight = weights.min
 
@@ -403,18 +376,13 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(initialData.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.9)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.9).setSeed(42).fit(df)
 
     val initialCenters = model.currentCenters.map(_.copy)
 
     // Multiple updates
     (1 to 5).foreach { i =>
-      val batch = Seq(
+      val batch   = Seq(
         Vectors.dense(i * 0.1, i * 0.1),
         Vectors.dense(5.0 + i * 0.1, 5.0 + i * 0.1)
       )
@@ -425,11 +393,14 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val finalCenters = model.currentCenters
 
     // Centers should have evolved
-    val totalShift = initialCenters.zip(finalCenters).map { case (initial, final_) =>
-      (0 until initial.size).map { i =>
-        math.abs(initial(i) - final_(i))
-      }.sum
-    }.sum
+    val totalShift = initialCenters
+      .zip(finalCenters)
+      .map { case (initial, final_) =>
+        (0 until initial.size).map { i =>
+          math.abs(initial(i) - final_(i))
+        }.sum
+      }
+      .sum
 
     assert(totalShift > 0.01, s"Centers should shift with multiple updates (shift=$totalShift)")
   }
@@ -444,11 +415,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     val cost = model.computeCost(df)
 
@@ -501,18 +468,15 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     val updater = model.createStreamingUpdater()
 
     assert(updater.batchesProcessed === 0)
 
     // Simulate batch processing
-    val batch1 = spark.createDataFrame(Seq(Vectors.dense(1.0, 1.0)).map(Tuple1.apply)).toDF("features")
+    val batch1 =
+      spark.createDataFrame(Seq(Vectors.dense(1.0, 1.0)).map(Tuple1.apply)).toDF("features")
     updater.currentModel.update(batch1)
     // Note: batchCounter only increments through updateOn(), not direct update() calls
     // So counter stays at 0 unless we use the streaming API
@@ -528,12 +492,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setDecayFactor(0.9)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setDecayFactor(0.9).setSeed(42).fit(df)
 
     val copied = model.copy(org.apache.spark.ml.param.ParamMap.empty)
 
@@ -548,7 +507,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("StreamingKMeans should work with high-dimensional data") {
-    val dim = 50
+    val dim  = 50
     val data = Seq(
       Vectors.dense(Array.fill(dim)(0.0)),
       Vectors.dense(Array.fill(dim)(0.1)),
@@ -558,11 +517,7 @@ class StreamingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42)
-      .fit(df)
+    val model = new StreamingKMeans().setK(2).setMaxIter(10).setSeed(42).fit(df)
 
     assert(model.clusterCenters.length === 2)
     assert(model.clusterCenters(0).size === dim)

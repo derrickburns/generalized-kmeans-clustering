@@ -202,7 +202,9 @@ class KernelOpsSuite extends AnyFunSuite with Matchers {
   test("recommendedTransform should return appropriate transforms") {
     assert(KernelOps.recommendedTransform(SquaredEuclideanDescriptor) == FeatureTransform.identity)
     assert(KernelOps.recommendedTransform(KLDivergenceDescriptor).name.contains("epsilon_shift"))
-    assert(KernelOps.recommendedTransform(CosineDistanceDescriptor) == FeatureTransform.normalizeL2())
+    assert(
+      KernelOps.recommendedTransform(CosineDistanceDescriptor) == FeatureTransform.normalizeL2()
+    )
   }
 
   test("KernelOps should be serializable") {
@@ -223,7 +225,7 @@ class KernelOpsSuite extends AnyFunSuite with Matchers {
     val result = kernel match {
       case SquaredEuclideanDescriptor => "SE"
       case KLDivergenceDescriptor     => "KL"
-      case _                      => "Other"
+      case _                          => "Other"
     }
 
     assert(result == "KL")

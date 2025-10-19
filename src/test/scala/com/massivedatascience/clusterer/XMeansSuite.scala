@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer.ml.tests
 
-import com.massivedatascience.clusterer.ml.{XMeans, GeneralizedKMeans}
+import com.massivedatascience.clusterer.ml.{ XMeans, GeneralizedKMeans }
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
@@ -56,12 +56,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(5)
-      .setCriterion("bic")
-      .setMaxIter(20)
-      .setSeed(42)
+    val xmeans = new XMeans().setMinK(2).setMaxK(5).setCriterion("bic").setMaxIter(20).setSeed(42)
 
     val model = xmeans.fit(df)
 
@@ -83,11 +78,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(4)
-      .setCriterion("bic")
-      .setMaxIter(20)
+    val xmeans = new XMeans().setMinK(2).setMaxK(4).setCriterion("bic").setMaxIter(20)
 
     val model = xmeans.fit(df)
 
@@ -105,11 +96,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(4)
-      .setCriterion("aic")
-      .setMaxIter(20)
+    val xmeans = new XMeans().setMinK(2).setMaxK(4).setCriterion("aic").setMaxIter(20)
 
     val model = xmeans.fit(df)
 
@@ -128,11 +115,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Test with L1 divergence
-    val xmeansL1 = new XMeans()
-      .setMinK(2)
-      .setMaxK(3)
-      .setDivergence("l1")
-      .setMaxIter(20)
+    val xmeansL1 = new XMeans().setMinK(2).setMaxK(3).setDivergence("l1").setMaxIter(20)
 
     val modelL1 = xmeansL1.fit(df)
     assert(modelL1.numClusters >= 1, s"Expected at least 1 cluster, got ${modelL1.numClusters}")
@@ -144,19 +127,15 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("X-Means should handle weighted data") {
     val data = Seq(
-      (Vectors.dense(1.0, 1.0), 10.0),  // High weight
+      (Vectors.dense(1.0, 1.0), 10.0), // High weight
       (Vectors.dense(1.1, 0.9), 10.0),
-      (Vectors.dense(9.0, 9.0), 1.0),   // Low weight
+      (Vectors.dense(9.0, 9.0), 1.0),  // Low weight
       (Vectors.dense(9.1, 8.9), 1.0)
     )
 
     val df = spark.createDataFrame(data).toDF("features", "weight")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(3)
-      .setWeightCol("weight")
-      .setMaxIter(20)
+    val xmeans = new XMeans().setMinK(2).setMaxK(3).setWeightCol("weight").setMaxIter(20)
 
     val model = xmeans.fit(df)
     assert(model.numClusters >= 2)
@@ -221,10 +200,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(3)
-      .setMaxIter(20)
+    val xmeans = new XMeans().setMinK(2).setMaxK(3).setMaxIter(20)
 
     val model = xmeans.fit(df)
 
@@ -235,7 +211,7 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Test predict on single vector
     val testVector = Vectors.dense(0.1, 0.1)
-    val cluster = model.predict(testVector)
+    val cluster    = model.predict(testVector)
     assert(cluster >= 0 && cluster < model.numClusters)
   }
 
@@ -249,13 +225,10 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(3)
-      .setMaxIter(20)
+    val xmeans = new XMeans().setMinK(2).setMaxK(3).setMaxIter(20)
 
     val model = xmeans.fit(df)
-    val cost = model.computeCost(df)
+    val cost  = model.computeCost(df)
 
     // Cost should be positive and finite
     assert(cost > 0.0 && java.lang.Double.isFinite(cost))
@@ -305,13 +278,9 @@ class XMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val xmeans = new XMeans()
-      .setMinK(2)
-      .setMaxK(3)
-      .setMaxIter(20)
-      .setSeed(42)
+    val xmeans = new XMeans().setMinK(2).setMaxK(3).setMaxIter(20).setSeed(42)
 
-    val model = xmeans.fit(df)
+    val model         = xmeans.fit(df)
     val originalPreds = model.transform(df).select("prediction").collect().map(_.getInt(0))
 
     // Save and load model

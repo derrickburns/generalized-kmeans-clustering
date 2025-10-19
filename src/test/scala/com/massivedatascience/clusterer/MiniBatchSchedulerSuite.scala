@@ -57,8 +57,8 @@ class MiniBatchSchedulerSuite extends AnyFunSuite with Matchers with BeforeAndAf
     assert(scheduler.learningRate(0) == 1.0)
     assert(scheduler.learningRate(10) == 1.0)
 
-    val data   = spark.sparkContext.parallelize(1 to 100)
-    val batch  = scheduler.sampleBatch(data, iteration = 0, seed = 42)
+    val data  = spark.sparkContext.parallelize(1 to 100)
+    val batch = scheduler.sampleBatch(data, iteration = 0, seed = 42)
 
     assert(batch.count() == 100)
   }
@@ -212,9 +212,9 @@ class MiniBatchSchedulerSuite extends AnyFunSuite with Matchers with BeforeAndAf
     val decay = LearningRateDecay.Step(initial = 1.0, factor = 0.5, stepSize = 10)
 
     assert(decay.rate(0) == 1.0)
-    assert(decay.rate(5) == 1.0) // Still in first step
+    assert(decay.rate(5) == 1.0)   // Still in first step
     assert(decay.rate(9) == 1.0)
-    assert(decay.rate(10) == 0.5) // First step down
+    assert(decay.rate(10) == 0.5)  // First step down
     assert(decay.rate(15) == 0.5)
     assert(decay.rate(20) == 0.25) // Second step down
   }

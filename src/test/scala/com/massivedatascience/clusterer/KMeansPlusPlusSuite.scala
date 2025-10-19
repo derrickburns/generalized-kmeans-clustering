@@ -33,7 +33,7 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext {
     val ops            = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val implementation = new KMeansPlusPlus(ops)
     val seed           = 0
-    val data = Array(
+    val data           = Array(
       WeightedVector(Vectors.dense(1.0, 2.0, 6.0), 2.0),
       WeightedVector(Vectors.dense(1.0, 3.0, 0.0), 4.0),
       WeightedVector(Vectors.dense(1.0, 4.0, 6.0), 8.0)
@@ -63,7 +63,7 @@ class KMeansPlusPlusSuite extends AnyFunSuite with LocalSparkContext {
     val ops            = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val implementation = new KMeansPlusPlus(ops)
     val seed           = 0
-    val data = Array(
+    val data           = Array(
       WeightedVector(Vectors.dense(1.0, 2.0, 6.0), 2.0),
       WeightedVector(Vectors.dense(1.0, 3.0, 0.0), 4.0),
       WeightedVector(Vectors.dense(1.0, 4.0, 6.0), 8.0),

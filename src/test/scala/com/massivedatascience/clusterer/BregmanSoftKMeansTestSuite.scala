@@ -84,12 +84,12 @@ class BregmanSoftKMeansTestSuite extends AnyFunSuite with LocalClusterSparkConte
     val initialCenters = selector.init(pointOps, points, 2, None, 1, 42L).head
 
     // Test with low beta (soft assignments)
-    val softResult =
+    val softResult      =
       BregmanSoftKMeans.verySoft(beta = 0.1).clusterSoft(30, pointOps, points, initialCenters)
     val softMemberships = softResult.memberships.collect()
 
     // Test with high beta (sharp assignments)
-    val sharpResult =
+    val sharpResult      =
       BregmanSoftKMeans.sharp(beta = 10.0).clusterSoft(30, pointOps, points, initialCenters)
     val sharpMemberships = sharpResult.memberships.collect()
 
@@ -210,7 +210,7 @@ class BregmanSoftKMeansTestSuite extends AnyFunSuite with LocalClusterSparkConte
     val effectiveNumClusters = result.effectiveNumberOfClusters
 
     // Debug: Check actual memberships
-    val sampleMemberships = result.memberships.take(5)
+    val sampleMemberships   = result.memberships.take(5)
     val hasMultipleClusters = sampleMemberships.exists { case (_, probs) =>
       probs.count(p => p > 0.01) > 1
     }
@@ -270,7 +270,7 @@ class BregmanSoftKMeansTestSuite extends AnyFunSuite with LocalClusterSparkConte
     points.cache()
 
     // Use very tight convergence threshold
-    val config = BregmanSoftKMeansConfig(
+    val config     = BregmanSoftKMeansConfig(
       beta = 5.0,
       convergenceThreshold = 1e-12,
       maxIterations = 5

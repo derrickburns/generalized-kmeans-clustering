@@ -66,11 +66,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setBeta(2.0)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setBeta(2.0).setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
 
@@ -85,7 +81,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Each point should have probabilities for 2 clusters
     val firstRow = predictions.select("probabilities").head()
-    val probs = firstRow.getAs[org.apache.spark.ml.linalg.Vector](0)
+    val probs    = firstRow.getAs[org.apache.spark.ml.linalg.Vector](0)
     assert(probs.size === 2)
 
     // Probabilities should sum to ~1.0
@@ -127,15 +123,23 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val sharpPreds = sharpModel.transform(df)
 
     // Compute average entropy for soft vs sharp
-    val softEntropy = softPreds.select("probabilities").collect().map { row =>
-      val probs = row.getAs[org.apache.spark.ml.linalg.Vector](0).toArray
-      -probs.map(p => if (p > 1e-10) p * math.log(p) else 0.0).sum
-    }.sum / softPreds.count()
+    val softEntropy = softPreds
+      .select("probabilities")
+      .collect()
+      .map { row =>
+        val probs = row.getAs[org.apache.spark.ml.linalg.Vector](0).toArray
+        -probs.map(p => if (p > 1e-10) p * math.log(p) else 0.0).sum
+      }
+      .sum / softPreds.count()
 
-    val sharpEntropy = sharpPreds.select("probabilities").collect().map { row =>
-      val probs = row.getAs[org.apache.spark.ml.linalg.Vector](0).toArray
-      -probs.map(p => if (p > 1e-10) p * math.log(p) else 0.0).sum
-    }.sum / sharpPreds.count()
+    val sharpEntropy = sharpPreds
+      .select("probabilities")
+      .collect()
+      .map { row =>
+        val probs = row.getAs[org.apache.spark.ml.linalg.Vector](0).toArray
+        -probs.map(p => if (p > 1e-10) p * math.log(p) else 0.0).sum
+      }
+      .sum / sharpPreds.count()
 
     // Soft clustering should have higher entropy (more uncertainty)
     assert(softEntropy > sharpEntropy)
@@ -152,28 +156,19 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Test Euclidean
-    val euclideanModel = new SoftKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val euclideanModel =
+      new SoftKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(20).setSeed(42).fit(df)
 
     assert(euclideanModel.numClusters === 2)
 
     // Test L1
-    val l1Model = new SoftKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val l1Model = new SoftKMeans().setK(2).setDivergence("l1").setMaxIter(20).setSeed(42).fit(df)
 
     assert(l1Model.numClusters === 2)
 
     // Both should produce valid predictions
     val euclideanPreds = euclideanModel.transform(df)
-    val l1Preds = l1Model.transform(df)
+    val l1Preds        = l1Model.transform(df)
 
     assert(euclideanPreds.count() === 4)
     assert(l1Preds.count() === 4)
@@ -189,11 +184,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data).toDF("features", "weight")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setWeightCol("weight")
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setWeightCol("weight").setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
 
@@ -215,10 +206,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
 
@@ -245,12 +233,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // Very soft clustering (low beta)
-    val softModel = new SoftKMeans()
-      .setK(2)
-      .setBeta(0.1)
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val softModel = new SoftKMeans().setK(2).setBeta(0.1).setMaxIter(20).setSeed(42).fit(df)
 
     val effectiveClusters = softModel.effectiveNumberOfClusters(df)
 
@@ -266,10 +249,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
 
@@ -324,10 +304,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
     assert(model.numClusters === 2)
@@ -346,16 +323,10 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setBeta(2.0)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setBeta(2.0).setMaxIter(20).setSeed(42)
 
-    val model = softKMeans.fit(df)
-    val originalPreds = model.transform(df)
-      .select("prediction", "probabilities")
-      .collect()
+    val model         = softKMeans.fit(df)
+    val originalPreds = model.transform(df).select("prediction", "probabilities").collect()
 
     // Save and load model
     val tempDir = java.nio.file.Files.createTempDirectory("softkmeans-model-test").toString
@@ -363,16 +334,14 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       model.write.overwrite().save(tempDir)
 
       val loadedModel = com.massivedatascience.clusterer.ml.SoftKMeansModel.load(tempDir)
-      val loadedPreds = loadedModel.transform(df)
-        .select("prediction", "probabilities")
-        .collect()
+      val loadedPreds = loadedModel.transform(df).select("prediction", "probabilities").collect()
 
       // Predictions should match
       assert(originalPreds.length === loadedPreds.length)
       originalPreds.zip(loadedPreds).foreach { case (orig, loaded) =>
         assert(orig.getInt(0) === loaded.getInt(0))
 
-        val origProbs = orig.getAs[org.apache.spark.ml.linalg.Vector](1).toArray
+        val origProbs   = orig.getAs[org.apache.spark.ml.linalg.Vector](1).toArray
         val loadedProbs = loaded.getAs[org.apache.spark.ml.linalg.Vector](1).toArray
 
         origProbs.zip(loadedProbs).foreach { case (op, lp) =>
@@ -399,11 +368,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(50)
-      .setTol(1e-4)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setMaxIter(50).setTol(1e-4).setSeed(42)
 
     val model = softKMeans.fit(df)
 
@@ -420,7 +385,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val minMemb = 1e-10
+    val minMemb    = 1e-10
     val softKMeans = new SoftKMeans()
       .setK(2)
       .setBeta(10.0) // Very sharp clustering
@@ -428,7 +393,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(20)
       .setSeed(42)
 
-    val model = softKMeans.fit(df)
+    val model       = softKMeans.fit(df)
     val predictions = model.transform(df)
 
     // Even with very sharp clustering, all probabilities should be >= minMembership (with tolerance)
@@ -448,17 +413,9 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val model1 = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val model1 = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42).fit(df)
 
-    val model2 = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
-      .fit(df)
+    val model2 = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42).fit(df)
 
     val preds1 = model1.transform(df).select("prediction").collect().map(_.getInt(0))
     val preds2 = model2.transform(df).select("prediction").collect().map(_.getInt(0))
@@ -477,10 +434,7 @@ class SoftKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val softKMeans = new SoftKMeans()
-      .setK(2)
-      .setMaxIter(20)
-      .setSeed(42)
+    val softKMeans = new SoftKMeans().setK(2).setMaxIter(20).setSeed(42)
 
     val model = softKMeans.fit(df)
     assert(model.numClusters === 2)

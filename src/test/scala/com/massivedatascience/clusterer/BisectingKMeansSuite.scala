@@ -1,13 +1,14 @@
 package com.massivedatascience.clusterer
 
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
 /** Test suite for Bisecting K-Means clustering.
   *
-  * Tests hierarchical divisive clustering with various configurations, comparing behavior with standard K-Means.
+  * Tests hierarchical divisive clustering with various configurations, comparing behavior with
+  * standard K-Means.
   */
 class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
@@ -102,7 +103,7 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Set minDivisibleClusterSize to 5, so only the large cluster can be split
     val bisecting = new ml.BisectingKMeans()
-      .setK(4) // Request 4 clusters
+      .setK(4)                       // Request 4 clusters
       .setDivergence("squaredEuclidean")
       .setMaxIter(10)
       .setMinDivisibleClusterSize(5) // Minimum size to split
@@ -136,11 +137,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(modelKL.numClusters === 2)
 
     // Test with L1 divergence
-    val bisectingL1 = new ml.BisectingKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisectingL1 =
+      new ml.BisectingKMeans().setK(2).setDivergence("l1").setMaxIter(10).setSeed(42)
 
     val modelL1 = bisectingL1.fit(df)
     assert(modelL1.numClusters === 2)
@@ -161,11 +159,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Run bisecting K-Means multiple times with different seeds
     val runs = Range.inclusive(1, 5).map { i =>
-      val bisecting = new ml.BisectingKMeans()
-        .setK(2)
-        .setDivergence("squaredEuclidean")
-        .setMaxIter(10)
-        .setSeed(i)
+      val bisecting =
+        new ml.BisectingKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(i)
 
       val model       = bisecting.fit(df)
       val predictions = model.transform(df)
@@ -193,11 +188,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val bisecting = new ml.BisectingKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisecting =
+      new ml.BisectingKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(42)
 
     val model = bisecting.fit(df)
 
@@ -233,7 +225,7 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(model.numClusters === 2)
 
     // The heavy point should influence the center of its cluster
-    val centers = model.clusterCentersAsVectors
+    val centers           = model.clusterCentersAsVectors
     val hasNearZeroCenter = centers.exists { center =>
       val arr = center.toArray
       math.sqrt(arr(0) * arr(0) + arr(1) * arr(1)) < 1.0
@@ -259,11 +251,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
     // First split into 2 clusters (should be A vs B)
-    val bisecting2 = new ml.BisectingKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisecting2 =
+      new ml.BisectingKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(42)
 
     val model2       = bisecting2.fit(df)
     val predictions2 = model2.transform(df).select("prediction").collect().map(_.getInt(0))
@@ -277,11 +266,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     // Now split into 4 clusters (should be A1, A2, B1, B2)
-    val bisecting4 = new ml.BisectingKMeans()
-      .setK(4)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisecting4 =
+      new ml.BisectingKMeans().setK(4).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(42)
 
     val model4 = bisecting4.fit(df)
     assert(model4.numClusters === 4)
@@ -295,11 +281,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val bisecting = new ml.BisectingKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisecting =
+      new ml.BisectingKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(42)
 
     val model = bisecting.fit(df)
     assert(model.numClusters === 2)
@@ -315,11 +298,8 @@ class BisectingKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
 
-    val bisecting = new ml.BisectingKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(10)
-      .setSeed(42)
+    val bisecting =
+      new ml.BisectingKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(10).setSeed(42)
 
     val model = bisecting.fit(df)
     val cost  = model.computeCost(df)

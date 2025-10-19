@@ -38,11 +38,7 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMConfig should support method chaining") {
-    val config = GKMConfig.default
-      .withK(10)
-      .withKernel("kl")
-      .withMaxIter(50)
-      .withTolerance(1e-6)
+    val config = GKMConfig.default.withK(10).withKernel("kl").withMaxIter(50).withTolerance(1e-6)
 
     assert(config.k == 10)
     assert(config.kernel == "kl")
@@ -126,7 +122,7 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMConfig.summary should generate readable output") {
-    val config = GKMConfig.default.withK(10).withKernel("kl")
+    val config  = GKMConfig.default.withK(10).withKernel("kl")
     val summary = config.summary
 
     assert(summary.contains("k: 10"))
@@ -220,12 +216,8 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMConfigBuilder should build configuration") {
-    val config = GKMConfigBuilder()
-      .setK(10)
-      .setKernel("kl")
-      .setMaxIter(50)
-      .setTolerance(1e-6)
-      .build()
+    val config =
+      GKMConfigBuilder().setK(10).setKernel("kl").setMaxIter(50).setTolerance(1e-6).build()
 
     assert(config.k == 10)
     assert(config.kernel == "kl")
@@ -271,24 +263,18 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
 
   test("GKMConfigBuilder should build from existing config") {
     val original = GKMConfig.default.withK(10)
-    val modified = GKMConfigBuilder(original)
-      .setMaxIter(100)
-      .build()
+    val modified = GKMConfigBuilder(original).setMaxIter(100).build()
 
-    assert(modified.k == 10) // Preserved from original
+    assert(modified.k == 10)        // Preserved from original
     assert(modified.maxIter == 100) // Modified
   }
 
   test("GKMConfigBuilder.buildValidated should validate") {
-    val validResult = GKMConfigBuilder()
-      .setK(10)
-      .buildValidated()
+    val validResult = GKMConfigBuilder().setK(10).buildValidated()
 
     assert(validResult.isSuccess)
 
-    val invalidResult = GKMConfigBuilder()
-      .setK(-1)
-      .buildValidated()
+    val invalidResult = GKMConfigBuilder().setK(-1).buildValidated()
 
     assert(invalidResult.isFailure)
   }
@@ -352,7 +338,7 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
     val original = GKMConfig.default
     val modified = original.withK(10)
 
-    assert(original.k == 5) // Original unchanged
+    assert(original.k == 5)  // Original unchanged
     assert(modified.k == 10) // New instance
   }
 
@@ -360,7 +346,7 @@ class GKMConfigSuite extends AnyFunSuite with Matchers {
     val config = GKMConfig.default
 
     val stream = new java.io.ByteArrayOutputStream()
-    val oos = new java.io.ObjectOutputStream(stream)
+    val oos    = new java.io.ObjectOutputStream(stream)
     oos.writeObject(config)
     oos.close()
 

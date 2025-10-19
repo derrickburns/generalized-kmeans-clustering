@@ -30,7 +30,7 @@ import com.massivedatascience.clusterer.compat._
 class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("numerical stability with near-duplicate points") {
-    val basePoint = Array(1.0, 2.0, 3.0)
+    val basePoint      = Array(1.0, 2.0, 3.0)
     val nearDuplicates = (0 until 100).map { i =>
       val noise = Array.fill(3)(scala.util.Random.nextGaussian() * 1e-10)
       Vectors.dense(basePoint.zip(noise).map { case (base, n) => base + n })
@@ -57,7 +57,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val dim       = 10
 
     val clusterCounts = Seq(5, 10, 20, 50)
-    val results = clusterCounts.map { k =>
+    val results       = clusterCounts.map { k =>
       val data = sc.parallelize((0 until numPoints).map { i =>
         val cluster = i % k
         val center  = Array.fill(dim)(cluster * 2.0)
@@ -125,7 +125,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("convergence speed with different initializations") {
     val numPoints = 200
-    val data = sc.parallelize((0 until numPoints).map { i =>
+    val data      = sc.parallelize((0 until numPoints).map { i =>
       val cluster = i % 4
       Vectors.dense(
         cluster * 5.0 + scala.util.Random.nextGaussian(),
@@ -143,13 +143,13 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
     val results = initializers.map { initializer =>
       val startTime = System.currentTimeMillis()
-      val model = KMeans.train(
+      val model     = KMeans.train(
         data,
         k = 4,
         maxIterations = maxIterations,
         mode = initializer
       )
-      val endTime = System.currentTimeMillis()
+      val endTime   = System.currentTimeMillis()
 
       val duration = endTime - startTime
       val cost     = model.computeCost(data)
@@ -174,7 +174,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("performance with different distance functions") {
     val numPoints = 200
-    val data = sc.parallelize((0 until numPoints).map { i =>
+    val data      = sc.parallelize((0 until numPoints).map { i =>
       // Generate positive values for KL divergence compatibility
       val cluster = i % 3
       val base    = Array.fill(5)(cluster + 1.0)
@@ -191,13 +191,13 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val results = distanceFunctions.map { distanceFunction =>
       try {
         val startTime = System.currentTimeMillis()
-        val model = KMeans.train(
+        val model     = KMeans.train(
           data,
           k = 3,
           maxIterations = 10,
           distanceFunctionNames = Seq(distanceFunction)
         )
-        val endTime = System.currentTimeMillis()
+        val endTime   = System.currentTimeMillis()
 
         val duration = endTime - startTime
         val cost     = model.computeCost(data)
@@ -224,7 +224,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
 
   test("memory usage with zero-weight vectors") {
     val numPoints = 100
-    val data = sc.parallelize((0 until numPoints).map { i =>
+    val data      = sc.parallelize((0 until numPoints).map { i =>
       val weight  = if (i % 10 == 0) 1e-100 else 1.0 // Use very small weight instead of exactly zero
       val cluster = i % 3
       WeightedVector(
@@ -256,7 +256,8 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0) // May be infinite with extreme weights
     } catch {
-      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException
+          if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable if extreme weights cause invalid centers
         succeed
     }
@@ -325,7 +326,7 @@ class PerformanceTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     assert(model.k >= 1)
     assert(model.k <= 3)
 
-    val predictions = model.predict(tightClusters).collect()
+    val predictions   = model.predict(tightClusters).collect()
     assert(predictions.forall(p => p >= 0 && p < model.k))
     val clusterCounts = predictions.groupBy(identity).mapValues(_.length)
     assert(clusterCounts.size <= 3, "Should produce at most 3 clusters")

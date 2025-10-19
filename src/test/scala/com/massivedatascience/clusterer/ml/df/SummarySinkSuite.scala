@@ -227,7 +227,7 @@ class SummarySinkSuite extends AnyFunSuite with Matchers {
     )
 
     val summary = ClusteringSummary(events, 0, 1000)
-    val report = summary.report
+    val report  = summary.report
 
     assert(report.contains("Clustering Summary"))
     assert(report.contains("Iterations: 3"))
@@ -256,7 +256,7 @@ class SummarySinkSuite extends AnyFunSuite with Matchers {
   }
 
   test("IterationTracker should record start and complete") {
-    val sink = SummarySink()
+    val sink    = SummarySink()
     val tracker = IterationTracker(sink, 0)
 
     // Start event should be recorded
@@ -279,7 +279,7 @@ class SummarySinkSuite extends AnyFunSuite with Matchers {
   }
 
   test("IterationTracker should measure duration") {
-    val sink = SummarySink()
+    val sink    = SummarySink()
     val tracker = IterationTracker(sink, 0)
 
     Thread.sleep(50) // Simulate work
@@ -324,7 +324,7 @@ class SummarySinkSuite extends AnyFunSuite with Matchers {
     sink.record(IterationStarted(0))
 
     val stream = new java.io.ByteArrayOutputStream()
-    val oos = new java.io.ObjectOutputStream(stream)
+    val oos    = new java.io.ObjectOutputStream(stream)
     oos.writeObject(sink)
     oos.close()
 
@@ -340,7 +340,7 @@ class SummarySinkSuite extends AnyFunSuite with Matchers {
     )
 
     val stream = new java.io.ByteArrayOutputStream()
-    val oos = new java.io.ObjectOutputStream(stream)
+    val oos    = new java.io.ObjectOutputStream(stream)
     oos.writeObject(summary)
     oos.close()
 

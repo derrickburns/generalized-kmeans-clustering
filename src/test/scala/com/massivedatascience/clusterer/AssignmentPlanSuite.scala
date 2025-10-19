@@ -62,7 +62,7 @@ class AssignmentPlanSuite extends AnyFunSuite with Matchers {
 
   test("ConditionalAssignmentPlan should be created correctly") {
     val defaultPlan = RDDMapAssignmentPlan("squaredEuclidean")
-    val plan = ConditionalAssignmentPlan(
+    val plan        = ConditionalAssignmentPlan(
       defaultPlan = defaultPlan,
       featuresCol = "features",
       predictionCol = "prediction"
@@ -87,7 +87,7 @@ class AssignmentPlanSuite extends AnyFunSuite with Matchers {
 
   test("AssignmentPlan.crossJoin factory should accept custom parameters") {
     val customProvider = RowIdProvider.fromColumn("id")
-    val plan = AssignmentPlan.crossJoin(
+    val plan           = AssignmentPlan.crossJoin(
       featuresCol = "data",
       predictionCol = "cluster",
       rowIdProvider = customProvider
@@ -140,11 +140,11 @@ class AssignmentPlanSuite extends AnyFunSuite with Matchers {
     val result = plan match {
       case CrossJoinAssignmentPlan(div, _, feat, pred) =>
         s"CrossJoin: $div, $feat -> $pred"
-      case RDDMapAssignmentPlan(div, feat, pred) =>
+      case RDDMapAssignmentPlan(div, feat, pred)       =>
         s"RDDMap: $div, $feat -> $pred"
-      case UDFAssignmentPlan(div, feat, pred) =>
+      case UDFAssignmentPlan(div, feat, pred)          =>
         s"UDF: $div, $feat -> $pred"
-      case ConditionalAssignmentPlan(_, feat, pred) =>
+      case ConditionalAssignmentPlan(_, feat, pred)    =>
         s"Conditional: $feat -> $pred"
     }
 

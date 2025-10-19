@@ -142,7 +142,7 @@ class BregmanMixtureModelTestSuite extends AnyFunSuite with LocalClusterSparkCon
     }
 
     // Points that are close should likely have the same assignment
-    val assignmentMap = mapAssignments.toMap
+    val assignmentMap       = mapAssignments.toMap
     val expectedSameCluster = Set(
       (
         BregmanPoint(WeightedVector(Vectors.dense(0.0, 0.0)), 0.0),
@@ -292,7 +292,7 @@ class BregmanMixtureModelTestSuite extends AnyFunSuite with LocalClusterSparkCon
     val model  = BregmanMixtureModel()
     val result = model.fit(points, 2, pointOps)
 
-    val stats = result.getStats
+    val stats        = result.getStats
     val expectedKeys = Set(
       "logLikelihood",
       "numComponents",

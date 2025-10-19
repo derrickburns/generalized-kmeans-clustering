@@ -21,7 +21,7 @@ import com.massivedatascience.clusterer.TestingUtils._
 import com.massivedatascience.clusterer.KMeans.RunConfig
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.scalatest.funsuite.AnyFunSuite
 
 class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContext {
@@ -40,8 +40,8 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
   }
 
   test("KMeansModel.fromAssignments with mismatched RDD lengths") {
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
-    val points = sc.parallelize(
+    val ops         = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val points      = sc.parallelize(
       Seq(
         WeightedVector(Vectors.dense(1.0, 2.0))
       )
@@ -64,7 +64,7 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
   }
 
   test("KMeansModel.fromAssignments with invalid cluster assignments") {
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val ops    = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
     val points = sc.parallelize(
       Seq(
         WeightedVector(Vectors.dense(1.0, 2.0)),
@@ -86,8 +86,8 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
   }
 
   test("KMeansModel.fromAssignments with all points in one cluster") {
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
-    val points = sc.parallelize(
+    val ops         = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val points      = sc.parallelize(
       Seq(
         WeightedVector(Vectors.dense(1.0, 2.0)),
         WeightedVector(Vectors.dense(3.0, 4.0)),
@@ -122,8 +122,8 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
   }
 
   test("KMeansModel.fromAssignments with zero-weight points") {
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
-    val points = sc.parallelize(
+    val ops         = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val points      = sc.parallelize(
       Seq(
         WeightedVector.fromInhomogeneousWeighted(Vectors.dense(1.0, 2.0), 0.0), // Zero weight
         WeightedVector.fromInhomogeneousWeighted(Vectors.dense(3.0, 4.0), 1.0),
@@ -301,7 +301,7 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
         WeightedVector(Vectors.dense(3.0, 4.0))
       )
     )
-    val ops = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
+    val ops  = BregmanPointOps(BregmanPointOps.EUCLIDEAN)
 
     // Test with invalid k
     intercept[Exception] {
@@ -365,7 +365,7 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
   }
 
   test("model with high-dimensional sparse data") {
-    val dim = 1000
+    val dim  = 1000
     val data = (0 until 20).map { i =>
       val indices = Seq(i % dim, (i * 2) % dim, (i * 3) % dim).distinct
       val values  = indices.map(_ => scala.util.Random.nextGaussian())
@@ -416,7 +416,8 @@ class KMeansModelEdgeCasesSuite extends AnyFunSuite with LocalClusterSparkContex
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0) // May be infinite with extreme weights
     } catch {
-      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException
+          if e.getMessage.contains("requires at least one valid center") =>
         // Acceptable failure mode when extreme weights cause all centers to be invalid
         succeed
     }

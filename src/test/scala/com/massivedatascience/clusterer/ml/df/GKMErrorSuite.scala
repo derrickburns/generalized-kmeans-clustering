@@ -226,7 +226,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.failure should create Failure") {
-    val error = InvalidK(0, 100)
+    val error  = InvalidK(0, 100)
     val result = GKMResult.failure[Int](error)
 
     assert(!result.isSuccess)
@@ -241,7 +241,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.Failure.get should throw exception") {
-    val error = InvalidK(0, 100)
+    val error  = InvalidK(0, 100)
     val result = GKMResult.failure[Int](error)
 
     intercept[IllegalArgumentException] {
@@ -258,7 +258,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.map should preserve failure") {
-    val error = InvalidK(0, 100)
+    val error  = InvalidK(0, 100)
     val result = GKMResult.failure[Int](error)
     val mapped = result.map(_ * 2)
 
@@ -275,7 +275,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.flatMap should short-circuit on failure") {
-    val error = InvalidK(0, 100)
+    val error   = InvalidK(0, 100)
     val result1 = GKMResult.failure[Int](error)
     val result2 = result1.flatMap(x => GKMResult.success(x * 2))
 
@@ -284,7 +284,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.flatMap should propagate failure from mapper") {
-    val error = InvalidK(0, 100)
+    val error   = InvalidK(0, 100)
     val result1 = GKMResult.success(5)
     val result2 = result1.flatMap(_ => GKMResult.failure[Int](error))
 
@@ -300,7 +300,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult.fromOption should handle None") {
-    val error = InvalidK(0, 100)
+    val error  = InvalidK(0, 100)
     val result = GKMResult.fromOption(None, error)
 
     assert(result.isFailure)
@@ -335,7 +335,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
   }
 
   test("GKMResult for-comprehension should short-circuit") {
-    val error = InvalidK(0, 100)
+    val error  = InvalidK(0, 100)
     val result = for {
       x <- GKMResult.success(5)
       y <- GKMResult.failure[Int](error)
@@ -358,7 +358,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
     val error: GKMError = InvalidK(0, 100)
 
     val stream = new java.io.ByteArrayOutputStream()
-    val oos = new java.io.ObjectOutputStream(stream)
+    val oos    = new java.io.ObjectOutputStream(stream)
     oos.writeObject(error)
     oos.close()
 
@@ -370,7 +370,7 @@ class GKMErrorSuite extends AnyFunSuite with Matchers {
     val result: GKMResult[Int] = GKMResult.success(42)
 
     val stream = new java.io.ByteArrayOutputStream()
-    val oos = new java.io.ObjectOutputStream(stream)
+    val oos    = new java.io.ObjectOutputStream(stream)
     oos.writeObject(result)
     oos.close()
 
