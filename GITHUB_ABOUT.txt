@@ -1,0 +1,1 @@
+Production-ready K-Means clustering for Apache Spark with pluggable Bregman divergences (KL, Itakura-Saito, L1, etc). 6 algorithms, 740 tests, cross-version persistence. Drop-in replacement for MLlib with mathematically correct distance functions for probability distributions, spectral data, and count data.
