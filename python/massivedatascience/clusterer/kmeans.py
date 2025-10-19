@@ -389,6 +389,30 @@ class GeneralizedKMeans(
         """Sets the value of distanceCol."""
         return self._set(distanceCol=value)
 
+    def setMaxIter(self, value: int):
+        """Sets the value of maxIter."""
+        return self._set(maxIter=value)
+
+    def setSeed(self, value: int):
+        """Sets the value of seed."""
+        return self._set(seed=value)
+
+    def setTol(self, value: float):
+        """Sets the value of tol."""
+        return self._set(tol=value)
+
+    def setFeaturesCol(self, value: str):
+        """Sets the value of featuresCol."""
+        return self._set(featuresCol=value)
+
+    def setPredictionCol(self, value: str):
+        """Sets the value of predictionCol."""
+        return self._set(predictionCol=value)
+
+    def setWeightCol(self, value: str):
+        """Sets the value of weightCol."""
+        return self._set(weightCol=value)
+
     def _create_model(self, java_model):
         """Create Python model from Java model."""
         return GeneralizedKMeansModel(java_model)
