@@ -70,7 +70,12 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % sparkVersion % "test",
   "org.apache.spark" %% "spark-sql" % sparkVersion % "test",
   "org.apache.spark" %% "spark-mllib" % sparkVersion % "test",
-  "com.holdenkarau" %% "spark-testing-base" % s"${sparkVersion}_2.1.2" % "test"
+  // spark-testing-base version mapping: Spark 3.4.x -> 3.4.0_1.4.4, Spark 3.5.x -> 3.5.0_1.5.2
+  "com.holdenkarau" %% "spark-testing-base" % {
+    if (sparkVersion.startsWith("3.4.")) "3.4.0_1.4.4"
+    else if (sparkVersion.startsWith("3.5.")) "3.5.0_1.5.2"
+    else s"${sparkVersion}_1.4.4"
+  } % "test"
 )
 
 libraryDependencies ++= Seq(

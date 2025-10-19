@@ -155,17 +155,19 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Install PySpark
+      - name: Install PySpark and dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyspark==${{ env.SPARK_35 }}
+          pip install pyspark==${{ env.SPARK_35 }} numpy
       - name: Run smoke test with 2.12 JAR
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          JAR_212=$(ls jars/target/scala-2.12/*.jar 2>/dev/null | head -n1 || true)
+          ls -la jars/ || true
+          JAR_212=$(find jars -name "*scala-2.12*.jar" -type f | head -n1)
           if [ -z "$JAR_212" ]; then
-            JAR_212=$(ls jars/*scala-2.12*.jar | head -n1)
+            echo "ERROR: No Scala 2.12 JAR found in jars/"
+            exit 1
           fi
           echo "Using jar: $JAR_212"
           test -f python/smoke_test.py
