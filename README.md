@@ -14,21 +14,24 @@ Version 0.6.0 introduces a modern, RDD-free DataFrame-native API with Spark ML i
 See DataFrame API Examples for end-to-end usage.
 
 This project generalizes K-Means to multiple Bregman divergences and advanced variants (Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids). It provides:
-	•	A DataFrame/ML API (recommended), and
-	•	A legacy RDD API kept for backwards compatibility (archived below).
 
-What’s in here
-	•	Multiple divergences: Squared Euclidean, KL, Itakura–Saito, L1/Manhattan (K-Medians), Generalized-I, Logistic-loss
-	•	Variants: Bisecting, X-Means (BIC/AIC), Soft K-Means, Structured-Streaming K-Means, K-Medoids (PAM/CLARA)
-	•	Scale: Tested on tens of millions of points in 700+ dimensions
-	•	Tooling: Scala 2.13 (primary), Spark 3.5.x (default, with 3.4.x compatibility)
+- A DataFrame/ML API (recommended), and
+- A legacy RDD API kept for backwards compatibility (archived below).
 
-⸻
+## What's in here
 
-Quick Start (DataFrame API)
+- Multiple divergences: Squared Euclidean, KL, Itakura–Saito, L1/Manhattan (K-Medians), Generalized-I, Logistic-loss
+- Variants: Bisecting, X-Means (BIC/AIC), Soft K-Means, Structured-Streaming K-Means, K-Medoids (PAM/CLARA)
+- Scale: Tested on tens of millions of points in 700+ dimensions
+- Tooling: Scala 2.13 (primary), Spark 3.5.x (default, with 3.4.x compatibility)
+
+---
+
+## Quick Start (DataFrame API)
 
 Recommended for all new projects. The DataFrame API follows the Spark ML Estimator/Model pattern.
 
+```scala
 import org.apache.spark.ml.linalg.Vectors
 import com.massivedatascience.clusterer.ml.GeneralizedKMeans
 
@@ -48,10 +51,11 @@ val gkm = new GeneralizedKMeans()
 val model = gkm.fit(df)
 val pred  = model.transform(df)
 pred.show(false)
+```
 
 More recipes: see DataFrame API Examples.
 
-⸻
+---
 
 ## What CI Validates
 
@@ -70,9 +74,9 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 
 **View live CI results:** [CI Workflow Runs](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml)
 
-⸻
+---
 
-Feature Matrix
+## Feature Matrix
 
 Truth-linked to code, tests, and examples for full transparency:
 
@@ -98,56 +102,59 @@ All DataFrame API algorithms include:
 - ✅ Deterministic behavior (same seed → identical results)
 - ✅ CI validation on every commit
 
+---
 
-⸻
+## Installation / Versions
 
-Installation / Versions
-	•	Spark: 3.5.1 default (override via -Dspark.version), 3.4.x tested
-	•	Scala: 2.13.14 (primary), 2.12.18 (cross-compiled)
-	•	Java: 17
+- Spark: 3.5.1 default (override via -Dspark.version), 3.4.x tested
+- Scala: 2.13.14 (primary), 2.12.18 (cross-compiled)
+- Java: 17
 
+```scala
 libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.6.0"
+```
 
-What’s New in 0.6.0
-	•	Scala 2.13 primary; 3.5.x Spark default
-	•	DataFrame API implementations for: Bisecting, X-Means, Soft, Streaming, K-Medoids
-	•	K-Medians (L1) divergence support
-	•	PySpark wrapper + smoke test
-	•	Expanded examples & docs
+## What's New in 0.6.0
 
-⸻
+- Scala 2.13 primary; 3.5.x Spark default
+- DataFrame API implementations for: Bisecting, X-Means, Soft, Streaming, K-Medoids
+- K-Medians (L1) divergence support
+- PySpark wrapper + smoke test
+- Expanded examples & docs
 
-Scaling & Assignment Strategy (important)
+---
+
+## Scaling & Assignment Strategy (important)
 
 Different divergences require different assignment mechanics at scale:
-	•	Squared Euclidean (SE) fast path — expression/codegen route:
+-	Squared Euclidean (SE) fast path — expression/codegen route:
 	1.	Cross-join points with centers
 	2.	Compute squared distance column
 	3.	Prefer groupBy(rowId).min(distance) → join to pick argmin (scales better than window sorts)
 	4.	Requires a stable rowId; we provide a RowIdProvider.
-	•	General Bregman — broadcast + UDF route:
-	•	Broadcast the centers; compute argmin via a tight JVM UDF.
-	•	Broadcast ceiling: you’ll hit executor/memory limits if k × dim is too large to broadcast.
+-	General Bregman — broadcast + UDF route:
+-	Broadcast the centers; compute argmin via a tight JVM UDF.
+-	Broadcast ceiling: you'll hit executor/memory limits if k × dim is too large to broadcast.
 
-Parameters
-	•	assignmentStrategy: StringParam = auto | crossJoin | broadcastUDF
-	•	auto chooses SE fast path when divergence == SE and feasible; otherwise broadcastUDF.
-	•	broadcastThreshold: IntParam (elements, not bytes)
-	•	Heuristic ceiling for k × dim to guard broadcasts. If exceeded for non-SE, we warn and keep the broadcastUDF path (no DF fallback exists for general Bregman).
+**Parameters**
+-	assignmentStrategy: StringParam = auto | crossJoin | broadcastUDF
+-	auto chooses SE fast path when divergence == SE and feasible; otherwise broadcastUDF.
+-	broadcastThreshold: IntParam (elements, not bytes)
+-	Heuristic ceiling for k × dim to guard broadcasts. If exceeded for non-SE, we warn and keep the broadcastUDF path (no DF fallback exists for general Bregman).
 
-⸻
+---
 
-Input Transforms & Interpretation
+## Input Transforms & Interpretation
 
 Some divergences (KL, IS) require positivity or benefit from stabilized domains.
-	•	inputTransform: StringParam = none | log1p | epsilonShift
-	•	shiftValue: DoubleParam (e.g., 1e-6) when epsilonShift is used.
+-	inputTransform: StringParam = none | log1p | epsilonShift
+-	shiftValue: DoubleParam (e.g., 1e-6) when epsilonShift is used.
 
 Note: Cluster centers are learned in the transformed space. If you need original-space interpretation, apply the appropriate inverse (e.g., expm1) for reporting, understanding that this is an interpretive mapping, not a different optimum.
 
-⸻
+---
 
-Bisecting K-Means — efficiency note
+## Bisecting K-Means — efficiency note
 
 The driver maintains a cluster_id column. For each split:
 	1.	Filter only the target cluster: df.where(col("cluster_id") === id)
@@ -156,50 +163,53 @@ The driver maintains a cluster_id column. For each split:
 
 This avoids reshuffling the full dataset at every split.
 
-⸻
+---
 
-Structured Streaming K-Means
+## Structured Streaming K-Means
 
 Estimator/Model for micro-batch streams using the same core update logic.
-	•	initStrategy = pretrained | randomFirstBatch
-	•	pretrained: provide setInitialModel / setInitialCenters
-	•	randomFirstBatch: seed from the first micro-batch
-	•	State & snapshots: Each micro-batch writes centers to
+-	initStrategy = pretrained | randomFirstBatch
+-	pretrained: provide setInitialModel / setInitialCenters
+-	randomFirstBatch: seed from the first micro-batch
+-	State & snapshots: Each micro-batch writes centers to
 ${checkpointDir}/centers/latest.parquet for batch reuse.
-	•	StreamingGeneralizedKMeansModel.read(path) reconstructs a batch model from snapshots.
+-	StreamingGeneralizedKMeansModel.read(path) reconstructs a batch model from snapshots.
 
-⸻
+---
 
-Persistence (Spark ML)
+## Persistence (Spark ML)
 
 Models implement DefaultParamsWritable/Readable.
 
-Layout
+**Layout**
 
+```
 <path>/
   ├─ metadata/params.json
   ├─ centers/*.parquet          # (center_id, vector[, weight])
   └─ summary/*.json             # events, metrics (optional)
+```
 
-Compatibility
-	•	Save/Load verified across Spark 3.4.x ↔ 3.5.x in CI.
-	•	New params default safely on older loads; unknown params are ignored.
+**Compatibility**
+-	Save/Load verified across Spark 3.4.x ↔ 3.5.x in CI.
+-	New params default safely on older loads; unknown params are ignored.
 
-⸻
+---
 
-Python (PySpark) wrapper
-	•	Package exposes GeneralizedKMeans, BisectingGeneralizedKMeans, SoftGeneralizedKMeans, StreamingGeneralizedKMeans, KMedoids, etc.
-	•	CI runs a spark-submit smoke test on local[*] with a non-SE divergence.
+## Python (PySpark) wrapper
+-	Package exposes GeneralizedKMeans, BisectingGeneralizedKMeans, SoftGeneralizedKMeans, StreamingGeneralizedKMeans, KMedoids, etc.
+-	CI runs a spark-submit smoke test on local[*] with a non-SE divergence.
 
-⸻
+---
 
-Legacy RDD API (Archived)
+## Legacy RDD API (Archived)
 
 Status: Kept for backward compatibility. New development should use the DataFrame API.
 The material below documents the original RDD interfaces and helper objects. Some snippets show API signatures (placeholders) rather than runnable examples.
 
 Quick Start (Legacy RDD API)
 
+```scala
 import com.massivedatascience.clusterer.KMeans
 import org.apache.spark.mllib.linalg.Vectors
 
@@ -216,9 +226,10 @@ val model = KMeans.train(
   k = 2,
   maxIterations = 20
 )
+```
 
 
-⸻
+---
 
 The remainder of this section is an archived reference for the RDD API.
 
@@ -242,36 +253,36 @@ For brevity in this chat, I’m not duplicating it again, but in your repo, plac
 
 
 
-⸻
+---
 
-Table of Contents
-	•	Generalized K-Means Clustering
-	•	Quick Start (DataFrame API)
-	•	Feature Matrix
-	•	Installation / Versions
-	•	Scaling & Assignment Strategy
-	•	Input Transforms & Interpretation
-	•	Bisecting K-Means — efficiency note
-	•	Structured Streaming K-Means
-	•	Persistence (Spark ML)
-	•	Python (PySpark) wrapper
-	•	Legacy RDD API (Archived)
+## Table of Contents
+-	Generalized K-Means Clustering
+-	Quick Start (DataFrame API)
+-	Feature Matrix
+-	Installation / Versions
+-	Scaling & Assignment Strategy
+-	Input Transforms & Interpretation
+-	Bisecting K-Means — efficiency note
+-	Structured Streaming K-Means
+-	Persistence (Spark ML)
+-	Python (PySpark) wrapper
+-	Legacy RDD API (Archived)
 
-⸻
+---
 
-Contributing
-	•	Please prefer PRs that target the DataFrame/ML path.
-	•	Add tests (including property-based where sensible) and update examples.
-	•	Follow Conventional Commits (feat:, fix:, docs:, refactor:, test:).
+## Contributing
+-	Please prefer PRs that target the DataFrame/ML path.
+-	Add tests (including property-based where sensible) and update examples.
+-	Follow Conventional Commits (feat:, fix:, docs:, refactor:, test:).
 
-⸻
+---
 
-License
+## License
 
 Apache 2.0
 
-⸻
+---
 
-Notes for maintainers (can be removed later)
-	•	As you land more DF features, consider extracting the RDD material into LEGACY_RDD.md to keep the README short.
-	•	Keep the “Scaling & Assignment Strategy” section up-to-date when adding SE accelerations (Hamerly/Elkan/Yinyang) or ANN-assisted paths—mark SE-only and exact/approximate as appropriate.
+## Notes for maintainers (can be removed later)
+-	As you land more DF features, consider extracting the RDD material into LEGACY_RDD.md to keep the README short.
+-	Keep the “Scaling & Assignment Strategy” section up-to-date when adding SE accelerations (Hamerly/Elkan/Yinyang) or ANN-assisted paths—mark SE-only and exact/approximate as appropriate.
