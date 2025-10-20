@@ -15,14 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     name: Update dependencies with Scala Steward
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           author-email: 41898282+github-actions[bot]@users.noreply.github.com
           author-name: github-actions[bot]
-          # Respect .scala-steward.conf in repo root
-          repo-config: .scala-steward.conf
+          # Respect .scala-steward.conf in repo root (will be available after checkout)
+          repos-file: .scala-steward.conf
           # Sign commits (optional)
           sign-commits: false
           # Ignore SNAPSHOT versions
