@@ -89,9 +89,9 @@ Truth-linked to code, tests, and examples for full transparency:
 | **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
 | **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
 | **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/L1Kernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
+| **Coreset K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/CoresetKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/CoresetKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripCoresetKMeans.scala) | Large-scale approximation (10-100x speedup) |
 | Constrained K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Balance/capacity constraints |
 | Mini-Batch K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Massive datasets via sampling |
-| Coreset K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Approximation/acceleration |
 
 **Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss
 

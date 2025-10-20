@@ -199,6 +199,41 @@ class ExamplesSuite extends AnyFunSuite with Matchers {
     }
   }
 
+  test("PersistenceRoundTripCoresetKMeans save/load cycle works") {
+    val tmpDir = Files.createTempDirectory("gkm-test-coresetkmeans")
+    try {
+      val savePath = tmpDir.resolve("coresetkmeans").toString
+
+      // Save
+      runExample(
+        "PersistenceRoundTripCoresetKMeans save",
+        PersistenceRoundTripCoresetKMeans.main(Array("save", savePath))
+      )
+
+      // Verify model was saved
+      Files.exists(Paths.get(savePath)) shouldBe true
+      Files.isDirectory(Paths.get(savePath)) shouldBe true
+
+      // Load
+      runExample(
+        "PersistenceRoundTripCoresetKMeans load",
+        PersistenceRoundTripCoresetKMeans.main(Array("load", savePath))
+      )
+    } finally {
+      // Cleanup
+      import scala.util.Try
+      Try {
+        def deleteRecursively(path: java.nio.file.Path): Unit = {
+          if (Files.isDirectory(path)) {
+            Files.list(path).forEach(deleteRecursively)
+          }
+          Files.deleteIfExists(path)
+        }
+        deleteRecursively(tmpDir)
+      }
+    }
+  }
+
   test("All examples contain assertions (truth-linked documentation)") {
     // Verify that examples have assertions to ensure they validate correctness
     val exampleDir = Paths.get("src/main/scala/examples")
