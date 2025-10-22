@@ -237,13 +237,3 @@ One-liner of the change and why.
 	•	RDD API is archived: Do not propose new RDD features.
 
 ---
-
-### Drop-in Patch (unified diff)
-
-```diff
---- a/CLAUDE.md
-+++ b/CLAUDE.md
-@@ -1,0 +1,999 @@
-+<paste the entire file above>
-
-If you want, I can also add a short “Using an AI Copilot on this repo” section in README.md that links to CLAUDE.md, plus a scalafmt.conf/compiler-flag stanza to lock in the style.
