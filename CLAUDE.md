@@ -1,10 +1,3 @@
-Perfect—here’s a PR-ready replacement for CLAUDE.md that merges your project-specific copilot guide with the Scala standards you provided. I’ve woven the guidelines into sections Claude can act on for this repo (Spark/DF-first, deterministic, persistence-safe), and I’ve called out where we’re Scala 2.13 today while still steering contributions to be Scala-3-friendly.
-
-Drop this in as CLAUDE.md:
-
-⸻
-
-
 # CLAUDE.md — Maintainer Copilot for *generalized-kmeans-clustering*
 
 **Purpose.** This file tells Claude (or any LLM assistant) exactly how to help on this repo without wasting maintainer time. It encodes project norms, API/persistence guarantees, review rubrics, performance boundaries, and Scala engineering standards.
