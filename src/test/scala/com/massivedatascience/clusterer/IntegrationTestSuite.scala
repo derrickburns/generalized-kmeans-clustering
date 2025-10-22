@@ -17,8 +17,8 @@
 
 package com.massivedatascience.clusterer
 
-import com.massivedatascience.clusterer.KMeans.RunConfig
 import com.massivedatascience.clusterer.TestingUtils._
+import com.massivedatascience.clusterer.KMeans.RunConfig
 import com.massivedatascience.linalg.WeightedVector
 import com.massivedatascience.transforms.Embedding
 import org.apache.spark.ml.linalg.Vectors
@@ -29,24 +29,18 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
   private val seedRng = new scala.util.Random(42L)
 
   /** Produce strictly positive 2D data suitable for KL / Generalized-I. */
-  private def positive2D(
-      n: Int,
-      clusters: Int
-  ): org.apache.spark.rdd.RDD[org.apache.spark.ml.linalg.Vector] = {
+  private def positive2D(n: Int, clusters: Int): org.apache.spark.rdd.RDD[org.apache.spark.ml.linalg.Vector] = {
     val eps = 1e-6
     sc.parallelize((0 until n).map { i =>
       val base = (i % clusters) * 5.0
-      val x    = math.exp(seedRng.nextGaussian() + base) + eps
-      val y    = math.exp(seedRng.nextGaussian() + base) + eps
+      val x = math.exp(seedRng.nextGaussian() + base) + eps
+      val y = math.exp(seedRng.nextGaussian() + base) + eps
       Vectors.dense(x, y)
     })
   }
 
   /** Real-valued 2D Gaussian-ish data for Euclidean. */
-  private def gaussian2D(
-      n: Int,
-      clusters: Int
-  ): org.apache.spark.rdd.RDD[org.apache.spark.ml.linalg.Vector] = {
+  private def gaussian2D(n: Int, clusters: Int): org.apache.spark.rdd.RDD[org.apache.spark.ml.linalg.Vector] = {
     sc.parallelize((0 until n).map { i =>
       Vectors.dense(
         seedRng.nextGaussian() + (i % clusters) * 5,
@@ -60,9 +54,9 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val dataPositive  = positive2D(n = 100, clusters = 3)
 
     val distances = Seq(
-      BregmanPointOps.EUCLIDEAN        -> dataEuclidean,
+      BregmanPointOps.EUCLIDEAN -> dataEuclidean,
       BregmanPointOps.RELATIVE_ENTROPY -> dataPositive, // KL on positive data
-      BregmanPointOps.GENERALIZED_I    -> dataPositive  // Generalized I on positive data
+      BregmanPointOps.GENERALIZED_I -> dataPositive     // Generalized I on positive data
     )
 
     distances.foreach { case (distanceFunction, data) =>
@@ -74,19 +68,14 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       )
 
       assert(model.centers.length <= 3, s"Too many centers for $distanceFunction")
-
       val cost = model.computeCost(data)
       assert(java.lang.Double.isFinite(cost), s"Non-finite cost for $distanceFunction")
       assert(cost >= 0.0, s"Negative cost for $distanceFunction: $cost")
 
       val predictions = model.predict(data).collect()
-      assert(
-        predictions.forall(p => p >= 0 && p < model.centers.length),
-        s"Invalid prediction for $distanceFunction"
-      )
+      assert(predictions.forall(p => p >= 0 && p < model.centers.length), s"Invalid prediction for $distanceFunction")
 
-      val clusterCounts =
-        predictions.groupBy(identity).map { case (k, arr) => k -> arr.length }
+      val clusterCounts = predictions.groupBy(identity).map { case (k, arr) => k -> arr.length }
       assert(clusterCounts.size <= 3, s"Too many clusters observed for $distanceFunction")
       assert(clusterCounts.values.forall(_ > 0), s"Empty cluster detected for $distanceFunction")
     }
@@ -95,7 +84,7 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
   test("embedding pipeline integration with time series") {
     val timeSeries = sc.parallelize((0 until 50).map { i =>
       val pattern = i % 3
-      val values = (0 until 16).map { t =>
+      val values  = (0 until 16).map { t =>
         pattern match {
           case 0 => math.sin(t * 0.5) + seedRng.nextGaussian() * 0.1
           case 1 => math.cos(t * 0.3) + seedRng.nextGaussian() * 0.1
@@ -159,7 +148,8 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
       val cost = model.computeCostWeighted(data)
       assert(cost >= 0.0 && java.lang.Double.isFinite(cost))
     } catch {
-      case e: IllegalArgumentException if e.getMessage.contains("requires at least one valid center") =>
+      case e: IllegalArgumentException
+          if e.getMessage.contains("requires at least one valid center") =>
         succeed
       case e: IllegalArgumentException if e.getMessage.contains("requirement failed") =>
         succeed
@@ -212,10 +202,7 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val minCost = costs.min
     val maxCost = costs.max
     val eps     = 1e-9
-    assert(
-      (maxCost + eps) / (minCost + eps) <= 100.0,
-      "Clustering implementations produce very different costs"
-    )
+    assert((maxCost + eps) / (minCost + eps) <= 100.0, "Clustering implementations produce very different costs")
   }
 
   test("large dataset performance test (log only, no timing assert)") {
@@ -248,30 +235,23 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     info(s"KMeans training duration: ${duration}ms")
 
     assert(model.centers.length <= numClusters)
-
     val predictions = model.predict(data).collect()
     assert(predictions.forall(p => p >= 0 && p < model.centers.length))
 
     val trueLabels = (0 until numPoints).map(_ % numClusters).toArray
 
-    val clusterToTrueLabel =
-      predictions.zipWithIndex
-        .groupBy(_._1)
-        .map { case (pred, pairs) =>
-          val labelCounts =
-            pairs
-              .map { case (_, idx) => trueLabels(idx) }
-              .groupBy(identity)
-              .map { case (k, v) => k -> v.length }
-          val majority = labelCounts.maxBy(_._2)._1
-          pred -> majority
-        }
-
-    val correctAssignments =
-      predictions.zipWithIndex.count { case (prediction, index) =>
-        clusterToTrueLabel.get(prediction).contains(trueLabels(index))
+    val clusterToTrueLabel = predictions.zipWithIndex
+      .groupBy(_._1)
+      .map { case (pred, pairs) =>
+        val labelCounts = pairs.map { case (_, idx) => trueLabels(idx) }.groupBy(identity).map { case (k, v) => k -> v.length }
+        val majority    = labelCounts.maxBy(_._2)._1
+        pred -> majority
       }
-    val accuracy = correctAssignments.toDouble / numPoints
+
+    val correctAssignments = predictions.zipWithIndex.count { case (prediction, index) =>
+      clusterToTrueLabel.get(prediction).contains(trueLabels(index))
+    }
+    val accuracy           = correctAssignments.toDouble / numPoints
     assert(accuracy > 0.5, s"Poor clustering accuracy: $accuracy")
   }
 
@@ -375,15 +355,14 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val normalData        = sc.parallelize(normalPoints)
     val normalPredictions = model.predict(normalData).collect()
 
-    val clusterCounts =
-      normalPredictions.groupBy(identity).map { case (k, arr) => k -> arr.length }
+    val clusterCounts = normalPredictions.groupBy(identity).map { case (k, arr) => k -> arr.length }
     assert(clusterCounts.size <= 3)
     // Loosened threshold to reduce flakiness while still catching degenerate solutions
     assert(clusterCounts.values.forall(_ >= 3))
   }
 
   test("reproducibility with fixed seeds (seeded data + algorithm)") {
-    val rng  = new scala.util.Random(1234L)
+    val rng = new scala.util.Random(1234L)
     val data = sc.parallelize((0 until 50).map { _ =>
       WeightedVector(
         Vectors.dense(
@@ -418,11 +397,8 @@ class IntegrationTestSuite extends AnyFunSuite with LocalClusterSparkContext {
     val cost1 = model1.computeCostWeighted(data)
     val cost2 = model2.computeCostWeighted(data)
 
-    val tol     = 0.05 // 5% to absorb non-determinism in reduction order/FP
+    val tol = 0.05 // 5% to absorb non-determinism in reduction order/FP
     val relDiff = math.abs(cost1 - cost2) / math.max(1e-9, math.abs(cost1))
-    assert(
-      relDiff <= tol,
-      f"Results differ more than ${tol * 100}%.0f%% with same seed: $cost1%.6f vs $cost2%.6f"
-    )
+    assert(relDiff <= tol, s"Results differ more than ${tol * 100}%% with same seed: $cost1 vs $cost2")
   }
 }
