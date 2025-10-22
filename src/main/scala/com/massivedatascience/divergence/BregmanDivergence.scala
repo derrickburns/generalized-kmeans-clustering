@@ -203,26 +203,34 @@ case object NaturalKLDivergence extends KullbackLeiblerDivergence {
 /** The generalized I-Divergence is defined on points in R**n
   */
 case object GeneralizedIDivergence extends BregmanDivergence {
-
   protected val logFunc: MathLog = GeneralLog
 
-  def convex(v: Vector): Double = dot(trans(v, logFunc.log), v)
+  // F(x) = sum_i x_i (log x_i - 1)
+  def convex(v: Vector): Double =
+    dot(trans(v, x => logFunc.log(x) - 1.0), v)
 
+  // F(v/w) with input given in homogeneous coords
   def convexHomogeneous(v: Vector, w: Double): Double = {
     ValidationUtils.requirePositiveWeight(w, "Weight for generalized I-divergence")
-    val logW = logFunc.log(w)
-    dot(v, trans(v, logFunc.log(_) - logW)) / w
+    ValidationUtils.requirePositiveVector(v, "Vector elements for generalized I-divergence")
+    val c = v.copy
+    scal(1.0 / w, c)
+    convex(c)
   }
 
-  def gradientOfConvex(v: Vector): Vector = {
+  // ∇F(x) = log x
+  def gradientOfConvex(v: Vector): Vector =
     trans(v, logFunc.log)
-  }
 
+  // ∇F(v/w) = log(v/w) = log v - log w
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    val c = -logFunc.log(w)
-    trans(v, c + logFunc.log(_))
+    ValidationUtils.requirePositiveWeight(w, "Weight for generalized I-divergence gradient")
+    ValidationUtils.requirePositiveVector(v, "Vector elements for generalized I-divergence gradient")
+    val c = logFunc.log(w)
+    trans(v, x => logFunc.log(x) - c)
   }
 }
+
 
 /** The Logistic loss divergence is defined on points in (0.0,1.0)
   *
