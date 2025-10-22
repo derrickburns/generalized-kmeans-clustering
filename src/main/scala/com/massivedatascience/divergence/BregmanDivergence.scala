@@ -96,7 +96,7 @@ trait KullbackLeiblerSimplexDivergence extends BregmanDivergence {
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
     ValidationUtils.requirePositiveWeight(w, "Weight for KL simplex divergence")
-    convex(v) / w - logFunc.log(w) - 1.0
+    convex(v) / w - logFunc.log(w)
   }
 
   def gradientOfConvex(v: Vector): Vector = {
@@ -170,17 +170,12 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
     c
   }
 
+  
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
-    if (w == 0.0) {
-      // For zero weight, return zero vector
-      val c = v.copy
-      scal(0.0, c)
-      c
-    } else {
-      val c = v.copy
-      scal(2.0 / w, c)
-      c
-    }
+    require(w != 0.0, "Weight must be nonzero for Euclidean gradient")
+    val c = v.copy
+    scal(2.0 / (w * w), c)
+    c
   }
 }
 
@@ -296,6 +291,8 @@ case object ItakuraSaitoDivergence extends BregmanDivergence {
   }
 
   def convexHomogeneous(v: Vector, w: Double): Double = {
+    ValidationUtils.requirePositiveWeight(w, "Weight for Itakura-Saito divergence")
+    ValidationUtils.requirePositiveVector(v, "Vector elements for Itakura-Saito divergence")
     logFunc.log(w) - sum(trans(v, logFunc.log))
   }
 
