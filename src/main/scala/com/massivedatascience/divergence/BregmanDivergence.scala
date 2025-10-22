@@ -225,12 +225,14 @@ case object GeneralizedIDivergence extends BregmanDivergence {
   // ∇F(v/w) = log(v/w) = log v - log w
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     ValidationUtils.requirePositiveWeight(w, "Weight for generalized I-divergence gradient")
-    ValidationUtils.requirePositiveVector(v, "Vector elements for generalized I-divergence gradient")
+    ValidationUtils.requirePositiveVector(
+      v,
+      "Vector elements for generalized I-divergence gradient"
+    )
     val c = logFunc.log(w)
     trans(v, x => logFunc.log(x) - c)
   }
 }
-
 
 /** The Logistic loss divergence is defined on points in (0.0,1.0)
   *
