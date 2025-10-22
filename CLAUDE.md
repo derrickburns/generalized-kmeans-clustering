@@ -192,18 +192,17 @@ val gkm = new GeneralizedKMeans()
 
 val model = gkm.fit(df)
 val pred  = model.transform(df)
+```
 
 
-⸻
-
-7) CI Expectations
+## 7) CI Expectations
 	•	Stay within existing matrix (Scala 2.12/2.13 × Spark 3.4/3.5).
 	•	Update ExamplesSuite when editing docs; examples are executable documentation.
 	•	Keep perf sanity checks ≤ 30s wall clock.
 
 ⸻
 
-8) Quick PR Template
+## 8) Quick PR Template
 
 ### Summary
 One-liner of the change and why.
@@ -225,14 +224,14 @@ One-liner of the change and why.
 
 ⸻
 
-9) Backlog Suggestions (safe, high-ROI)
+## 9) Backlog Suggestions (safe, high-ROI)
 	•	Validation helpers for KL/IS domain with actionable messages and suggested transforms.
 	•	Better broadcast-threshold diagnostics (include k × dim and configured threshold).
 	•	X-Means end-to-end “auto-k” example notebook + doc.
 
 ⸻
 
-10) Hallucination Traps (pin these truths)
+## 10) Hallucination Traps (pin these truths)
 	•	General Bregman ≠ SE: Do not reuse SE-only vectorized shortcuts in the general (UDF) path.
 	•	Transformed space: When transforms apply, centers live in transformed space; inverse is for interpretation only.
 	•	RDD API is archived: Do not propose new RDD features.
