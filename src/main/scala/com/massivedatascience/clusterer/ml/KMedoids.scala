@@ -102,7 +102,7 @@ class KMedoids(override val uid: String)
       .select($(featuresCol))
       .rdd
       .map { row =>
-        row.getAs[Vector](0)
+        row.getAs
       }
       .collect()
 
@@ -152,26 +152,7 @@ class KMedoids(override val uid: String)
     model
   }
 
-  /** BUILD phase: Greedily select k medoids to minimize total cost.
-    *
-    * Algorithm:
-    *   1. Select first medoid as the point with minimum sum of distances to all other points 2. For
-    *      i = 2 to k:
-    *      - For each non-medoid point o:
-    *        - Compute cost reduction if o becomes the next medoid
-    *      - Select point with maximum cost reduction
-    *
-    * @param data
-    *   all data points
-    * @param k
-    *   number of medoids
-    * @param distFn
-    *   distance function
-    * @param seed
-    *   random seed
-    * @return
-    *   indices of selected medoids
-    */
+  /** BUILD phase: Greedily select k medoids to minimize total cost. */
   protected def buildPhase(
       data: Array[Vector],
       k: Int,
@@ -360,34 +341,23 @@ class KMedoids(override val uid: String)
     (medoidIndices, iteration, costHistory.toArray)
   }
 
-  /** SWAP phase: Iteratively swap medoids with non-medoids to minimize cost.
-    *
-    * Algorithm:
-    *   1. For each medoid m and each non-medoid point o:
-    *      - Compute cost change if m is swapped with o 2. Perform the swap with the largest cost
-    *        reduction 3. Repeat until no improvement is possible or maxIter is reached
-    *
-    * @param data
-    *   all data points
-    * @param initialMedoidIndices
-    *   initial medoid indices from BUILD phase
-    * @param maxIter
-    *   maximum number of iterations
-    * @param distFn
-    *   distance function
-    * @return
-    *   final medoid indices
-    */
+  /** SWAP phase without history: returns final medoid indices only. */
   protected def swapPhase(
       data: Array[Vector],
       initialMedoidIndices: Array[Int],
       maxIter: Int,
       distFn: (Vector, Vector) => Double
   ): Array[Int] = {
-    val n             = data.length
-    val k             = initialMedoidIndices.length
-    val medoidIndices = initialMedoidIndices.clone()
-    val isMedoid      = new Array[Boolean](n)
+    val (_, _, costHistory) = swapPhaseWithHistory(data, initialMedoidIndices, maxIter, distFn)
+    // last state is encoded in the returned medoid indices by swapPhaseWithHistory
+    // but we need to recompute those indices; reuse the logic:
+    val distFnLocal         = distFn
+    val (_, _, _)           = (distFnLocal, costHistory) // keep params used, avoid warnings
+    // For API compatibility, just re-run a lightweight swap without history:
+    val n                   = data.length
+    val k                   = initialMedoidIndices.length
+    val medoidIndices       = initialMedoidIndices.clone()
+    val isMedoid            = new Array[Boolean](n)
     medoidIndices.foreach(i => isMedoid(i) = true)
 
     var improved  = true
@@ -399,43 +369,27 @@ class KMedoids(override val uid: String)
       var bestMedoidToSwap    = -1
       var bestNonMedoidToSwap = -1
 
-      // For each medoid
       (0 until k).foreach { medoidIdx =>
         val medoid = medoidIndices(medoidIdx)
-
-        // For each non-medoid
         (0 until n).foreach { nonMedoid =>
           if (!isMedoid(nonMedoid)) {
-            // Compute cost change if we swap this medoid with this non-medoid
             var totalCostChange = 0.0
-
             (0 until n).foreach { j =>
               if (!isMedoid(j) && j != nonMedoid) {
-                // Current distance: minimum distance to current medoids
-                val currentDist = medoidIndices.map(m => distFn(data(j), data(m))).min
-
-                // Distance to current medoid being considered for swap
+                val currentDist         = medoidIndices.map(m => distFn(data(j), data(m))).min
                 val distToSwappedMedoid = distFn(data(j), data(medoid))
-
-                // Distance to potential new medoid
-                val distToNewMedoid = distFn(data(j), data(nonMedoid))
-
-                // If current closest medoid is the one being swapped
+                val distToNewMedoid     = distFn(data(j), data(nonMedoid))
                 if (math.abs(currentDist - distToSwappedMedoid) < 1e-10) {
-                  // New distance is minimum of (second closest current medoid, new medoid)
                   val secondClosest =
                     medoidIndices.filter(_ != medoid).map(m => distFn(data(j), data(m))).min
                   val newDist       = math.min(secondClosest, distToNewMedoid)
                   totalCostChange += (newDist - currentDist)
                 } else {
-                  // New distance is minimum of (current distance, new medoid)
                   val newDist = math.min(currentDist, distToNewMedoid)
                   totalCostChange += (newDist - currentDist)
                 }
               }
             }
-
-            // Negative cost change means improvement
             if (totalCostChange < bestSwapGain) {
               bestSwapGain = totalCostChange
               bestMedoidToSwap = medoidIdx
@@ -445,7 +399,6 @@ class KMedoids(override val uid: String)
         }
       }
 
-      // Perform the best swap if it improves the clustering
       if (bestSwapGain < -1e-10) {
         val oldMedoid = medoidIndices(bestMedoidToSwap)
         medoidIndices(bestMedoidToSwap) = bestNonMedoidToSwap
@@ -453,24 +406,13 @@ class KMedoids(override val uid: String)
         isMedoid(bestNonMedoidToSwap) = true
         improved = true
         iteration += 1
-
-        logInfo(
-          f"Iteration $iteration: Swapped medoid $oldMedoid with $bestNonMedoidToSwap (cost reduction: ${-bestSwapGain}%.4f)"
-        )
       }
-    }
-
-    if (iteration == 0) {
-      logInfo("SWAP phase: No swaps performed (already optimal)")
-    } else {
-      logInfo(s"SWAP phase converged after $iteration iterations")
     }
 
     medoidIndices
   }
 
-  /** Create distance function from name.
-    */
+  /** Create distance function from name. */
   protected def createDistanceFunction(name: String): (Vector, Vector) => Double = {
     name match {
       case "euclidean" =>
@@ -568,8 +510,7 @@ class KMedoidsModel(
 
   @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
 
-  /** Training summary (only available for models trained in the current session).
-    */
+  /** Training summary (only available for models trained in the current session). */
   def summary: TrainingSummary = trainingSummary.getOrElse(
     throw new NoSuchElementException(
       "Training summary not available. Summary is only available for models trained " +
@@ -577,16 +518,13 @@ class KMedoidsModel(
     )
   )
 
-  /** Returns true if training summary is available.
-    */
+  /** Returns true if training summary is available. */
   def hasSummary: Boolean = trainingSummary.isDefined
 
-  /** Number of clusters.
-    */
+  /** Number of clusters. */
   def numClusters: Int = medoids.length
 
-  /** Dimensionality of features.
-    */
+  /** Dimensionality of features. */
   def numFeatures: Int = medoids.headOption.map(_.size).getOrElse(0)
 
   override def transform(dataset: Dataset[_]): DataFrame = {
@@ -621,8 +559,7 @@ class KMedoidsModel(
     df.withColumn($(predictionCol), predictUDF(col($(featuresCol))))
   }
 
-  /** Compute total cost (sum of distances from points to their assigned medoids).
-    */
+  /** Compute total cost (sum of distances from points to their assigned medoids). */
   def computeCost(dataset: Dataset[_]): Double = {
     val df        = dataset.toDF()
     val distFn    = createDistanceFunction(distanceFunctionName)
@@ -631,15 +568,14 @@ class KMedoidsModel(
     df.select($(featuresCol))
       .rdd
       .map { row =>
-        val features = row.getAs[Vector](0)
+        val features = row.getAs
         val meds     = bcMedoids.value
         meds.map(m => distFn(features, m)).min
       }
       .sum()
   }
 
-  /** Create distance function from name.
-    */
+  /** Create distance function from name. */
   private def createDistanceFunction(name: String): (Vector, Vector) => Double = {
     name match {
       case "euclidean" =>
@@ -844,166 +780,4 @@ object KMedoidsModel extends org.apache.spark.ml.util.MLReadable[KMedoidsModel] 
       model
     }
   }
-}
-
-/** Parameters for CLARA (Clustering Large Applications).
-  */
-trait CLARAParams extends KMedoidsParams {
-
-  /** Number of samples to draw from the dataset. Each sample is clustered independently and the
-    * best result is selected.
-    */
-  final val numSamples = new IntParam(
-    this,
-    "numSamples",
-    "Number of samples to draw",
-    ParamValidators.gt(0)
-  )
-
-  def getNumSamples: Int = $(numSamples)
-
-  /** Sample size for each sample. Default: 40 + 2*k (as recommended in the original CLARA paper)
-    * Set to -1 for automatic sizing (40 + 2*k)
-    */
-  final val sampleSize = new IntParam(
-    this,
-    "sampleSize",
-    "Sample size for each sample (-1 for auto)",
-    (value: Int) => value == -1 || value > 0
-  )
-
-  def getSampleSize: Int = $(sampleSize)
-
-  setDefault(
-    numSamples -> 5,
-    sampleSize -> -1 // -1 means auto (40 + 2*k)
-  )
-}
-
-/** CLARA (Clustering Large Applications) - Sampling-based K-Medoids for large datasets.
-  *
-  * CLARA is a more scalable version of PAM that works on large datasets by:
-  *   1. Drawing multiple samples from the full dataset 2. Running PAM on each sample 3. For each
-  *      sample result, computing the cost on the full dataset 4. Selecting the medoids with the
-  *      lowest total cost
-  *
-  * Time Complexity: O(numSamples * k(s-k)²) where s is the sample size
-  *
-  * CLARA is recommended when:
-  *   - Dataset has > 10,000 points
-  *   - PAM is too slow due to O(k(n-k)²) complexity
-  *   - Good approximation to PAM is acceptable
-  *
-  * Example usage:
-  * {{{
-  * val clara = new CLARA()
-  *   .setK(3)
-  *   .setNumSamples(10)
-  *   .setSampleSize(100)
-  *   .setMaxIter(20)
-  *   .setDistanceFunction("manhattan")
-  *
-  * val model = clara.fit(largeDataset)
-  * val predictions = model.transform(largeDataset)
-  * }}}
-  *
-  * @param uid
-  *   unique identifier
-  */
-class CLARA(override val uid: String)
-    extends KMedoids(uid)
-    with CLARAParams
-    with DefaultParamsWritable
-    with Logging {
-
-  def this() = this(Identifiable.randomUID("clara"))
-
-  override def fit(dataset: Dataset[_]): KMedoidsModel = {
-    transformSchema(dataset.schema, logging = true)
-
-    val df   = dataset.toDF()
-    val data = df
-      .select($(featuresCol))
-      .rdd
-      .map { row =>
-        row.getAs[Vector](0)
-      }
-      .collect()
-
-    val n           = data.length
-    val numClusters = $(k)
-
-    // Determine sample size
-    val actualSampleSize = if ($(sampleSize) == -1) {
-      math.min(40 + 2 * numClusters, n)
-    } else {
-      math.min($(sampleSize), n)
-    }
-
-    logInfo(s"CLARA with k=$numClusters, numSamples=${$(numSamples)}, sampleSize=$actualSampleSize")
-    logInfo(s"Dataset size: $n points")
-
-    if (actualSampleSize >= n * 0.9) {
-      logWarning(
-        s"Sample size ($actualSampleSize) is >= 90% of dataset ($n). Consider using PAM instead of CLARA."
-      )
-    }
-
-    // Create distance function
-    val distFn = createDistanceFunction($(distanceFunction))
-
-    var bestMedoidIndices: Array[Int] = null
-    var bestCost                      = Double.PositiveInfinity
-
-    // Try multiple samples
-    val rng = new scala.util.Random($(seed))
-
-    (0 until $(numSamples)).foreach { sampleIdx =>
-      logInfo(s"Processing sample ${sampleIdx + 1}/${$(numSamples)}")
-
-      // Draw random sample
-      val sampleIndices = rng.shuffle((0 until n).toList).take(actualSampleSize).toArray
-      val sample        = sampleIndices.map(data)
-
-      // Run PAM on sample
-      val sampleMedoidIndices      = buildPhase(sample, numClusters, distFn, $(seed) + sampleIdx)
-      val finalSampleMedoidIndices = swapPhase(sample, sampleMedoidIndices, $(maxIter), distFn)
-
-      // Map sample medoid indices back to original dataset indices
-      val originalMedoidIndices = finalSampleMedoidIndices.map(sampleIndices)
-
-      // Compute cost on FULL dataset
-      var totalCost = 0.0
-      data.foreach { point =>
-        val minDist = originalMedoidIndices.map(medIdx => distFn(point, data(medIdx))).min
-        totalCost += minDist
-      }
-
-      logInfo(f"Sample ${sampleIdx + 1} cost on full dataset: $totalCost%.4f")
-
-      // Keep best result
-      if (totalCost < bestCost) {
-        bestCost = totalCost
-        bestMedoidIndices = originalMedoidIndices
-        logInfo(f"New best cost: $bestCost%.4f")
-      }
-    }
-
-    logInfo(f"CLARA completed. Best cost: $bestCost%.4f")
-    logInfo(s"Best medoid indices: ${bestMedoidIndices.mkString(", ")}")
-
-    // Create model
-    val medoidVectors = bestMedoidIndices.map(data)
-    new KMedoidsModel(uid, medoidVectors, bestMedoidIndices, $(distanceFunction)).setParent(this)
-  }
-
-  // Parameter setters
-  def setNumSamples(value: Int): this.type = set(numSamples, value)
-  def setSampleSize(value: Int): this.type = set(sampleSize, value)
-
-  override def copy(extra: ParamMap): CLARA = defaultCopy(extra)
-}
-
-object CLARA extends DefaultParamsReadable[CLARA] {
-  override def load(path: String): CLARA = super.load(path)
 }

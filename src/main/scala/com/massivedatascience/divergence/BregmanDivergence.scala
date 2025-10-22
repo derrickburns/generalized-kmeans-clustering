@@ -170,7 +170,6 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
     c
   }
 
-  
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     require(w != 0.0, "Weight must be nonzero for Euclidean gradient")
     val c = v.copy
