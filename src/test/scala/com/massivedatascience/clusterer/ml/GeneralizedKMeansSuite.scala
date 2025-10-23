@@ -305,9 +305,24 @@ class GeneralizedKMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("model persistence - different kernels") {
-    val df = createSimpleDataset()
-
     Seq("squaredEuclidean", "kl").foreach { divergence =>
+      // Use different datasets for different divergences due to domain requirements
+      val df = if (divergence == "kl") {
+        // KL divergence requires strictly positive values
+        val sparkSession = spark
+        import sparkSession.implicits._
+        Seq(
+          Tuple1(Vectors.dense(0.1, 0.1)),
+          Tuple1(Vectors.dense(1.0, 1.0)),
+          Tuple1(Vectors.dense(5.0, 5.0)),
+          Tuple1(Vectors.dense(6.0, 6.0)),
+          Tuple1(Vectors.dense(10.0, 10.0)),
+          Tuple1(Vectors.dense(11.0, 11.0))
+        ).toDF("features")
+      } else {
+        createSimpleDataset()
+      }
+
       val kmeans =
         new GeneralizedKMeans().setK(2).setDivergence(divergence).setMaxIter(5).setSeed(42)
 

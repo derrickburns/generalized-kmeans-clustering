@@ -105,7 +105,13 @@ class PersistenceSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll 
   }
 
   test("GeneralizedKMeans save-load roundtrip with KL divergence") {
-    val df = tinyDF()
+    // Create data with strictly positive values for KL divergence
+    val df = Seq(
+      Tuple1(Vectors.dense(0.1, 0.1)),
+      Tuple1(Vectors.dense(1.0, 1.0)),
+      Tuple1(Vectors.dense(9.0, 9.0)),
+      Tuple1(Vectors.dense(10.0, 10.0))
+    ).toDF("features")
 
     val gkm = new GeneralizedKMeans()
       .setK(2)

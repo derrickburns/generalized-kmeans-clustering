@@ -23,8 +23,16 @@ class PerfSanitySuite extends AnyFunSuite {
     withSpark("PerfSanity") { spark =>
       import spark.implicits._
       val numPoints = 2000
-      val data      = (0 until numPoints).map { i =>
+
+      // SE data: can have zeros
+      val dataSE = (0 until numPoints).map { i =>
         val base = if (i % 2 == 0) 0.0 else 10.0
+        Tuple1(Vectors.dense(base + (i % 5) * 0.1, base + (i % 7) * 0.1))
+      }.toDF("features")
+
+      // KL data: must be strictly positive
+      val dataKL = (0 until numPoints).map { i =>
+        val base = if (i % 2 == 0) 0.1 else 10.0
         Tuple1(Vectors.dense(base + (i % 5) * 0.1, base + (i % 7) * 0.1))
       }.toDF("features")
 
@@ -32,8 +40,8 @@ class PerfSanitySuite extends AnyFunSuite {
       val t0     = System.nanoTime()
       val se     =
         new GeneralizedKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(1)
-      val mSe    = se.fit(data)
-      val predSe = mSe.transform(data)
+      val mSe    = se.fit(dataSE)
+      val predSe = mSe.transform(dataSE)
       val _      = predSe.count()
       val t1     = System.nanoTime()
 
@@ -43,8 +51,8 @@ class PerfSanitySuite extends AnyFunSuite {
       // KL divergence benchmark
       val t2     = System.nanoTime()
       val kl     = new GeneralizedKMeans().setK(2).setDivergence("kl").setMaxIter(3).setSeed(2)
-      val mKl    = kl.fit(data)
-      val predKl = mKl.transform(data)
+      val mKl    = kl.fit(dataKL)
+      val predKl = mKl.transform(dataKL)
       val _2     = predKl.count()
       val t3     = System.nanoTime()
 
