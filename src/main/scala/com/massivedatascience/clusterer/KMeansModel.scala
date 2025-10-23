@@ -20,7 +20,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
-import com.massivedatascience.linalg.WeightedVector
+import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import com.massivedatascience.util.XORShiftRandom
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.ml.linalg.{ Vector, Vectors }

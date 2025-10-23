@@ -173,7 +173,9 @@ case object SquaredEuclideanDistanceDivergence extends BregmanDivergence {
   def gradientOfConvexHomogeneous(v: Vector, w: Double): Vector = {
     require(w != 0.0, "Weight must be nonzero for Euclidean gradient")
     val c = v.copy
-    scal(2.0 / (w * w), c)
+    // Return ∇F(v/w) = 2(v/w) to match the pattern used by other divergences
+    // The caller will apply dot(v, ∇F(v/w))/w to get ⟨v/w, ∇F(v/w)⟩
+    scal(2.0 / w, c)
     c
   }
 }

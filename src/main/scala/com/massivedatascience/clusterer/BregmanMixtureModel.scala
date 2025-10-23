@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer
 
+import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
@@ -224,7 +225,7 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
       responsibilities = computeResponsibilities(data, components, pointOps)
 
       // M-step: Update parameters based on responsibilities
-      components = updateParameters(responsibilities, numComponents, pointOps)
+      components = updateParameters(responsibilities, components, pointOps)
 
       // Check convergence
       val logLikelihood       = computeLogLikelihood(responsibilities, components, pointOps)
@@ -347,12 +348,19 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
   }
 
   /** M-step: Update parameters based on responsibilities.
+    *
+    * @param responsibilities RDD of (point, responsibility_probabilities) pairs
+    * @param previousComponents Previous mixture components (used as template for degenerate components)
+    * @param pointOps Bregman point operations
+    * @return Updated mixture components
     */
   private def updateParameters(
       responsibilities: RDD[(BregmanPoint, Array[Double])],
-      numComponents: Int,
+      previousComponents: IndexedSeq[MixtureComponent],
       pointOps: BregmanPointOps
   ): IndexedSeq[MixtureComponent] = {
+
+    val numComponents = previousComponents.length
 
     // Compute effective counts and weighted sums for each component
     val componentStats = responsibilities.flatMap { case (point, resps) =>
@@ -379,6 +387,9 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
     (0 until numComponents).map { componentId =>
       componentStats.get(componentId) match {
         case Some((accumulator, effectiveCount)) if effectiveCount > pointOps.weightThreshold =>
+          // Convert accumulated responsibilities to center
+          // The accumulator contains (Σ r(c|x)*x, Σ r(c|x))
+          // toCenter works correctly with any weight > 0
           val center       = pointOps.toCenter(accumulator.asImmutable)
           val mixingWeight = math.max(
             (effectiveCount + config.regularization) / (totalDataWeight + numComponents * config.regularization),
@@ -387,10 +398,9 @@ case class BregmanMixtureModel(config: BregmanMixtureConfig = BregmanMixtureMode
           MixtureComponent(center, mixingWeight, componentId)
 
         case _ =>
-          // Handle degenerate component
-          logger.warn(s"Component $componentId has insufficient data, using minimum mixing weight")
-          val defaultCenter = pointOps.toCenter(pointOps.make().asImmutable)
-          MixtureComponent(defaultCenter, config.minMixingWeight, componentId)
+          // Handle degenerate component - keep the previous center to avoid dimension mismatch
+          logger.warn(s"Component $componentId has insufficient data, keeping previous center with minimum mixing weight")
+          MixtureComponent(previousComponents(componentId).center, config.minMixingWeight, componentId)
       }
     }
   }

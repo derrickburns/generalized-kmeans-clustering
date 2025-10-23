@@ -18,6 +18,7 @@
 package com.massivedatascience.clusterer
 
 import com.massivedatascience.clusterer.MultiKMeansClusterer.ClusteringWithDistortion
+import com.massivedatascience.linalg.{ BLAS, WeightedVector }
 import org.apache.spark.rdd.RDD
 
 import scala.math.{ exp, log }
@@ -213,7 +214,7 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
       val memberships = computeSoftAssignments(data, centers, pointOps)
 
       // M-step: Update centers based on soft assignments
-      val newCenters = computeSoftCenters(memberships, numClusters, pointOps)
+      val newCenters = computeSoftCenters(memberships, centers, pointOps)
 
       // Check convergence
       if (config.computeObjective) {
@@ -314,12 +315,19 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
   /** Compute new cluster centers using soft assignments.
     *
     * Each center is the weighted average of all points, where weights are membership probabilities.
+    *
+    * @param memberships RDD of (point, membership_probabilities) pairs
+    * @param previousCenters Previous cluster centers (used as template for empty clusters)
+    * @param pointOps Bregman point operations
+    * @return New cluster centers
     */
   private def computeSoftCenters(
       memberships: RDD[(BregmanPoint, Array[Double])],
-      numClusters: Int,
+      previousCenters: IndexedSeq[BregmanCenter],
       pointOps: BregmanPointOps
   ): IndexedSeq[BregmanCenter] = {
+
+    val numClusters = previousCenters.length
 
     // Compute weighted sums for each cluster
     val clusterSums = memberships.flatMap { case (point, probs) =>
@@ -344,11 +352,15 @@ case class BregmanSoftKMeans(config: BregmanSoftKMeansConfig = BregmanSoftKMeans
     (0 until numClusters).map { clusterId =>
       clusterSums.get(clusterId) match {
         case Some((accumulator, totalWeight)) if totalWeight > pointOps.weightThreshold =>
+          // Convert accumulated soft assignments to center
+          // The accumulator contains (Σ p(c|x)*x, Σ p(c|x))
+          // toCenter works correctly with any weight > 0
           pointOps.toCenter(accumulator.asImmutable)
         case _                                                                          =>
-          // Handle empty cluster - keep previous center or create default
-          logger.warn(s"Cluster $clusterId has insufficient soft membership weight")
-          pointOps.toCenter(pointOps.make().asImmutable)
+          // Handle empty cluster - keep the previous center position
+          // This prevents dimension mismatches and allows soft clustering to recover
+          logger.warn(s"Cluster $clusterId has insufficient soft membership weight, keeping previous center")
+          previousCenters(clusterId)
       }
     }
   }
