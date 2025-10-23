@@ -2,7 +2,7 @@ package com.massivedatascience.clusterer.ml
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
@@ -102,7 +102,7 @@ class KMedoids(override val uid: String)
       .select($(featuresCol))
       .rdd
       .map { row =>
-        row.getAs
+        row.getAs[Vector](0)
       }
       .collect()
 
@@ -351,8 +351,7 @@ class KMedoids(override val uid: String)
     val (_, _, costHistory) = swapPhaseWithHistory(data, initialMedoidIndices, maxIter, distFn)
     // last state is encoded in the returned medoid indices by swapPhaseWithHistory
     // but we need to recompute those indices; reuse the logic:
-    val distFnLocal         = distFn
-    val (_, _, _)           = (distFnLocal, costHistory) // keep params used, avoid warnings
+    val _                   = (distFn, costHistory) // keep params used, avoid warnings
     // For API compatibility, just re-run a lightweight swap without history:
     val n                   = data.length
     val k                   = initialMedoidIndices.length
@@ -568,7 +567,7 @@ class KMedoidsModel(
     df.select($(featuresCol))
       .rdd
       .map { row =>
-        val features = row.getAs
+        val features = row.getAs[Vector](0)
         val meds     = bcMedoids.value
         meds.map(m => distFn(features, m)).min
       }

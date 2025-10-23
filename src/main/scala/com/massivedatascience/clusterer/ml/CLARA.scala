@@ -85,7 +85,7 @@ class CLARA(override val uid: String)
       .select($(featuresCol))
       .rdd
       .map { row =>
-        row.getAs
+        row.getAs[Vector](0)
       }
       .collect()
 

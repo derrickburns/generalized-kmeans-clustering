@@ -232,7 +232,7 @@ class SoftKMeans(override val uid: String)
       .sample(withReplacement = false, fraction, seed)
       .limit(k)
       .collect()
-      .map(_.getAs.toArray)
+      .map(_.getAs[org.apache.spark.ml.linalg.Vector](0).toArray)
   }
 
   /** Compute soft assignment probabilities for all points (Boltzmann distribution). */
@@ -280,10 +280,10 @@ class SoftKMeans(override val uid: String)
       var totalWeight                = 0.0
 
       membershipData.foreach { row =>
-        val features    = row.getAs.toArray
-        val probs       = row.getAs.toArray
+        val features    = row.getAs[org.apache.spark.ml.linalg.Vector](featCol).toArray
+        val probs       = row.getAs[org.apache.spark.ml.linalg.Vector]($(probabilityCol)).toArray
         val clusterProb = probs(clusterId)
-        val w           = weightColOpt.map(_ => row.getAs).getOrElse(1.0)
+        val w           = weightColOpt.map(col => row.getAs[Double](col)).getOrElse(1.0)
         val finalWeight = clusterProb * w
 
         if (weightedSum == null) weightedSum = Array.fill(features.length)(0.0)

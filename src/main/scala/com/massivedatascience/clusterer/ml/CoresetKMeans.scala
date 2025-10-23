@@ -7,8 +7,7 @@ import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable }
 import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{ DoubleType, StructType }
-import scala.util.Random
+import org.apache.spark.sql.types.StructType
 
 /** Core-set based K-Means clustering with pluggable Bregman divergences.
   *

@@ -22,8 +22,6 @@ object PersistenceRoundTripCoresetKMeans {
     val spark =
       SparkSession.builder().appName("CoresetKMeans Persistence").master("local[*]").getOrCreate()
 
-    import spark.implicits._
-
     mode match {
       case "save" => saveModel(spark, path)
       case "load" => loadModel(spark, path)
