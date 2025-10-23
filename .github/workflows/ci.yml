@@ -15,6 +15,7 @@ env:
   JAVA_VERSION: "17"
   SCALA_213: "2.13.14"
   SCALA_212: "2.12.18"
+  SPARK_40:  "4.0.1"
   SPARK_35:  "3.5.1"
   SPARK_34:  "3.4.3"
   SBT_OPTS: "-Dsbt.ci=true -Dsbt.log.noformat=true"
@@ -86,6 +87,8 @@ jobs:
       matrix:
         include:
           # Legal Spark–Scala pairs only
+          # Spark 4.0.x requires Scala 2.13 (2.12 support dropped)
+          - { scala: "2.13.14", spark: "4.0.1" }
           - { scala: "2.13.14", spark: "3.5.1" }
           - { scala: "2.12.18", spark: "3.4.3" }
           - { scala: "2.12.18", spark: "3.5.1" }

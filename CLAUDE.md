@@ -2,11 +2,13 @@
 
 **Purpose.** This file tells Claude (or any LLM assistant) exactly how to help on this repo without wasting maintainer time. It encodes project norms, API/persistence guarantees, review rubrics, performance boundaries, and Scala engineering standards.
 
-> TL;DR  
-> **Primary surface:** Spark **DataFrame/ML API** (`GeneralizedKMeans`, etc.).  
-> **Versions:** Scala **2.13** (primary), Spark **3.5.x** (default; 3.4.x compat).  
-> **Math:** Bregman family — divergences include `squaredEuclidean`, `kl`, `itakuraSaito`, `l1`, `generalizedI`, `logistic`.  
-> **Variants:** Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids.  
+> TL;DR
+> **Primary surface:** Spark **DataFrame/ML API** (`GeneralizedKMeans`, etc.).
+> **Versions:** Scala **2.13** (primary) / 2.12, Spark **4.0.x / 3.5.x / 3.4.x**
+>   - **Spark 4.0.x**: Scala 2.13 only (2.12 dropped in Spark 4.0)
+>   - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
+> **Math:** Bregman family — divergences include `squaredEuclidean`, `kl`, `itakuraSaito`, `l1`, `generalizedI`, `logistic`.
+> **Variants:** Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids.
 > **Determinism + persistence** are non-negotiable; RDD API is **archived** (reference only).
 
 ---
@@ -23,14 +25,16 @@
 
 ## 1) Project Snapshot (facts Claude must anchor to)
 
-- **Surface:** `GeneralizedKMeans` (and friends) via DataFrame API; prediction via `transform`.  
-- **Spark:** 3.5.x default; 3.4.x tested.  
-- **Scala:** 2.13.x primary (keep code Scala-3-friendly where feasible).  
-- **Java:** 17.  
-- **Divergences:** `squaredEuclidean | kl | itakuraSaito | l1 | generalizedI | logistic`.  
-- **Assignment strategies:** `auto | crossJoin (SE fast path) | broadcastUDF (general Bregman)`.  
-- **Input transforms:** `none | log1p | epsilonShift(shiftValue)`; ensure domain validity for KL/IS.  
-- **Persistence:** Models round-trip across Spark 3.4↔3.5, Scala 2.12↔2.13.  
+- **Surface:** `GeneralizedKMeans` (and friends) via DataFrame API; prediction via `transform`.
+- **Spark:** 4.0.x / 3.5.x / 3.4.x all tested.
+  - **Spark 4.0.x**: Scala 2.13 only (Scala 2.12 dropped in Spark 4.0)
+  - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
+- **Scala:** 2.13.x primary (keep code Scala-3-friendly where feasible).
+- **Java:** 17.
+- **Divergences:** `squaredEuclidean | kl | itakuraSaito | l1 | generalizedI | logistic`.
+- **Assignment strategies:** `auto | crossJoin (SE fast path) | broadcastUDF (general Bregman)`.
+- **Input transforms:** `none | log1p | epsilonShift(shiftValue)`; ensure domain validity for KL/IS.
+- **Persistence:** Models round-trip across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13.
 - **RDD API:** archived; do not add features.
 
 ---
@@ -196,7 +200,8 @@ val pred  = model.transform(df)
 
 
 ## 7) CI Expectations
-	•	Stay within existing matrix (Scala 2.12/2.13 × Spark 3.4/3.5).
+	•	Stay within existing matrix (Scala 2.12/2.13 × Spark 3.4/3.5/4.0).
+	  - Note: Spark 4.0.x only supports Scala 2.13
 	•	Update ExamplesSuite when editing docs; examples are executable documentation.
 	•	Keep perf sanity checks ≤ 30s wall clock.
 

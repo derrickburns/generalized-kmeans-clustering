@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Scala 2.13](https://img.shields.io/badge/scala-2.13.14-red.svg)](https://www.scala-lang.org/)
 [![Scala 2.12](https://img.shields.io/badge/scala-2.12.18-red.svg)](https://www.scala-lang.org/)
+[![Spark 4.0](https://img.shields.io/badge/spark-4.0.1-orange.svg)](https://spark.apache.org/)
 [![Spark 3.5](https://img.shields.io/badge/spark-3.5.1-orange.svg)](https://spark.apache.org/)
 
 > **Security**: This project follows security best practices. See [SECURITY.md](SECURITY.md) for vulnerability reporting and [dependabot.yml](.github/dependabot.yml) for automated dependency updates.
@@ -23,7 +24,9 @@ This project generalizes K-Means to multiple Bregman divergences and advanced va
 - Multiple divergences: Squared Euclidean, KL, Itakura–Saito, L1/Manhattan (K-Medians), Generalized-I, Logistic-loss
 - Variants: Bisecting, X-Means (BIC/AIC), Soft K-Means, Structured-Streaming K-Means, K-Medoids (PAM/CLARA)
 - Scale: Tested on tens of millions of points in 700+ dimensions
-- Tooling: Scala 2.13 (primary), Spark 3.5.x (default, with 3.4.x compatibility)
+- Tooling: Scala 2.13 (primary) / 2.12, Spark 4.0.x / 3.5.x / 3.4.x
+  - **Spark 4.0.x**: Scala 2.13 only (Scala 2.12 support dropped in Spark 4.0)
+  - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
 
 ---
 
@@ -64,10 +67,10 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 | **Validation** | **What It Checks** | **Badge** |
 |----------------|-------------------|-----------|
 | **Lint & Style** | Scalastyle compliance, code formatting | Part of main CI |
-| **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.3 & 3.5.1 (4 combinations) | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
+| **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.3 / 3.5.1 / 4.0.1 | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
 | **Test Matrix** | 730 tests across all Scala/Spark combinations<br/>• 62 kernel accuracy tests (divergence formulas, gradients, inverse gradients)<br/>• 19 Lloyd's iterator tests (core k-means loop)<br/>• Determinism, edge cases, numerical stability | Part of main CI |
 | **Executable Documentation** | All examples run with assertions that verify correctness ([ExamplesSuite](src/test/scala/examples/ExamplesSuite.scala)):<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala) - validates cluster count<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala) - validates probability columns<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala) - validates automatic k selection<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) - validates save/load with center accuracy<br/>• [PersistenceRoundTripKMedoids](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) - validates medoid preservation | Part of main CI |
-| **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5 | Part of main CI |
+| **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5↔4.0 | Part of main CI |
 | **Performance Sanity** | Basic performance regression check (30s budget) | Part of main CI |
 | **Python Smoke Test** | PySpark wrapper with both SE and non-SE divergences | Part of main CI |
 | **Security Scanning** | CodeQL static analysis for vulnerabilities | [![CodeQL](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/codeql.yml) |
@@ -96,7 +99,7 @@ Truth-linked to code, tests, and examples for full transparency:
 **Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss
 
 All DataFrame API algorithms include:
-- ✅ Model persistence (save/load across Spark 3.4↔3.5, Scala 2.12↔2.13)
+- ✅ Model persistence (save/load across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13)
 - ✅ Comprehensive test coverage (740 tests, 100% passing)
 - ✅ Executable documentation with assertions (8 examples validate correctness in CI)
 - ✅ Deterministic behavior (same seed → identical results)
