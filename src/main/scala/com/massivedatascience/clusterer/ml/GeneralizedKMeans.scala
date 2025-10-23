@@ -113,6 +113,14 @@ class GeneralizedKMeans(override val uid: String)
         s"divergence=${$(divergence)}, numFeatures=$numFeatures"
     )
 
+    // Validate input data domain requirements for the selected divergence
+    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+      df,
+      $(featuresCol),
+      $(divergence),
+      maxSamples = Some(1000) // Check first 1000 rows for performance
+    )
+
     // Create kernel
     val kernel = createKernel($(divergence), $(smoothing))
 

@@ -157,6 +157,106 @@ Note: Cluster centers are learned in the transformed space. If you need original
 
 ---
 
+## Domain Requirements & Validation
+
+**Automatic validation at fit time** — Different divergences have different input domain requirements. The library automatically validates your data and provides actionable error messages if violations are found:
+
+| Divergence | Domain Requirement | Example Fix |
+|------------|-------------------|-------------|
+| **squaredEuclidean** | Any finite values (x ∈ ℝ) | None needed |
+| **l1** / **manhattan** | Any finite values (x ∈ ℝ) | None needed |
+| **kl** | Strictly positive (x > 0) | Use `log1p` or `epsilonShift` transform |
+| **itakuraSaito** | Strictly positive (x > 0) | Use `log1p` or `epsilonShift` transform |
+| **generalizedI** | Non-negative (x ≥ 0) | Take absolute values or shift data |
+| **logistic** | Open interval (0 < x < 1) | Normalize to [0,1] then use `epsilonShift` |
+
+**What happens on validation failure:**
+
+When you call `fit()`, the library samples your data (first 1000 rows by default) and checks domain requirements. If violations are found, you'll see an **actionable error message** with:
+- The specific invalid value and its location (feature index)
+- Suggested fixes with example code
+- Transform options to map your data into the valid domain
+
+**Example validation error:**
+
+```scala
+// This will fail for KL divergence (contains zero)
+val df = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(1.0, 0.0)),  // Zero at index 1!
+  Tuple1(Vectors.dense(2.0, 3.0))
+)).toDF("features")
+
+val kmeans = new GeneralizedKMeans()
+  .setK(2)
+  .setDivergence("kl")
+
+kmeans.fit(df)  // ❌ Throws with actionable message
+```
+
+**Error message you'll see:**
+
+```
+kl divergence requires strictly positive values, but found: 0.0
+
+The kl divergence is only defined for positive data.
+
+Suggested fixes:
+  - Use .setInputTransform("log1p") to transform data using log(1 + x), which maps [0, ∞) → [0, ∞)
+  - Use .setInputTransform("epsilonShift") with .setShiftValue(1e-6) to add a small constant
+  - Pre-process your data to ensure all values are positive
+  - Consider using Squared Euclidean divergence (.setDivergence("squaredEuclidean")) which has no domain restrictions
+
+Example:
+  new GeneralizedKMeans()
+    .setDivergence("kl")
+    .setInputTransform("log1p")  // Transform to valid domain
+    .setMaxIter(20)
+```
+
+**How to fix domain violations:**
+
+1. **For KL/Itakura-Saito (requires x > 0):**
+   ```scala
+   val kmeans = new GeneralizedKMeans()
+     .setK(2)
+     .setDivergence("kl")
+     .setInputTransform("log1p")  // Maps [0, ∞) → [0, ∞) via log(1+x)
+     .setMaxIter(20)
+   ```
+
+2. **For Logistic Loss (requires 0 < x < 1):**
+   ```scala
+   // First normalize your data to [0, 1], then:
+   val kmeans = new GeneralizedKMeans()
+     .setK(2)
+     .setDivergence("logistic")
+     .setInputTransform("epsilonShift")
+     .setShiftValue(1e-6)  // Shifts to (ε, 1-ε)
+     .setMaxIter(20)
+   ```
+
+3. **For Generalized-I (requires x ≥ 0):**
+   ```scala
+   // Pre-process to ensure non-negative values
+   val df = originalDF.withColumn("features",
+     udf((v: Vector) => Vectors.dense(v.toArray.map(math.abs)))
+       .apply(col("features")))
+
+   val kmeans = new GeneralizedKMeans()
+     .setK(2)
+     .setDivergence("generalizedI")
+     .setMaxIter(20)
+   ```
+
+**Validation scope:**
+
+- Validates first 1000 rows by default (configurable in code)
+- Checks for NaN/Infinity in all divergences
+- Provides early failure with clear guidance before expensive computation
+- All DataFrame API estimators include validation: `GeneralizedKMeans`, `BisectingKMeans`, `XMeans`, `SoftKMeans`, `CoresetKMeans`
+
+---
+
 ## Bisecting K-Means — efficiency note
 
 The driver maintains a cluster_id column. For each split:

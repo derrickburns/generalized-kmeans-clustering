@@ -109,6 +109,14 @@ class BisectingKMeans(override val uid: String)
         s"divergence=${$(divergence)}, minDivisibleClusterSize=${$(minDivisibleClusterSize)}"
     )
 
+    // Validate input data domain requirements for the selected divergence
+    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+      df,
+      $(featuresCol),
+      $(divergence),
+      maxSamples = Some(1000)
+    )
+
     // Create kernel
     val kernel = createKernel($(divergence), $(smoothing))
 

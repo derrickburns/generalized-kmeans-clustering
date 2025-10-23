@@ -146,6 +146,14 @@ class CoresetKMeans(override val uid: String)
         s"divergence=${$(divergence)}, dataSize=$dataSize"
     )
 
+    // Validate input data domain requirements for the selected divergence
+    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+      df,
+      $(featuresCol),
+      $(divergence),
+      maxSamples = Some(1000)
+    )
+
     val startTime = System.currentTimeMillis()
 
     // Step 1: Build core-set if dataset is large enough

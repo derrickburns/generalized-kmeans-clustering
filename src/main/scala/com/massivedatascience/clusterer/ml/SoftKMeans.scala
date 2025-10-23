@@ -106,6 +106,14 @@ class SoftKMeans(override val uid: String)
       s"Starting Soft K-Means: k=${$(k)}, β=${$(beta)}, divergence=${$(divergence)}, maxIter=${$(maxIter)}"
     )
 
+    // Validate input data domain requirements for the selected divergence
+    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+      df,
+      $(featuresCol),
+      $(divergence),
+      maxSamples = Some(1000)
+    )
+
     df.cache()
     try {
       val kernel = createKernel($(divergence), $(smoothing))

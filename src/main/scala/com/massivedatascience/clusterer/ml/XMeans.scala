@@ -150,6 +150,14 @@ class XMeans(override val uid: String)
         s"criterion=${$(criterion)}, divergence=${$(divergence)}"
     )
 
+    // Validate input data domain requirements for the selected divergence
+    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+      df,
+      $(featuresCol),
+      $(divergence),
+      maxSamples = Some(1000)
+    )
+
     // Cache data for multiple k trials
     df.cache()
 
