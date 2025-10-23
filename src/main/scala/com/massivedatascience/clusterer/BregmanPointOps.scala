@@ -150,12 +150,15 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
       if (center.weight > weightThreshold) {
         // Inline distance computation to avoid function call overhead
         val d             = point.f + center.dotGradMinusF - BLAS.dot(center.gradient, point.inhomogeneous)
-        // Handle negative distances inline for better performance
-        val validDistance = if (d < 0.0) {
-          if (d < -1e-10) {
-            // Only log significant negative distances, avoid logging overhead in tight loop
-            logger.warn(s"Negative distance computed: $d between point and center")
-          }
+        // Negative distances indicate a mathematical error - this should never happen
+        val validDistance = if (d < -1e-10) {
+          throw new IllegalStateException(
+            s"Negative distance computed: $d. This indicates a bug in the Bregman divergence calculation. " +
+            s"Point f=${point.f}, Center dotGradMinusF=${center.dotGradMinusF}, " +
+            s"dot(gradient, point)=${BLAS.dot(center.gradient, point.inhomogeneous)}"
+          )
+        } else if (d < 0.0) {
+          // Allow tiny numerical errors (< 1e-10) due to floating point precision
           0.0
         } else d
 
@@ -223,14 +226,15 @@ trait BregmanPointOps extends Serializable with ClusterFactory {
       case x: Double if p.weight <= x => 0.0
       case _                          =>
         val d = p.f + c.dotGradMinusF - BLAS.dot(c.gradient, p.inhomogeneous)
-        if (d < 0.0) {
-          // Negative distances can indicate numerical instability or implementation issues
-          // Log a warning for debugging purposes but return 0.0 as the minimum valid distance
-          if (d < -1e-10) {
-            // Only log if the negative value is significant (not just numerical precision issue)
-            val logger = LoggerFactory.getLogger(getClass.getName)
-            logger.warn(s"Negative distance computed: $d between point and center")
-          }
+        if (d < -1e-10) {
+          // Negative distances indicate a mathematical error - this should never happen
+          throw new IllegalStateException(
+            s"Negative distance computed: $d. This indicates a bug in the Bregman divergence calculation. " +
+            s"Point f=${p.f}, weight=${p.weight}, Center dotGradMinusF=${c.dotGradMinusF}, weight=${c.weight}, " +
+            s"dot(gradient, point)=${BLAS.dot(c.gradient, p.inhomogeneous)}"
+          )
+        } else if (d < 0.0) {
+          // Allow tiny numerical errors (< 1e-10) due to floating point precision
           0.0
         } else d
     }
