@@ -42,6 +42,20 @@ trait AssignmentStrategy extends Serializable {
   */
 class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
 
+  /** Format broadcast size with human-readable units. */
+  private def formatBroadcastSize(elements: Long): String = {
+    val bytes = elements * 8 // doubles are 8 bytes
+    if (bytes < 1024) {
+      f"${bytes}B"
+    } else if (bytes < 1024 * 1024) {
+      f"${bytes / 1024.0}%.1fKB"
+    } else if (bytes < 1024 * 1024 * 1024) {
+      f"${bytes / (1024.0 * 1024.0)}%.1fMB"
+    } else {
+      f"${bytes / (1024.0 * 1024.0 * 1024.0)}%.1fGB"
+    }
+  }
+
   override def assign(
       df: DataFrame,
       featuresCol: String,
@@ -50,7 +64,36 @@ class BroadcastUDFAssignment extends AssignmentStrategy with Logging {
       kernel: BregmanKernel
   ): DataFrame = {
 
-    logDebug(s"BroadcastUDFAssignment: assigning ${centers.length} clusters")
+    val k         = centers.length
+    val dim       = centers.headOption.map(_.length).getOrElse(0)
+    val kTimesDim = k * dim
+    val sizeStr   = formatBroadcastSize(kTimesDim)
+
+    logDebug(
+      s"BroadcastUDFAssignment: broadcasting k=$k clusters × dim=$dim = $kTimesDim elements ≈ $sizeStr"
+    )
+
+    // Warn if broadcast size is very large (>100MB)
+    val warningThreshold = 12500000 // ~100MB
+    if (kTimesDim > warningThreshold) {
+      val warningStr = formatBroadcastSize(warningThreshold)
+      logWarning(
+        s"""BroadcastUDFAssignment: Large broadcast detected
+           |  Size: k=$k × dim=$dim = $kTimesDim elements ≈ $sizeStr
+           |  This exceeds the recommended size for broadcasting ($warningStr).
+           |
+           |  Potential issues:
+           |    - Executor OOM errors during broadcast
+           |    - Slow broadcast distribution across cluster
+           |    - Driver memory pressure
+           |
+           |  Consider:
+           |    1. Using ChunkedBroadcastAssignment for large k×dim
+           |    2. Reducing k or dimensionality
+           |    3. Increasing executor memory
+           |    4. Using AutoAssignment strategy (automatically selects best approach)""".stripMargin
+      )
+    }
 
     val spark     = df.sparkSession
     val bcCenters = spark.sparkContext.broadcast(centers)
@@ -273,6 +316,20 @@ class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSize: Int = 100
   private val seStrategy        = new SECrossJoinAssignment()
   private val chunkedStrategy   = new ChunkedBroadcastAssignment(chunkSize)
 
+  /** Format broadcast size with human-readable units. */
+  private def formatBroadcastSize(elements: Long): String = {
+    val bytes = elements * 8 // doubles are 8 bytes
+    if (bytes < 1024) {
+      f"${bytes}B"
+    } else if (bytes < 1024 * 1024) {
+      f"${bytes / 1024.0}%.1fKB"
+    } else if (bytes < 1024 * 1024 * 1024) {
+      f"${bytes / (1024.0 * 1024.0)}%.1fMB"
+    } else {
+      f"${bytes / (1024.0 * 1024.0 * 1024.0)}%.1fGB"
+    }
+  }
+
   override def assign(
       df: DataFrame,
       featuresCol: String,
@@ -289,16 +346,34 @@ class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSize: Int = 100
       logInfo(s"AutoAssignment: strategy=SECrossJoin (kernel=${kernel.name})")
       seStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     } else if (kTimesDim < broadcastThresholdElems) {
+      val sizeStr = formatBroadcastSize(kTimesDim)
       logInfo(
-        s"AutoAssignment: strategy=BroadcastUDF (kernel=${kernel.name}, k×dim=$kTimesDim < $broadcastThresholdElems)"
+        s"AutoAssignment: strategy=BroadcastUDF (kernel=${kernel.name}, k=$k, dim=$dim, " +
+          s"broadcast_size=$kTimesDim elements ≈ $sizeStr < threshold=$broadcastThresholdElems)"
       )
       broadcastStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     } else {
+      val sizeStr          = formatBroadcastSize(kTimesDim)
+      val thresholdStr     = formatBroadcastSize(broadcastThresholdElems)
+      val overagePercent   = ((kTimesDim.toDouble / broadcastThresholdElems - 1.0) * 100).toInt
+      val suggestedChunkK  = math.max(1, broadcastThresholdElems / dim)
+
       logWarning(
-        s"AutoAssignment: k×dim=$kTimesDim exceeds threshold=$broadcastThresholdElems, using ChunkedBroadcast to avoid OOM"
-      )
-      logInfo(
-        s"AutoAssignment: strategy=ChunkedBroadcast (kernel=${kernel.name}, k=$k, dim=$dim, chunkSize=$chunkSize)"
+        s"""AutoAssignment: Broadcast size exceeds threshold
+           |  Current: k=$k × dim=$dim = $kTimesDim elements ≈ $sizeStr
+           |  Threshold: $broadcastThresholdElems elements ≈ $thresholdStr
+           |  Overage: +$overagePercent%
+           |
+           |  Using ChunkedBroadcast (chunkSize=$chunkSize) to avoid OOM.
+           |  This will scan the data ${math.ceil(k.toDouble / chunkSize).toInt} times.
+           |
+           |  To avoid chunking overhead, consider:
+           |    1. Reduce k (number of clusters)
+           |    2. Reduce dimensionality (current: $dim dimensions)
+           |    3. Increase broadcastThreshold (suggested: k=$k would need ~${kTimesDim} elements)
+           |    4. Use Squared Euclidean divergence if appropriate (enables fast SE path)
+           |
+           |  Current configuration can broadcast up to k≈$suggestedChunkK clusters of $dim dimensions.""".stripMargin
       )
       chunkedStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     }

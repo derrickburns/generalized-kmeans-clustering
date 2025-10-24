@@ -130,20 +130,59 @@ libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer
 ## Scaling & Assignment Strategy (important)
 
 Different divergences require different assignment mechanics at scale:
--	Squared Euclidean (SE) fast path — expression/codegen route:
+-	**Squared Euclidean (SE) fast path** — expression/codegen route:
 	1.	Cross-join points with centers
 	2.	Compute squared distance column
 	3.	Prefer groupBy(rowId).min(distance) → join to pick argmin (scales better than window sorts)
 	4.	Requires a stable rowId; we provide a RowIdProvider.
--	General Bregman — broadcast + UDF route:
--	Broadcast the centers; compute argmin via a tight JVM UDF.
--	Broadcast ceiling: you'll hit executor/memory limits if k × dim is too large to broadcast.
+-	**General Bregman** — broadcast + UDF route:
+	-	Broadcast the centers; compute argmin via a tight JVM UDF.
+	-	Broadcast ceiling: you'll hit executor/memory limits if k × dim is too large to broadcast.
 
 **Parameters**
--	assignmentStrategy: StringParam = auto | crossJoin | broadcastUDF
--	auto chooses SE fast path when divergence == SE and feasible; otherwise broadcastUDF.
--	broadcastThreshold: IntParam (elements, not bytes)
--	Heuristic ceiling for k × dim to guard broadcasts. If exceeded for non-SE, we warn and keep the broadcastUDF path (no DF fallback exists for general Bregman).
+-	`assignmentStrategy: StringParam = auto | crossJoin | broadcastUDF | chunked`
+	-	`auto` (recommended): Chooses SE fast path when divergence == SE; otherwise selects between broadcastUDF and chunked based on k×dim size
+	-	`crossJoin`: Forces SE expression-based path (only works with Squared Euclidean)
+	-	`broadcastUDF`: Forces broadcast + UDF (works with any divergence, but may OOM on large k×dim)
+	-	`chunked`: Processes centers in chunks to avoid OOM (multiple data scans, but safe for large k×dim)
+-	`broadcastThreshold: IntParam` (elements, not bytes)
+	-	Default: 200,000 elements (~1.5MB)
+	-	Heuristic ceiling for k × dim. If exceeded for non-SE divergences, AutoAssignment switches to chunked broadcast.
+-	`chunkSize: IntParam` (for chunked strategy)
+	-	Default: 100 clusters per chunk
+	-	Controls how many centers are processed in each scan when using chunked broadcast
+
+**Broadcast Diagnostics**
+
+The library provides detailed diagnostics to help you tune performance and avoid OOM errors:
+
+```scala
+// Example: Large cluster configuration
+val gkm = new GeneralizedKMeans()
+  .setK(500)          // 500 clusters
+  .setDivergence("kl") // Non-SE divergence
+  // If your data has dim=1000, then k×dim = 500,000 elements
+
+// AutoAssignment will log:
+// [WARN] AutoAssignment: Broadcast size exceeds threshold
+//   Current: k=500 × dim=1000 = 500000 elements ≈ 3.8MB
+//   Threshold: 200000 elements ≈ 1.5MB
+//   Overage: +150%
+//
+//   Using ChunkedBroadcast (chunkSize=100) to avoid OOM.
+//   This will scan the data 5 times.
+//
+//   To avoid chunking overhead, consider:
+//     1. Reduce k (number of clusters)
+//     2. Reduce dimensionality (current: 1000 dimensions)
+//     3. Increase broadcastThreshold (suggested: k=500 would need ~500000 elements)
+//     4. Use Squared Euclidean divergence if appropriate (enables fast SE path)
+```
+
+**When you see these warnings:**
+-	**Chunked broadcast selected**: Your configuration will work but may be slower due to multiple data scans. Follow the suggestions to improve performance.
+-	**Large broadcast warning** (>100MB): Risk of executor OOM errors. Consider reducing k or dimensionality, or increasing executor memory.
+-	**No warning**: Your configuration is well-sized for broadcasting.
 
 ---
 
