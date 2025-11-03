@@ -16,7 +16,7 @@ jobs:
     name: Update dependencies with Scala Steward
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Scala Steward
         uses: scala-steward-org/scala-steward-action@v2

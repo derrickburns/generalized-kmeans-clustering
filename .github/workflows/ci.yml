@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint & Style
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -50,7 +50,7 @@ jobs:
     name: Build & Package (2.13 + 2.12)
     needs: lint
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -94,7 +94,7 @@ jobs:
           - { scala: "2.12.18", spark: "3.5.1" }
     name: Test (Scala ${{ matrix.scala }}, Spark ${{ matrix.spark }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -117,7 +117,7 @@ jobs:
     needs: build
     name: Examples (keep docs executable)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -146,7 +146,7 @@ jobs:
     needs: build
     name: PySpark Smoke (SE + non-SE)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with:
           name: jars
@@ -182,7 +182,7 @@ jobs:
     needs: test-jvm
     name: Coverage (scoverage)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
