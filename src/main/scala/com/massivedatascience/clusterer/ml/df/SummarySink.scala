@@ -302,12 +302,12 @@ class SummarySink extends Serializable {
 
   /** Record an event. */
   def record(event: ClusteringEvent): Unit = synchronized {
-    events += event
+    val _ = events += event
   }
 
   /** Record multiple events. */
   def recordAll(newEvents: Seq[ClusteringEvent]): Unit = synchronized {
-    events ++= newEvents
+    val _ = events ++= newEvents
   }
 
   /** Get current event count. */

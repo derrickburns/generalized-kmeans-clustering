@@ -39,7 +39,7 @@ trait SparkHelper {
   protected def sync[T](name: String, data: RDD[T], synchronous: Boolean = true): RDD[T] = {
     data.setName(name).cache()
     if (synchronous) {
-      data.foreachPartition(p => None)
+      data.foreachPartition(_ => ())
     }
     data: RDD[T]
   }

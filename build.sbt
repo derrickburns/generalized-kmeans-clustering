@@ -9,6 +9,28 @@
 
     scalacOptions ++= Seq("-unchecked", "-feature")
 
+    // Dead code detection flags (version-specific)
+    // Scala 2.13+ uses -W flags, Scala 2.12 uses -Ywarn flags
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) if n >= 13 =>
+          Seq(
+            "-Wunused:imports",
+            "-Wunused:privates",
+            "-Wunused:locals",
+            "-Wvalue-discard"
+          )
+        case Some((2, 12)) =>
+          Seq(
+            "-Ywarn-unused:imports",
+            "-Ywarn-unused:privates",
+            "-Ywarn-unused:locals",
+            "-Ywarn-value-discard"
+          )
+        case _ => Seq.empty
+      }
+    }
+
     // Conditional fatal warnings (disabled in CI by default, enable with -Dci=true)
     val isCi = sys.props.get("ci").contains("true")
     Compile / compile / scalacOptions ++= {

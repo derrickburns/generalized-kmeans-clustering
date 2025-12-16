@@ -135,7 +135,7 @@ object PersistenceLayoutV1 {
   def writeSummary(path: String, json: String): Unit = {
     val p = Paths.get(s"$path/summary.json")
     Files.createDirectories(p.getParent)
-    Files.write(
+    val _ = Files.write(
       p,
       json.getBytes(StandardCharsets.UTF_8),
       StandardOpenOption.CREATE,

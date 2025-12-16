@@ -9,8 +9,14 @@ package com.massivedatascience.clusterer.ml.df
   *   - [[strategies.EmptyClusterHandler]]: Handle empty clusters
   *   - [[strategies.ConvergenceCheck]]: Check for convergence
   *   - [[strategies.InputValidator]]: Validate input data
+  *
+  * Assignment strategy implementations are in [[strategies.impl]].
   */
 package object strategies {
-  // All types are defined in their respective files
-  // This package object serves as documentation
+  // Re-export implementation types for backward compatibility
+  type BroadcastUDFAssignment = impl.BroadcastUDFAssignment
+  type SECrossJoinAssignment = impl.SECrossJoinAssignment
+  type ChunkedBroadcastAssignment = impl.ChunkedBroadcastAssignment
+  type AdaptiveBroadcastAssignment = impl.AdaptiveBroadcastAssignment
+  type AutoAssignment = impl.AutoAssignment
 }
