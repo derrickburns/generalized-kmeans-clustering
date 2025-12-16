@@ -199,7 +199,7 @@ jobs:
             ${{ runner.os }}-coverage-
       - name: Run scoverage
         run: |
-          sbt ++${{ env.SCALA_212 }} -Dspark.version=${{ env.SPARK_35 }} coverage test coverageReport
+          sbt ++${{ env.SCALA_213 }} -Dspark.version=${{ env.SPARK_35 }} coverage test coverageReport
           echo "perf_sanity_seconds=$(grep -hR --only-matching -E 'perf_sanity_seconds=[0-9.]+' target || true)"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -212,7 +212,7 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          files: ./target/scala-2.12/scoverage-report/scoverage.xml
+          files: ./target/scala-2.13/scoverage-report/scoverage.xml
           fail_ci_if_error: false
 
   all-green:
