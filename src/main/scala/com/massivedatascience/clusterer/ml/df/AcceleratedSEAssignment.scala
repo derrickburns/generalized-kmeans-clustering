@@ -35,8 +35,8 @@ import org.apache.spark.sql.functions._
   *
   *   1. Precompute pairwise distances between all centers: O(k²) 2. For each point:
   *      a. Compute distance to first center b. For remaining centers, check if triangle inequality
-  *         allows skipping c. Only compute distance if the center might be closer
-  *      3. Track statistics on skipped computations
+  *         allows skipping c. Only compute distance if the center might be closer 3. Track
+  *         statistics on skipped computations
   *
   * ==Speedup Characteristics==
   *

@@ -46,8 +46,8 @@ import scala.util.Random
   *      Update''': Update centers using a streaming/online update rule:
   *      - Track per-center counts
   *      - Compute learning rate: η = 1 / (count + 1)
-  *      - Update: center = (1 - η) * center + η * new_point
-  *      5. '''Convergence''': Repeat until `maxIter` batches or early stopping
+  *      - Update: center = (1 - η) * center + η * new_point 5. '''Convergence''': Repeat until
+  *        `maxIter` batches or early stopping
   *
   * ==Comparison with Standard K-Means==
   *

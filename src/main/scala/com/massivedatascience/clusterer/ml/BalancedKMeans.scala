@@ -42,9 +42,9 @@ import scala.util.Random
   *   1. '''Initialization''': Select initial centers using k-means|| or random sampling 2.
   *      '''Constrained Assignment''': Assign points to clusters respecting size constraints:
   *      - Soft mode: Penalize assignment to oversized clusters (fast, approximate)
-  *      - Hard mode: Iterative redistribution from oversized to undersized clusters (exact)
-  *      3. '''Update''': Recompute centers as the Bregman centroid of assigned points 4.
-  *      '''Convergence''': Repeat until centers stabilize or `maxIter` is reached
+  *      - Hard mode: Iterative redistribution from oversized to undersized clusters (exact) 3.
+  *        '''Update''': Recompute centers as the Bregman centroid of assigned points 4.
+  *        '''Convergence''': Repeat until centers stabilize or `maxIter` is reached
   *
   * ==Balance Modes==
   *

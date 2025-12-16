@@ -174,9 +174,9 @@ trait DPMeansParams
   *   1. '''Initialization''': Start with first point as the only center 2. '''Assignment''': For
   *      each point:
   *      - If distance to nearest center > lambda: create new cluster
-  *      - Otherwise: assign to nearest center
-  *      3. '''Update''': Recompute centers as centroids of assigned points 4. '''Convergence''':
-  *      Repeat until no new clusters are created and centers stabilize
+  *      - Otherwise: assign to nearest center 3. '''Update''': Recompute centers as centroids of
+  *        assigned points 4. '''Convergence''': Repeat until no new clusters are created and
+  *        centers stabilize
   *
   * ==Choosing Lambda==
   *

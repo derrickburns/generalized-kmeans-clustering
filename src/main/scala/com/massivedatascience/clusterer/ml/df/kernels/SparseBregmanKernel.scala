@@ -60,8 +60,7 @@ trait SparseBregmanKernel extends BregmanKernel {
 /** Sparse-optimized Squared Euclidean kernel.
   *
   * Exploits sparsity by only iterating over non-zero indices in both vectors. For ||x - μ||², we
-  * compute:
-  * \||x||² + ||μ||² - 2⟨x, μ⟩
+  * compute: \||x||² + ||μ||² - 2⟨x, μ⟩
   *
   * Where each term can be computed sparsely.
   */
