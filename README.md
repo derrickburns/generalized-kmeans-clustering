@@ -10,14 +10,10 @@
 
 > **Security**: This project follows security best practices. See [SECURITY.md](SECURITY.md) for vulnerability reporting and [dependabot.yml](.github/dependabot.yml) for automated dependency updates.
 
-🆕 DataFrame API (Spark ML) is the default.
-Version 0.6.0 introduces a modern, RDD-free DataFrame-native API with Spark ML integration.
-See DataFrame API Examples for end-to-end usage.
+**DataFrame-only API** — Version 0.7.0 removes the legacy RDD API entirely.
+The library is now 100% DataFrame/Spark ML native with a clean, modern architecture.
 
-This project generalizes K-Means to multiple Bregman divergences and advanced variants (Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids). It provides:
-
-- A DataFrame/ML API (recommended), and
-- A legacy RDD API kept for backwards compatibility (archived below).
+This project generalizes K-Means to multiple Bregman divergences and advanced variants (Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids). It provides a pure DataFrame/ML API following Spark's Estimator/Model pattern.
 
 ## What's in here
 
@@ -68,7 +64,7 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 |----------------|-------------------|-----------|
 | **Lint & Style** | Scalastyle compliance, code formatting | Part of main CI |
 | **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.3 / 3.5.1 / 4.0.1 | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
-| **Test Matrix** | 730 tests across all Scala/Spark combinations<br/>• 62 kernel accuracy tests (divergence formulas, gradients, inverse gradients)<br/>• 19 Lloyd's iterator tests (core k-means loop)<br/>• Determinism, edge cases, numerical stability | Part of main CI |
+| **Test Matrix** | 576 tests across all Scala/Spark combinations<br/>• 62 kernel accuracy tests (divergence formulas, gradients, inverse gradients)<br/>• 19 Lloyd's iterator tests (core k-means loop)<br/>• Determinism, edge cases, numerical stability | Part of main CI |
 | **Executable Documentation** | All examples run with assertions that verify correctness ([ExamplesSuite](src/test/scala/examples/ExamplesSuite.scala)):<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala) - validates cluster count<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala) - validates probability columns<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala) - validates automatic k selection<br/>• [SphericalKMeansExample](src/main/scala/examples/SphericalKMeansExample.scala) - validates cosine similarity clustering<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) - validates save/load with center accuracy<br/>• [PersistenceRoundTripKMedoids](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) - validates medoid preservation | Part of main CI |
 | **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5↔4.0 | Part of main CI |
 | **Performance Sanity** | Basic performance regression check (30s budget) | Part of main CI |
@@ -94,14 +90,12 @@ Truth-linked to code, tests, and examples for full transparency:
 | **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/L1Kernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
 | **Spherical K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/BregmanKernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/df/BregmanKernelAccuracySuite.scala) | [Example](src/main/scala/examples/SphericalKMeansExample.scala) | Text/embedding clustering (cosine) |
 | **Coreset K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/CoresetKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/CoresetKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripCoresetKMeans.scala) | Large-scale approximation (10-100x speedup) |
-| Constrained K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Balance/capacity constraints |
-| Mini-Batch K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Massive datasets via sampling |
 
 **Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss, Spherical/Cosine
 
-All DataFrame API algorithms include:
+All algorithms include:
 - ✅ Model persistence (save/load across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13)
-- ✅ Comprehensive test coverage (740 tests, 100% passing)
+- ✅ Comprehensive test coverage (576 tests, 100% passing)
 - ✅ Executable documentation with assertions (9 examples validate correctness in CI)
 - ✅ Deterministic behavior (same seed → identical results)
 - ✅ CI validation on every commit
@@ -110,21 +104,33 @@ All DataFrame API algorithms include:
 
 ## Installation / Versions
 
-- Spark: 3.5.1 default (override via -Dspark.version), 3.4.x tested
+- Spark: 3.5.1 default (override via -Dspark.version), 3.4.x / 4.0.x tested
 - Scala: 2.13.14 (primary), 2.12.18 (cross-compiled)
 - Java: 17
 
 ```scala
-libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.6.0"
+libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.7.0"
 ```
 
-## What's New in 0.6.0
+## What's New in 0.7.0
 
-- Scala 2.13 primary; 3.5.x Spark default
-- DataFrame API implementations for: Bisecting, X-Means, Soft, Streaming, K-Medoids
-- K-Medians (L1) divergence support
+**Breaking Change: RDD API Removed**
+- Legacy RDD API completely removed (53% code reduction)
+- Library is now 100% DataFrame/Spark ML native
+- Cleaner architecture with modular package structure
+
+**Architecture Improvements**
+- Split large files into focused modules:
+  - `kernels/` subpackage: 8 Bregman kernel implementations
+  - `strategies/impl/` subpackage: 5 assignment strategy implementations
+- Added compiler warning flags for dead code detection
+- Zero compiler warnings across Scala 2.12 and 2.13
+
+**Maintained from 0.6.0**
+- All DataFrame API algorithms: GeneralizedKMeans, Bisecting, X-Means, Soft, Streaming, K-Medoids, Coreset
+- All divergences: Squared Euclidean, KL, Itakura-Saito, L1, Generalized-I, Logistic, Spherical
+- Cross-version persistence (Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13)
 - PySpark wrapper + smoke test
-- Expanded examples & docs
 
 ---
 
@@ -390,73 +396,62 @@ Models implement DefaultParamsWritable/Readable.
 
 ---
 
-## Legacy RDD API (Archived)
+## Migration from RDD API (v0.6.x and earlier)
 
-Status: Kept for backward compatibility. New development should use the DataFrame API.
-The material below documents the original RDD interfaces and helper objects. Some snippets show API signatures (placeholders) rather than runnable examples.
+The RDD API was removed in v0.7.0. If migrating from an older version:
 
-Quick Start (Legacy RDD API)
-
+**Before (RDD API):**
 ```scala
 import com.massivedatascience.clusterer.KMeans
 import org.apache.spark.mllib.linalg.Vectors
 
 val data = sc.parallelize(Array(
   Vectors.dense(0.0, 0.0),
-  Vectors.dense(1.0, 1.0),
-  Vectors.dense(9.0, 8.0),
-  Vectors.dense(8.0, 9.0)
+  Vectors.dense(1.0, 1.0)
 ))
-
-val model = KMeans.train(
-  data,
-  runs = 1,
-  k = 2,
-  maxIterations = 20
-)
+val model = KMeans.train(data, runs = 1, k = 2, maxIterations = 20)
 ```
 
+**After (DataFrame API):**
+```scala
+import com.massivedatascience.clusterer.ml.GeneralizedKMeans
+import org.apache.spark.ml.linalg.Vectors
 
----
+val df = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.0, 0.0)),
+  Tuple1(Vectors.dense(1.0, 1.0))
+)).toDF("features")
 
-The remainder of this section is an archived reference for the RDD API.
+val model = new GeneralizedKMeans()
+  .setK(2)
+  .setMaxIter(20)
+  .fit(df)
+```
 
-It includes: Bregman divergences, BregmanPoint/BregmanCenter, KMeansModel, clusterers, seeding, embeddings, iterative training, coreset helpers, and helper object builders.
-Code blocks that include ??? indicate signatures in the original design.
-
-<details>
-<summary>Open archived RDD documentation</summary>
-
-
-<!-- BEGIN LEGACY CONTENT (unchanged) -->
-
-
-(All of your original README RDD content goes here — exactly as provided in your message.
-For brevity in this chat, I’m not duplicating it again, but in your repo, place the full section here.)
-
-<!-- END LEGACY CONTENT -->
-
-
-</details>
+Key differences:
+- Use `org.apache.spark.ml.linalg.Vectors` (not `mllib.linalg`)
+- Data is a DataFrame with a features column
+- Use Estimator/Model pattern (`.fit()` / `.transform()`)
 
 
 
 ---
 
 ## Table of Contents
--	Generalized K-Means Clustering
--	Quick Start (DataFrame API)
--	Feature Matrix
--	Installation / Versions
--	Scaling & Assignment Strategy
--	Input Transforms & Interpretation
--	Domain Requirements & Validation
--	Spherical K-Means (Cosine Similarity)
--	Bisecting K-Means — efficiency note
--	Structured Streaming K-Means
--	Persistence (Spark ML)
--	Python (PySpark) wrapper
--	Legacy RDD API (Archived)
+- Generalized K-Means Clustering
+- Quick Start (DataFrame API)
+- Feature Matrix
+- Installation / Versions
+- What's New in 0.7.0
+- Scaling & Assignment Strategy
+- Input Transforms & Interpretation
+- Domain Requirements & Validation
+- Spherical K-Means (Cosine Similarity)
+- Bisecting K-Means — efficiency note
+- Structured Streaming K-Means
+- Persistence (Spark ML)
+- Python (PySpark) wrapper
+- Migration from RDD API
 
 ---
 
@@ -473,6 +468,6 @@ Apache 2.0
 
 ---
 
-## Notes for maintainers (can be removed later)
--	As you land more DF features, consider extracting the RDD material into LEGACY_RDD.md to keep the README short.
--	Keep the “Scaling & Assignment Strategy” section up-to-date when adding SE accelerations (Hamerly/Elkan/Yinyang) or ANN-assisted paths—mark SE-only and exact/approximate as appropriate.
+## Notes for maintainers
+- Keep the "Scaling & Assignment Strategy" section up-to-date when adding SE accelerations (Hamerly/Elkan/Yinyang) or ANN-assisted paths—mark SE-only and exact/approximate as appropriate.
+- Update test counts in Feature Matrix when adding new test suites.

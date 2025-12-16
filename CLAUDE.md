@@ -3,20 +3,20 @@
 **Purpose.** This file tells Claude (or any LLM assistant) exactly how to help on this repo without wasting maintainer time. It encodes project norms, API/persistence guarantees, review rubrics, performance boundaries, and Scala engineering standards.
 
 > TL;DR
-> **Primary surface:** Spark **DataFrame/ML API** (`GeneralizedKMeans`, etc.).
+> **Primary surface:** Spark **DataFrame/ML API** (`GeneralizedKMeans`, etc.) — **RDD API removed in v0.7.0**.
 > **Versions:** Scala **2.13** (primary) / 2.12, Spark **4.0.x / 3.5.x / 3.4.x**
 >   - **Spark 4.0.x**: Scala 2.13 only (2.12 dropped in Spark 4.0)
 >   - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
 > **Math:** Bregman family — divergences include `squaredEuclidean`, `kl`, `itakuraSaito`, `l1`, `generalizedI`, `logistic`, `spherical`/`cosine`.
 > **Variants:** Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids.
-> **Determinism + persistence** are non-negotiable; RDD API is **archived** (reference only).
-> **Roadmap:** See `ROADMAP.md` for planned improvements and technical debt.
+> **Determinism + persistence** are non-negotiable.
+> **Architecture:** Modular package structure with `kernels/` and `strategies/impl/` subpackages.
 
 ---
 
 ## 0) Operating Principles (do these every time)
 
-1. **Prefer the DataFrame/ML API.** Code and examples use Estimator/Model patterns and Params from this codebase.
+1. **Use the DataFrame/ML API.** Code and examples use Estimator/Model patterns and Params from this codebase. (RDD API was removed in v0.7.0.)
 2. **No silent API breaks.** If you touch params, model JSON, or persistence schemas, include migration/round-trip tests.
 3. **Mathematical fidelity first.** Correct Bregman formulations beat micro-perf. Perf changes must not alter semantics.
 4. **Determinism matters.** Same seed ⇒ identical results. Avoid nondeterministic ops in core loops.
@@ -58,7 +58,12 @@
 - **Assignment strategies:** `auto | crossJoin (SE fast path) | broadcastUDF (general Bregman)`.
 - **Input transforms:** `none | log1p | epsilonShift(shiftValue)`; ensure domain validity for KL/IS.
 - **Persistence:** Models round-trip across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13.
-- **RDD API:** archived; do not add features.
+- **Package structure:**
+  - `clusterer.ml.*` — Top-level algorithm estimators & models
+  - `clusterer.ml.df.*` — DataFrame API implementation
+  - `clusterer.ml.df.kernels.*` — 8 Bregman kernel implementations
+  - `clusterer.ml.df.strategies.*` — Assignment/update strategies
+  - `clusterer.ml.df.strategies.impl.*` — 5 assignment strategy implementations
 
 ---
 
@@ -191,13 +196,13 @@ examples/      // runnable examples & docs-as-tests
 
 ## 5) Code Review Rubric (Spark/DF specifics)
 
-- **API surface:** clear names, consistent Params, Java/Scala boundary sane.  
-- **Math:** divergence domain checks; gradients correct; no mixing transformed/original spaces.  
-- **Spark plans:** avoid unnecessary wide shuffles; respect broadcast thresholds; document tradeoffs.  
-- **Determinism:** seeded ops; no time-based seeds.  
-- **Persistence:** schema versioned; DF & medoid models round-trip.  
-- **Docs:** README/examples mirror Params exactly; examples are executable tests.  
-- **Legacy:** do not expand RDD API.
+- **API surface:** clear names, consistent Params, Java/Scala boundary sane.
+- **Math:** divergence domain checks; gradients correct; no mixing transformed/original spaces.
+- **Spark plans:** avoid unnecessary wide shuffles; respect broadcast thresholds; document tradeoffs.
+- **Determinism:** seeded ops; no time-based seeds.
+- **Persistence:** schema versioned; DF & medoid models round-trip.
+- **Docs:** README/examples mirror Params exactly; examples are executable tests.
+- **Visibility:** Use `private[df]` for internal implementations; keep public API minimal.
 
 ---
 
@@ -260,8 +265,9 @@ One-liner of the change and why.
 ⸻
 
 ## 10) Hallucination Traps (pin these truths)
-	•	General Bregman ≠ SE: Do not reuse SE-only vectorized shortcuts in the general (UDF) path.
-	•	Transformed space: When transforms apply, centers live in transformed space; inverse is for interpretation only.
-	•	RDD API is archived: Do not propose new RDD features.
+- **General Bregman ≠ SE:** Do not reuse SE-only vectorized shortcuts in the general (UDF) path.
+- **Transformed space:** When transforms apply, centers live in transformed space; inverse is for interpretation only.
+- **No RDD API:** The RDD API was removed in v0.7.0. All code uses DataFrame/Spark ML patterns.
+- **Package visibility:** Kernel and strategy implementations are `private[df]`; use re-export objects for backward compatibility.
 
 ---
