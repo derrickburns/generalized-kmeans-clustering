@@ -61,8 +61,8 @@ private[df] class SECrossJoinAssignment extends AssignmentStrategy with Logging 
     // Find minimum distance cluster for each point
     // Use window function for efficiency
     import org.apache.spark.sql.expressions.Window
-    import scala.collection.immutable.ArraySeq
-    val windowSpec = Window.partitionBy(ArraySeq.unsafeWrapArray(df.columns.map(col)): _*)
+    val partitionCols = df.columns.map(col)
+    val windowSpec    = Window.partitionBy(partitionCols: _*)
 
     val withRank = withDistances
       .withColumn("rank", row_number().over(windowSpec.orderBy("distance")))

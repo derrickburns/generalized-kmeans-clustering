@@ -336,13 +336,10 @@ class DPMeans(override val uid: String)
         )
 
         // Check convergence (max center movement)
-        val maxMovement = centers
-          .zip(newCentersArray)
-          .map { case (old, neu) =>
-            kernel.divergence(Vectors.dense(old), Vectors.dense(neu))
-          }
-          .maxOption
-          .getOrElse(0.0)
+        val movements   = centers.zip(newCentersArray).map { case (old, neu) =>
+          kernel.divergence(Vectors.dense(old), Vectors.dense(neu))
+        }
+        val maxMovement = if (movements.isEmpty) 0.0 else movements.max
 
         logInfo(f"Iteration $iter: max center movement = $maxMovement%.6f")
 
@@ -351,7 +348,7 @@ class DPMeans(override val uid: String)
           logInfo(s"Converged after $iter iterations (movement $maxMovement < tol $tolVal)")
         }
 
-        centers = ArrayBuffer.from(newCentersArray)
+        centers = ArrayBuffer(newCentersArray: _*)
       }
 
       assigned.unpersist()

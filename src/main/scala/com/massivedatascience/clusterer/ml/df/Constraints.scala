@@ -75,7 +75,7 @@ class ConstraintSet(constraints: Seq[Constraint]) extends Serializable {
       builder.getOrElseUpdate(ml.i, mutable.Set.empty) += ml.j
       builder.getOrElseUpdate(ml.j, mutable.Set.empty) += ml.i
     }
-    builder.view.mapValues(_.toSet).toMap
+    builder.map { case (k, v) => k -> v.toSet }.toMap
   }
 
   private val cannotLinkIndex: Map[Long, Set[Long]] = {
@@ -84,7 +84,7 @@ class ConstraintSet(constraints: Seq[Constraint]) extends Serializable {
       builder.getOrElseUpdate(cl.i, mutable.Set.empty) += cl.j
       builder.getOrElseUpdate(cl.j, mutable.Set.empty) += cl.i
     }
-    builder.view.mapValues(_.toSet).toMap
+    builder.map { case (k, v) => k -> v.toSet }.toMap
   }
 
   // Constraint weights for penalty calculation
