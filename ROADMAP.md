@@ -1,6 +1,6 @@
 # Roadmap: Generalized K-Means Clustering
 
-> **Last Updated:** 2025-12-15 (Vectorized BLAS)
+> **Last Updated:** 2025-12-15 (RDD API Removed)
 > **Status:** Active planning document
 > **Maintainer Note:** Claude should inspect and update this file as changes are made.
 
@@ -46,20 +46,15 @@ This document tracks planned improvements, technical debt, and future directions
 ## 2. Architecture Improvements (P1-P2)
 
 ### 2.1 ~~Unify BregmanDivergence and BregmanKernel~~ ✅ COMPLETED
-- **Problem:** Duplicate divergence implementations between RDD API (`BregmanDivergence`) and DataFrame API (`BregmanKernel`)
+- **Problem:** Duplicate divergence implementations between RDD API and DataFrame API
 - **Solution implemented:**
   - Created `BregmanFunction` trait as single source of truth
   - Provides `F(x)`, `gradF(x)`, `invGradF(θ)`, `divergence(x,y)`, `validate(x)`
-  - `BregmanFunctionAdapter` bridges to both APIs:
-    - `asKernel(func)` → BregmanKernel for DataFrame API
-    - `asDivergence(func)` → BregmanDivergence for RDD API
   - `BregmanFunctions` factory with all 7 divergences
-- **Files created:**
+- **Files:**
   - `src/main/scala/com/massivedatascience/divergence/BregmanFunction.scala`
-  - `src/main/scala/com/massivedatascience/divergence/BregmanFunctionAdapter.scala`
   - `src/test/scala/com/massivedatascience/divergence/BregmanFunctionSuite.scala`
-- **Benefits:** Single source of mathematical correctness, reduced duplication
-- **Backwards compatible:** Existing APIs unchanged; adapters enable gradual migration
+- **Benefits:** Single source of mathematical correctness
 - **Status:** Completed 2025-12-15
 
 ### 2.2 ~~Migrate Co-clustering to ML Estimator Pattern~~ ✅ COMPLETED
@@ -80,17 +75,24 @@ This document tracks planned improvements, technical debt, and future directions
   - Convergence tolerance and regularization parameters
   - Block center prediction for matrix completion
 - **Benefits:** Consistent API, persistence support, pipeline integration
-- **Legacy:** Original `BregmanCoClustering` remains for RDD API users
 - **Status:** Completed 2025-12-15
 
-### 2.3 Deprecate RDD API (P3)
-- **Problem:** Maintaining two parallel APIs increases complexity
-- **Current state:** RDD API is "archived" but still present
-- **Proposed timeline:**
-  1. Add deprecation warnings to RDD entry points
-  2. Move RDD code to separate module
-  3. Eventually remove from main artifact
-- **Status:** Not started
+### 2.3 ~~Remove RDD API~~ ✅ COMPLETED
+- **Problem:** Maintaining two parallel APIs increased complexity
+- **Solution:** Complete removal of RDD API
+- **Files removed (55 source files, 25 test files):**
+  - `src/main/scala/com/massivedatascience/clusterer/*.scala` (45 files)
+  - `src/main/scala/com/massivedatascience/clusterer/coreset/` (3 files)
+  - `src/main/scala/com/massivedatascience/transforms/` (5 files)
+  - `src/main/scala/com/massivedatascience/divergence/BregmanDivergence.scala`
+  - `src/main/scala/com/massivedatascience/divergence/BregmanFunctionAdapter.scala`
+- **Benefits:**
+  - Reduced codebase from 104 to 49 source files (53% reduction)
+  - Eliminated duplicate implementations
+  - Single API surface (DataFrame/ML only)
+  - Easier maintenance and testing
+- **Breaking change:** RDD API users must migrate to DataFrame API
+- **Status:** Completed 2025-12-15
 
 ---
 
@@ -277,6 +279,7 @@ This document tracks planned improvements, technical debt, and future directions
 | DPMeans | 2025-12-15 | Automatic k selection via distance threshold (3.3) |
 | AdaptiveBroadcastAssignment | 2025-12-15 | Memory-aware broadcast chunking (4.2) |
 | Vectorized BLAS | 2025-12-15 | Native nrm2, squaredNorm, asum, normalize (4.1) |
+| RDD API removed | 2025-12-15 | 55 source files, 25 test files deleted (2.3) |
 
 ---
 
@@ -285,15 +288,14 @@ This document tracks planned improvements, technical debt, and future directions
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2024 | DataFrame API as primary | Better Spark integration, SQL optimization |
-| 2024 | Archive RDD API | Maintenance burden, DF covers use cases |
 | 2024 | Keep L1 as "kernel" despite not being Bregman | Practical utility outweighs theoretical purity |
 | 2025-12-15 | Prioritize spherical k-means | High demand for embedding clustering |
 | 2025-12-15 | SphericalKernel in BregmanKernel.scala | Keep all kernels in one file for consistency |
-| 2025-12-15 | BregmanFunction as unified trait | Single source of truth with adapters for backwards compatibility |
-| 2025-12-15 | CoClustering as separate ML Estimator | Keep legacy RDD API intact, provide clean DF-based alternative |
+| 2025-12-15 | BregmanFunction as unified trait | Single source of truth for divergence math |
 | 2025-12-15 | Phased approach for Elkan acceleration | Start with single-iteration pruning (fits current architecture), defer cross-iteration bounds |
-| 2025-12-15 | ElkanLloydsIterator as specialized iterator | Encapsulates full Elkan algorithm with DataFrame-based bounds tracking, keeps AssignmentStrategy interface unchanged |
-| 2025-12-15 | DPMeans adds one cluster per iteration | Conservative approach prevents runaway cluster creation; furthest outlier gets new cluster |
+| 2025-12-15 | ElkanLloydsIterator as specialized iterator | Encapsulates full Elkan algorithm with DataFrame-based bounds tracking |
+| 2025-12-15 | DPMeans adds one cluster per iteration | Conservative approach prevents runaway cluster creation |
+| 2025-12-15 | Remove RDD API entirely | 53% code reduction, single API surface, eliminate maintenance burden |
 
 ---
 

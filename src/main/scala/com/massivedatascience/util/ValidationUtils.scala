@@ -84,7 +84,7 @@ object ValidationUtils {
     }
   }
 
-  def requireNonEmpty[T](collection: Traversable[T], context: String = "Collection"): Unit = {
+  def requireNonEmpty[T](collection: Iterable[T], context: String = "Collection"): Unit = {
     if (collection.isEmpty) {
       throw new IllegalArgumentException(s"$context must not be empty")
     }

@@ -410,20 +410,6 @@ class CoresetKMeans(override val uid: String)
     // (though we can't explicitly pass them to the initializer)
     refineKMeans.fit(fullDF)
   }
-
-  /** Helper: Compute squared Euclidean distance between two vectors. */
-  private def squaredDistance(v1: Vector, v2: Vector): Double = {
-    val arr1 = v1.toArray
-    val arr2 = v2.toArray
-    var sum  = 0.0
-    var i    = 0
-    while (i < arr1.length) {
-      val diff = arr1(i) - arr2(i)
-      sum += diff * diff
-      i += 1
-    }
-    sum
-  }
 }
 
 object CoresetKMeans extends DefaultParamsReadable[CoresetKMeans] {

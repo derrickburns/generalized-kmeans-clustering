@@ -10,7 +10,6 @@ import com.massivedatascience.clusterer.ml.df._
   * Verifies:
   *   1. Mathematical properties (non-negativity, identity)
   *   2. Consistency with existing BregmanKernel implementations
-  *   3. Adapter functionality
   */
 class BregmanFunctionSuite extends AnyFunSuite with Matchers {
 
@@ -191,19 +190,6 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
     val funcDiv = func.divergence(v1, v2)
     val kernelDiv = kernel.divergence(v1, v2)
     funcDiv shouldBe kernelDiv +- tolerance
-  }
-
-  // ============ Adapter Tests ============
-
-  test("asKernel adapter produces same results as original kernel") {
-    val func = BregmanFunctions.squaredEuclidean
-    val adaptedKernel = BregmanFunctionAdapter.asKernel(func)
-    val originalKernel = new SquaredEuclideanKernel()
-
-    adaptedKernel.divergence(v1, v2) shouldBe originalKernel.divergence(v1, v2) +- tolerance
-    adaptedKernel.grad(v1).toArray.zip(originalKernel.grad(v1).toArray).foreach { case (a, b) =>
-      a shouldBe b +- tolerance
-    }
   }
 
   test("BregmanFunctions.apply returns correct types") {

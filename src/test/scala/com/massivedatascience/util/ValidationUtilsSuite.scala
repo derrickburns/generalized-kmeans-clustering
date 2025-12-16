@@ -17,7 +17,6 @@
 
 package com.massivedatascience.util
 
-import com.massivedatascience.clusterer.TestingUtils._
 import org.apache.spark.ml.linalg.Vectors
 import org.scalatest.funsuite.AnyFunSuite
 

@@ -249,7 +249,6 @@ class DPMeans(override val uid: String)
     val maxKVal = $(maxK)
     val maxIterVal = $(maxIter)
     val tolVal = $(tol)
-    val seedVal = $(seed)
     val smooth = $(smoothing)
 
     val kernel = createKernel($(divergence), smooth)

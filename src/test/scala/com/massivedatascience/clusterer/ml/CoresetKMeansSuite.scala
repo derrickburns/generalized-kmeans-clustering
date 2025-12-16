@@ -1,6 +1,5 @@
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.TestingUtils._
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.scalatest.funsuite.AnyFunSuite

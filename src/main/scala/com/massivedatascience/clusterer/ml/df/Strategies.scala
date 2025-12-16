@@ -147,7 +147,7 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
 
     // Create centers DataFrame using RDD
     val centersRDD = spark.sparkContext.parallelize(
-      centers.zipWithIndex.map { case (center, idx) =>
+      centers.toIndexedSeq.zipWithIndex.map { case (center, idx) =>
         (idx, Vectors.dense(center))
       }
     )
@@ -175,7 +175,8 @@ class SECrossJoinAssignment extends AssignmentStrategy with Logging {
     // Find minimum distance cluster for each point
     // Use window function for efficiency
     import org.apache.spark.sql.expressions.Window
-    val windowSpec = Window.partitionBy(df.columns.map(col): _*)
+    import scala.collection.immutable.ArraySeq
+    val windowSpec = Window.partitionBy(ArraySeq.unsafeWrapArray(df.columns.map(col)): _*)
 
     val withRank = withDistances
       .withColumn("rank", row_number().over(windowSpec.orderBy("distance")))
