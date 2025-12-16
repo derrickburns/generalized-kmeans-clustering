@@ -44,7 +44,7 @@ This project adheres to a code of conduct adapted from the [Contributor Covenant
 
 ### Requirements
 
-- **Java**: JDK 17
+- **Java**: JDK 17 (required; Spark/Hadoop will fail on newer JDKs)
 - **Scala**: 2.12.18 or 2.13.14 (managed by sbt)
 - **SBT**: 1.9.x or later
 - **Spark**: 3.4.0+ or 3.5.1+ (managed by sbt)

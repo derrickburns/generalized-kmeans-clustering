@@ -16,7 +16,16 @@
       if (isCi) base :+ "-Xfatal-warnings" else base
     }
 
-    javacOptions ++= Seq( "-source", "17.0", "-target", "17.0")
+// Enforce Java 17 runtime/toolchain (Spark/Hadoop incompatibilities on JDK 21+)
+val javaSpecVersion = sys.props.getOrElse("java.specification.version", "0")
+val javaMajor       = javaSpecVersion.split('.').lastOption.flatMap(_.toIntOption).getOrElse(0)
+if (javaMajor != 17) {
+  throw new RuntimeException(
+    s"Incompatible JDK detected: $javaSpecVersion. Please run sbt with Java 17 (spark/hadoop require it)."
+  )
+}
+
+javacOptions ++= Seq("-source", "17.0", "-target", "17.0")
     publishMavenStyle := true
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
