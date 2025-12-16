@@ -345,7 +345,7 @@ object BLAS extends Serializable {
     var i       = 0
     var maximum = Double.MinValue
     while (i < v.length) {
-      if (v(i) < maximum) maximum = v(i)
+      if (v(i) > maximum) maximum = v(i)
       i = i + 1
     }
     maximum
@@ -369,6 +369,89 @@ object BLAS extends Serializable {
     v match {
       case x: DenseVector  => doMax(x.values)
       case y: SparseVector => doMax(y.values)
+    }
+  }
+
+  /** Compute the L2 norm (Euclidean norm) of a vector: ||x||_2 = sqrt(sum(x_i^2))
+    *
+    * Uses native BLAS dnrm2 for dense vectors, which is significantly faster than
+    * scalar loops for large vectors due to SIMD vectorization.
+    *
+    * @param v
+    *   input vector
+    * @return
+    *   L2 norm of the vector
+    */
+  def nrm2(v: Vector): Double = {
+    v match {
+      case dx: DenseVector  =>
+        f2jBLAS.dnrm2(dx.size, dx.values, 1)
+      case sx: SparseVector =>
+        // For sparse vectors, compute norm of non-zero values only
+        // Note: This is correct because zeros don't contribute to the norm
+        f2jBLAS.dnrm2(sx.values.length, sx.values, 1)
+    }
+  }
+
+  /** Compute the squared L2 norm of a vector: ||x||_2^2 = sum(x_i^2)
+    *
+    * This is useful for squared Euclidean distance calculations where
+    * we need ||x - y||^2 = ||x||^2 + ||y||^2 - 2*x'y
+    *
+    * Uses native BLAS ddot(x, x) which is vectorized.
+    *
+    * @param v
+    *   input vector
+    * @return
+    *   squared L2 norm of the vector
+    */
+  def squaredNorm(v: Vector): Double = {
+    v match {
+      case dx: DenseVector  =>
+        f2jBLAS.ddot(dx.size, dx.values, 1, dx.values, 1)
+      case sx: SparseVector =>
+        f2jBLAS.ddot(sx.values.length, sx.values, 1, sx.values, 1)
+    }
+  }
+
+  /** Compute L1 norm (sum of absolute values): ||x||_1 = sum(|x_i|)
+    *
+    * Uses native BLAS dasum which is vectorized.
+    *
+    * @param v
+    *   input vector
+    * @return
+    *   L1 norm of the vector
+    */
+  def asum(v: Vector): Double = {
+    v match {
+      case dx: DenseVector  =>
+        f2jBLAS.dasum(dx.size, dx.values, 1)
+      case sx: SparseVector =>
+        f2jBLAS.dasum(sx.values.length, sx.values, 1)
+    }
+  }
+
+  /** Normalize a vector to unit L2 norm: x / ||x||_2
+    *
+    * This is a common operation for spherical k-means and cosine similarity.
+    * Uses native BLAS for both norm computation and scaling.
+    *
+    * @param v
+    *   input vector
+    * @param minNorm
+    *   minimum norm threshold to avoid division by zero (default 1e-10)
+    * @return
+    *   normalized vector with L2 norm = 1, or original vector if norm < minNorm
+    */
+  def normalize(v: Vector, minNorm: Double = 1e-10): Vector = {
+    val norm = nrm2(v)
+    if (norm < minNorm) {
+      v.copy
+    } else {
+      val result = v.copy
+      scal(1.0 / norm, result)
+      result
     }
   }
 }

@@ -67,9 +67,84 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
   )
 }
 
-/** Soft K-Means clustering (fuzzy c-means) - DataFrame API.
+/** Soft K-Means clustering (fuzzy c-means) with pluggable Bregman divergences.
   *
+  * Unlike hard clustering where each point belongs to exactly one cluster, soft clustering
+  * assigns each point a probability distribution over all clusters. This is useful when:
+  *   - Cluster boundaries are uncertain or overlapping
+  *   - You need confidence scores for cluster assignments
+  *   - Points may genuinely belong to multiple categories
+  *   - You want to detect outliers (points with high entropy across clusters)
+  *
+  * ==Algorithm==
+  *
+  * Soft K-Means uses the EM algorithm with a Boltzmann distribution:
+  *
+  * '''E-step:''' Compute soft membership probabilities:
+  * {{{
   * p(cluster c | point x) ∝ exp(-β * D_φ(x, μ_c))
+  * }}}
+  *
+  * '''M-step:''' Update centers using weighted mean of soft assignments:
+  * {{{
+  * μ_c = Σ_x p(c|x) * x / Σ_x p(c|x)
+  * }}}
+  *
+  * ==Beta Parameter==
+  *
+  * The `beta` parameter (inverse temperature) controls assignment sharpness:
+  *   - '''β → ∞''': Hard clustering (each point assigned to exactly one cluster)
+  *   - '''β = 1.0''': Moderate softness (default, good starting point)
+  *   - '''β → 0''': Maximum softness (uniform distribution over all clusters)
+  *
+  * Typical values:
+  *   - β = 0.1: Very soft (high uncertainty)
+  *   - β = 1.0: Moderate (default)
+  *   - β = 10.0: Nearly hard clustering
+  *
+  * ==Divergences==
+  *
+  * Supports all Bregman divergences from [[GeneralizedKMeans]]:
+  *   - `squaredEuclidean` (default): Standard soft k-means
+  *   - `kl`: Soft clustering of probability distributions
+  *   - `itakuraSaito`: Soft spectral clustering
+  *   - `spherical`/`cosine`: Soft clustering of directional data
+  *
+  * ==Example Usage==
+  *
+  * {{{
+  * val softKMeans = new SoftKMeans()
+  *   .setK(3)
+  *   .setBeta(1.0)                    // Inverse temperature
+  *   .setDivergence("squaredEuclidean")
+  *   .setMaxIter(50)
+  *   .setProbabilityCol("probs")
+  *
+  * val model = softKMeans.fit(dataset)
+  * val predictions = model.transform(dataset)
+  *
+  * // predictions now has:
+  * // - "prediction": hard cluster assignment (argmax of probabilities)
+  * // - "probs": Vector of membership probabilities for each cluster
+  *
+  * // Analyze cluster overlap
+  * predictions.select("features", "probs").show()
+  * // A point with probs = [0.45, 0.45, 0.10] is ambiguous between clusters 0 and 1
+  *
+  * // Compute effective number of clusters per point (entropy-based)
+  * val effectiveK = model.effectiveNumberOfClusters(dataset)
+  * }}}
+  *
+  * ==Use Cases==
+  *
+  *   - '''Customer segmentation:''' Customers may belong to multiple segments
+  *   - '''Topic modeling:''' Documents often cover multiple topics
+  *   - '''Outlier detection:''' Outliers have high entropy (spread across clusters)
+  *   - '''Ensemble clustering:''' Soft assignments enable cluster aggregation
+  *   - '''Uncertainty quantification:''' Know when assignments are confident vs. ambiguous
+  *
+  * @see [[SoftKMeansModel]] for prediction methods and model details
+  * @see [[GeneralizedKMeans]] for hard clustering alternative
   *
   * @param uid
   *   Unique identifier
@@ -207,13 +282,14 @@ class SoftKMeans(override val uid: String)
   private def createKernel(divName: String, smooth: Double): BregmanKernel = {
     import com.massivedatascience.clusterer.ml.df._
     divName match {
-      case "squaredEuclidean" => new SquaredEuclideanKernel()
-      case "kl"               => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"     => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"         => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan" => new L1Kernel()
-      case _                  => throw new IllegalArgumentException(s"Unknown divergence: $divName")
+      case "squaredEuclidean"     => new SquaredEuclideanKernel()
+      case "kl"                   => new KLDivergenceKernel(smooth)
+      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
+      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
+      case "logistic"             => new LogisticLossKernel(smooth)
+      case "l1" | "manhattan"     => new L1Kernel()
+      case "spherical" | "cosine" => new SphericalKernel()
+      case _                      => throw new IllegalArgumentException(s"Unknown divergence: $divName")
     }
   }
 

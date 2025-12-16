@@ -288,15 +288,8 @@ object VectorizedTransforms {
           batch.map { vector =>
             val denseVector = Vectors.dense(vector.homogeneous.toArray).toDense
 
-            // Calculate norm manually
-            val values      = denseVector.values
-            var normSquared = 0.0
-            var i           = 0
-            while (i < values.length) {
-              normSquared += values(i) * values(i)
-              i += 1
-            }
-            val norm        = math.sqrt(normSquared)
+            // Use vectorized BLAS norm computation
+            val norm = BLAS.nrm2(denseVector)
 
             if (norm > 1e-12) {
               BLAS.scal(1.0 / norm, denseVector)

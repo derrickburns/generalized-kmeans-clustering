@@ -55,6 +55,10 @@ class ExamplesSuite extends AnyFunSuite with Matchers {
     runExample("XMeansExample", XMeansExample.main(Array.empty))
   }
 
+  test("SphericalKMeansExample runs successfully with assertions") {
+    runExample("SphericalKMeansExample", SphericalKMeansExample.main(Array.empty))
+  }
+
   test("PersistenceRoundTrip save/load cycle works") {
     val tmpDir = Files.createTempDirectory("gkm-test-persistence")
     try {

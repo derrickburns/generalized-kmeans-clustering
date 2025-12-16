@@ -7,19 +7,42 @@
 > **Versions:** Scala **2.13** (primary) / 2.12, Spark **4.0.x / 3.5.x / 3.4.x**
 >   - **Spark 4.0.x**: Scala 2.13 only (2.12 dropped in Spark 4.0)
 >   - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
-> **Math:** Bregman family — divergences include `squaredEuclidean`, `kl`, `itakuraSaito`, `l1`, `generalizedI`, `logistic`.
+> **Math:** Bregman family — divergences include `squaredEuclidean`, `kl`, `itakuraSaito`, `l1`, `generalizedI`, `logistic`, `spherical`/`cosine`.
 > **Variants:** Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids.
 > **Determinism + persistence** are non-negotiable; RDD API is **archived** (reference only).
+> **Roadmap:** See `ROADMAP.md` for planned improvements and technical debt.
 
 ---
 
 ## 0) Operating Principles (do these every time)
 
-1. **Prefer the DataFrame/ML API.** Code and examples use Estimator/Model patterns and Params from this codebase.  
-2. **No silent API breaks.** If you touch params, model JSON, or persistence schemas, include migration/round-trip tests.  
-3. **Mathematical fidelity first.** Correct Bregman formulations beat micro-perf. Perf changes must not alter semantics.  
-4. **Determinism matters.** Same seed ⇒ identical results. Avoid nondeterministic ops in core loops.  
+1. **Prefer the DataFrame/ML API.** Code and examples use Estimator/Model patterns and Params from this codebase.
+2. **No silent API breaks.** If you touch params, model JSON, or persistence schemas, include migration/round-trip tests.
+3. **Mathematical fidelity first.** Correct Bregman formulations beat micro-perf. Perf changes must not alter semantics.
+4. **Determinism matters.** Same seed ⇒ identical results. Avoid nondeterministic ops in core loops.
 5. **Tight PRs.** Small, test-backed, CI-friendly. No speculative abstractions.
+6. **Maintain the roadmap.** When making changes, update `ROADMAP.md` to reflect completed work, new issues discovered, or priority changes.
+
+---
+
+## 0.1) Roadmap Maintenance
+
+**IMPORTANT:** The file `ROADMAP.md` contains the project's technical roadmap, including:
+- Bug fixes (completed and pending)
+- Architecture improvements
+- Algorithm additions
+- Performance improvements
+- Documentation needs
+
+**Claude must:**
+1. **Inspect `ROADMAP.md`** at the start of significant work to understand current priorities and context.
+2. **Update `ROADMAP.md`** when:
+   - Completing a bug fix → mark as ✅ FIXED with date
+   - Discovering a new bug → add to Bug Fixes section with priority
+   - Completing a feature → move to Completed Items section
+   - Identifying technical debt → add to appropriate section
+   - Making architectural decisions → add to Decision Log
+3. **Reference roadmap items** in commit messages and PR descriptions where applicable.
 
 ---
 
@@ -31,7 +54,7 @@
   - **Spark 3.x**: Both Scala 2.13 and 2.12 supported
 - **Scala:** 2.13.x primary (keep code Scala-3-friendly where feasible).
 - **Java:** 17.
-- **Divergences:** `squaredEuclidean | kl | itakuraSaito | l1 | generalizedI | logistic`.
+- **Divergences:** `squaredEuclidean | kl | itakuraSaito | l1 | generalizedI | logistic | spherical | cosine`.
 - **Assignment strategies:** `auto | crossJoin (SE fast path) | broadcastUDF (general Bregman)`.
 - **Input transforms:** `none | log1p | epsilonShift(shiftValue)`; ensure domain validity for KL/IS.
 - **Persistence:** Models round-trip across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13.

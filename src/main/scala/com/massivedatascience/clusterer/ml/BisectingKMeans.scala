@@ -31,27 +31,60 @@ trait BisectingKMeansParams extends GeneralizedKMeansParams {
 
 /** Bisecting K-Means clustering with pluggable Bregman divergences.
   *
-  * This is a hierarchical divisive clustering algorithm that:
-  *   1. Starts with all points in one cluster 2. Repeatedly selects the largest cluster and splits
-  *      it into two using k=2 clustering 3. Continues until reaching target k clusters
+  * A hierarchical divisive clustering algorithm that produces a dendrogram-like structure.
+  * Unlike standard k-means which starts with k random centers, bisecting k-means builds
+  * clusters incrementally by recursive splitting.
   *
-  * Benefits over standard k-means:
-  *   - More deterministic (less sensitive to initialization)
-  *   - Better handling of imbalanced cluster sizes
-  *   - Often faster for large k (only splits locally)
-  *   - Generally higher quality than random initialization
+  * ==Algorithm==
   *
-  * Example usage:
+  *   1. Start with all points in one cluster
+  *   2. Select the largest divisible cluster (size ≥ minDivisibleClusterSize)
+  *   3. Split it into two using k=2 clustering with the selected divergence
+  *   4. Repeat until reaching the target k clusters
+  *
+  * ==Advantages==
+  *
+  *   - '''More deterministic:''' Less sensitive to initialization than standard k-means
+  *   - '''Balanced clusters:''' Natural handling of imbalanced cluster sizes
+  *   - '''Faster for large k:''' Only splits locally, O(log k) full passes vs O(k) for k-means
+  *   - '''Hierarchical structure:''' Implicit dendrogram can be extracted from split order
+  *   - '''Quality:''' Often produces higher quality clusters than random initialization
+  *
+  * ==Divergences==
+  *
+  * Supports all Bregman divergences:
+  *   - `squaredEuclidean` (default): Standard bisecting k-means
+  *   - `kl`: Hierarchical topic/probability modeling
+  *   - `itakuraSaito`: Spectral analysis with nested structure
+  *   - `spherical`/`cosine`: Text/embedding hierarchical clustering
+  *   - `l1`: Robust hierarchical clustering with median-based splits
+  *
+  * ==Example Usage==
+  *
   * {{{
-  *   val bisecting = new BisectingKMeans()
-  *     .setK(10)
-  *     .setDivergence("squaredEuclidean")
-  *     .setMaxIter(20)
-  *     .setMinDivisibleClusterSize(5)
+  * val bisecting = new BisectingKMeans()
+  *   .setK(10)
+  *   .setDivergence("squaredEuclidean")
+  *   .setMaxIter(20)
+  *   .setMinDivisibleClusterSize(5)  // Don't split clusters smaller than 5
   *
-  *   val model = bisecting.fit(dataset)
-  *   val predictions = model.transform(dataset)
+  * val model = bisecting.fit(dataset)
+  * val predictions = model.transform(dataset)
+  *
+  * // Training summary shows number of splits performed
+  * println(s"Performed ${model.summary.iterations} splits")
   * }}}
+  *
+  * ==When to Use==
+  *
+  * Prefer bisecting k-means when:
+  *   - You need reproducible results
+  *   - Cluster sizes are expected to be imbalanced
+  *   - You want to analyze hierarchical structure
+  *   - k is large (e.g., k > 50)
+  *
+  * @see [[GeneralizedKMeans]] for standard k-means with multiple initialization methods
+  * @see [[GeneralizedKMeansModel]] for prediction and model persistence
   *
   * @param uid
   *   Unique identifier
@@ -374,13 +407,14 @@ class BisectingKMeans(override val uid: String)
     */
   private def createKernel(divName: String, smooth: Double): BregmanKernel = {
     divName match {
-      case "squaredEuclidean" => new SquaredEuclideanKernel()
-      case "kl"               => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"     => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"         => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan" => new L1Kernel()
-      case _                  => throw new IllegalArgumentException(s"Unknown divergence: $divName")
+      case "squaredEuclidean"     => new SquaredEuclideanKernel()
+      case "kl"                   => new KLDivergenceKernel(smooth)
+      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
+      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
+      case "logistic"             => new LogisticLossKernel(smooth)
+      case "l1" | "manhattan"     => new L1Kernel()
+      case "spherical" | "cosine" => new SphericalKernel()
+      case _                      => throw new IllegalArgumentException(s"Unknown divergence: $divName")
     }
   }
 

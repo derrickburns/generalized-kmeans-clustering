@@ -14,25 +14,93 @@ import scala.util.Random
 /** Generalized K-Means clustering with pluggable Bregman divergences.
   *
   * This estimator implements Lloyd's algorithm for clustering with any Bregman divergence. Unlike
-  * MLlib's KMeans (which only supports Squared Euclidean distance), this supports:
-  *   - Squared Euclidean (L2)
-  *   - Kullback-Leibler divergence (for probability distributions)
-  *   - Itakura-Saito divergence (for spectral data)
-  *   - Generalized I-divergence (for count data)
-  *   - Logistic loss (for binary probabilities)
+  * MLlib's KMeans (which only supports Squared Euclidean distance), this supports multiple
+  * distance measures suitable for different data types.
   *
-  * Example usage:
+  * ==Supported Divergences==
+  *
+  * | Divergence | Use Case | Domain Requirement |
+  * |------------|----------|-------------------|
+  * | `squaredEuclidean` | General clustering, continuous data | Any finite values |
+  * | `kl` | Probability distributions, topic models, TF-IDF | Non-negative values |
+  * | `itakuraSaito` | Spectral analysis, audio, power spectra | Strictly positive values |
+  * | `generalizedI` | Count data, non-negative matrices | Non-negative values |
+  * | `logistic` | Binary probabilities, proportions | Values in [0, 1] |
+  * | `l1` / `manhattan` | Outlier-robust clustering (K-Medians) | Any finite values |
+  * | `spherical` / `cosine` | Text embeddings, document vectors | Non-zero vectors |
+  *
+  * ==Domain Validation==
+  *
+  * For divergences with domain requirements (KL, Itakura-Saito, etc.), the algorithm validates
+  * input data at fit time. Use `setSmoothing()` to add a small constant to avoid numerical issues
+  * with zeros or near-zero values.
+  *
+  * ==Algorithm==
+  *
+  * The algorithm proceeds as follows:
+  *   1. '''Initialization''': Select initial centers using k-means|| (default) or random sampling
+  *   2. '''Assignment''': Assign each point to the nearest center using the specified divergence
+  *   3. '''Update''': Recompute centers as the Bregman centroid of assigned points
+  *   4. '''Convergence''': Repeat until centers move less than `tol` or `maxIter` is reached
+  *
+  * ==Performance Considerations==
+  *
+  * - For '''Squared Euclidean''', the `crossJoin` assignment strategy uses vectorized Spark SQL
+  *   operations and is significantly faster than the UDF-based approach.
+  * - For '''large k × dim''', consider using checkpointing to avoid lineage explosion.
+  * - For '''high-dimensional sparse data''', consider using `spherical` divergence which
+  *   normalizes vectors and focuses on directional similarity.
+  *
+  * ==Example Usage==
+  *
+  * '''Basic clustering with Squared Euclidean:'''
   * {{{
-  *   val kmeans = new GeneralizedKMeans()
-  *     .setK(5)
-  *     .setDivergence("kl")
-  *     .setMaxIter(20)
-  *     .setFeaturesCol("features")
-  *     .setPredictionCol("cluster")
+  * val kmeans = new GeneralizedKMeans()
+  *   .setK(5)
+  *   .setMaxIter(20)
+  *   .setFeaturesCol("features")
   *
-  *   val model = kmeans.fit(dataset)
-  *   val predictions = model.transform(dataset)
+  * val model = kmeans.fit(dataset)
+  * val predictions = model.transform(dataset)
   * }}}
+  *
+  * '''Clustering probability distributions with KL divergence:'''
+  * {{{
+  * val kmeans = new GeneralizedKMeans()
+  *   .setK(10)
+  *   .setDivergence("kl")
+  *   .setSmoothing(1e-6)  // Add smoothing for numerical stability
+  *   .setMaxIter(50)
+  *
+  * val model = kmeans.fit(probabilityData)
+  * }}}
+  *
+  * '''Clustering text embeddings with cosine similarity:'''
+  * {{{
+  * val kmeans = new GeneralizedKMeans()
+  *   .setK(20)
+  *   .setDivergence("spherical")  // or "cosine"
+  *   .setMaxIter(30)
+  *
+  * val model = kmeans.fit(embeddingsData)
+  * }}}
+  *
+  * '''Weighted clustering:'''
+  * {{{
+  * val kmeans = new GeneralizedKMeans()
+  *   .setK(5)
+  *   .setWeightCol("importance")
+  *
+  * val model = kmeans.fit(weightedData)
+  * }}}
+  *
+  * @see [[GeneralizedKMeansModel]] for the trained model
+  * @see [[BisectingKMeans]] for hierarchical divisive clustering
+  * @see [[SoftKMeans]] for fuzzy/soft clustering with membership probabilities
+  * @see [[StreamingKMeans]] for online/streaming clustering
+  *
+  * @note For reproducible results, set the seed using `setSeed()`.
+  * @note Empty clusters are handled according to `emptyClusterStrategy` (default: reseed with random points).
   */
 class GeneralizedKMeans(override val uid: String)
     extends Estimator[GeneralizedKMeansModel]
@@ -206,16 +274,17 @@ class GeneralizedKMeans(override val uid: String)
     */
   private def createKernel(divName: String, smooth: Double): BregmanKernel = {
     divName match {
-      case "squaredEuclidean" => new SquaredEuclideanKernel()
-      case "kl"               => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"     => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"         => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan" => new L1Kernel()
-      case _                  =>
+      case "squaredEuclidean"     => new SquaredEuclideanKernel()
+      case "kl"                   => new KLDivergenceKernel(smooth)
+      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
+      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
+      case "logistic"             => new LogisticLossKernel(smooth)
+      case "l1" | "manhattan"     => new L1Kernel()
+      case "spherical" | "cosine" => new SphericalKernel()
+      case _                      =>
         throw new IllegalArgumentException(
           s"Unknown divergence: '$divName'. " +
-            s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan"
+            s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan, spherical, cosine"
         )
     }
   }

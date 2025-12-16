@@ -283,13 +283,14 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
 
       import com.massivedatascience.clusterer.ml.df._
       val kernel: BregmanKernel = divergence match {
-        case "squaredEuclidean" => new SquaredEuclideanKernel()
-        case "kl"               => new KLDivergenceKernel(smoothing)
-        case "itakuraSaito"     => new ItakuraSaitoKernel(smoothing)
-        case "generalizedI"     => new GeneralizedIDivergenceKernel(smoothing)
-        case "logistic"         => new LogisticLossKernel(smoothing)
-        case "l1" | "manhattan" => new L1Kernel()
-        case _                  => new SquaredEuclideanKernel()
+        case "squaredEuclidean"     => new SquaredEuclideanKernel()
+        case "kl"                   => new KLDivergenceKernel(smoothing)
+        case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
+        case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
+        case "logistic"             => new LogisticLossKernel(smoothing)
+        case "l1" | "manhattan"     => new L1Kernel()
+        case "spherical" | "cosine" => new SphericalKernel()
+        case _                      => new SquaredEuclideanKernel()
       }
 
       val model = new SoftKMeansModel(uid, centers, beta, minMembership, kernel)

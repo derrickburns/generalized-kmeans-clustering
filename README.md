@@ -21,7 +21,7 @@ This project generalizes K-Means to multiple Bregman divergences and advanced va
 
 ## What's in here
 
-- Multiple divergences: Squared Euclidean, KL, Itakura–Saito, L1/Manhattan (K-Medians), Generalized-I, Logistic-loss
+- Multiple divergences: Squared Euclidean, KL, Itakura–Saito, L1/Manhattan (K-Medians), Generalized-I, Logistic-loss, Spherical/Cosine
 - Variants: Bisecting, X-Means (BIC/AIC), Soft K-Means, Structured-Streaming K-Means, K-Medoids (PAM/CLARA)
 - Scale: Tested on tens of millions of points in 700+ dimensions
 - Tooling: Scala 2.13 (primary) / 2.12, Spark 4.0.x / 3.5.x / 3.4.x
@@ -47,7 +47,7 @@ val df = spark.createDataFrame(Seq(
 
 val gkm = new GeneralizedKMeans()
   .setK(2)
-  .setDivergence("kl")              // "squaredEuclidean", "itakuraSaito", "l1", "generalizedI", "logistic"
+  .setDivergence("kl")              // "squaredEuclidean", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical"
   .setAssignmentStrategy("auto")    // "auto" | "crossJoin" (SE fast path) | "broadcastUDF" (general Bregman)
   .setMaxIter(20)
 
@@ -69,7 +69,7 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 | **Lint & Style** | Scalastyle compliance, code formatting | Part of main CI |
 | **Build Matrix** | Scala 2.12.18 & 2.13.14 × Spark 3.4.3 / 3.5.1 / 4.0.1 | [![CI](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml/badge.svg)](https://github.com/derrickburns/generalized-kmeans-clustering/actions/workflows/ci.yml) |
 | **Test Matrix** | 730 tests across all Scala/Spark combinations<br/>• 62 kernel accuracy tests (divergence formulas, gradients, inverse gradients)<br/>• 19 Lloyd's iterator tests (core k-means loop)<br/>• Determinism, edge cases, numerical stability | Part of main CI |
-| **Executable Documentation** | All examples run with assertions that verify correctness ([ExamplesSuite](src/test/scala/examples/ExamplesSuite.scala)):<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala) - validates cluster count<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala) - validates probability columns<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala) - validates automatic k selection<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) - validates save/load with center accuracy<br/>• [PersistenceRoundTripKMedoids](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) - validates medoid preservation | Part of main CI |
+| **Executable Documentation** | All examples run with assertions that verify correctness ([ExamplesSuite](src/test/scala/examples/ExamplesSuite.scala)):<br/>• [BisectingExample](src/main/scala/examples/BisectingExample.scala) - validates cluster count<br/>• [SoftKMeansExample](src/main/scala/examples/SoftKMeansExample.scala) - validates probability columns<br/>• [XMeansExample](src/main/scala/examples/XMeansExample.scala) - validates automatic k selection<br/>• [SphericalKMeansExample](src/main/scala/examples/SphericalKMeansExample.scala) - validates cosine similarity clustering<br/>• [PersistenceRoundTrip](src/main/scala/examples/PersistenceRoundTrip.scala) - validates save/load with center accuracy<br/>• [PersistenceRoundTripKMedoids](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) - validates medoid preservation | Part of main CI |
 | **Cross-version Persistence** | Models save/load across Scala 2.12↔2.13 and Spark 3.4↔3.5↔4.0 | Part of main CI |
 | **Performance Sanity** | Basic performance regression check (30s budget) | Part of main CI |
 | **Python Smoke Test** | PySpark wrapper with both SE and non-SE divergences | Part of main CI |
@@ -92,16 +92,17 @@ Truth-linked to code, tests, and examples for full transparency:
 | **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
 | **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
 | **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/L1Kernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
+| **Spherical K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/BregmanKernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/df/BregmanKernelAccuracySuite.scala) | [Example](src/main/scala/examples/SphericalKMeansExample.scala) | Text/embedding clustering (cosine) |
 | **Coreset K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/CoresetKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/CoresetKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripCoresetKMeans.scala) | Large-scale approximation (10-100x speedup) |
 | Constrained K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Balance/capacity constraints |
 | Mini-Batch K-Means | ⚠️ RDD only | [Code](src/main/scala/com/massivedatascience/clusterer) | Legacy | — | Massive datasets via sampling |
 
-**Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss
+**Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss, Spherical/Cosine
 
 All DataFrame API algorithms include:
 - ✅ Model persistence (save/load across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13)
 - ✅ Comprehensive test coverage (740 tests, 100% passing)
-- ✅ Executable documentation with assertions (8 examples validate correctness in CI)
+- ✅ Executable documentation with assertions (9 examples validate correctness in CI)
 - ✅ Deterministic behavior (same seed → identical results)
 - ✅ CI validation on every commit
 
@@ -204,6 +205,7 @@ Note: Cluster centers are learned in the transformed space. If you need original
 |------------|-------------------|-------------|
 | **squaredEuclidean** | Any finite values (x ∈ ℝ) | None needed |
 | **l1** / **manhattan** | Any finite values (x ∈ ℝ) | None needed |
+| **spherical** / **cosine** | Non-zero vectors (‖x‖ > 0) | None needed (auto-normalized) |
 | **kl** | Strictly positive (x > 0) | Use `log1p` or `epsilonShift` transform |
 | **itakuraSaito** | Strictly positive (x > 0) | Use `log1p` or `epsilonShift` transform |
 | **generalizedI** | Non-negative (x ≥ 0) | Take absolute values or shift data |
@@ -293,6 +295,50 @@ Example:
 - Checks for NaN/Infinity in all divergences
 - Provides early failure with clear guidance before expensive computation
 - All DataFrame API estimators include validation: `GeneralizedKMeans`, `BisectingKMeans`, `XMeans`, `SoftKMeans`, `CoresetKMeans`
+
+---
+
+## Spherical K-Means (Cosine Similarity)
+
+Spherical K-Means clusters data on the unit hypersphere using cosine similarity. This is ideal for:
+- **Text/document clustering** (TF-IDF vectors, word embeddings)
+- **Image feature clustering** (CNN embeddings)
+- **Recommendation systems** (user/item embeddings)
+- **Any high-dimensional sparse data** where direction matters more than magnitude
+
+**How it works:**
+1. All vectors are automatically L2-normalized to unit length
+2. Distance: `D(x, μ) = 1 - cos(x, μ) = 1 - (x · μ)` for unit vectors
+3. Centers are computed as normalized mean of assigned points
+
+**Example:**
+
+```scala
+import com.massivedatascience.clusterer.ml.GeneralizedKMeans
+
+// Example: Clustering text embeddings
+val embeddings = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.8, 0.6, 0.0)),   // Document about topic A
+  Tuple1(Vectors.dense(0.9, 0.5, 0.1)),   // Also topic A (similar direction)
+  Tuple1(Vectors.dense(0.1, 0.2, 0.95)),  // Document about topic B
+  Tuple1(Vectors.dense(0.0, 0.3, 0.9))    // Also topic B
+)).toDF("features")
+
+val sphericalKMeans = new GeneralizedKMeans()
+  .setK(2)
+  .setDivergence("spherical")  // or "cosine"
+  .setMaxIter(20)
+
+val model = sphericalKMeans.fit(embeddings)
+val predictions = model.transform(embeddings)
+predictions.show()
+```
+
+**Key properties:**
+- Distance range: `[0, 2]` (0 = identical direction, 2 = opposite direction)
+- Equivalent to squared Euclidean on normalized data: `‖x - μ‖² = 2(1 - x·μ)`
+- No domain restrictions except non-zero vectors
+- Available in all estimators: `GeneralizedKMeans`, `BisectingKMeans`, `SoftKMeans`, `StreamingKMeans`
 
 ---
 
@@ -404,6 +450,8 @@ For brevity in this chat, I’m not duplicating it again, but in your repo, plac
 -	Installation / Versions
 -	Scaling & Assignment Strategy
 -	Input Transforms & Interpretation
+-	Domain Requirements & Validation
+-	Spherical K-Means (Cosine Similarity)
 -	Bisecting K-Means — efficiency note
 -	Structured Streaming K-Means
 -	Persistence (Spark ML)

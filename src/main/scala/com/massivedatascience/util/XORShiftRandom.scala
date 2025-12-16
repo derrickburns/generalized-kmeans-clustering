@@ -57,5 +57,15 @@ class XORShiftRandom(init: Long) extends JavaRandom(init) {
 }
 
 object XORShiftRandom {
+
+  /** Global random instance for generating default seeds.
+    *
+    * NOTE: This is intentionally NOT seeded to provide different default behavior
+    * across JVM restarts. Users requiring deterministic behavior should always
+    * pass an explicit seed parameter to clustering methods.
+    *
+    * This is used only for default parameter values in methods like
+    * `KMeansModel.usingRandomGenerator` and `KMeansModel.fromCenters`.
+    */
   val random = new Random()
 }

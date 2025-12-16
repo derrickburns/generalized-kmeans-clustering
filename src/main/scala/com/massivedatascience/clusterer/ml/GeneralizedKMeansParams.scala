@@ -26,7 +26,9 @@ trait GeneralizedKMeansParams
     *   - "itakuraSaito"
     *   - "generalizedI"
     *   - "logistic"
-    *   - "l1" or "manhattan" (L1 for K-Medians) Default: "squaredEuclidean"
+    *   - "l1" or "manhattan" (L1 for K-Medians)
+    *   - "spherical" or "cosine" (Spherical K-Means for cosine similarity)
+    * Default: "squaredEuclidean"
     */
   final val divergence = new Param[String](
     this,
@@ -40,7 +42,9 @@ trait GeneralizedKMeansParams
         "generalizedI",
         "logistic",
         "l1",
-        "manhattan"
+        "manhattan",
+        "spherical",
+        "cosine"
       )
     )
   )

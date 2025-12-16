@@ -78,13 +78,22 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   }
 }
 
-/** Streaming K-Means clustering for incremental updates.
+/** Streaming K-Means clustering for incremental updates on streaming data.
   *
-  * This implementation uses the mini-batch K-Means algorithm with exponential forgetting to enable
-  * real-time clustering on streaming data. The model is updated incrementally as new batches
-  * arrive.
+  * Implements mini-batch K-Means with exponential forgetting for real-time clustering.
+  * The model is updated incrementally as new batches arrive, adapting to concept drift
+  * in the data distribution over time.
   *
-  * Update Rule (for each cluster):
+  * ==Algorithm==
+  *
+  * For each incoming batch, the algorithm:
+  *   1. Assigns new points to nearest clusters
+  *   2. Computes batch-local cluster statistics (mean, count)
+  *   3. Applies exponential decay to existing cluster weights
+  *   4. Merges batch statistics with decayed historical statistics
+  *   5. Handles dying clusters by splitting the largest cluster
+  *
+  * '''Update Rule (for each cluster):'''
   * {{{
   * c_{t+1} = [(c_t * n_t * α) + (x_t * m_t)] / [n_t * α + m_t]
   * n_{t+1} = n_t * α + m_t
@@ -92,30 +101,69 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   *
   * Where:
   *   - c_t: current center
-  *   - n_t: current weight (number of points assigned)
+  *   - n_t: current effective weight (decayed historical count)
   *   - x_t: mean of new points assigned to this cluster
-  *   - m_t: number of new points assigned to this cluster
-  *   - α: decay factor (applies exponential forgetting)
+  *   - m_t: count of new points assigned to this cluster
+  *   - α: decay factor (controls rate of forgetting)
   *
-  * Example usage:
+  * ==Decay Factor==
+  *
+  * The `decayFactor` controls how quickly old data is forgotten:
+  *   - '''α = 1.0:''' No forgetting (all batches weighted equally) - good for stationary data
+  *   - '''α = 0.9:''' Moderate forgetting - good for slowly drifting data
+  *   - '''α = 0.5:''' Strong forgetting - good for rapidly changing data
+  *   - '''α = 0.0:''' Complete forgetting (only current batch matters)
+  *
+  * Alternatively, use `halfLife` to specify how many batches/points until a data point's
+  * influence decays to 50%.
+  *
+  * ==Divergences==
+  *
+  * Supports all Bregman divergences:
+  *   - `squaredEuclidean` (default): Standard streaming k-means
+  *   - `kl`: Streaming topic modeling for probability distributions
+  *   - `spherical`/`cosine`: Streaming clustering for embeddings/text
+  *
+  * ==Example Usage==
+  *
   * {{{
-  * // Initialize with batch data
-  * val kmeans = new StreamingKMeans()
-  *   .setK(3)
-  *   .setDecayFactor(0.9)
-  *   .setMaxIter(10)
+  * // Step 1: Initialize model on batch data
+  * val streaming = new StreamingKMeans()
+  *   .setK(5)
+  *   .setDecayFactor(0.9)  // 90% retention per batch
+  *   .setMaxIter(10)       // Iterations for initial training
   *
-  * val initialModel = kmeans.fit(batchDF)
+  * val initialModel = streaming.fit(batchDF)
   *
-  * // Create streaming updater
+  * // Step 2: Create streaming updater
   * val updater = initialModel.createStreamingUpdater()
   *
-  * // Update on streaming data
-  * val query = updater.updateOn(streamingDF)
+  * // Step 3: Update on streaming data
+  * val query = updater.updateOn(streamingDF, Some("/path/to/checkpoint"))
   *
-  * // Get current model anytime
+  * // Step 4: Access current model anytime (thread-safe)
   * val currentModel = updater.currentModel
+  * val predictions = currentModel.transform(newData)
+  *
+  * // Monitor progress
+  * println(s"Processed ${updater.batchesProcessed} batches")
   * }}}
+  *
+  * ==Use Cases==
+  *
+  *   - '''Real-time anomaly detection:''' Track cluster centers, flag distant points
+  *   - '''IoT sensor clustering:''' Adapt to changing sensor behavior
+  *   - '''User behavior clustering:''' Track evolving user segments
+  *   - '''Log analysis:''' Cluster streaming logs with concept drift
+  *
+  * ==Model Persistence==
+  *
+  * The streaming model can be saved and loaded, preserving cluster weights for seamless
+  * continuation after restarts. This enables fault-tolerant streaming pipelines.
+  *
+  * @see [[StreamingKMeansModel]] for the updateable model
+  * @see [[StreamingKMeansUpdater]] for the streaming update interface
+  * @see [[GeneralizedKMeans]] for batch clustering
   *
   * @param uid
   *   unique identifier
@@ -210,12 +258,13 @@ class StreamingKMeansModel(
     */
   private def createKernel(divName: String, smooth: Double): BregmanKernel = {
     divName match {
-      case "squaredEuclidean" => new SquaredEuclideanKernel()
-      case "kl"               => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"     => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"     => new GeneralizedIDivergenceKernel(smooth)
-      case "l1" | "manhattan" => new L1Kernel()
-      case _                  =>
+      case "squaredEuclidean"     => new SquaredEuclideanKernel()
+      case "kl"                   => new KLDivergenceKernel(smooth)
+      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
+      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
+      case "l1" | "manhattan"     => new L1Kernel()
+      case "spherical" | "cosine" => new SphericalKernel()
+      case _                      =>
         logWarning(s"Unknown divergence $divName, using squared Euclidean")
         new SquaredEuclideanKernel()
     }

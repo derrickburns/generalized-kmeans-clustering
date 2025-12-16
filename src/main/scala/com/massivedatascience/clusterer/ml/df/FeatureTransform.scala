@@ -17,6 +17,7 @@
 
 package com.massivedatascience.clusterer.ml.df
 
+import com.massivedatascience.linalg.BLAS
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -182,12 +183,12 @@ case class NormalizeL2Transform(minNorm: Double = 1e-10) extends FeatureTransfor
   }
 
   override def apply(v: Vector): Vector = {
-    val arr   = v.toArray
-    val norm2 = math.sqrt(arr.map(x => x * x).sum)
+    // Use vectorized BLAS for norm computation
+    val norm2 = BLAS.nrm2(v)
     if (norm2 < minNorm) {
       v // Return original if near-zero norm
     } else {
-      Vectors.dense(arr.map(_ / norm2))
+      BLAS.normalize(v, minNorm)
     }
   }
 
@@ -222,12 +223,14 @@ case class NormalizeL1Transform(minNorm: Double = 1e-10) extends FeatureTransfor
   }
 
   override def apply(v: Vector): Vector = {
-    val arr   = v.toArray
-    val norm1 = arr.map(math.abs).sum
+    // Use vectorized BLAS for L1 norm computation
+    val norm1 = BLAS.asum(v)
     if (norm1 < minNorm) {
       v // Return original if near-zero norm
     } else {
-      Vectors.dense(arr.map(_ / norm1))
+      val result = v.copy
+      BLAS.scal(1.0 / norm1, result)
+      result
     }
   }
 

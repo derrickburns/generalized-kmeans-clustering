@@ -220,8 +220,15 @@ class CoClusteringInitializer(
           // Compute marginal statistics
           val values      = entries.map(_.value)
           val weights     = entries.map(_.weight)
-          val mean        = values.zip(weights).map { case (v, w) => v * w }.sum / weights.sum
           val totalWeight = weights.sum
+
+          // Guard against division by zero when all weights are zero
+          val mean = if (totalWeight > 0.0) {
+            values.zip(weights).map { case (v, w) => v * w }.sum / totalWeight
+          } else {
+            // All entries have zero weight - use unweighted mean as fallback
+            values.sum / values.length
+          }
 
           val marginalPoint = BregmanPoint(WeightedVector(Vectors.dense(mean), totalWeight), mean)
           rowIdx -> marginalPoint
@@ -248,8 +255,15 @@ class CoClusteringInitializer(
           // Compute marginal statistics
           val values      = entries.map(_.value)
           val weights     = entries.map(_.weight)
-          val mean        = values.zip(weights).map { case (v, w) => v * w }.sum / weights.sum
           val totalWeight = weights.sum
+
+          // Guard against division by zero when all weights are zero
+          val mean = if (totalWeight > 0.0) {
+            values.zip(weights).map { case (v, w) => v * w }.sum / totalWeight
+          } else {
+            // All entries have zero weight - use unweighted mean as fallback
+            values.sum / values.length
+          }
 
           val marginalPoint = BregmanPoint(WeightedVector(Vectors.dense(mean), totalWeight), mean)
           colIdx -> marginalPoint

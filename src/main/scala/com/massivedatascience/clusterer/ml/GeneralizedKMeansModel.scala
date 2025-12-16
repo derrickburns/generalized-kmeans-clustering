@@ -268,6 +268,7 @@ class GeneralizedKMeansModel(
       case name if name.startsWith("GeneralizedI(") => new GeneralizedIDivergenceKernel(smoothing)
       case name if name.startsWith("LogisticLoss(") => new LogisticLossKernel(smoothing)
       case "L1"                                     => new L1Kernel()
+      case "Spherical"                              => new SphericalKernel()
       case _                                        => throw new IllegalArgumentException(s"Unknown kernel: $kernelName")
     }
   }
