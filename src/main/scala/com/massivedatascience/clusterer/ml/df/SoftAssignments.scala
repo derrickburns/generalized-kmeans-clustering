@@ -27,8 +27,8 @@ object SoftAssignments {
 
   /** Compute soft assignment probabilities for each point.
     *
-    * Uses a Boltzmann distribution with temperature controlled by `beta`.
-    * Probabilities are floor-clamped at `minMembership` and renormalized.
+    * Uses a Boltzmann distribution with temperature controlled by `beta`. Probabilities are
+    * floor-clamped at `minMembership` and renormalized.
     */
   def withProbabilities(
       df: DataFrame,

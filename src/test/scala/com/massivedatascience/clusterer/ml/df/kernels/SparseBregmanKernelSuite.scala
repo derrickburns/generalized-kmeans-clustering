@@ -30,7 +30,7 @@ import org.scalatest.matchers.should.Matchers
   */
 class SparseBregmanKernelSuite extends AnyFunSuite with Matchers {
 
-  private val tol       = 1e-10
+  private val tol        = 1e-10
   private val relaxedTol = 1e-8
 
   // Helper to create sparse vector

@@ -62,22 +62,21 @@ class ExtendedPersistenceSuite extends AnyFunSuite with Matchers with BeforeAndA
   }
 
   test("SoftKMeans save/load round-trip preserves centers and columns") {
-    val df = tinyDF()
-    val model = new SoftKMeans()
-      .setK(2)
-      .setBeta(1.0)
-      .setSeed(1234L)
-      .setProbabilityCol("probs")
-      .fit(df)
+    val df    = tinyDF()
+    val model =
+      new SoftKMeans().setK(2).setBeta(1.0).setSeed(1234L).setProbabilityCol("probs").fit(df)
 
     withTempDir("softkmeans-persist") { path =>
       model.write.overwrite().save(path)
       val loaded = SoftKMeansModel.load(path)
 
       loaded.numClusters shouldBe model.numClusters
-      loaded.clusterCentersAsVectors.map(_.toArray).zip(model.clusterCentersAsVectors.map(_.toArray)).foreach {
-        case (l, r) => l should contain theSameElementsInOrderAs r
-      }
+      loaded.clusterCentersAsVectors
+        .map(_.toArray)
+        .zip(model.clusterCentersAsVectors.map(_.toArray))
+        .foreach { case (l, r) =>
+          l should contain theSameElementsInOrderAs r
+        }
       loaded.hasSummary shouldBe false
 
       val pred = loaded.transform(df)
@@ -87,13 +86,9 @@ class ExtendedPersistenceSuite extends AnyFunSuite with Matchers with BeforeAndA
   }
 
   test("KernelKMeans save/load round-trip with linear kernel") {
-    val df = tinyDF()
-    val model = new KernelKMeans()
-      .setK(2)
-      .setKernelType("linear")
-      .setMaxIter(5)
-      .setSeed(42L)
-      .fit(df)
+    val df    = tinyDF()
+    val model =
+      new KernelKMeans().setK(2).setKernelType("linear").setMaxIter(5).setSeed(42L).fit(df)
 
     withTempDir("kernelkmeans-persist") { path =>
       model.write.overwrite().save(path)
@@ -109,7 +104,7 @@ class ExtendedPersistenceSuite extends AnyFunSuite with Matchers with BeforeAndA
   }
 
   test("AgglomerativeBregman save/load round-trip") {
-    val df = tinyDF()
+    val df    = tinyDF()
     val model = new AgglomerativeBregman()
       .setNumClusters(2)
       .setDivergence("squaredEuclidean")
@@ -130,12 +125,8 @@ class ExtendedPersistenceSuite extends AnyFunSuite with Matchers with BeforeAndA
   }
 
   test("BregmanMixtureModel save/load round-trip") {
-    val df = tinyPositiveDF()
-    val model = new BregmanMixture()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setSeed(99L)
-      .fit(df)
+    val df    = tinyPositiveDF()
+    val model = new BregmanMixture().setK(2).setDivergence("squaredEuclidean").setSeed(99L).fit(df)
 
     withTempDir("bmm-persist") { path =>
       model.write.overwrite().save(path)
@@ -152,12 +143,8 @@ class ExtendedPersistenceSuite extends AnyFunSuite with Matchers with BeforeAndA
   }
 
   test("StreamingKMeans save/load round-trip") {
-    val df = tinyDF()
-    val model = new StreamingKMeans()
-      .setK(2)
-      .setDecayFactor(0.8)
-      .setSeed(7L)
-      .fit(df)
+    val df    = tinyDF()
+    val model = new StreamingKMeans().setK(2).setDecayFactor(0.8).setSeed(7L).fit(df)
 
     withTempDir("streamingkmeans-persist") { path =>
       model.write.overwrite().save(path)

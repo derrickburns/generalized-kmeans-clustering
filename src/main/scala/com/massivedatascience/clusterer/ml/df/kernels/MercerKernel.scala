@@ -22,15 +22,14 @@ import org.apache.spark.ml.linalg.{ DenseMatrix, Vector }
 /** Mercer kernel (positive-definite kernel function) for kernel methods.
   *
   * A Mercer kernel k: X × X → ℝ satisfies:
-  *   1. Symmetry: k(x, y) = k(y, x)
-  *   2. Positive semi-definiteness: ∀{x_i}, the Gram matrix K_ij = k(x_i, x_j) is PSD
+  *   1. Symmetry: k(x, y) = k(y, x) 2. Positive semi-definiteness: ∀{x_i}, the Gram matrix K_ij =
+  *      k(x_i, x_j) is PSD
   *
-  * This enables the "kernel trick" - computing inner products in high-dimensional
-  * feature spaces without explicit mapping:
-  *   k(x, y) = ⟨φ(x), φ(y)⟩
+  * This enables the "kernel trick" - computing inner products in high-dimensional feature spaces
+  * without explicit mapping: k(x, y) = ⟨φ(x), φ(y)⟩
   *
-  * IMPORTANT: This is distinct from BregmanKernel, which represents divergence functions.
-  * We use "MercerKernel" to avoid confusion.
+  * IMPORTANT: This is distinct from BregmanKernel, which represents divergence functions. We use
+  * "MercerKernel" to avoid confusion.
   *
   * @see
   *   [[BregmanKernel]] for divergence-based clustering
@@ -112,10 +111,10 @@ class RBFKernel(val gamma: Double) extends MercerKernel {
   require(gamma > 0, s"gamma must be positive, got $gamma")
 
   override def apply(x: Vector, y: Vector): Double = {
-    val xArr = x.toArray
-    val yArr = y.toArray
+    val xArr   = x.toArray
+    val yArr   = y.toArray
     var sqDist = 0.0
-    var i     = 0
+    var i      = 0
     while (i < xArr.length) {
       val diff = xArr(i) - yArr(i)
       sqDist += diff * diff
@@ -162,8 +161,9 @@ object RBFKernel {
     }
 
     val sorted = distances.sorted
-    val median = if (sorted.isEmpty) 1.0
-    else sorted(sorted.length / 2)
+    val median =
+      if (sorted.isEmpty) 1.0
+      else sorted(sorted.length / 2)
 
     val gamma = if (median > 1e-10) 1.0 / median else 1.0
     new RBFKernel(gamma)
@@ -210,8 +210,8 @@ class PolynomialKernel(val degree: Int, val gamma: Double = 1.0, val coef0: Doub
   *
   * k(x, y) = ⟨x, y⟩
   *
-  * Special case of polynomial kernel with d=1, γ=1, c=0.
-  * Equivalent to standard K-Means in input space.
+  * Special case of polynomial kernel with d=1, γ=1, c=0. Equivalent to standard K-Means in input
+  * space.
   */
 class LinearKernel extends MercerKernel {
 
@@ -248,8 +248,8 @@ class LinearKernel extends MercerKernel {
   *
   * k(x, y) = tanh(γ⟨x, y⟩ + c)
   *
-  * Note: Not always positive semi-definite (not a true Mercer kernel
-  * for all parameter values). Use with caution.
+  * Note: Not always positive semi-definite (not a true Mercer kernel for all parameter values). Use
+  * with caution.
   *
   * @param gamma
   *   scaling factor
@@ -318,11 +318,11 @@ object MercerKernel {
       degree: Int = 3,
       coef0: Double = 0.0
   ): MercerKernel = kernelType.toLowerCase match {
-    case "rbf" | "gaussian"  => new RBFKernel(gamma)
+    case "rbf" | "gaussian"    => new RBFKernel(gamma)
     case "polynomial" | "poly" => new PolynomialKernel(degree, gamma, coef0)
     case "linear"              => new LinearKernel()
     case "sigmoid" | "tanh"    => new SigmoidKernel(gamma, coef0)
     case "laplacian"           => new LaplacianKernel(gamma)
-    case other => throw new IllegalArgumentException(s"Unknown Mercer kernel: $other")
+    case other                 => throw new IllegalArgumentException(s"Unknown Mercer kernel: $other")
   }
 }

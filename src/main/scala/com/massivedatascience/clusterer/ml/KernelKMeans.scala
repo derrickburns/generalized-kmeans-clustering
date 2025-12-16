@@ -23,7 +23,15 @@ import org.apache.spark.ml.{ Estimator, Model }
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
-import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable, MLReadable, MLReader, MLWritable, MLWriter }
+import org.apache.spark.ml.util.{
+  DefaultParamsReadable,
+  DefaultParamsWritable,
+  Identifiable,
+  MLReadable,
+  MLReader,
+  MLWritable,
+  MLWriter
+}
 import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
@@ -42,8 +50,8 @@ trait KernelKMeansParams
   final val k: IntParam = new IntParam(this, "k", "Number of clusters", ParamValidators.gt(1))
   def getK: Int         = $(k)
 
-  /** Mercer kernel type: "rbf", "polynomial", "linear", "laplacian".
-    * Note: This is distinct from Bregman divergence (BregmanKernel).
+  /** Mercer kernel type: "rbf", "polynomial", "linear", "laplacian". Note: This is distinct from
+    * Bregman divergence (BregmanKernel).
     */
   final val kernelType: Param[String] = new Param[String](
     this,
@@ -53,9 +61,8 @@ trait KernelKMeansParams
   )
   def getKernelType: String           = $(kernelType)
 
-  /** Kernel bandwidth/scaling parameter (gamma).
-    * For RBF: k(x,y) = exp(-gamma * ||x-y||²)
-    * For polynomial: k(x,y) = (gamma * <x,y> + coef0)^degree
+  /** Kernel bandwidth/scaling parameter (gamma). For RBF: k(x,y) = exp(-gamma * ||x-y||²) For
+    * polynomial: k(x,y) = (gamma * <x,y> + coef0)^degree
     */
   final val gamma: DoubleParam = new DoubleParam(
     this,
@@ -87,28 +94,28 @@ trait KernelKMeansParams
   def getAutoGamma: Boolean         = $(autoGamma)
 
   setDefault(
-    k           -> 2,
-    kernelType  -> "rbf",
-    gamma       -> 1.0,
-    degree      -> 3,
-    coef0       -> 0.0,
-    autoGamma   -> false,
-    maxIter     -> 20,
-    tol         -> 1e-4,
-    featuresCol -> "features",
+    k             -> 2,
+    kernelType    -> "rbf",
+    gamma         -> 1.0,
+    degree        -> 3,
+    coef0         -> 0.0,
+    autoGamma     -> false,
+    maxIter       -> 20,
+    tol           -> 1e-4,
+    featuresCol   -> "features",
     predictionCol -> "prediction"
   )
 }
 
 /** Kernel K-Means clustering for non-linearly separable data.
   *
-  * Uses positive-definite Mercer kernels to implicitly map data to
-  * high-dimensional feature spaces where clusters become linearly separable.
+  * Uses positive-definite Mercer kernels to implicitly map data to high-dimensional feature spaces
+  * where clusters become linearly separable.
   *
   * ==Algorithm==
   *
-  * The key insight is that K-Means only requires distances, which can be
-  * computed in kernel space without explicit feature mapping:
+  * The key insight is that K-Means only requires distances, which can be computed in kernel space
+  * without explicit feature mapping:
   *
   * {{{
   * ||φ(x) - μ_c||² = k(x,x) - 2/|C_c| Σ_{j∈C_c} k(x, x_j) + 1/|C_c|² Σ_{i,j∈C_c} k(x_i, x_j)
@@ -138,8 +145,7 @@ trait KernelKMeansParams
   *
   * ==Scalability Note==
   *
-  * Kernel K-Means requires O(n²) kernel evaluations per iteration.
-  * For large datasets, consider:
+  * Kernel K-Means requires O(n²) kernel evaluations per iteration. For large datasets, consider:
   *   - Using a representative subset
   *   - Nyström approximation (future enhancement)
   *   - Random Fourier Features (future enhancement)
@@ -156,17 +162,17 @@ class KernelKMeans(override val uid: String)
   def this() = this(Identifiable.randomUID("kernelkmeans"))
 
   // Parameter setters
-  def setK(value: Int): this.type             = set(k, value)
-  def setKernelType(value: String): this.type = set(kernelType, value)
-  def setGamma(value: Double): this.type      = set(gamma, value)
-  def setDegree(value: Int): this.type        = set(degree, value)
-  def setCoef0(value: Double): this.type      = set(coef0, value)
-  def setAutoGamma(value: Boolean): this.type = set(autoGamma, value)
-  def setFeaturesCol(value: String): this.type = set(featuresCol, value)
+  def setK(value: Int): this.type                = set(k, value)
+  def setKernelType(value: String): this.type    = set(kernelType, value)
+  def setGamma(value: Double): this.type         = set(gamma, value)
+  def setDegree(value: Int): this.type           = set(degree, value)
+  def setCoef0(value: Double): this.type         = set(coef0, value)
+  def setAutoGamma(value: Boolean): this.type    = set(autoGamma, value)
+  def setFeaturesCol(value: String): this.type   = set(featuresCol, value)
   def setPredictionCol(value: String): this.type = set(predictionCol, value)
-  def setMaxIter(value: Int): this.type       = set(maxIter, value)
-  def setTol(value: Double): this.type        = set(tol, value)
-  def setSeed(value: Long): this.type         = set(seed, value)
+  def setMaxIter(value: Int): this.type          = set(maxIter, value)
+  def setTol(value: Double): this.type           = set(tol, value)
+  def setSeed(value: Long): this.type            = set(seed, value)
 
   override def fit(dataset: Dataset[_]): KernelKMeansModel = {
     transformSchema(dataset.schema, logging = true)
@@ -194,12 +200,12 @@ class KernelKMeans(override val uid: String)
       val diagK = points.map(p => kernel(p, p))
 
       // Initialize cluster assignments randomly
-      val rng = new scala.util.Random($(seed))
+      val rng         = new scala.util.Random($(seed))
       var assignments = Array.fill(n)(rng.nextInt($(k)))
 
-      var iteration           = 0
-      var converged           = false
-      val distortionHistory   = scala.collection.mutable.ArrayBuffer[Double]()
+      var iteration         = 0
+      var converged         = false
+      val distortionHistory = scala.collection.mutable.ArrayBuffer[Double]()
 
       while (iteration < $(maxIter) && !converged) {
         iteration += 1
@@ -209,7 +215,7 @@ class KernelKMeans(override val uid: String)
         val clusterSizes = (0 until $(k)).map(c => assignments.count(_ == c)).toArray
 
         // Assignment step: assign each point to nearest cluster in kernel space
-        val newAssignments = new Array[Int](n)
+        val newAssignments  = new Array[Int](n)
         var totalDistortion = 0.0
 
         for (i <- 0 until n) {
@@ -220,7 +226,8 @@ class KernelKMeans(override val uid: String)
             if (clusterSizes(c) > 0) {
               // ||φ(x_i) - μ_c||² = k(x_i,x_i) - 2/|C_c| Σ_j k(x_i,x_j) + 1/|C_c|² Σ_{j,l} k(x_j,x_l)
               val term1 = diagK(i)
-              val term2 = 2.0 * computePointClusterSum(points, i, assignments, c, kernel) / clusterSizes(c)
+              val term2 =
+                2.0 * computePointClusterSum(points, i, assignments, c, kernel) / clusterSizes(c)
               val term3 = clusterSums(c) / (clusterSizes(c).toDouble * clusterSizes(c))
               val dist  = term1 - term2 + term3
 
@@ -340,8 +347,8 @@ object KernelKMeans extends DefaultParamsReadable[KernelKMeans] {
 
 /** Model from Kernel K-Means fitting.
   *
-  * Stores support vectors and their cluster assignments for prediction.
-  * Prediction assigns new points to nearest cluster in kernel space.
+  * Stores support vectors and their cluster assignments for prediction. Prediction assigns new
+  * points to nearest cluster in kernel space.
   */
 class KernelKMeansModel(
     override val uid: String,
@@ -370,10 +377,10 @@ class KernelKMeansModel(
   override def transform(dataset: Dataset[_]): DataFrame = {
     val df = dataset.toDF()
 
-    val bcSupportVectors    = df.sparkSession.sparkContext.broadcast(supportVectors)
+    val bcSupportVectors     = df.sparkSession.sparkContext.broadcast(supportVectors)
     val bcSupportAssignments = df.sparkSession.sparkContext.broadcast(supportAssignments)
-    val bcKernel            = df.sparkSession.sparkContext.broadcast(kernel)
-    val numClusters         = $(k)
+    val bcKernel             = df.sparkSession.sparkContext.broadcast(kernel)
+    val numClusters          = $(k)
 
     // Precompute cluster kernel sums and sizes
     val clusterSizes = Array.fill(numClusters)(0)
@@ -441,9 +448,7 @@ object KernelKMeansModel extends MLReadable[KernelKMeansModel] {
 
   override def read: MLReader[KernelKMeansModel] = new KernelKMeansModelReader
 
-  private class KernelKMeansModelWriter(instance: KernelKMeansModel)
-      extends MLWriter
-      with Logging {
+  private class KernelKMeansModelWriter(instance: KernelKMeansModel) extends MLWriter with Logging {
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
     import org.json4s.jackson.Serialization
@@ -460,20 +465,20 @@ object KernelKMeansModel extends MLReadable[KernelKMeansModel] {
       val centersHash = writeCenters(spark, path, centersData)
 
       val params: Map[String, Any] = Map(
-        "k"            -> instance.getOrDefault(instance.k),
-        "featuresCol"  -> instance.getOrDefault(instance.featuresCol),
+        "k"             -> instance.getOrDefault(instance.k),
+        "featuresCol"   -> instance.getOrDefault(instance.featuresCol),
         "predictionCol" -> instance.getOrDefault(instance.predictionCol),
-        "kernelType"   -> instance.getOrDefault(instance.kernelType),
-        "gamma"        -> instance.getOrDefault(instance.gamma),
-        "degree"       -> instance.getOrDefault(instance.degree),
-        "coef0"        -> instance.getOrDefault(instance.coef0)
+        "kernelType"    -> instance.getOrDefault(instance.kernelType),
+        "gamma"         -> instance.getOrDefault(instance.gamma),
+        "degree"        -> instance.getOrDefault(instance.degree),
+        "coef0"         -> instance.getOrDefault(instance.coef0)
       )
 
       val k   = instance.getOrDefault(instance.k)
       val dim = instance.supportVectors.headOption.map(_.size).getOrElse(0)
 
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaObj: Map[String, Any] = Map(
+      val metaObj: Map[String, Any]             = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "KernelKMeansModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -509,9 +514,9 @@ object KernelKMeansModel extends MLReadable[KernelKMeansModel] {
       val spark = sparkSession
       logInfo(s"Loading KernelKMeansModel from $path")
 
-      val metaStr                                = readMetadata(path)
+      val metaStr                               = readMetadata(path)
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaJ                                  = JsonMethods.parse(metaStr)
+      val metaJ                                 = JsonMethods.parse(metaStr)
 
       val layoutVersion     = (metaJ \ "layoutVersion").extract[Int]
       val k                 = (metaJ \ "k").extract[Int]

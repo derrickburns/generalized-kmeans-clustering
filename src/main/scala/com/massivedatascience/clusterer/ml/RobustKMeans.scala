@@ -31,10 +31,9 @@ import org.apache.spark.sql.types.StructType
   */
 trait RobustKMeansParams extends GeneralizedKMeansParams {
 
-  /** Fraction of points to consider as potential outliers.
-    * For trim mode: fraction to exclude from center updates.
-    * For noise_cluster mode: fraction threshold for outlier detection.
-    * Default: 0.05 (5% outliers)
+  /** Fraction of points to consider as potential outliers. For trim mode: fraction to exclude from
+    * center updates. For noise_cluster mode: fraction threshold for outlier detection. Default:
+    * 0.05 (5% outliers)
     */
   final val outlierFraction: DoubleParam = new DoubleParam(
     this,
@@ -42,7 +41,7 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
     "Fraction of points to treat as outliers",
     ParamValidators.inRange(0.0, 0.5, lowerInclusive = true, upperInclusive = true)
   )
-  def getOutlierFraction: Double = $(outlierFraction)
+  def getOutlierFraction: Double         = $(outlierFraction)
 
   /** Outlier handling mode.
     *   - "trim": Exclude outliers from center updates (trimmed k-means)
@@ -56,31 +55,28 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
     "Outlier handling mode: trim, noise_cluster, m_estimator",
     ParamValidators.inArray(Array("trim", "noise_cluster", "m_estimator"))
   )
-  def getOutlierMode: String = $(outlierMode)
+  def getOutlierMode: String           = $(outlierMode)
 
-  /** Column name for outlier scores (distance-based).
-    * Default: "outlier_score"
+  /** Column name for outlier scores (distance-based). Default: "outlier_score"
     */
   final val outlierScoreCol: Param[String] = new Param[String](
     this,
     "outlierScoreCol",
     "Column name for outlier scores"
   )
-  def getOutlierScoreCol: String = $(outlierScoreCol)
+  def getOutlierScoreCol: String           = $(outlierScoreCol)
 
-  /** Column name for outlier flag.
-    * Default: "is_outlier"
+  /** Column name for outlier flag. Default: "is_outlier"
     */
   final val isOutlierCol: Param[String] = new Param[String](
     this,
     "isOutlierCol",
     "Column name for outlier flag"
   )
-  def getIsOutlierCol: String = $(isOutlierCol)
+  def getIsOutlierCol: String           = $(isOutlierCol)
 
-  /** Distance threshold multiplier for outlier detection.
-    * Points with score > threshold * median_score are outliers.
-    * Default: 3.0 (3 standard deviations)
+  /** Distance threshold multiplier for outlier detection. Points with score > threshold *
+    * median_score are outliers. Default: 3.0 (3 standard deviations)
     */
   final val outlierThreshold: DoubleParam = new DoubleParam(
     this,
@@ -88,7 +84,7 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
     "Distance threshold multiplier for outliers",
     ParamValidators.gt(0.0)
   )
-  def getOutlierThreshold: Double = $(outlierThreshold)
+  def getOutlierThreshold: Double         = $(outlierThreshold)
 
   setDefault(
     outlierFraction  -> 0.05,
@@ -101,8 +97,8 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
 
 /** Robust K-Means clustering with outlier detection and handling.
   *
-  * This estimator extends standard K-Means to handle outliers that can
-  * distort cluster centers and degrade clustering quality.
+  * This estimator extends standard K-Means to handle outliers that can distort cluster centers and
+  * degrade clustering quality.
   *
   * ==Outlier Modes==
   *
@@ -131,11 +127,9 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
   *
   * ==Algorithm==
   *
-  * 1. Initialize centers using k-means++ or random
-  * 2. Assignment: Assign points to nearest center
-  * 3. Outlier detection: Identify outliers based on distance
-  * 4. Robust update: Recompute centers excluding/downweighting outliers
-  * 5. Repeat until convergence
+  *   1. Initialize centers using k-means++ or random 2. Assignment: Assign points to nearest center
+  *      3. Outlier detection: Identify outliers based on distance 4. Robust update: Recompute
+  *      centers excluding/downweighting outliers 5. Repeat until convergence
   *
   * ==Output Columns==
   *
@@ -144,8 +138,10 @@ trait RobustKMeansParams extends GeneralizedKMeansParams {
   *   - `outlier_score`: normalized distance to nearest center
   *   - `is_outlier`: boolean flag for identified outliers
   *
-  * @see [[OutlierDetector]] for outlier detection strategies
-  * @see [[GeneralizedKMeans]] for standard k-means without outlier handling
+  * @see
+  *   [[OutlierDetector]] for outlier detection strategies
+  * @see
+  *   [[GeneralizedKMeans]] for standard k-means without outlier handling
   */
 class RobustKMeans(override val uid: String)
     extends Estimator[RobustKMeansModel]
@@ -156,19 +152,19 @@ class RobustKMeans(override val uid: String)
   def this() = this(Identifiable.randomUID("robustkmeans"))
 
   // Parameter setters
-  def setK(value: Int): this.type                  = set(k, value)
-  def setDivergence(value: String): this.type      = set(divergence, value)
-  def setSmoothing(value: Double): this.type       = set(smoothing, value)
-  def setFeaturesCol(value: String): this.type     = set(featuresCol, value)
-  def setPredictionCol(value: String): this.type   = set(predictionCol, value)
-  def setWeightCol(value: String): this.type       = set(weightCol, value)
-  def setMaxIter(value: Int): this.type            = set(maxIter, value)
-  def setTol(value: Double): this.type             = set(tol, value)
-  def setSeed(value: Long): this.type              = set(seed, value)
-  def setOutlierFraction(value: Double): this.type = set(outlierFraction, value)
-  def setOutlierMode(value: String): this.type     = set(outlierMode, value)
-  def setOutlierScoreCol(value: String): this.type = set(outlierScoreCol, value)
-  def setIsOutlierCol(value: String): this.type    = set(isOutlierCol, value)
+  def setK(value: Int): this.type                   = set(k, value)
+  def setDivergence(value: String): this.type       = set(divergence, value)
+  def setSmoothing(value: Double): this.type        = set(smoothing, value)
+  def setFeaturesCol(value: String): this.type      = set(featuresCol, value)
+  def setPredictionCol(value: String): this.type    = set(predictionCol, value)
+  def setWeightCol(value: String): this.type        = set(weightCol, value)
+  def setMaxIter(value: Int): this.type             = set(maxIter, value)
+  def setTol(value: Double): this.type              = set(tol, value)
+  def setSeed(value: Long): this.type               = set(seed, value)
+  def setOutlierFraction(value: Double): this.type  = set(outlierFraction, value)
+  def setOutlierMode(value: String): this.type      = set(outlierMode, value)
+  def setOutlierScoreCol(value: String): this.type  = set(outlierScoreCol, value)
+  def setIsOutlierCol(value: String): this.type     = set(isOutlierCol, value)
   def setOutlierThreshold(value: Double): this.type = set(outlierThreshold, value)
 
   override def fit(dataset: Dataset[_]): RobustKMeansModel = {
@@ -248,12 +244,12 @@ class RobustKMeans(override val uid: String)
 
     // Create outlier detector based on mode
     val outlierParam = mode match {
-      case OutlierMode.Trim       => $(outlierFraction)
+      case OutlierMode.Trim         => $(outlierFraction)
       case OutlierMode.NoiseCluster => $(outlierThreshold)
-      case OutlierMode.MEstimator => $(outlierThreshold)
+      case OutlierMode.MEstimator   => $(outlierThreshold)
     }
-    val detector = OutlierDetector.create(mode, kernel, outlierParam)
-    val updater  = RobustCenterUpdate.create(mode)
+    val detector     = OutlierDetector.create(mode, kernel, outlierParam)
+    val updater      = RobustCenterUpdate.create(mode)
 
     while (iteration < $(maxIter) && !converged) {
       iteration += 1
@@ -265,11 +261,11 @@ class RobustKMeans(override val uid: String)
       val bcCenters = df.sparkSession.sparkContext.broadcast(centersVec)
 
       val assignUDF = udf { (features: Vector) =>
-        val k    = bcKernel.value
-        val ctrs = bcCenters.value
+        val k           = bcKernel.value
+        val ctrs        = bcCenters.value
         var bestCluster = 0
         var bestDist    = Double.MaxValue
-        var i = 0
+        var i           = 0
         while (i < ctrs.length) {
           val dist = k.divergence(features, ctrs(i))
           if (dist < bestDist) {
@@ -348,9 +344,12 @@ class RobustKMeans(override val uid: String)
       oldCenters: Array[Array[Double]],
       newCenters: Array[Array[Double]]
   ): Double = {
-    oldCenters.zip(newCenters).map { case (old, newC) =>
-      math.sqrt(old.zip(newC).map { case (a, b) => val d = a - b; d * d }.sum)
-    }.max
+    oldCenters
+      .zip(newCenters)
+      .map { case (old, newC) =>
+        math.sqrt(old.zip(newC).map { case (a, b) => val d = a - b; d * d }.sum)
+      }
+      .max
   }
 
   private def computeDistortion(
@@ -362,10 +361,10 @@ class RobustKMeans(override val uid: String)
     val bcCenters = df.sparkSession.sparkContext.broadcast(centers)
 
     val distUDF = udf { (features: Vector) =>
-      val k    = bcKernel.value
-      val ctrs = bcCenters.value
+      val k       = bcKernel.value
+      val ctrs    = bcCenters.value
       var minDist = Double.MaxValue
-      var i = 0
+      var i       = 0
       while (i < ctrs.length) {
         val dist = k.divergence(features, ctrs(i))
         if (dist < minDist) minDist = dist
@@ -393,8 +392,8 @@ object RobustKMeans extends DefaultParamsReadable[RobustKMeans] {
 
 /** Model from Robust K-Means clustering.
   *
-  * Includes cluster centers and outlier detection parameters.
-  * Transform adds prediction, outlier score, and outlier flag columns.
+  * Includes cluster centers and outlier detection parameters. Transform adds prediction, outlier
+  * score, and outlier flag columns.
   */
 class RobustKMeansModel(
     override val uid: String,
@@ -423,11 +422,11 @@ class RobustKMeansModel(
 
     // Assign to nearest center
     val assignUDF = udf { (features: Vector) =>
-      val k    = bcKernel.value
-      val ctrs = bcCenters.value
+      val k           = bcKernel.value
+      val ctrs        = bcCenters.value
       var bestCluster = 0
       var bestDist    = Double.MaxValue
-      var i = 0
+      var i           = 0
       while (i < ctrs.length) {
         val dist = k.divergence(features, ctrs(i))
         if (dist < bestDist) {
@@ -441,10 +440,10 @@ class RobustKMeansModel(
 
     // Compute distance to assigned center (for outlier score)
     val distUDF = udf { (features: Vector) =>
-      val k    = bcKernel.value
-      val ctrs = bcCenters.value
+      val k       = bcKernel.value
+      val ctrs    = bcCenters.value
       var minDist = Double.MaxValue
-      var i = 0
+      var i       = 0
       while (i < ctrs.length) {
         val dist = k.divergence(features, ctrs(i))
         if (dist < minDist) minDist = dist
@@ -458,16 +457,13 @@ class RobustKMeansModel(
       .withColumn("_dist", distUDF(col($(featuresCol))))
 
     // Compute median for normalization
-    val medianDist = withPred
-      .stat
-      .approxQuantile("_dist", Array(0.5), 0.01)
-      .headOption
-      .getOrElse(1.0)
+    val medianDist =
+      withPred.stat.approxQuantile("_dist", Array(0.5), 0.01).headOption.getOrElse(1.0)
 
     val normalizedMedian = if (medianDist > 1e-10) medianDist else 1.0
 
     // Add outlier columns
-    val threshold = $(outlierThreshold)
+    val threshold    = $(outlierThreshold)
     val withOutliers = withPred
       .withColumn($(outlierScoreCol), col("_dist") / lit(normalizedMedian))
       .withColumn($(isOutlierCol), col($(outlierScoreCol)) > lit(threshold))
@@ -502,9 +498,7 @@ object RobustKMeansModel extends MLReadable[RobustKMeansModel] {
 
   override def read: MLReader[RobustKMeansModel] = new RobustKMeansModelReader
 
-  private class RobustKMeansModelWriter(instance: RobustKMeansModel)
-      extends MLWriter
-      with Logging {
+  private class RobustKMeansModelWriter(instance: RobustKMeansModel) extends MLWriter with Logging {
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
     import org.json4s.jackson.Serialization
@@ -522,19 +516,19 @@ object RobustKMeansModel extends MLReadable[RobustKMeansModel] {
       val dim = instance.clusterCenters.headOption.map(_.size).getOrElse(0)
 
       val params: Map[String, Any] = Map(
-        "k"               -> k,
-        "featuresCol"     -> instance.getOrDefault(instance.featuresCol),
-        "predictionCol"   -> instance.getOrDefault(instance.predictionCol),
-        "divergence"      -> instance.divergenceName,
-        "outlierMode"     -> instance.outlierModeName,
-        "outlierFraction" -> instance.getOrDefault(instance.outlierFraction),
+        "k"                -> k,
+        "featuresCol"      -> instance.getOrDefault(instance.featuresCol),
+        "predictionCol"    -> instance.getOrDefault(instance.predictionCol),
+        "divergence"       -> instance.divergenceName,
+        "outlierMode"      -> instance.outlierModeName,
+        "outlierFraction"  -> instance.getOrDefault(instance.outlierFraction),
         "outlierThreshold" -> instance.getOrDefault(instance.outlierThreshold),
-        "outlierScoreCol" -> instance.getOrDefault(instance.outlierScoreCol),
-        "isOutlierCol"    -> instance.getOrDefault(instance.isOutlierCol)
+        "outlierScoreCol"  -> instance.getOrDefault(instance.outlierScoreCol),
+        "isOutlierCol"     -> instance.getOrDefault(instance.isOutlierCol)
       )
 
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaObj: Map[String, Any] = Map(
+      val metaObj: Map[String, Any]             = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "RobustKMeansModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -570,9 +564,9 @@ object RobustKMeansModel extends MLReadable[RobustKMeansModel] {
       val spark = sparkSession
       logInfo(s"Loading RobustKMeansModel from $path")
 
-      val metaStr                                = readMetadata(path)
+      val metaStr                               = readMetadata(path)
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaJ                                  = JsonMethods.parse(metaStr)
+      val metaJ                                 = JsonMethods.parse(metaStr)
 
       val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
       val k             = (metaJ \ "k").extract[Int]
@@ -585,9 +579,9 @@ object RobustKMeansModel extends MLReadable[RobustKMeansModel] {
 
       val centers = rows.sortBy(_.getInt(0)).map(_.getAs[Vector]("vector"))
 
-      val paramsJ      = metaJ \ "params"
-      val divergence   = (paramsJ \ "divergence").extract[String]
-      val outlierMode  = (paramsJ \ "outlierMode").extract[String]
+      val paramsJ     = metaJ \ "params"
+      val divergence  = (paramsJ \ "divergence").extract[String]
+      val outlierMode = (paramsJ \ "outlierMode").extract[String]
 
       val model = new RobustKMeansModel(uid, centers, divergence, outlierMode)
 

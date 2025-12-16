@@ -21,8 +21,8 @@ import scala.collection.mutable
 
 /** Pairwise constraint between data points.
   *
-  * Constraints guide clustering by specifying which points should (must-link)
-  * or should not (cannot-link) be in the same cluster.
+  * Constraints guide clustering by specifying which points should (must-link) or should not
+  * (cannot-link) be in the same cluster.
   */
 sealed trait Constraint extends Serializable {
   def i: Long
@@ -63,8 +63,8 @@ case class CannotLink(i: Long, j: Long, weight: Double = 1.0) extends Constraint
 
 /** Collection of constraints with efficient lookup.
   *
-  * Provides O(1) lookup for constraints involving a specific point,
-  * and methods to check constraint violations.
+  * Provides O(1) lookup for constraints involving a specific point, and methods to check constraint
+  * violations.
   */
 class ConstraintSet(constraints: Seq[Constraint]) extends Serializable {
 
@@ -204,9 +204,9 @@ class ConstraintSet(constraints: Seq[Constraint]) extends Serializable {
     *   mapping from point ID to component ID
     */
   def mustLinkComponents(): Map[Long, Int] = {
-    val allPoints = (mustLinkIndex.keys ++ cannotLinkIndex.keys).toSet
-    val visited   = mutable.Set.empty[Long]
-    val components = mutable.Map.empty[Long, Int]
+    val allPoints   = (mustLinkIndex.keys ++ cannotLinkIndex.keys).toSet
+    val visited     = mutable.Set.empty[Long]
+    val components  = mutable.Map.empty[Long, Int]
     var componentId = 0
 
     for (point <- allPoints if !visited.contains(point)) {
@@ -326,7 +326,7 @@ class LinearConstraintPenalty(
       assignments.get(partnerId) match {
         case Some(partnerCluster) if partnerCluster != clusterId =>
           penalty += mustLinkWeight * constraints.mustLinkWeight(pointId, partnerId)
-        case _ => // No violation
+        case _                                                   => // No violation
       }
     }
 
@@ -335,7 +335,7 @@ class LinearConstraintPenalty(
       assignments.get(partnerId) match {
         case Some(partnerCluster) if partnerCluster == clusterId =>
           penalty += cannotLinkWeight * constraints.cannotLinkWeight(pointId, partnerId)
-        case _ => // No violation
+        case _                                                   => // No violation
       }
     }
 

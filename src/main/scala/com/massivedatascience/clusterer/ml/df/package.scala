@@ -42,7 +42,7 @@ package object df {
         case "logistic"                              => new kernels.LogisticLossKernel(smoothing)
         case "l1" | "manhattan"                      => new kernels.L1Kernel()
         case "spherical" | "cosine"                  => new kernels.SphericalKernel()
-        case other => throw new IllegalArgumentException(s"Unknown divergence: $other")
+        case other                                   => throw new IllegalArgumentException(s"Unknown divergence: $other")
       }
   }
 

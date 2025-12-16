@@ -377,8 +377,8 @@ class GeneralizedKMeans(override val uid: String)
     * Algorithm:
     *   1. Select first center uniformly at random 2. For each subsequent center:
     *      - Compute D(x, nearest_center) for all points x
-    *      - Select next center with probability proportional to D(x, nearest_center)
-    *      3. Repeat until k centers are selected
+    *      - Select next center with probability proportional to D(x, nearest_center) 3. Repeat
+    *        until k centers are selected
     *
     * This properly uses the specified Bregman divergence for distance-proportional sampling, which
     * leads to better initialization quality compared to using squared Euclidean for all

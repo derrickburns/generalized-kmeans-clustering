@@ -95,8 +95,8 @@ class OutlierDetectionSuite extends AnyFunSuite with Matchers with BeforeAndAfte
     val df      = testDataWithOutlier()
     val centers = singleCenterAtOrigin()
 
-    val result  = detector.detectOutliers(df, centers, "features")
-    val scores  = result.select("outlier_score").collect().map(_.getDouble(0))
+    val result = detector.detectOutliers(df, centers, "features")
+    val scores = result.select("outlier_score").collect().map(_.getDouble(0))
 
     // All scores should be positive
     scores.foreach(_ should be >= 0.0)

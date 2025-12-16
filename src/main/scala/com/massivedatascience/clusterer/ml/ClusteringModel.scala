@@ -6,8 +6,8 @@ import org.apache.spark.ml.linalg.Vector
 
 /** Shared training summary handling for clustering models.
   *
-  * Models mix this in to get consistent summary/hasSummary behavior while
-  * keeping the summary payload optionally available for persisted models.
+  * Models mix this in to get consistent summary/hasSummary behavior while keeping the summary
+  * payload optionally available for persisted models.
   */
 trait HasTrainingSummary extends Params { self: Logging =>
 

@@ -106,15 +106,15 @@ case class IterationState(
 
 /** Base trait for all clustering iteration algorithms.
   *
-  * This provides a common interface and shared functionality for different
-  * clustering iteration patterns:
+  * This provides a common interface and shared functionality for different clustering iteration
+  * patterns:
   *   - Lloyd's algorithm (assign → update → check)
   *   - EM algorithm (E-step → M-step → likelihood)
   *   - Agglomerative (merge → update linkage)
   *   - Information Bottleneck (optimize T|Y → optimize T|X)
   *
-  * Implementations override the core iteration logic while inheriting
-  * checkpointing, logging, and convergence tracking.
+  * Implementations override the core iteration logic while inheriting checkpointing, logging, and
+  * convergence tracking.
   */
 trait ClusteringIterator extends Logging with Serializable {
 
@@ -219,8 +219,8 @@ trait ClusteringIterator extends Logging with Serializable {
 
 /** Abstract base class providing common iteration loop logic.
   *
-  * Subclasses only need to implement the `iterate` method for their
-  * specific algorithm (Lloyd's, EM, etc.).
+  * Subclasses only need to implement the `iterate` method for their specific algorithm (Lloyd's,
+  * EM, etc.).
   */
 abstract class AbstractClusteringIterator extends ClusteringIterator {
 

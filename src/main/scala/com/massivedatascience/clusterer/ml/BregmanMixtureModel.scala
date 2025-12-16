@@ -22,7 +22,15 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.{ Estimator, Model }
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable, MLReadable, MLReader, MLWritable, MLWriter }
+import org.apache.spark.ml.util.{
+  DefaultParamsReadable,
+  DefaultParamsWritable,
+  Identifiable,
+  MLReadable,
+  MLReader,
+  MLWritable,
+  MLWriter
+}
 import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
@@ -35,8 +43,7 @@ trait BregmanMixtureParams extends GeneralizedKMeansParams {
     */
   def getNumComponents: Int = $(k)
 
-  /** Regularization parameter (Dirichlet prior for component weights).
-    * 0 = no regularization (MLE)
+  /** Regularization parameter (Dirichlet prior for component weights). 0 = no regularization (MLE)
     * > 0 = MAP estimation with symmetric Dirichlet prior
     */
   final val regularization: DoubleParam = new DoubleParam(
@@ -63,8 +70,8 @@ trait BregmanMixtureParams extends GeneralizedKMeansParams {
 
 /** Bregman Mixture Model - probabilistic clustering via EM algorithm.
   *
-  * Fits a mixture model where each component is parameterized by an
-  * exponential family distribution corresponding to the chosen Bregman divergence:
+  * Fits a mixture model where each component is parameterized by an exponential family distribution
+  * corresponding to the chosen Bregman divergence:
   *
   *   - Squared Euclidean → Gaussian mixture
   *   - KL divergence → Multinomial mixture
@@ -127,18 +134,18 @@ class BregmanMixture(override val uid: String)
   def this() = this(Identifiable.randomUID("bregmanmixture"))
 
   // Parameter setters
-  def setK(value: Int): this.type               = set(k, value)
-  def setNumComponents(value: Int): this.type   = set(k, value)
-  def setDivergence(value: String): this.type   = set(divergence, value)
-  def setSmoothing(value: Double): this.type    = set(smoothing, value)
+  def setK(value: Int): this.type                 = set(k, value)
+  def setNumComponents(value: Int): this.type     = set(k, value)
+  def setDivergence(value: String): this.type     = set(divergence, value)
+  def setSmoothing(value: Double): this.type      = set(smoothing, value)
   def setRegularization(value: Double): this.type = set(regularization, value)
-  def setFeaturesCol(value: String): this.type  = set(featuresCol, value)
-  def setPredictionCol(value: String): this.type = set(predictionCol, value)
+  def setFeaturesCol(value: String): this.type    = set(featuresCol, value)
+  def setPredictionCol(value: String): this.type  = set(predictionCol, value)
   def setProbabilityCol(value: String): this.type = set(probabilityCol, value)
-  def setWeightCol(value: String): this.type    = set(weightCol, value)
-  def setMaxIter(value: Int): this.type         = set(maxIter, value)
-  def setTol(value: Double): this.type          = set(tol, value)
-  def setSeed(value: Long): this.type           = set(seed, value)
+  def setWeightCol(value: String): this.type      = set(weightCol, value)
+  def setMaxIter(value: Int): this.type           = set(maxIter, value)
+  def setTol(value: Double): this.type            = set(tol, value)
+  def setSeed(value: Long): this.type             = set(seed, value)
 
   override def fit(dataset: Dataset[_]): BregmanMixtureModelInstance = {
     transformSchema(dataset.schema, logging = true)
@@ -176,7 +183,7 @@ class BregmanMixture(override val uid: String)
 
       // Run EM
       val emIterator = new BregmanEMIterator()
-      val result = emIterator.runEM(
+      val result     = emIterator.runEM(
         df,
         $(featuresCol),
         if (hasWeightCol) Some($(weightCol)) else None,
@@ -187,12 +194,13 @@ class BregmanMixture(override val uid: String)
       val elapsed = System.currentTimeMillis() - startTime
       logInfo(
         s"Bregman Mixture Model completed: ${result.iterations} iterations, " +
-          s"converged=${result.converged}, finalLogLik=${result.logLikelihoodHistory.lastOption.getOrElse(Double.NaN)}"
+          s"converged=${result.converged}, finalLogLik=${result.logLikelihoodHistory.lastOption
+              .getOrElse(Double.NaN)}"
       )
 
       // Create model
       val centersAsVectors = result.centers.map(Vectors.dense)
-      val model = new BregmanMixtureModelInstance(
+      val model            = new BregmanMixtureModelInstance(
         uid,
         centersAsVectors,
         result.weights,
@@ -315,7 +323,8 @@ class BregmanMixtureModelInstance(
       (prediction, Vectors.dense(probs))
     }
 
-    val result = df.withColumn("_bmm_result", predictUDF(col($(featuresCol))))
+    val result = df
+      .withColumn("_bmm_result", predictUDF(col($(featuresCol))))
       .withColumn($(predictionCol), col("_bmm_result._1"))
       .withColumn($(probabilityCol), col("_bmm_result._2"))
       .drop("_bmm_result")
@@ -343,17 +352,14 @@ class BregmanMixtureModelInstance(
       maxLogProb + math.log(expSum)
     }
 
-    df.select(logLikUDF(col($(featuresCol))).as("loglik"))
-      .agg(sum("loglik"))
-      .head()
-      .getDouble(0)
+    df.select(logLikUDF(col($(featuresCol))).as("loglik")).agg(sum("loglik")).head().getDouble(0)
   }
 
   /** Compute BIC (Bayesian Information Criterion). Lower is better. */
   def bic(dataset: Dataset[_]): Double = {
-    val n        = dataset.count()
-    val logLik   = logLikelihood(dataset)
-    val dim      = means.headOption.map(_.size).getOrElse(0)
+    val n         = dataset.count()
+    val logLik    = logLikelihood(dataset)
+    val dim       = means.headOption.map(_.size).getOrElse(0)
     val numParams = numComponents * dim + numComponents - 1 // means + weights
     -2 * logLik + numParams * math.log(n.toDouble)
   }
@@ -415,7 +421,7 @@ object BregmanMixtureModelInstance extends MLReadable[BregmanMixtureModelInstanc
       val dim = instance.means.headOption.map(_.size).getOrElse(0)
 
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaObj: Map[String, Any] = Map(
+      val metaObj: Map[String, Any]             = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "BregmanMixtureModelInstance",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -441,7 +447,9 @@ object BregmanMixtureModelInstance extends MLReadable[BregmanMixtureModelInstanc
     }
   }
 
-  private class BregmanMixtureModelReader extends MLReader[BregmanMixtureModelInstance] with Logging {
+  private class BregmanMixtureModelReader
+      extends MLReader[BregmanMixtureModelInstance]
+      with Logging {
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
     import org.json4s.jackson.JsonMethods
@@ -450,9 +458,9 @@ object BregmanMixtureModelInstance extends MLReadable[BregmanMixtureModelInstanc
       val spark = sparkSession
       logInfo(s"Loading BregmanMixtureModelInstance from $path")
 
-      val metaStr                                = readMetadata(path)
+      val metaStr                               = readMetadata(path)
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaJ                                  = JsonMethods.parse(metaStr)
+      val metaJ                                 = JsonMethods.parse(metaStr)
 
       val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
       val k             = (metaJ \ "k").extract[Int]

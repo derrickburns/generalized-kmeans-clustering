@@ -141,8 +141,8 @@ class ConstrainedKMeans(override val uid: String)
   def getConstraints: ConstraintSet = constraintSet
 
   // Parameter setters
-  def setIdCol(value: String): this.type           = set(idCol, value)
-  def setConstraintMode(value: String): this.type  = set(constraintMode, value)
+  def setIdCol(value: String): this.type            = set(idCol, value)
+  def setConstraintMode(value: String): this.type   = set(constraintMode, value)
   def setConstraintWeight(value: Double): this.type = set(constraintWeight, value)
   def setK(value: Int): this.type                   = set(k, value)
   def setDivergence(value: String): this.type       = set(divergence, value)
@@ -170,7 +170,7 @@ class ConstrainedKMeans(override val uid: String)
 
     df.cache()
     try {
-      val kernel = createKernel()
+      val kernel    = createKernel()
       val startTime = System.currentTimeMillis()
 
       // Initialize centers
@@ -222,12 +222,12 @@ class ConstrainedKMeans(override val uid: String)
     val isSoftMode = $(constraintMode) == "soft"
     val lambda     = $(constraintWeight)
 
-    var centers            = initialCenters
-    var iteration          = 0
-    var converged          = false
-    val distortionHistory  = scala.collection.mutable.ArrayBuffer[Double]()
-    val movementHistory    = scala.collection.mutable.ArrayBuffer[Double]()
-    var totalViolations    = 0
+    var centers           = initialCenters
+    var iteration         = 0
+    var converged         = false
+    val distortionHistory = scala.collection.mutable.ArrayBuffer[Double]()
+    val movementHistory   = scala.collection.mutable.ArrayBuffer[Double]()
+    var totalViolations   = 0
 
     while (iteration < $(maxIter) && !converged) {
       iteration += 1
@@ -296,14 +296,14 @@ class ConstrainedKMeans(override val uid: String)
       var bestCost    = Double.MaxValue
 
       for (c <- 0 until k) {
-        val divergence = kernel.divergence(features, centersVec(c))
+        val divergence  = kernel.divergence(features, centersVec(c))
         val penaltyCost = penalty.computeAssignmentPenalty(
           pointId,
           c,
           assignments.toMap,
           constraintSet
         )
-        val totalCost = divergence + penaltyCost
+        val totalCost   = divergence + penaltyCost
 
         if (totalCost < bestCost) {
           bestCost = totalCost
@@ -331,9 +331,9 @@ class ConstrainedKMeans(override val uid: String)
     val k          = centers.length
     val centersVec = centers.map(Vectors.dense)
 
-    val points = df.select($(idCol), $(featuresCol)).collect()
+    val points      = df.select($(idCol), $(featuresCol)).collect()
     val assignments = scala.collection.mutable.Map.empty[Long, Int]
-    var violations = 0
+    var violations  = 0
 
     // First, handle must-link components (reserved for future use)
     val _ = constraintSet.mustLinkComponents()
@@ -374,9 +374,9 @@ class ConstrainedKMeans(override val uid: String)
       assignments: Map[Long, Int],
       kernel: BregmanKernel
   ): Array[Array[Double]] = {
-    val k           = $(this.k)
+    val k             = $(this.k)
     val bcAssignments = df.sparkSession.sparkContext.broadcast(assignments)
-    val bcKernel    = df.sparkSession.sparkContext.broadcast(kernel)
+    val bcKernel      = df.sparkSession.sparkContext.broadcast(kernel)
 
     // Add cluster column based on assignments
     val assignUDF = udf { (id: Long) =>
@@ -390,7 +390,7 @@ class ConstrainedKMeans(override val uid: String)
 
     val centers = (0 until k).map { clusterId =>
       val clusterPoints = assigned.filter(col("cluster") === clusterId)
-      val count = clusterPoints.count()
+      val count         = clusterPoints.count()
 
       if (count == 0) {
         Array.fill(numFeatures)(0.0)
@@ -419,9 +419,12 @@ class ConstrainedKMeans(override val uid: String)
       oldCenters: Array[Array[Double]],
       newCenters: Array[Array[Double]]
   ): Double = {
-    oldCenters.zip(newCenters).map { case (old, newC) =>
-      math.sqrt(old.zip(newC).map { case (a, b) => val d = a - b; d * d }.sum)
-    }.max
+    oldCenters
+      .zip(newCenters)
+      .map { case (old, newC) =>
+        math.sqrt(old.zip(newC).map { case (a, b) => val d = a - b; d * d }.sum)
+      }
+      .max
   }
 
   /** Compute total distortion. */

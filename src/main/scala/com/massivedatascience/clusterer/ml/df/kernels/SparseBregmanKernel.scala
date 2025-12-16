@@ -21,8 +21,8 @@ import org.apache.spark.ml.linalg.{ SparseVector, Vector, Vectors }
 
 /** Extended kernel interface for sparse-optimized divergence computation.
   *
-  * This trait extends BregmanKernel with methods optimized for sparse vectors,
-  * avoiding materialization of dense representations when possible.
+  * This trait extends BregmanKernel with methods optimized for sparse vectors, avoiding
+  * materialization of dense representations when possible.
   *
   * Key optimizations:
   *   - Skip zero entries where mathematically valid (0·log(0) = 0 for KL)
@@ -33,8 +33,8 @@ trait SparseBregmanKernel extends BregmanKernel {
 
   /** Compute divergence optimized for sparse vectors.
     *
-    * Default implementation converts to dense. Subclasses should override
-    * for efficient sparse computation.
+    * Default implementation converts to dense. Subclasses should override for efficient sparse
+    * computation.
     *
     * @param x
     *   sparse data point
@@ -59,9 +59,9 @@ trait SparseBregmanKernel extends BregmanKernel {
 
 /** Sparse-optimized Squared Euclidean kernel.
   *
-  * Exploits sparsity by only iterating over non-zero indices in both vectors.
-  * For ||x - μ||², we compute:
-  *   ||x||² + ||μ||² - 2⟨x, μ⟩
+  * Exploits sparsity by only iterating over non-zero indices in both vectors. For ||x - μ||², we
+  * compute:
+  * \||x||² + ||μ||² - 2⟨x, μ⟩
   *
   * Where each term can be computed sparsely.
   */
@@ -214,7 +214,7 @@ class SparseKLKernel(val smoothing: Double = 1e-10) extends SparseBregmanKernel 
   *
   * Sparse optimization:
   *   - Only iterate over union of non-zero indices
-  *   - |0 - 0| = 0 contributes nothing
+  *   - \|0 - 0| = 0 contributes nothing
   */
 class SparseL1Kernel extends L1Kernel with SparseBregmanKernel {
 
@@ -281,7 +281,7 @@ object SparseBregmanKernel {
     case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
     case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
     case "logistic"             => new LogisticLossKernel(smoothing)
-    case other => throw new IllegalArgumentException(s"Unknown divergence: $other")
+    case other                  => throw new IllegalArgumentException(s"Unknown divergence: $other")
   }
 
   /** Check if sparse optimization is available for given divergence.

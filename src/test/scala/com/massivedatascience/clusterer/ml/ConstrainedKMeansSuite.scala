@@ -72,13 +72,9 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
   test("ConstrainedKMeans basic clustering without constraints") {
     val df = testData()
 
-    val ckm = new ConstrainedKMeans()
-      .setK(2)
-      .setIdCol("id")
-      .setMaxIter(10)
-      .setSeed(42L)
+    val ckm = new ConstrainedKMeans().setK(2).setIdCol("id").setMaxIter(10).setSeed(42L)
 
-    val model = ckm.fit(df)
+    val model       = ckm.fit(df)
     val predictions = model.transform(df)
 
     predictions.count() shouldBe 6
@@ -107,10 +103,10 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = ckm.fit(df)
+    val model       = ckm.fit(df)
     val predictions = model.transform(df)
 
-    val rows = predictions.select("id", "prediction").collect()
+    val rows       = predictions.select("id", "prediction").collect()
     val clusterMap = rows.map(r => r.getLong(0) -> r.getInt(1)).toMap
 
     // With high constraint weight, 0 and 3 should be in same cluster
@@ -144,10 +140,10 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = ckm.fit(df)
+    val model       = ckm.fit(df)
     val predictions = model.transform(df)
 
-    val rows = predictions.select("id", "prediction").collect()
+    val rows       = predictions.select("id", "prediction").collect()
     val clusterMap = rows.map(r => r.getLong(0) -> r.getInt(1)).toMap
 
     // In hard mode, 0 and 2 should be in different clusters
@@ -197,10 +193,10 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = ckm.fit(df)
+    val model       = ckm.fit(df)
     val predictions = model.transform(df)
 
-    val rows = predictions.select("id", "prediction").collect()
+    val rows       = predictions.select("id", "prediction").collect()
     val clusterMap = rows.map(r => r.getLong(0) -> r.getInt(1)).toMap
 
     // 0, 1, 2 should all be in same cluster
@@ -239,8 +235,7 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       cannotLinks = Seq((3L, 4L))
     )
 
-    val ckm = new ConstrainedKMeans()
-      .setConstraints(constraints)
+    val ckm = new ConstrainedKMeans().setConstraints(constraints)
 
     ckm.getConstraints.numMustLink shouldBe 1
     ckm.getConstraints.numCannotLink shouldBe 1
@@ -251,11 +246,7 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
   test("ConstrainedKMeans provides training summary") {
     val df = testData()
 
-    val ckm = new ConstrainedKMeans()
-      .setK(2)
-      .setIdCol("id")
-      .setMaxIter(5)
-      .setSeed(42L)
+    val ckm = new ConstrainedKMeans().setK(2).setIdCol("id").setMaxIter(5).setSeed(42L)
 
     val model = ckm.fit(df)
 
@@ -317,12 +308,8 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       (4L, Vectors.dense(0.9, 0.8))
     ).toDF("id", "features")
 
-    val ckm = new ConstrainedKMeans()
-      .setK(2)
-      .setIdCol("id")
-      .setDivergence("kl")
-      .setMaxIter(5)
-      .setSeed(42L)
+    val ckm =
+      new ConstrainedKMeans().setK(2).setIdCol("id").setDivergence("kl").setMaxIter(5).setSeed(42L)
 
     val model = ckm.fit(df)
     model.hasSummary shouldBe true
@@ -336,9 +323,7 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       cannotLinks = Seq.empty
     )
 
-    val ckm = new ConstrainedKMeans()
-      .setK(3)
-      .setConstraints(constraints)
+    val ckm = new ConstrainedKMeans().setK(3).setConstraints(constraints)
 
     val copied = ckm.copy(new org.apache.spark.ml.param.ParamMap())
 
@@ -354,9 +339,7 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
       Tuple1(Vectors.dense(1.0, 1.0))
     ).toDF("features")
 
-    val ckm = new ConstrainedKMeans()
-      .setK(2)
-      .setIdCol("id") // Column doesn't exist
+    val ckm = new ConstrainedKMeans().setK(2).setIdCol("id") // Column doesn't exist
 
     an[IllegalArgumentException] should be thrownBy {
       ckm.fit(dfNoId)
@@ -421,7 +404,8 @@ class ConstrainedKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAft
         .setSeed(12345L)
 
       val model = ckm.fit(df)
-      model.transform(df)
+      model
+        .transform(df)
         .select("id", "prediction")
         .collect()
         .map(r => (r.getLong(0), r.getInt(1)))

@@ -73,8 +73,8 @@ trait OutlierDetector extends Serializable {
 
 /** Distance-based outlier detection using Bregman divergence.
   *
-  * Points are considered outliers if their distance to the nearest center
-  * exceeds a threshold (relative to the median distance).
+  * Points are considered outliers if their distance to the nearest center exceeds a threshold
+  * (relative to the median distance).
   *
   * @param kernel
   *   Bregman kernel for distance computation
@@ -98,10 +98,10 @@ class DistanceBasedOutlierDetector(
 
     // Compute distance to nearest center
     val distanceUDF = udf { (features: Vector) =>
-      val k    = bcKernel.value
-      val ctrs = bcCenters.value
+      val k       = bcKernel.value
+      val ctrs    = bcCenters.value
       var minDist = Double.MaxValue
-      var i = 0
+      var i       = 0
       while (i < ctrs.length) {
         val dist = k.divergence(features, ctrs(i))
         if (dist < minDist) minDist = dist
@@ -113,11 +113,8 @@ class DistanceBasedOutlierDetector(
     val dfWithDist = df.withColumn("_outlier_dist", distanceUDF(col(featuresCol)))
 
     // Compute median distance for normalization
-    val medianDist = dfWithDist
-      .stat
-      .approxQuantile("_outlier_dist", Array(0.5), 0.01)
-      .headOption
-      .getOrElse(1.0)
+    val medianDist =
+      dfWithDist.stat.approxQuantile("_outlier_dist", Array(0.5), 0.01).headOption.getOrElse(1.0)
 
     val normalizedMedian = if (medianDist > 1e-10) medianDist else 1.0
 
@@ -156,10 +153,10 @@ class TrimmedOutlierDetector(
 
     // Compute distance to nearest center
     val distanceUDF = udf { (features: Vector) =>
-      val k    = bcKernel.value
-      val ctrs = bcCenters.value
+      val k       = bcKernel.value
+      val ctrs    = bcCenters.value
       var minDist = Double.MaxValue
-      var i = 0
+      var i       = 0
       while (i < ctrs.length) {
         val dist = k.divergence(features, ctrs(i))
         if (dist < minDist) minDist = dist
@@ -171,9 +168,8 @@ class TrimmedOutlierDetector(
     val dfWithDist = df.withColumn(outlierScoreCol, distanceUDF(col(featuresCol)))
 
     // Compute threshold at (1 - trimFraction) quantile
-    val quantile = 1.0 - trimFraction
-    val threshold = dfWithDist
-      .stat
+    val quantile  = 1.0 - trimFraction
+    val threshold = dfWithDist.stat
       .approxQuantile(outlierScoreCol, Array(quantile), 0.01)
       .headOption
       .getOrElse(Double.MaxValue)
@@ -247,10 +243,8 @@ class TrimmedCenterUpdate extends RobustCenterUpdate {
         withGrad
           .withColumn("_weighted_grad", transform(col("_grad"), g => g * col(wCol)))
           .withColumn("_weight", col(wCol))
-      case None =>
-        withGrad
-          .withColumn("_weighted_grad", col("_grad"))
-          .withColumn("_weight", lit(1.0))
+      case None       =>
+        withGrad.withColumn("_weighted_grad", col("_grad")).withColumn("_weight", lit(1.0))
     }
 
     // Aggregate per cluster
@@ -260,7 +254,8 @@ class TrimmedCenterUpdate extends RobustCenterUpdate {
       .groupBy(predictionCol)
       .agg(
         sum("_weight").as("weight_sum"),
-        array((0 until dim).map(i => sum(element_at(col("_weighted_grad"), i + 1))): _*).as("grad_sum")
+        array((0 until dim).map(i => sum(element_at(col("_weighted_grad"), i + 1))): _*)
+          .as("grad_sum")
       )
       .collect()
 
@@ -336,7 +331,7 @@ object OutlierMode {
     case "trim"          => Trim
     case "noise_cluster" => NoiseCluster
     case "m_estimator"   => MEstimator
-    case other => throw new IllegalArgumentException(s"Unknown outlier mode: $other")
+    case other           => throw new IllegalArgumentException(s"Unknown outlier mode: $other")
   }
 }
 

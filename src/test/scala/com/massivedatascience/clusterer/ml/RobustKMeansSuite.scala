@@ -98,10 +98,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("RobustKMeans basic clustering") {
     val df = cleanTestData()
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val rkm = new RobustKMeans().setK(2).setMaxIter(10).setSeed(42L)
 
     val model = rkm.fit(df)
 
@@ -120,7 +117,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = rkm.fit(df)
+    val model       = rkm.fit(df)
     val predictions = model.transform(df)
 
     predictions.columns should contain("prediction")
@@ -139,7 +136,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = rkm.fit(df)
+    val model       = rkm.fit(df)
     val predictions = model.transform(df)
 
     // Verify outlier scores are computed
@@ -192,7 +189,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = rkm.fit(df)
+    val model       = rkm.fit(df)
     val predictions = model.transform(df)
 
     // Some points should be assigned to cluster -1
@@ -205,11 +202,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("RobustKMeans m_estimator mode runs successfully") {
     val df = testDataWithOutlier()
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setOutlierMode("m_estimator")
-      .setMaxIter(10)
-      .setSeed(42L)
+    val rkm = new RobustKMeans().setK(2).setOutlierMode("m_estimator").setMaxIter(10).setSeed(42L)
 
     val model = rkm.fit(df)
     model should not be null
@@ -263,10 +256,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("RobustKMeans provides training summary") {
     val df = cleanTestData()
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setMaxIter(5)
-      .setSeed(42L)
+    val rkm = new RobustKMeans().setK(2).setMaxIter(5).setSeed(42L)
 
     val model = rkm.fit(df)
 
@@ -283,11 +273,8 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
   test("RobustKMeans with squared euclidean divergence") {
     val df = cleanTestData()
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setDivergence("squaredEuclidean")
-      .setMaxIter(5)
-      .setSeed(42L)
+    val rkm =
+      new RobustKMeans().setK(2).setDivergence("squaredEuclidean").setMaxIter(5).setSeed(42L)
 
     val model = rkm.fit(df)
     model.hasSummary shouldBe true
@@ -302,11 +289,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       Tuple1(Vectors.dense(0.9, 0.8))
     ).toDF("features")
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setDivergence("kl")
-      .setMaxIter(5)
-      .setSeed(42L)
+    val rkm = new RobustKMeans().setK(2).setDivergence("kl").setMaxIter(5).setSeed(42L)
 
     val model = rkm.fit(df)
     model.hasSummary shouldBe true
@@ -351,11 +334,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
     val df = testDataWithOutlier()
 
     def runClustering(): Array[Array[Double]] = {
-      val rkm = new RobustKMeans()
-        .setK(2)
-        .setOutlierMode("trim")
-        .setMaxIter(10)
-        .setSeed(12345L)
+      val rkm = new RobustKMeans().setK(2).setOutlierMode("trim").setMaxIter(10).setSeed(12345L)
 
       val model = rkm.fit(df)
       model.clusterCentersAsVectors.map(_.toArray).sortBy(_.head)
@@ -383,7 +362,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       .setMaxIter(5)
       .setSeed(42L)
 
-    val model = rkm.fit(df)
+    val model       = rkm.fit(df)
     val predictions = model.transform(df)
 
     predictions.columns should contain("my_outlier_score")
@@ -402,7 +381,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       .setMaxIter(10)
       .setSeed(42L)
 
-    val model = rkm.fit(df)
+    val model       = rkm.fit(df)
     val predictions = model.transform(df)
 
     // With clean data and high threshold, few/no outliers expected
@@ -416,10 +395,7 @@ class RobustKMeansSuite extends AnyFunSuite with Matchers with BeforeAndAfterAll
       Tuple1(Vectors.dense(10.0, 10.0))
     ).toDF("features")
 
-    val rkm = new RobustKMeans()
-      .setK(2)
-      .setMaxIter(5)
-      .setSeed(42L)
+    val rkm = new RobustKMeans().setK(2).setMaxIter(5).setSeed(42L)
 
     val model = rkm.fit(df)
     model.numClusters shouldBe 2

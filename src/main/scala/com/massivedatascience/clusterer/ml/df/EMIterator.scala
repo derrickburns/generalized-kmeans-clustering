@@ -184,9 +184,9 @@ class BregmanEMIterator extends AbstractClusteringIterator {
 
     // Apply regularization to weights if configured
     val regularizedWeights = if (emConfig.regularization > 0) {
-      val alpha   = emConfig.regularization
+      val alpha    = emConfig.regularization
       val adjusted = newWeights.map(_ + alpha)
-      val sum     = adjusted.sum
+      val sum      = adjusted.sum
       adjusted.map(_ / sum)
     } else {
       newWeights
@@ -217,9 +217,9 @@ class BregmanEMIterator extends AbstractClusteringIterator {
       weights: Array[Double],
       kernel: BregmanKernel
   ): (DataFrame, Double) = {
-    val spark    = df.sparkSession
-    val k        = centers.length
-    val bcKernel = spark.sparkContext.broadcast(kernel)
+    val spark      = df.sparkSession
+    val k          = centers.length
+    val bcKernel   = spark.sparkContext.broadcast(kernel)
     val centersVec = centers.map(Vectors.dense)
 
     // UDF to compute responsibilities for each point
@@ -230,16 +230,17 @@ class BregmanEMIterator extends AbstractClusteringIterator {
       }.toArray
 
       // Log-sum-exp for numerical stability
-      val maxLogProb  = logProbs.max
-      val expSum      = logProbs.map(lp => math.exp(lp - maxLogProb)).sum
-      val logNorm     = maxLogProb + math.log(expSum)
+      val maxLogProb       = logProbs.max
+      val expSum           = logProbs.map(lp => math.exp(lp - maxLogProb)).sum
+      val logNorm          = maxLogProb + math.log(expSum)
       val responsibilities = logProbs.map(lp => math.exp(lp - logNorm))
 
       // Return (responsibilities, log-likelihood contribution)
       (Vectors.dense(responsibilities), logNorm)
     }
 
-    val withResp = df.withColumn("_em_result", responsibilitiesUDF(col(featuresCol)))
+    val withResp = df
+      .withColumn("_em_result", responsibilitiesUDF(col(featuresCol)))
       .withColumn("_responsibilities", col("_em_result._1"))
       .withColumn("_loglik", col("_em_result._2"))
       .drop("_em_result")
@@ -248,7 +249,7 @@ class BregmanEMIterator extends AbstractClusteringIterator {
     val totalLogLik = weightCol match {
       case Some(wc) =>
         withResp.select(sum(col("_loglik") * col(wc))).head().getDouble(0)
-      case None =>
+      case None     =>
         withResp.select(sum(col("_loglik"))).head().getDouble(0)
     }
 
@@ -257,8 +258,8 @@ class BregmanEMIterator extends AbstractClusteringIterator {
 
   /** M-step: Update component means and weights.
     *
-    * Uses gradient-space averaging for Bregman divergences:
-    * μ_k = invGrad(Σ_n γ_nk · grad(x_n) / N_k)
+    * Uses gradient-space averaging for Bregman divergences: μ_k = invGrad(Σ_n γ_nk · grad(x_n) /
+    * N_k)
     */
   private def updateParameters(
       df: DataFrame,
@@ -279,7 +280,7 @@ class BregmanEMIterator extends AbstractClusteringIterator {
           val weight   = row.getDouble(2)
           (features, resp, weight)
         }
-      case None =>
+      case None     =>
         df.select(featuresCol, "_responsibilities").rdd.map { row =>
           val features = row.getAs[Vector](0)
           val resp     = row.getAs[Vector](1)
@@ -288,7 +289,7 @@ class BregmanEMIterator extends AbstractClusteringIterator {
     }
 
     // Aggregate gradient sums and effective counts per component
-    val dim = data.first()._1.size
+    val dim  = data.first()._1.size
     val init = (Array.fill(k)(Array.fill(dim)(0.0)), Array.fill(k)(0.0))
 
     val (gradSums, effectiveCounts) = data.aggregate(init)(
@@ -336,8 +337,8 @@ class BregmanEMIterator extends AbstractClusteringIterator {
     (newCenters, newWeights)
   }
 
-  /** For EM, convergence is based on log-likelihood improvement.
-    * We override to handle maximization (log-likelihood increases).
+  /** For EM, convergence is based on log-likelihood improvement. We override to handle maximization
+    * (log-likelihood increases).
     */
   override protected def hasConverged(
       previousObjective: Double,

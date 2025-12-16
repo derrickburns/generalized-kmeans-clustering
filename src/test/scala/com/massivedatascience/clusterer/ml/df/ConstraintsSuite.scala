@@ -79,7 +79,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
       MustLink(2L, 3L),
       CannotLink(1L, 4L)
     )
-    val cs = ConstraintSet(constraints)
+    val cs          = ConstraintSet(constraints)
 
     cs.isEmpty shouldBe false
     cs.size shouldBe 3
@@ -239,10 +239,12 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   }
 
   test("computeViolationPenalty sums multiple violations") {
-    val cs = ConstraintSet(Seq(
-      MustLink(1L, 2L, 1.0),
-      CannotLink(3L, 4L, 2.0)
-    ))
+    val cs = ConstraintSet(
+      Seq(
+        MustLink(1L, 2L, 1.0),
+        CannotLink(3L, 4L, 2.0)
+      )
+    )
 
     // Both constraints violated
     val assignments = Map(1L -> 0, 2L -> 1, 3L -> 0, 4L -> 0)
@@ -271,7 +273,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   test("mustLinkComponents handles isolated points") {
     val cs = ConstraintSet.fromPairs(
       mustLinks = Seq((1L, 2L)),
-      cannotLinks = Seq((3L, 4L))  // 3 and 4 are isolated from must-links
+      cannotLinks = Seq((3L, 4L)) // 3 and 4 are isolated from must-links
     )
 
     val components = cs.mustLinkComponents()
@@ -297,7 +299,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   test("isSatisfiable detects conflicting constraints") {
     val cs = ConstraintSet.fromPairs(
       mustLinks = Seq((1L, 2L)),
-      cannotLinks = Seq((1L, 2L))  // Conflict: same pair has both ML and CL
+      cannotLinks = Seq((1L, 2L)) // Conflict: same pair has both ML and CL
     )
 
     cs.isSatisfiable shouldBe false
@@ -305,8 +307,8 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
 
   test("isSatisfiable detects transitive conflicts") {
     val cs = ConstraintSet.fromPairs(
-      mustLinks = Seq((1L, 2L), (2L, 3L)),  // 1-2-3 must be together
-      cannotLinks = Seq((1L, 3L))           // 1 and 3 cannot be together
+      mustLinks = Seq((1L, 2L), (2L, 3L)), // 1-2-3 must be together
+      cannotLinks = Seq((1L, 3L))          // 1 and 3 cannot be together
     )
 
     cs.isSatisfiable shouldBe false
@@ -315,7 +317,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   // ========== LinearConstraintPenalty Tests ==========
 
   test("LinearConstraintPenalty computes must-link penalty") {
-    val cs = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
+    val cs      = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
     val penalty = new LinearConstraintPenalty(mustLinkWeight = 2.0, cannotLinkWeight = 1.0)
 
     // No violation
@@ -326,7 +328,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   }
 
   test("LinearConstraintPenalty computes cannot-link penalty") {
-    val cs = ConstraintSet(Seq(CannotLink(1L, 2L, 1.0)))
+    val cs      = ConstraintSet(Seq(CannotLink(1L, 2L, 1.0)))
     val penalty = new LinearConstraintPenalty(mustLinkWeight = 1.0, cannotLinkWeight = 3.0)
 
     // No violation
@@ -337,7 +339,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   }
 
   test("LinearConstraintPenalty handles unassigned partners") {
-    val cs = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
+    val cs      = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
     val penalty = new LinearConstraintPenalty()
 
     // Partner not assigned - no penalty
@@ -347,7 +349,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   // ========== ExponentialConstraintPenalty Tests ==========
 
   test("ExponentialConstraintPenalty returns 0 for no violations") {
-    val cs = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
+    val cs      = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
     val penalty = new ExponentialConstraintPenalty(alpha = 1.0)
 
     // No violation
@@ -355,7 +357,7 @@ class ConstraintsSuite extends AnyFunSuite with Matchers {
   }
 
   test("ExponentialConstraintPenalty grows exponentially") {
-    val cs = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
+    val cs      = ConstraintSet(Seq(MustLink(1L, 2L, 1.0)))
     val penalty = new ExponentialConstraintPenalty(alpha = 1.0)
 
     // Violation penalty = exp(1*1) - 1 = e - 1 ≈ 1.718

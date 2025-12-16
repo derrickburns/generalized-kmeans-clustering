@@ -23,7 +23,15 @@ import org.apache.spark.ml.{ Estimator, Model }
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
-import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable, MLReadable, MLReader, MLWritable, MLWriter }
+import org.apache.spark.ml.util.{
+  DefaultParamsReadable,
+  DefaultParamsWritable,
+  Identifiable,
+  MLReadable,
+  MLReader,
+  MLWritable,
+  MLWriter
+}
 import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
@@ -47,8 +55,8 @@ trait AgglomerativeBregmanParams
   )
   def getNumClusters: Int         = $(numClusters)
 
-  /** Distance threshold for merging (alternative to numClusters).
-    * If set > 0, clustering stops when min merge distance exceeds threshold.
+  /** Distance threshold for merging (alternative to numClusters). If set > 0, clustering stops when
+    * min merge distance exceeds threshold.
     */
   final val distanceThreshold: DoubleParam = new DoubleParam(
     this,
@@ -103,16 +111,14 @@ trait AgglomerativeBregmanParams
 
 /** Agglomerative (bottom-up) hierarchical clustering with Bregman divergences.
   *
-  * Starts with each point as its own cluster and iteratively merges the
-  * closest pair of clusters until the desired number is reached.
+  * Starts with each point as its own cluster and iteratively merges the closest pair of clusters
+  * until the desired number is reached.
   *
   * ==Algorithm==
   *
-  * 1. Initialize: Each point is a singleton cluster
-  * 2. Compute pairwise distances/divergences between all clusters
-  * 3. Find and merge the closest pair
-  * 4. Update distances to the merged cluster
-  * 5. Repeat until numClusters reached or distanceThreshold exceeded
+  *   1. Initialize: Each point is a singleton cluster 2. Compute pairwise distances/divergences
+  *      between all clusters 3. Find and merge the closest pair 4. Update distances to the merged
+  *      cluster 5. Repeat until numClusters reached or distanceThreshold exceeded
   *
   * ==Linkage Criteria==
   *
@@ -139,9 +145,9 @@ trait AgglomerativeBregmanParams
   *
   * ==Scalability Note==
   *
-  * Standard agglomerative clustering has O(n³) or O(n²log n) complexity.
-  * This implementation is suitable for datasets up to ~10,000 points.
-  * For larger datasets, consider [[BisectingKMeans]] (top-down approach).
+  * Standard agglomerative clustering has O(n³) or O(n²log n) complexity. This implementation is
+  * suitable for datasets up to ~10,000 points. For larger datasets, consider [[BisectingKMeans]]
+  * (top-down approach).
   *
   * @see
   *   [[BisectingKMeans]] for top-down hierarchical clustering
@@ -155,14 +161,14 @@ class AgglomerativeBregman(override val uid: String)
   def this() = this(Identifiable.randomUID("agglomerative"))
 
   // Parameter setters
-  def setNumClusters(value: Int): this.type        = set(numClusters, value)
+  def setNumClusters(value: Int): this.type          = set(numClusters, value)
   def setDistanceThreshold(value: Double): this.type = set(distanceThreshold, value)
-  def setLinkage(value: String): this.type         = set(linkage, value)
-  def setDivergence(value: String): this.type      = set(divergence, value)
-  def setSmoothing(value: Double): this.type       = set(smoothing, value)
-  def setFeaturesCol(value: String): this.type     = set(featuresCol, value)
-  def setPredictionCol(value: String): this.type   = set(predictionCol, value)
-  def setSeed(value: Long): this.type              = set(seed, value)
+  def setLinkage(value: String): this.type           = set(linkage, value)
+  def setDivergence(value: String): this.type        = set(divergence, value)
+  def setSmoothing(value: Double): this.type         = set(smoothing, value)
+  def setFeaturesCol(value: String): this.type       = set(featuresCol, value)
+  def setPredictionCol(value: String): this.type     = set(predictionCol, value)
+  def setSeed(value: Long): this.type                = set(seed, value)
 
   override def fit(dataset: Dataset[_]): AgglomerativeBregmanModel = {
     transformSchema(dataset.schema, logging = true)
@@ -250,8 +256,8 @@ class AgglomerativeBregman(override val uid: String)
     }
 
     def union(x: Int, y: Int): Int = {
-      val px = find(x)
-      val py = find(y)
+      val px            = find(x)
+      val py            = find(y)
       if (px == py) return px
       val (root, child) = if (rank(px) < rank(py)) (py, px) else (px, py)
       parent(child) = root
@@ -331,8 +337,8 @@ class AgglomerativeBregman(override val uid: String)
     val assignments = Array.tabulate(n)(i => find(i))
 
     // Relabel to 0..k-1
-    val uniqueLabels = assignments.distinct.sorted
-    val labelMap     = uniqueLabels.zipWithIndex.toMap
+    val uniqueLabels     = assignments.distinct.sorted
+    val labelMap         = uniqueLabels.zipWithIndex.toMap
     val finalAssignments = assignments.map(labelMap)
 
     (finalAssignments, dendrogram.toArray, mergeDistances.toArray)
@@ -380,8 +386,8 @@ class AgglomerativeBregman(override val uid: String)
         val centroidB = computeCentroid(clusterB, points, kernel)
 
         // ESS increase = |A||B|/(|A|+|B|) * ||μ_A - μ_B||²
-        val nA = clusterA.size.toDouble
-        val nB = clusterB.size.toDouble
+        val nA   = clusterA.size.toDouble
+        val nB   = clusterB.size.toDouble
         val dist = kernel.divergence(centroidA, centroidB)
         (nA * nB / (nA + nB)) * dist
 
@@ -561,24 +567,26 @@ object AgglomerativeBregmanModel extends MLReadable[AgglomerativeBregmanModel] {
       val dendrogramData = instance.dendrogram.zipWithIndex.map { case (m, i) =>
         (i, m.cluster1, m.cluster2, m.merged, m.distance)
       }.toSeq
-      spark.createDataFrame(dendrogramData)
+      spark
+        .createDataFrame(dendrogramData)
         .toDF("id", "cluster1", "cluster2", "merged", "distance")
-        .write.parquet(s"$path/dendrogram")
+        .write
+        .parquet(s"$path/dendrogram")
 
       val params: Map[String, Any] = Map(
-        "k"            -> instance.k,
-        "featuresCol"  -> instance.getOrDefault(instance.featuresCol),
+        "k"             -> instance.k,
+        "featuresCol"   -> instance.getOrDefault(instance.featuresCol),
         "predictionCol" -> instance.getOrDefault(instance.predictionCol),
-        "divergence"   -> instance.modelDivergence,
-        "smoothing"    -> instance.modelSmoothing,
-        "linkage"      -> instance.modelLinkage
+        "divergence"    -> instance.modelDivergence,
+        "smoothing"     -> instance.modelSmoothing,
+        "linkage"       -> instance.modelLinkage
       )
 
       val k   = instance.k
       val dim = instance.clusterCenters.headOption.map(_.size).getOrElse(0)
 
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaObj: Map[String, Any] = Map(
+      val metaObj: Map[String, Any]             = Map(
         "layoutVersion"      -> LayoutVersion,
         "algo"               -> "AgglomerativeBregmanModel",
         "sparkMLVersion"     -> org.apache.spark.SPARK_VERSION,
@@ -609,7 +617,9 @@ object AgglomerativeBregmanModel extends MLReadable[AgglomerativeBregmanModel] {
     }
   }
 
-  private class AgglomerativeBregmanModelReader extends MLReader[AgglomerativeBregmanModel] with Logging {
+  private class AgglomerativeBregmanModelReader
+      extends MLReader[AgglomerativeBregmanModel]
+      with Logging {
     import com.massivedatascience.clusterer.ml.df.persistence.PersistenceLayoutV1._
     import org.json4s.DefaultFormats
     import org.json4s.jackson.JsonMethods
@@ -618,9 +628,9 @@ object AgglomerativeBregmanModel extends MLReadable[AgglomerativeBregmanModel] {
       val spark = sparkSession
       logInfo(s"Loading AgglomerativeBregmanModel from $path")
 
-      val metaStr                                = readMetadata(path)
+      val metaStr                               = readMetadata(path)
       implicit val formats: DefaultFormats.type = DefaultFormats
-      val metaJ                                  = JsonMethods.parse(metaStr)
+      val metaJ                                 = JsonMethods.parse(metaStr)
 
       val layoutVersion = (metaJ \ "layoutVersion").extract[Int]
       val k             = (metaJ \ "k").extract[Int]
@@ -633,7 +643,8 @@ object AgglomerativeBregmanModel extends MLReadable[AgglomerativeBregmanModel] {
 
       val centers = rows.sortBy(_.getInt(0)).map(_.getAs[Vector]("vector"))
 
-      val dendrogram = spark.read.parquet(s"$path/dendrogram")
+      val dendrogram = spark.read
+        .parquet(s"$path/dendrogram")
         .orderBy("id")
         .collect()
         .map(r => MergeStep(r.getInt(1), r.getInt(2), r.getInt(3), r.getDouble(4)))
