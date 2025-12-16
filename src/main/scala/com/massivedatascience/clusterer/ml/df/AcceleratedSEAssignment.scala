@@ -26,38 +26,38 @@ import org.apache.spark.sql.functions._
   *
   * Uses the triangle inequality to skip unnecessary distance computations:
   *
-  * '''Key Insight (Elkan's Lemma 1):'''
-  * If d(x, c) ≤ d(c, c')/2, then d(x, c) ≤ d(x, c')
+  * '''Key Insight (Elkan's Lemma 1):''' If d(x, c) ≤ d(c, c')/2, then d(x, c) ≤ d(x, c')
   *
-  * This means: once we find a center c with distance d, we can skip any center c'
-  * where d(c, c') ≥ 2*d (because the triangle inequality guarantees c' is farther).
+  * This means: once we find a center c with distance d, we can skip any center c' where d(c, c') ≥
+  * 2*d (because the triangle inequality guarantees c' is farther).
   *
   * ==Algorithm==
   *
-  * 1. Precompute pairwise distances between all centers: O(k²)
-  * 2. For each point:
-  *    a. Compute distance to first center
-  *    b. For remaining centers, check if triangle inequality allows skipping
-  *    c. Only compute distance if the center might be closer
-  * 3. Track statistics on skipped computations
+  *   1. Precompute pairwise distances between all centers: O(k²) 2. For each point:
+  *      a. Compute distance to first center b. For remaining centers, check if triangle inequality
+  *         allows skipping c. Only compute distance if the center might be closer
+  *      3. Track statistics on skipped computations
   *
   * ==Speedup Characteristics==
   *
-  * - Best case: O(1) per point when clusters are well-separated
-  * - Worst case: O(k) per point when clusters overlap significantly
-  * - Typical: 2-5x speedup for well-clustered data
+  *   - Best case: O(1) per point when clusters are well-separated
+  *   - Worst case: O(k) per point when clusters overlap significantly
+  *   - Typical: 2-5x speedup for well-clustered data
   *
   * ==Limitations==
   *
-  * - Only works with Squared Euclidean distance (uses metric properties)
-  * - Requires k² memory for center-center distances
-  * - Overhead may not pay off for small k (< 10)
+  *   - Only works with Squared Euclidean distance (uses metric properties)
+  *   - Requires k² memory for center-center distances
+  *   - Overhead may not pay off for small k (< 10)
   *
-  * @note This is a single-iteration optimization. For full Elkan/Hamerly acceleration
-  *       with cross-iteration bounds, a stateful iterator would be needed.
+  * @note
+  *   This is a single-iteration optimization. For full Elkan/Hamerly acceleration with
+  *   cross-iteration bounds, a stateful iterator would be needed.
   *
-  * @see Elkan (2003): "Using the Triangle Inequality to Accelerate k-Means"
-  * @see Hamerly (2010): "Making k-means Even Faster"
+  * @see
+  *   Elkan (2003): "Using the Triangle Inequality to Accelerate k-Means"
+  * @see
+  *   Hamerly (2010): "Making k-means Even Faster"
   */
 class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
 
@@ -87,11 +87,11 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
 
   /** Precompute pairwise Euclidean distances between centers.
     *
-    * Returns a k×k matrix where entry (i,j) is d(center_i, center_j).
-    * Uses Euclidean (not squared) for triangle inequality.
+    * Returns a k×k matrix where entry (i,j) is d(center_i, center_j). Uses Euclidean (not squared)
+    * for triangle inequality.
     */
   private def computeCenterDistances(centers: Array[Array[Double]]): Array[Array[Double]] = {
-    val k = centers.length
+    val k         = centers.length
     val distances = Array.ofDim[Double](k, k)
 
     var i = 0
@@ -111,10 +111,14 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
 
   /** Find the closest center with pruning based on triangle inequality.
     *
-    * @param point feature vector
-    * @param centers cluster centers
-    * @param centerDists precomputed center-to-center distances
-    * @return (closest_center_index, distance_to_closest, num_distances_computed)
+    * @param point
+    *   feature vector
+    * @param centers
+    *   cluster centers
+    * @param centerDists
+    *   precomputed center-to-center distances
+    * @return
+    *   (closest_center_index, distance_to_closest, num_distances_computed)
     */
   private def findClosestWithPruning(
       point: Array[Double],
@@ -126,10 +130,10 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
     if (k == 1) return (0, squaredEuclidean(point, centers(0)), 1)
 
     // Start with first center
-    var minIdx  = 0
-    var minDist = squaredEuclidean(point, centers(0))
+    var minIdx           = 0
+    var minDist          = squaredEuclidean(point, centers(0))
     var minDistEuclidean = math.sqrt(2.0 * minDist) // Convert to Euclidean for triangle inequality
-    var computations = 1
+    var computations     = 1
 
     // Check remaining centers with pruning
     var i = 1
@@ -176,7 +180,9 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
 
     // For small k, overhead may not pay off - fall back to simple broadcast
     if (k < 5) {
-      logInfo(s"AcceleratedSEAssignment: k=$k < 5, using simple broadcast (pruning overhead not worthwhile)")
+      logInfo(
+        s"AcceleratedSEAssignment: k=$k < 5, using simple broadcast (pruning overhead not worthwhile)"
+      )
       return new BroadcastUDFAssignment().assign(df, featuresCol, weightCol, centers, kernel)
     }
 
@@ -193,9 +199,9 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
     val totalPoints       = spark.sparkContext.longAccumulator("totalPoints")
 
     val assignWithStatsUDF = udf { (features: Vector) =>
-      val ctrs      = bcCenters.value
-      val ctrDists  = bcCenterDists.value
-      val pointArr  = features.toArray
+      val ctrs     = bcCenters.value
+      val ctrDists = bcCenterDists.value
+      val pointArr = features.toArray
 
       val (minIdx, _, computations) = findClosestWithPruning(pointArr, ctrs, ctrDists)
 
@@ -235,12 +241,15 @@ object AcceleratedAssignment {
 
   /** Create an accelerated assignment strategy if applicable.
     *
-    * Returns AcceleratedSEAssignment for Squared Euclidean with k >= 5,
-    * otherwise returns the standard BroadcastUDFAssignment.
+    * Returns AcceleratedSEAssignment for Squared Euclidean with k >= 5, otherwise returns the
+    * standard BroadcastUDFAssignment.
     *
-    * @param kernel the Bregman kernel being used
-    * @param k number of clusters
-    * @return appropriate assignment strategy
+    * @param kernel
+    *   the Bregman kernel being used
+    * @param k
+    *   number of clusters
+    * @return
+    *   appropriate assignment strategy
     */
   def forKernel(kernel: BregmanKernel, k: Int): AssignmentStrategy = {
     if (kernel.supportsExpressionOptimization && k >= 5) {

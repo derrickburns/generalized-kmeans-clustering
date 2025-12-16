@@ -374,8 +374,8 @@ object BLAS extends Serializable {
 
   /** Compute the L2 norm (Euclidean norm) of a vector: ||x||_2 = sqrt(sum(x_i^2))
     *
-    * Uses native BLAS dnrm2 for dense vectors, which is significantly faster than
-    * scalar loops for large vectors due to SIMD vectorization.
+    * Uses native BLAS dnrm2 for dense vectors, which is significantly faster than scalar loops for
+    * large vectors due to SIMD vectorization.
     *
     * @param v
     *   input vector
@@ -395,8 +395,8 @@ object BLAS extends Serializable {
 
   /** Compute the squared L2 norm of a vector: ||x||_2^2 = sum(x_i^2)
     *
-    * This is useful for squared Euclidean distance calculations where
-    * we need ||x - y||^2 = ||x||^2 + ||y||^2 - 2*x'y
+    * This is useful for squared Euclidean distance calculations where we need ||x - y||^2 = ||x||^2
+    * + ||y||^2 - 2*x'y
     *
     * Uses native BLAS ddot(x, x) which is vectorized.
     *
@@ -434,8 +434,8 @@ object BLAS extends Serializable {
 
   /** Normalize a vector to unit L2 norm: x / ||x||_2
     *
-    * This is a common operation for spherical k-means and cosine similarity.
-    * Uses native BLAS for both norm computation and scaling.
+    * This is a common operation for spherical k-means and cosine similarity. Uses native BLAS for
+    * both norm computation and scaling.
     *
     * @param v
     *   input vector

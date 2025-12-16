@@ -52,14 +52,14 @@ object ElkanHelpers {
 
 /** Elkan-accelerated Lloyd's iterator for Squared Euclidean distance.
   *
-  * Uses the triangle inequality to dramatically reduce distance computations
-  * by tracking per-point bounds across iterations.
+  * Uses the triangle inequality to dramatically reduce distance computations by tracking per-point
+  * bounds across iterations.
   *
   * ==Algorithm Overview==
   *
-  * The key insight is that cluster assignments change slowly as the algorithm converges.
-  * By tracking bounds on distances, we can often prove a point's assignment hasn't changed
-  * without computing any distances.
+  * The key insight is that cluster assignments change slowly as the algorithm converges. By
+  * tracking bounds on distances, we can often prove a point's assignment hasn't changed without
+  * computing any distances.
   *
   * '''Per-point state (stored as DataFrame columns):'''
   *   - `_upper_bound`: Upper bound on distance to assigned center
@@ -67,11 +67,10 @@ object ElkanHelpers {
   *   - `_cluster`: Current cluster assignment
   *
   * '''Per-iteration:'''
-  *   1. Compute center movements from previous iteration
-  *   2. Update bounds: upper += movement[assigned], lower -= max(movements)
-  *   3. For points where upper < lower: skip (assignment unchanged)
-  *   4. For remaining points: recompute distances with pruning
-  *   5. Update centers based on assignments
+  *   1. Compute center movements from previous iteration 2. Update bounds: upper +=
+  *      movement[assigned], lower -= max(movements) 3. For points where upper < lower: skip
+  *      (assignment unchanged) 4. For remaining points: recompute distances with pruning 5. Update
+  *      centers based on assignments
   *
   * ==Speedup Characteristics==
   *
@@ -85,8 +84,10 @@ object ElkanHelpers {
   *   - Requires additional memory for bound columns
   *   - Best for k >= 5 (overhead not worthwhile for small k)
   *
-  * @see Elkan (2003): "Using the Triangle Inequality to Accelerate k-Means"
-  * @see Hamerly (2010): "Making k-means Even Faster"
+  * @see
+  *   Elkan (2003): "Using the Triangle Inequality to Accelerate k-Means"
+  * @see
+  *   Hamerly (2010): "Making k-means Even Faster"
   */
 class ElkanLloydsIterator extends LloydsIterator {
 
@@ -99,7 +100,8 @@ class ElkanLloydsIterator extends LloydsIterator {
 
   /** Compute center movements between iterations.
     *
-    * @return Array of Euclidean distances each center moved
+    * @return
+    *   Array of Euclidean distances each center moved
     */
   private def computeCenterMovements(
       oldCenters: Array[Array[Double]],
@@ -112,10 +114,11 @@ class ElkanLloydsIterator extends LloydsIterator {
 
   /** Compute pairwise center-to-center distances.
     *
-    * @return k×k matrix of Euclidean distances
+    * @return
+    *   k×k matrix of Euclidean distances
     */
   private def computeCenterDistances(centers: Array[Array[Double]]): Array[Array[Double]] = {
-    val k = centers.length
+    val k         = centers.length
     val distances = Array.ofDim[Double](k, k)
 
     var i = 0
@@ -135,16 +138,17 @@ class ElkanLloydsIterator extends LloydsIterator {
 
   /** Initialize bounds by computing all distances.
     *
-    * @return DataFrame with cluster assignment and bounds columns
+    * @return
+    *   DataFrame with cluster assignment and bounds columns
     */
   private def initializeBounds(
       df: DataFrame,
       featuresCol: String,
       centers: Array[Array[Double]]
   ): DataFrame = {
-    val spark = df.sparkSession
+    val spark     = df.sparkSession
     val bcCenters = spark.sparkContext.broadcast(centers)
-    val k = centers.length
+    val k         = centers.length
 
     // UDF to compute initial assignment and bounds
     val initBoundsUDF = udf { (features: Vector) =>
@@ -155,8 +159,8 @@ class ElkanLloydsIterator extends LloydsIterator {
       val distances = ctrs.map(c => squaredEuclidean(point, c))
 
       // Find closest and second-closest
-      var minIdx  = 0
-      var minDist = distances(0)
+      var minIdx     = 0
+      var minDist    = distances(0)
       var secondDist = Double.PositiveInfinity
 
       var i = 1
@@ -192,12 +196,18 @@ class ElkanLloydsIterator extends LloydsIterator {
 
   /** Update assignments using bounds to prune computations.
     *
-    * @param df DataFrame with current bounds
-    * @param prevCenters centers from previous iteration
-    * @param newCenters centers for current iteration (after update)
-    * @param movements how much each center moved
-    * @param maxMovement maximum movement across all centers
-    * @return DataFrame with updated assignments and bounds
+    * @param df
+    *   DataFrame with current bounds
+    * @param prevCenters
+    *   centers from previous iteration
+    * @param newCenters
+    *   centers for current iteration (after update)
+    * @param movements
+    *   how much each center moved
+    * @param maxMovement
+    *   maximum movement across all centers
+    * @return
+    *   DataFrame with updated assignments and bounds
     */
   private def updateWithBounds(
       df: DataFrame,
@@ -208,21 +218,21 @@ class ElkanLloydsIterator extends LloydsIterator {
       centerDists: Array[Array[Double]]
   ): (DataFrame, Long, Long) = {
 
-    val spark = df.sparkSession
-    val bcCenters = spark.sparkContext.broadcast(centers)
-    val bcMovements = spark.sparkContext.broadcast(movements)
+    val spark         = df.sparkSession
+    val bcCenters     = spark.sparkContext.broadcast(centers)
+    val bcMovements   = spark.sparkContext.broadcast(movements)
     val bcCenterDists = spark.sparkContext.broadcast(centerDists)
-    val k = centers.length
+    val k             = centers.length
 
     // Accumulators for statistics
     val skippedPoints = spark.sparkContext.longAccumulator("skippedPoints")
-    val totalPoints = spark.sparkContext.longAccumulator("totalPoints")
+    val totalPoints   = spark.sparkContext.longAccumulator("totalPoints")
 
     // UDF to update bounds and possibly reassign
     val updateBoundsUDF = udf { (features: Vector, cluster: Int, upper: Double, lower: Double) =>
-      val point = features.toArray
-      val ctrs  = bcCenters.value
-      val mvmts = bcMovements.value
+      val point  = features.toArray
+      val ctrs   = bcCenters.value
+      val mvmts  = bcMovements.value
       val cDists = bcCenterDists.value
 
       totalPoints.add(1)
@@ -247,8 +257,8 @@ class ElkanLloydsIterator extends LloydsIterator {
           (cluster, actualDist, newLower)
         } else {
           // May need to change assignment - compute distances with pruning
-          var minIdx = cluster
-          var minDist = actualDist
+          var minIdx     = cluster
+          var minDist    = actualDist
           var secondDist = Double.PositiveInfinity
 
           var i = 0
@@ -277,7 +287,10 @@ class ElkanLloydsIterator extends LloydsIterator {
     }
 
     val result = df
-      .withColumn("_update", updateBoundsUDF(col(featuresCol), col(ClusterCol), col(UpperBoundCol), col(LowerBoundCol)))
+      .withColumn(
+        "_update",
+        updateBoundsUDF(col(featuresCol), col(ClusterCol), col(UpperBoundCol), col(LowerBoundCol))
+      )
       .withColumn(ClusterCol, col("_update._1"))
       .withColumn(UpperBoundCol, col("_update._2"))
       .withColumn(LowerBoundCol, col("_update._3"))
@@ -347,12 +360,21 @@ class ElkanLloydsIterator extends LloydsIterator {
 
         // Update centers based on current assignments
         val newCenters = config.updater.update(
-          assignedDF, featuresCol, weightCol, k, config.kernel
+          assignedDF,
+          featuresCol,
+          weightCol,
+          k,
+          config.kernel
         )
 
         // Handle empty clusters
         val (finalCenters, emptyCount) = config.emptyHandler.handle(
-          assignedDF, featuresCol, weightCol, newCenters, df, config.kernel
+          assignedDF,
+          featuresCol,
+          weightCol,
+          newCenters,
+          df,
+          config.kernel
         )
 
         if (emptyCount > 0) {
@@ -361,7 +383,7 @@ class ElkanLloydsIterator extends LloydsIterator {
         }
 
         // Compute center movements
-        val movements = computeCenterMovements(centers, finalCenters)
+        val movements   = computeCenterMovements(centers, finalCenters)
         val maxMovement = movements.max
 
         // Check convergence
@@ -378,16 +400,23 @@ class ElkanLloydsIterator extends LloydsIterator {
           movementHistory += movement
         } else {
           // Update bounds and reassign
-          val centerDists = computeCenterDistances(finalCenters)
+          val centerDists                 = computeCenterDistances(finalCenters)
           val (updatedDF, skipped, total) = updateWithBounds(
-            currentDF, featuresCol, finalCenters, movements, maxMovement, centerDists
+            currentDF,
+            featuresCol,
+            finalCenters,
+            movements,
+            maxMovement,
+            centerDists
           )
 
           val newDF = updatedDF.cache()
           newDF.count() // Materialize
 
           val skipRate = if (total > 0) skipped.toDouble / total * 100 else 0.0
-          logInfo(f"Iteration $iter: $skipped%d / $total%d points skipped ($skipRate%.1f%% pruning)")
+          logInfo(
+            f"Iteration $iter: $skipped%d / $total%d points skipped ($skipRate%.1f%% pruning)"
+          )
 
           // Compute distortion for history
           val distortion = computeDistortion(newDF, featuresCol, ClusterCol, finalCenters)
@@ -440,11 +469,11 @@ class ElkanLloydsIterator extends LloydsIterator {
       clusterCol: String,
       centers: Array[Array[Double]]
   ): Double = {
-    val spark = df.sparkSession
+    val spark     = df.sparkSession
     val bcCenters = spark.sparkContext.broadcast(centers)
 
     val distortionUDF = udf { (features: Vector, cluster: Int) =>
-      val point = features.toArray
+      val point  = features.toArray
       val center = bcCenters.value(cluster)
       squaredEuclidean(point, center)
     }
@@ -465,10 +494,14 @@ object LloydsIteratorFactory {
 
   /** Create a Lloyd's iterator appropriate for the given kernel.
     *
-    * @param kernel the Bregman kernel being used
-    * @param k number of clusters
-    * @param useAcceleration whether to use Elkan acceleration when possible
-    * @return appropriate LloydsIterator implementation
+    * @param kernel
+    *   the Bregman kernel being used
+    * @param k
+    *   number of clusters
+    * @param useAcceleration
+    *   whether to use Elkan acceleration when possible
+    * @return
+    *   appropriate LloydsIterator implementation
     */
   def create(kernel: BregmanKernel, k: Int, useAcceleration: Boolean = true): LloydsIterator = {
     if (useAcceleration && kernel.supportsExpressionOptimization && k >= 5) {

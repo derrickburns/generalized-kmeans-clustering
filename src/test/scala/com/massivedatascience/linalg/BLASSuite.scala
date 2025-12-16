@@ -30,7 +30,10 @@ class BLASSuite extends AnyFunSuite {
 
   test("nrm2 computes correct L2 norm for sparse vector") {
     val norm = BLAS.nrm2(sparseVec)
-    assert(math.abs(norm - expectedSparseNorm) < Epsilon, s"Expected $expectedSparseNorm, got $norm")
+    assert(
+      math.abs(norm - expectedSparseNorm) < Epsilon,
+      s"Expected $expectedSparseNorm, got $norm"
+    )
   }
 
   test("nrm2 returns 0 for zero vector") {

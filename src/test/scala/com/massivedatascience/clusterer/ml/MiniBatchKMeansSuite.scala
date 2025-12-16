@@ -40,11 +40,7 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
 
     val df = spark.createDataFrame(data).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(2)
-      .setBatchSize(5)
-      .setMaxIter(50)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(2).setBatchSize(5).setMaxIter(50).setSeed(42)
 
     val model = mbKmeans.fit(df)
 
@@ -61,21 +57,13 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
 
     val df = spark.createDataFrame(cluster1 ++ cluster2).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(2)
-      .setBatchSize(20)
-      .setMaxIter(100)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(2).setBatchSize(20).setMaxIter(100).setSeed(42)
 
-    val model = mbKmeans.fit(df)
+    val model       = mbKmeans.fit(df)
     val predictions = model.transform(df)
 
     // All points should be assigned to one of two clusters
-    val clusterCounts = predictions
-      .groupBy("prediction")
-      .count()
-      .collect()
-      .map(r => r.getLong(1))
+    val clusterCounts = predictions.groupBy("prediction").count().collect().map(r => r.getLong(1))
 
     assert(clusterCounts.length == 2)
     // Each cluster should have roughly 50 points (some variance expected)
@@ -149,18 +137,17 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
     // Should converge before maxIter due to early stopping
     assert(model.trainingSummary.isDefined)
     val summary = model.trainingSummary.get
-    assert(summary.iterations < 1000, s"Expected early stopping, got ${summary.iterations} iterations")
+    assert(
+      summary.iterations < 1000,
+      s"Expected early stopping, got ${summary.iterations} iterations"
+    )
   }
 
   test("MiniBatchKMeans respects batch size") {
     val data = (1 to 1000).map(i => Tuple1(Vectors.dense(i.toDouble, i.toDouble)))
     val df   = spark.createDataFrame(data).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(5)
-      .setBatchSize(100)
-      .setMaxIter(10)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(5).setBatchSize(100).setMaxIter(10).setSeed(42)
 
     // Should complete without error
     val model = mbKmeans.fit(df)
@@ -194,12 +181,7 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
     assert(mbKmeans.getReassignmentRatio == 0.01)
 
     // Set and verify
-    mbKmeans
-      .setK(10)
-      .setBatchSize(512)
-      .setDivergence("kl")
-      .setMaxIter(200)
-      .setMaxNoImprovement(20)
+    mbKmeans.setK(10).setBatchSize(512).setDivergence("kl").setMaxIter(200).setMaxNoImprovement(20)
 
     assert(mbKmeans.getK == 10)
     assert(mbKmeans.getBatchSize == 512)
@@ -212,17 +194,9 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
     val data = (1 to 100).map(i => Tuple1(Vectors.dense(i.toDouble % 5, i.toDouble / 20)))
     val df   = spark.createDataFrame(data).toDF("features")
 
-    val mbKmeans1 = new MiniBatchKMeans()
-      .setK(3)
-      .setBatchSize(20)
-      .setMaxIter(30)
-      .setSeed(12345)
+    val mbKmeans1 = new MiniBatchKMeans().setK(3).setBatchSize(20).setMaxIter(30).setSeed(12345)
 
-    val mbKmeans2 = new MiniBatchKMeans()
-      .setK(3)
-      .setBatchSize(20)
-      .setMaxIter(30)
-      .setSeed(12345)
+    val mbKmeans2 = new MiniBatchKMeans().setK(3).setBatchSize(20).setMaxIter(30).setSeed(12345)
 
     val model1 = mbKmeans1.fit(df)
     val model2 = mbKmeans2.fit(df)
@@ -247,14 +221,10 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
       Tuple1(Vectors.dense(1.1, 1.1)),
       Tuple1(Vectors.dense(0.9, 0.9))
     )
-    val df = spark.createDataFrame(data).toDF("features")
+    val df   = spark.createDataFrame(data).toDF("features")
 
     // k=2 is minimum, but all points are similar
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(2)
-      .setBatchSize(3)
-      .setMaxIter(20)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(2).setBatchSize(3).setMaxIter(20).setSeed(42)
 
     val model = mbKmeans.fit(df)
     assert(model.clusterCenters.length == 2)
@@ -267,14 +237,10 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
       Tuple1(Vectors.dense(10.0, 10.0)),
       Tuple1(Vectors.dense(11.0, 11.0))
     )
-    val df = spark.createDataFrame(data).toDF("features")
+    val df   = spark.createDataFrame(data).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(2)
-      .setDivergence("l1")
-      .setBatchSize(2)
-      .setMaxIter(30)
-      .setSeed(42)
+    val mbKmeans =
+      new MiniBatchKMeans().setK(2).setDivergence("l1").setBatchSize(2).setMaxIter(30).setSeed(42)
 
     val model = mbKmeans.fit(df)
     assert(model.clusterCenters.length == 2)
@@ -284,11 +250,7 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
     val data = (1 to 50).map(i => Tuple1(Vectors.dense(i.toDouble, i.toDouble)))
     val df   = spark.createDataFrame(data).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(3)
-      .setBatchSize(10)
-      .setMaxIter(20)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(3).setBatchSize(10).setMaxIter(20).setSeed(42)
 
     val model = mbKmeans.fit(df)
 
@@ -307,13 +269,9 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
       Tuple1(Vectors.dense(0.0, 0.0)),
       Tuple1(Vectors.dense(10.0, 10.0))
     )
-    val trainDf = spark.createDataFrame(trainData).toDF("features")
+    val trainDf   = spark.createDataFrame(trainData).toDF("features")
 
-    val mbKmeans = new MiniBatchKMeans()
-      .setK(2)
-      .setBatchSize(2)
-      .setMaxIter(20)
-      .setSeed(42)
+    val mbKmeans = new MiniBatchKMeans().setK(2).setBatchSize(2).setMaxIter(20).setSeed(42)
 
     val model = mbKmeans.fit(trainDf)
 
@@ -323,7 +281,7 @@ class MiniBatchKMeansSuite extends AnyFunSuite with DataFrameSuiteBase with Matc
       Tuple1(Vectors.dense(9.5, 9.5)),
       Tuple1(Vectors.dense(5.0, 5.0))
     )
-    val testDf = spark.createDataFrame(testData).toDF("features")
+    val testDf   = spark.createDataFrame(testData).toDF("features")
 
     val predictions = model.transform(testDf)
     assert(predictions.count() == 3)

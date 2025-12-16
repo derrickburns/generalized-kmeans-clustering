@@ -49,7 +49,7 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
       Array(10.5, 10.5)
     )
 
-    val kernel = new SquaredEuclideanKernel()
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AdaptiveBroadcastAssignment()
 
     val result = assigner.assign(data, "features", None, centers, kernel)
@@ -78,7 +78,7 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
       Array(0.15, 0.85)
     )
 
-    val kernel = new KLDivergenceKernel(1e-10)
+    val kernel   = new KLDivergenceKernel(1e-10)
     val assigner = new AdaptiveBroadcastAssignment()
 
     val result = assigner.assign(data, "features", None, centers, kernel)
@@ -105,7 +105,7 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
       Array(10.0, 10.0)
     )
 
-    val kernel = new SquaredEuclideanKernel()
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AdaptiveBroadcastAssignment()
 
     // Should use SE fast path (kernel.supportsExpressionOptimization = true)
@@ -119,12 +119,12 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
     import sparkSession.implicits._
 
     val numPoints = 100
-    val data = (0 until numPoints).map { i =>
+    val data      = (0 until numPoints).map { i =>
       Tuple1(Vectors.dense(i.toDouble, i.toDouble))
     }.toDF("features")
 
     // Create many centers (more than typical chunk size)
-    val k = 200
+    val k       = 200
     val centers = (0 until k).map { i =>
       Array(i.toDouble, i.toDouble)
     }.toArray
@@ -212,8 +212,8 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
       Tuple1(Vectors.dense(0.0, 0.0))
     ).toDF("features")
 
-    val centers = Array.empty[Array[Double]]
-    val kernel = new SquaredEuclideanKernel()
+    val centers  = Array.empty[Array[Double]]
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AdaptiveBroadcastAssignment()
 
     val result = assigner.assign(data, "features", None, centers, kernel)
@@ -245,7 +245,7 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
     val kernel = new KLDivergenceKernel(1e-6)
 
     // Run both assignment strategies
-    val adaptiveAssigner = new AdaptiveBroadcastAssignment()
+    val adaptiveAssigner  = new AdaptiveBroadcastAssignment()
     val broadcastAssigner = new BroadcastUDFAssignment()
 
     val adaptiveResult = adaptiveAssigner
@@ -261,7 +261,9 @@ class AdaptiveBroadcastAssignmentSuite extends AnyFunSuite with BeforeAndAfterAl
       .map(_.getInt(0))
 
     // Results should be identical
-    assert(adaptiveResult.toSeq == broadcastResult.toSeq,
-      s"Adaptive: ${adaptiveResult.toSeq}, Broadcast: ${broadcastResult.toSeq}")
+    assert(
+      adaptiveResult.toSeq == broadcastResult.toSeq,
+      s"Adaptive: ${adaptiveResult.toSeq}, Broadcast: ${broadcastResult.toSeq}"
+    )
   }
 }

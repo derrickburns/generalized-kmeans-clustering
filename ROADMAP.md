@@ -176,7 +176,7 @@ This document tracks planned improvements, technical debt, and future directions
   - `src/main/scala/com/massivedatascience/clusterer/ml/MiniBatchKMeans.scala`
   - `src/test/scala/com/massivedatascience/clusterer/ml/MiniBatchKMeansSuite.scala`
 - **Reference:** Sculley (2010): "Web-Scale K-Means Clustering"
-- **Status:** In Progress
+- **Status:** Completed 2025-12-15
 
 ### 3.5 Add Constrained/Balanced K-Means (P2)
 - **Motivation:** Enforce min/max cluster sizes for workload balancing, equal-sized segments
@@ -191,7 +191,7 @@ This document tracks planned improvements, technical debt, and future directions
   - `src/main/scala/com/massivedatascience/clusterer/ml/BalancedKMeans.scala`
   - `src/test/scala/com/massivedatascience/clusterer/ml/BalancedKMeansSuite.scala`
 - **Reference:** Malinen & Fränti (2014): "Balanced K-Means for Clustering"
-- **Status:** Not Started
+- **Status:** Completed 2025-12-15
 
 ### 3.6 Bregman-Native k-means++ Seeding (P2)
 - **Motivation:** Current k-means|| uses SE distances for seeding even with non-SE divergences

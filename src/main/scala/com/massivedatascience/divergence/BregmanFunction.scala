@@ -19,11 +19,11 @@ package com.massivedatascience.divergence
 
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 
-/** Core trait for Bregman functions, providing a single source of truth for divergence
-  * computations across both RDD and DataFrame APIs.
+/** Core trait for Bregman functions, providing a single source of truth for divergence computations
+  * across both RDD and DataFrame APIs.
   *
-  * A Bregman function F: S → ℝ is a strictly convex, continuously differentiable function
-  * defined on a closed convex set S ⊆ ℝ^d. The Bregman divergence D_F is defined as:
+  * A Bregman function F: S → ℝ is a strictly convex, continuously differentiable function defined
+  * on a closed convex set S ⊆ ℝ^d. The Bregman divergence D_F is defined as:
   *
   * D_F(x, y) = F(x) - F(y) - ⟨∇F(y), x - y⟩
   *
@@ -41,9 +41,8 @@ import org.apache.spark.ml.linalg.{ Vector, Vectors }
   *   - `BregmanKernel` (DataFrame API): Focused on grad/invGrad for Lloyd's algorithm
   *
   * By consolidating the mathematical definitions, we:
-  *   1. Ensure consistent divergence formulas across APIs
-  *   2. Reduce maintenance burden (single place to fix bugs)
-  *   3. Enable sharing of implementations between APIs
+  *   1. Ensure consistent divergence formulas across APIs 2. Reduce maintenance burden (single
+  *      place to fix bugs) 3. Enable sharing of implementations between APIs
   *
   * ==Usage==
   *
@@ -88,8 +87,8 @@ trait BregmanFunction extends Serializable {
 
   /** Compute the inverse gradient: given θ = ∇F(x), recover x.
     *
-    * This maps natural parameters back to expectation parameters.
-    * For k-means: center = invGradF(weighted_mean_of_gradients)
+    * This maps natural parameters back to expectation parameters. For k-means: center =
+    * invGradF(weighted_mean_of_gradients)
     *
     * @param theta
     *   natural parameters
@@ -102,8 +101,8 @@ trait BregmanFunction extends Serializable {
     *
     * D_F(x, y) = F(x) - F(y) - ⟨∇F(y), x - y⟩
     *
-    * Default implementation uses the definition. Override for efficiency
-    * or when the direct formula is simpler (e.g., squared Euclidean).
+    * Default implementation uses the definition. Override for efficiency or when the direct formula
+    * is simpler (e.g., squared Euclidean).
     *
     * @param x
     *   first point
@@ -199,13 +198,12 @@ class SquaredEuclideanFunction extends BregmanFunction {
 
 /** KL Divergence Bregman function: F(x) = ∑_i x_i log(x_i)
   *
-  * For probability distributions and count data.
-  * Domain: x_i > 0 for all i
+  * For probability distributions and count data. Domain: x_i > 0 for all i
   *
   * Properties:
   *   - ∇F(x) = [log(x_i) + 1]
   *   - (∇F)^(-1)(θ) = [exp(θ_i - 1)]
-  *   - D_F(x, y) = ∑_i x_i log(x_i / y_i) - x_i + y_i  (generalized KL)
+  *   - D_F(x, y) = ∑_i x_i log(x_i / y_i) - x_i + y_i (generalized KL)
   *
   * @param smoothing
   *   small constant to avoid log(0)
@@ -474,8 +472,8 @@ class LogisticLossFunction(smoothing: Double = 1e-10) extends BregmanFunction {
 
 /** L1 (Manhattan) distance function.
   *
-  * NOT a Bregman divergence (non-differentiable at 0), but provided for K-Medians.
-  * Uses sign function as subgradient.
+  * NOT a Bregman divergence (non-differentiable at 0), but provided for K-Medians. Uses sign
+  * function as subgradient.
   */
 class L1Function extends BregmanFunction {
 
@@ -525,8 +523,8 @@ class L1Function extends BregmanFunction {
 
 /** Spherical (cosine similarity) function.
   *
-  * NOT a Bregman divergence, but provided for spherical K-Means.
-  * Automatically normalizes vectors to unit length.
+  * NOT a Bregman divergence, but provided for spherical K-Means. Automatically normalizes vectors
+  * to unit length.
   */
 class SphericalFunction extends BregmanFunction {
 
@@ -594,8 +592,8 @@ class SphericalFunction extends BregmanFunction {
 /** Factory for standard Bregman functions.
   */
 object BregmanFunctions {
-  val squaredEuclidean: BregmanFunction              = new SquaredEuclideanFunction()
-  def kl(smoothing: Double = 1e-10): BregmanFunction = new KLFunction(smoothing)
+  val squaredEuclidean: BregmanFunction                        = new SquaredEuclideanFunction()
+  def kl(smoothing: Double = 1e-10): BregmanFunction           = new KLFunction(smoothing)
   def itakuraSaito(smoothing: Double = 1e-10): BregmanFunction = new ItakuraSaitoFunction(
     smoothing
   )
@@ -605,8 +603,8 @@ object BregmanFunctions {
   def logisticLoss(smoothing: Double = 1e-10): BregmanFunction = new LogisticLossFunction(
     smoothing
   )
-  val l1: BregmanFunction                            = new L1Function()
-  val spherical: BregmanFunction                     = new SphericalFunction()
+  val l1: BregmanFunction                                      = new L1Function()
+  val spherical: BregmanFunction                               = new SphericalFunction()
 
   /** Get a BregmanFunction by name.
     *

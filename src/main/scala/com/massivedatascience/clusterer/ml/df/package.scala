@@ -2,8 +2,8 @@ package com.massivedatascience.clusterer.ml
 
 /** DataFrame-based K-means clustering algorithms.
   *
-  * This package provides the core implementation of Bregman K-means clustering
-  * using Spark's DataFrame API.
+  * This package provides the core implementation of Bregman K-means clustering using Spark's
+  * DataFrame API.
   *
   * ==Key Components==
   *
@@ -24,38 +24,38 @@ package object df {
   // Users importing com.massivedatascience.clusterer.ml.df._ get these types
 
   // Assignment strategies
-  type AssignmentStrategy = strategies.AssignmentStrategy
-  type BroadcastUDFAssignment = strategies.BroadcastUDFAssignment
-  type SECrossJoinAssignment = strategies.SECrossJoinAssignment
-  type ChunkedBroadcastAssignment = strategies.ChunkedBroadcastAssignment
+  type AssignmentStrategy          = strategies.AssignmentStrategy
+  type BroadcastUDFAssignment      = strategies.BroadcastUDFAssignment
+  type SECrossJoinAssignment       = strategies.SECrossJoinAssignment
+  type ChunkedBroadcastAssignment  = strategies.ChunkedBroadcastAssignment
   type AdaptiveBroadcastAssignment = strategies.AdaptiveBroadcastAssignment
-  type AutoAssignment = strategies.AutoAssignment
+  type AutoAssignment              = strategies.AutoAssignment
 
   // Update strategies
-  type UpdateStrategy = strategies.UpdateStrategy
-  type GradMeanUDAFUpdate = strategies.GradMeanUDAFUpdate
+  type UpdateStrategy       = strategies.UpdateStrategy
+  type GradMeanUDAFUpdate   = strategies.GradMeanUDAFUpdate
   type MedianUpdateStrategy = strategies.MedianUpdateStrategy
 
   // Empty cluster handlers
-  type EmptyClusterHandler = strategies.EmptyClusterHandler
-  type ReseedRandomHandler = strategies.ReseedRandomHandler
+  type EmptyClusterHandler      = strategies.EmptyClusterHandler
+  type ReseedRandomHandler      = strategies.ReseedRandomHandler
   type DropEmptyClustersHandler = strategies.DropEmptyClustersHandler
 
   // Convergence checks
-  type ConvergenceCheck = strategies.ConvergenceCheck
+  type ConvergenceCheck    = strategies.ConvergenceCheck
   type MovementConvergence = strategies.MovementConvergence
 
   // Input validators
-  type InputValidator = strategies.InputValidator
+  type InputValidator         = strategies.InputValidator
   type StandardInputValidator = strategies.StandardInputValidator
 
   // Kernel types (from kernels subpackage)
-  type BregmanKernel = kernels.BregmanKernel
-  type SquaredEuclideanKernel = kernels.SquaredEuclideanKernel
-  type KLDivergenceKernel = kernels.KLDivergenceKernel
-  type ItakuraSaitoKernel = kernels.ItakuraSaitoKernel
+  type BregmanKernel                = kernels.BregmanKernel
+  type SquaredEuclideanKernel       = kernels.SquaredEuclideanKernel
+  type KLDivergenceKernel           = kernels.KLDivergenceKernel
+  type ItakuraSaitoKernel           = kernels.ItakuraSaitoKernel
   type GeneralizedIDivergenceKernel = kernels.GeneralizedIDivergenceKernel
-  type LogisticLossKernel = kernels.LogisticLossKernel
-  type L1Kernel = kernels.L1Kernel
-  type SphericalKernel = kernels.SphericalKernel
+  type LogisticLossKernel           = kernels.LogisticLossKernel
+  type L1Kernel                     = kernels.L1Kernel
+  type SphericalKernel              = kernels.SphericalKernel
 }

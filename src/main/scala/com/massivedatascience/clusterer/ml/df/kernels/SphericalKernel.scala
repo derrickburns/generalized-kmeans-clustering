@@ -11,9 +11,8 @@ import org.apache.spark.ml.linalg.{ Vector, Vectors }
   * practical clustering. Like L1Kernel, we provide it for its widespread utility.
   *
   * The algorithm:
-  *   1. Normalizes all points to unit length (L2 norm = 1)
-  *   2. Uses cosine similarity as the proximity measure
-  *   3. Centers are computed as normalized mean of assigned points
+  *   1. Normalizes all points to unit length (L2 norm = 1) 2. Uses cosine similarity as the
+  *      proximity measure 3. Centers are computed as normalized mean of assigned points
   *
   * Distance: 1 - cos(x, μ) = 1 - (x · μ) / (||x|| ||μ||)
   *
@@ -30,8 +29,8 @@ import org.apache.spark.ml.linalg.{ Vector, Vectors }
   *   - Recommendation systems
   *   - Any high-dimensional sparse data where scale is irrelevant
   *
-  * Note: Input vectors are automatically normalized. Pre-normalized data will work correctly
-  * but normalization is applied regardless.
+  * Note: Input vectors are automatically normalized. Pre-normalized data will work correctly but
+  * normalization is applied regardless.
   */
 private[df] class SphericalKernel extends BregmanKernel {
 
@@ -131,9 +130,9 @@ private[df] class SphericalKernel extends BregmanKernel {
     *   true if valid for spherical k-means
     */
   override def validate(x: Vector): Boolean = {
-    val arr = x.toArray
-    var norm = 0.0
-    var i = 0
+    val arr   = x.toArray
+    var norm  = 0.0
+    var i     = 0
     var valid = true
     while (i < arr.length && valid) {
       val v = arr(i)

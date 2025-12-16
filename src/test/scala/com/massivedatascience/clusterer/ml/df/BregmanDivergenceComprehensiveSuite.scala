@@ -23,8 +23,8 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.util.Random
 
-/** Comprehensive tests for Bregman divergences with random values, extreme cases, and
-  * mathematical property verification.
+/** Comprehensive tests for Bregman divergences with random values, extreme cases, and mathematical
+  * property verification.
   *
   * This suite complements BregmanKernelAccuracySuite by testing:
   *   - Random value combinations
@@ -71,7 +71,8 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
     val x      = Vectors.dense(1e10, -1e10, 5e9)
     val mu     = Vectors.dense(2e10, -2e10, 1e10)
 
-    val expected = 0.5 * ((1e10 - 2e10) * (1e10 - 2e10) + (-1e10 + 2e10) * (-1e10 + 2e10) + (5e9 - 1e10) * (5e9 - 1e10))
+    val expected =
+      0.5 * ((1e10 - 2e10) * (1e10 - 2e10) + (-1e10 + 2e10) * (-1e10 + 2e10) + (5e9 - 1e10) * (5e9 - 1e10))
     val actual   = kernel.divergence(x, mu)
 
     math.abs((actual - expected) / expected) should be < looseTol // Relative error
@@ -108,7 +109,7 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
     val kernel = new KLDivergenceKernel(smoothing = 1e-10)
 
     for (_ <- 1 to 100) {
-      val dim = 2 + rng.nextInt(10)
+      val dim   = 2 + rng.nextInt(10)
       // Generate random probability distributions
       val xRaw  = Array.fill(dim)(rng.nextDouble())
       val xSum  = xRaw.sum
@@ -417,24 +418,24 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
               Vectors.dense(Array.fill(3)(rng.nextDouble() * 10 - 5)),
               Vectors.dense(Array.fill(3)(rng.nextDouble() * 10 - 5))
             )
-          case "KL" =>
+          case "KL"        =>
             // For KL, ensure we use valid probability distributions
             val xRaw  = Array.fill(3)(0.1 + rng.nextDouble())
             val xSum  = xRaw.sum
             val muRaw = Array.fill(3)(0.1 + rng.nextDouble())
             val muSum = muRaw.sum
             (Vectors.dense(xRaw.map(_ / xSum)), Vectors.dense(muRaw.map(_ / muSum)))
-          case "GenI" =>
+          case "GenI"      =>
             (
               Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10)),
               Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10))
             )
-          case "IS" =>
+          case "IS"        =>
             (
               Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10)),
               Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10))
             )
-          case "Logistic" =>
+          case "Logistic"  =>
             (
               Vectors.dense(Array.fill(2)(0.01 + rng.nextDouble() * 0.98)),
               Vectors.dense(Array.fill(2)(0.01 + rng.nextDouble() * 0.98))
@@ -442,7 +443,8 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
         }
 
         val dist = kernel.divergence(x, mu)
-        withClue(s"$name divergence should be non-negative (iteration $iteration, x=${x.toArray.mkString(",")}, mu=${mu.toArray.mkString(",")}, dist=$dist)") {
+        withClue(s"$name divergence should be non-negative (iteration $iteration, x=${x.toArray
+            .mkString(",")}, mu=${mu.toArray.mkString(",")}, dist=$dist)") {
           dist should be >= (-1e-8) // Allow small numerical errors due to log calculations
           java.lang.Double.isFinite(dist) shouldBe true
         }
@@ -463,10 +465,10 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
     kernels.foreach { case (name, kernel) =>
       for (_ <- 1 to 20) {
         val x = name match {
-          case "SE" | "L1"            => Vectors.dense(Array.fill(3)(rng.nextDouble() * 10 - 5))
-          case "KL" | "GenI"          => Vectors.dense(Array.fill(3)(rng.nextDouble() * 10))
-          case "IS"                   => Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10))
-          case "Logistic"             => Vectors.dense(Array.fill(2)(0.01 + rng.nextDouble() * 0.98))
+          case "SE" | "L1"   => Vectors.dense(Array.fill(3)(rng.nextDouble() * 10 - 5))
+          case "KL" | "GenI" => Vectors.dense(Array.fill(3)(rng.nextDouble() * 10))
+          case "IS"          => Vectors.dense(Array.fill(3)(0.1 + rng.nextDouble() * 10))
+          case "Logistic"    => Vectors.dense(Array.fill(2)(0.01 + rng.nextDouble() * 0.98))
         }
 
         val dist = kernel.divergence(x, x)
@@ -560,9 +562,12 @@ class BregmanDivergenceComprehensiveSuite extends AnyFunSuite with Matchers {
     val gradFmu = mu.toArray.map(_ * 2.0)
 
     // <grad(F(mu)), x - mu>
-    val dotProd = gradFmu.zip(x.toArray.zip(mu.toArray)).map { case (g, (xi, mui)) =>
-      g * (xi - mui)
-    }.sum
+    val dotProd = gradFmu
+      .zip(x.toArray.zip(mu.toArray))
+      .map { case (g, (xi, mui)) =>
+        g * (xi - mui)
+      }
+      .sum
 
     // Bregman divergence formula (note: SE kernel uses 0.5 * ||x - mu||^2)
     val expected = 0.5 * (Fx - Fmu - dotProd)

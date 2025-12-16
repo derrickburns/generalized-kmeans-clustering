@@ -59,10 +59,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDF("features")
 
     // Lambda of 2.0 should create ~3 clusters (cluster diameter < 2, inter-cluster > 5)
-    val dpmeans = new DPMeans()
-      .setLambda(2.0)
-      .setMaxIter(20)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(2.0).setMaxIter(20).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -87,11 +84,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     }.toDF("features")
 
     // Small lambda would create many clusters, but maxK limits it
-    val dpmeans = new DPMeans()
-      .setLambda(1.0)
-      .setMaxK(5)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(1.0).setMaxK(5).setMaxIter(10).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -110,10 +103,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDF("features")
 
     // Very large lambda should create only 1 cluster
-    val dpmeans = new DPMeans()
-      .setLambda(100.0)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(100.0).setMaxIter(10).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -134,11 +124,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDF("features")
 
     // Small lambda should create cluster for each point
-    val dpmeans = new DPMeans()
-      .setLambda(1.0)
-      .setMaxK(10)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(1.0).setMaxK(10).setMaxIter(10).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -207,11 +193,8 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       Tuple1(Vectors.dense(normalize(Array(0.0, 0.1, 1.0))))
     ).toDF("features")
 
-    val dpmeans = new DPMeans()
-      .setDivergence("spherical")
-      .setLambda(0.5)
-      .setMaxIter(20)
-      .setSeed(42L)
+    val dpmeans =
+      new DPMeans().setDivergence("spherical").setLambda(0.5).setMaxIter(20).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -231,13 +214,10 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       Tuple1(Vectors.dense(10.0, 0.0))
     ).toDF("features")
 
-    val dpmeans = new DPMeans()
-      .setLambda(5.0)
-      .setDistanceCol("distance")
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans =
+      new DPMeans().setLambda(5.0).setDistanceCol("distance").setMaxIter(10).setSeed(42L)
 
-    val model = dpmeans.fit(data)
+    val model       = dpmeans.fit(data)
     val predictions = model.transform(data)
 
     assert(predictions.columns.contains("distance"))
@@ -259,10 +239,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       Tuple1(Vectors.dense(1.0, 1.0))
     ).toDF("features")
 
-    val dpmeans = new DPMeans()
-      .setLambda(0.5)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(0.5).setMaxIter(10).setSeed(42L)
 
     val model = dpmeans.fit(data)
 
@@ -307,10 +284,7 @@ class DPMeansSuite extends AnyFunSuite with BeforeAndAfterAll {
       Tuple1(Vectors.dense(100.0, 0.0))
     ).toDF("features")
 
-    val dpmeans = new DPMeans()
-      .setLambda(10.0)
-      .setMaxIter(10)
-      .setSeed(42L)
+    val dpmeans = new DPMeans().setLambda(10.0).setMaxIter(10).setSeed(42L)
 
     val model = dpmeans.fit(data)
 

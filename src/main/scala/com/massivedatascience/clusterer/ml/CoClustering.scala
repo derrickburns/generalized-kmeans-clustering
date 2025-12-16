@@ -193,18 +193,18 @@ class CoClustering(override val uid: String)
 
   def this() = this(Identifiable.randomUID("coClustering"))
 
-  def setNumRowClusters(value: Int): this.type    = set(numRowClusters, value)
-  def setNumColClusters(value: Int): this.type    = set(numColClusters, value)
-  def setRowIndexCol(value: String): this.type    = set(rowIndexCol, value)
-  def setColIndexCol(value: String): this.type    = set(colIndexCol, value)
-  def setValueCol(value: String): this.type       = set(valueCol, value)
+  def setNumRowClusters(value: Int): this.type      = set(numRowClusters, value)
+  def setNumColClusters(value: Int): this.type      = set(numColClusters, value)
+  def setRowIndexCol(value: String): this.type      = set(rowIndexCol, value)
+  def setColIndexCol(value: String): this.type      = set(colIndexCol, value)
+  def setValueCol(value: String): this.type         = set(valueCol, value)
   def setRowPredictionCol(value: String): this.type = set(rowPredictionCol, value)
   def setColPredictionCol(value: String): this.type = set(colPredictionCol, value)
-  def setMaxIter(value: Int): this.type           = set(maxIter, value)
-  def setTolerance(value: Double): this.type      = set(tolerance, value)
-  def setRegularization(value: Double): this.type = set(regularization, value)
-  def setDivergence(value: String): this.type     = set(divergence, value)
-  def setSeed(value: Long): this.type             = set(seed, value)
+  def setMaxIter(value: Int): this.type             = set(maxIter, value)
+  def setTolerance(value: Double): this.type        = set(tolerance, value)
+  def setRegularization(value: Double): this.type   = set(regularization, value)
+  def setDivergence(value: String): this.type       = set(divergence, value)
+  def setSeed(value: Long): this.type               = set(seed, value)
 
   override def fit(dataset: Dataset[_]): CoClusteringModel = {
     transformSchema(dataset.schema, logging = true)
@@ -212,7 +212,9 @@ class CoClustering(override val uid: String)
     val spark = dataset.sparkSession
     import spark.implicits._
 
-    logInfo(s"Starting co-clustering with ${$(numRowClusters)} row clusters and ${$(numColClusters)} column clusters")
+    logInfo(
+      s"Starting co-clustering with ${$(numRowClusters)} row clusters and ${$(numColClusters)} column clusters"
+    )
 
     val df = dataset.toDF()
     df.cache()
@@ -233,7 +235,7 @@ class CoClustering(override val uid: String)
     logInfo(s"Matrix dimensions: ${rowIndices.length} rows x ${colIndices.length} columns")
 
     // Initialize cluster assignments randomly
-    val random = new scala.util.Random($(seed))
+    val random      = new scala.util.Random($(seed))
     var rowClusters = rowIndices.map(idx => idx -> random.nextInt($(numRowClusters))).toMap
     var colClusters = colIndices.map(idx => idx -> random.nextInt($(numColClusters))).toMap
 
@@ -252,7 +254,8 @@ class CoClustering(override val uid: String)
       val blockCenters = computeBlockCenters(df, bcRowClusters.value, bcColClusters.value)
 
       // Calculate objective
-      val objective = computeObjective(df, bcRowClusters.value, bcColClusters.value, blockCenters, kernel)
+      val objective =
+        computeObjective(df, bcRowClusters.value, bcColClusters.value, blockCenters, kernel)
 
       logDebug(s"Iteration $iterations: objective = $objective")
 
@@ -280,7 +283,7 @@ class CoClustering(override val uid: String)
     logWarning(s"Did not converge after ${$(maxIter)} iterations")
 
     val finalBlockCenters = computeBlockCenters(df, rowClusters, colClusters)
-    val finalObjective = computeObjective(df, rowClusters, colClusters, finalBlockCenters, kernel)
+    val finalObjective    = computeObjective(df, rowClusters, colClusters, finalBlockCenters, kernel)
 
     bcRowClusters.unpersist()
     bcColClusters.unpersist()
@@ -373,16 +376,15 @@ class CoClustering(override val uid: String)
       kernel: BregmanKernel
   ): Map[Long, Int] = {
 
-    val spark = df.sparkSession
-    val bcBlockCenters = spark.sparkContext.broadcast(blockCenters)
-    val bcColClusters  = spark.sparkContext.broadcast(colClusters)
+    val spark               = df.sparkSession
+    val bcBlockCenters      = spark.sparkContext.broadcast(blockCenters)
+    val bcColClusters       = spark.sparkContext.broadcast(colClusters)
     val numRowClustersLocal = $(numRowClusters)
 
     val getColCluster = udf((idx: Long) => bcColClusters.value.getOrElse(idx, 0))
 
     // For each row, compute cost for each potential row cluster assignment
-    val dfWithColCluster = df
-      .withColumn("_colCluster", getColCluster(col($(colIndexCol))))
+    val dfWithColCluster = df.withColumn("_colCluster", getColCluster(col($(colIndexCol))))
 
     // Collect data by row to compute assignments locally
     val rowData = dfWithColCluster
@@ -391,10 +393,10 @@ class CoClustering(override val uid: String)
       .groupBy(row => row.getLong(0))
       .map { case (rowIdx, rows) =>
         val entries = rows.map(r => (r.getInt(1), r.getDouble(2)))
-        val costs = (0 until numRowClustersLocal).map { rowCluster =>
+        val costs   = (0 until numRowClustersLocal).map { rowCluster =>
           entries.map { case (colCluster, value) =>
             val center = bcBlockCenters.value(rowCluster)(colCluster)
-            val diff = value - center
+            val diff   = value - center
             diff * diff * 0.5
           }.sum
         }
@@ -414,16 +416,15 @@ class CoClustering(override val uid: String)
       kernel: BregmanKernel
   ): Map[Long, Int] = {
 
-    val spark = df.sparkSession
-    val bcBlockCenters = spark.sparkContext.broadcast(blockCenters)
-    val bcRowClusters  = spark.sparkContext.broadcast(rowClusters)
+    val spark               = df.sparkSession
+    val bcBlockCenters      = spark.sparkContext.broadcast(blockCenters)
+    val bcRowClusters       = spark.sparkContext.broadcast(rowClusters)
     val numColClustersLocal = $(numColClusters)
 
     val getRowCluster = udf((idx: Long) => bcRowClusters.value.getOrElse(idx, 0))
 
     // For each column, compute cost for each potential column cluster assignment
-    val dfWithRowCluster = df
-      .withColumn("_rowCluster", getRowCluster(col($(rowIndexCol))))
+    val dfWithRowCluster = df.withColumn("_rowCluster", getRowCluster(col($(rowIndexCol))))
 
     // Collect data by column to compute assignments locally
     val colData = dfWithRowCluster
@@ -432,10 +433,10 @@ class CoClustering(override val uid: String)
       .groupBy(row => row.getLong(0))
       .map { case (colIdx, rows) =>
         val entries = rows.map(r => (r.getInt(1), r.getDouble(2)))
-        val costs = (0 until numColClustersLocal).map { colCluster =>
+        val costs   = (0 until numColClustersLocal).map { colCluster =>
           entries.map { case (rowCluster, value) =>
             val center = bcBlockCenters.value(rowCluster)(colCluster)
-            val diff = value - center
+            val diff   = value - center
             diff * diff * 0.5
           }.sum
         }
@@ -569,21 +570,21 @@ object CoClusteringModel extends MLReadable[CoClusteringModel] {
 
       // Create metadata JSON
       val metaObj: Map[String, Any] = Map(
-        "algo"               -> "CoClusteringModel",
-        "uid"                -> instance.uid,
-        "sparkVersion"       -> org.apache.spark.SPARK_VERSION,
-        "divergence"         -> instance.getOrDefault(instance.divergence),
-        "numRowClusters"     -> instance.getOrDefault(instance.numRowClusters),
-        "numColClusters"     -> instance.getOrDefault(instance.numColClusters),
-        "rowIndexCol"        -> instance.getOrDefault(instance.rowIndexCol),
-        "colIndexCol"        -> instance.getOrDefault(instance.colIndexCol),
-        "valueCol"           -> instance.getOrDefault(instance.valueCol),
-        "rowPredictionCol"   -> instance.getOrDefault(instance.rowPredictionCol),
-        "colPredictionCol"   -> instance.getOrDefault(instance.colPredictionCol),
-        "maxIter"            -> instance.getOrDefault(instance.maxIter),
-        "tolerance"          -> instance.getOrDefault(instance.tolerance),
-        "regularization"     -> instance.getOrDefault(instance.regularization),
-        "seed"               -> instance.getOrDefault(instance.seed)
+        "algo"             -> "CoClusteringModel",
+        "uid"              -> instance.uid,
+        "sparkVersion"     -> org.apache.spark.SPARK_VERSION,
+        "divergence"       -> instance.getOrDefault(instance.divergence),
+        "numRowClusters"   -> instance.getOrDefault(instance.numRowClusters),
+        "numColClusters"   -> instance.getOrDefault(instance.numColClusters),
+        "rowIndexCol"      -> instance.getOrDefault(instance.rowIndexCol),
+        "colIndexCol"      -> instance.getOrDefault(instance.colIndexCol),
+        "valueCol"         -> instance.getOrDefault(instance.valueCol),
+        "rowPredictionCol" -> instance.getOrDefault(instance.rowPredictionCol),
+        "colPredictionCol" -> instance.getOrDefault(instance.colPredictionCol),
+        "maxIter"          -> instance.getOrDefault(instance.maxIter),
+        "tolerance"        -> instance.getOrDefault(instance.tolerance),
+        "regularization"   -> instance.getOrDefault(instance.regularization),
+        "seed"             -> instance.getOrDefault(instance.seed)
       )
 
       val json = Serialization.write(metaObj)
@@ -610,7 +611,8 @@ object CoClusteringModel extends MLReadable[CoClusteringModel] {
       logInfo(s"Loading CoClusteringModel from $path")
 
       // Load metadata
-      val metaJson = new String(Files.readAllBytes(Paths.get(s"$path/metadata.json")), StandardCharsets.UTF_8)
+      val metaJson =
+        new String(Files.readAllBytes(Paths.get(s"$path/metadata.json")), StandardCharsets.UTF_8)
       val meta     = JsonMethods.parse(metaJson).extract[Map[String, Any]]
 
       val uid = meta("uid").toString
@@ -634,7 +636,7 @@ object CoClusteringModel extends MLReadable[CoClusteringModel] {
       }
 
       val divergenceName = meta("divergence").toString
-      val kernel = divergenceName match {
+      val kernel         = divergenceName match {
         case "squaredEuclidean" => new SquaredEuclideanKernel()
         case "kl"               => new KLDivergenceKernel()
         case "itakuraSaito"     => new ItakuraSaitoKernel()

@@ -252,7 +252,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with valid strictly positive data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(3.0, 4.0)),
       Tuple1(Vectors.dense(0.5, 0.1))
@@ -265,7 +265,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with invalid strictly positive data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(0.0, 4.0)), // Invalid: contains zero
       Tuple1(Vectors.dense(0.5, 0.1))
@@ -283,7 +283,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with valid open interval data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(0.1, 0.2)),
       Tuple1(Vectors.dense(0.3, 0.4)),
       Tuple1(Vectors.dense(0.5, 0.9))
@@ -296,7 +296,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with invalid open interval data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(0.1, 0.2)),
       Tuple1(Vectors.dense(1.0, 0.4)), // Invalid: contains 1.0
       Tuple1(Vectors.dense(0.5, 0.9))
@@ -313,7 +313,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with valid non-negative data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(0.0, 1.0)),
       Tuple1(Vectors.dense(2.0, 0.0)),
       Tuple1(Vectors.dense(0.5, 3.0))
@@ -326,7 +326,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with invalid non-negative data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(0.0, 1.0)),
       Tuple1(Vectors.dense(-1.0, 0.0)), // Invalid: contains negative
       Tuple1(Vectors.dense(0.5, 3.0))
@@ -343,7 +343,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with unrestricted divergence") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(-10.0, 10.0)),
       Tuple1(Vectors.dense(0.0, 0.0)),
       Tuple1(Vectors.dense(-5.0, 5.0))
@@ -356,7 +356,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with NaN in unrestricted data") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(Double.NaN, 4.0)), // Invalid: contains NaN
       Tuple1(Vectors.dense(0.5, 0.1))
@@ -372,7 +372,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with Infinity") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(Double.PositiveInfinity, 4.0)), // Invalid: contains Infinity
       Tuple1(Vectors.dense(0.5, 0.1))
@@ -381,13 +381,17 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
     val exception = intercept[IllegalArgumentException] {
       DivergenceDomainValidator.validateDataFrame(df, "features", "kl")
     }
-    assert(exception.getMessage.contains("Infinity") || exception.getMessage.contains("strictly positive"))
+    assert(
+      exception.getMessage.contains("Infinity") || exception.getMessage.contains(
+        "strictly positive"
+      )
+    )
   }
 
   test("validateDataFrame with maxSamples parameter") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0)),
       Tuple1(Vectors.dense(3.0, 4.0)),
       Tuple1(Vectors.dense(5.0, 6.0)),
@@ -402,7 +406,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame reports feature index in error") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, 2.0, 3.0, 4.0, 5.0)),
       Tuple1(Vectors.dense(1.0, 2.0, 0.0, 4.0, 5.0)) // Invalid at index 2
     ).toDF("features")
@@ -452,7 +456,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("error messages include suggested fixes") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.0, -1.0))
     ).toDF("features")
 
@@ -470,7 +474,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("error messages show example code") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(0.0, 1.0))
     ).toDF("features")
 
@@ -488,7 +492,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("error messages are actionable for logistic divergence") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.dense(1.5, 0.5))
     ).toDF("features")
 
@@ -510,9 +514,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with empty DataFrame") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = spark.emptyDataFrame
-      .selectExpr("array(1.0, 2.0) as features")
-      .limit(0)
+    val df           = spark.emptyDataFrame.selectExpr("array(1.0, 2.0) as features").limit(0)
 
     // Should not throw on empty data
     DivergenceDomainValidator.validateDataFrame(df, "features", "kl")
@@ -533,7 +535,7 @@ class DivergenceDomainValidatorSuite extends AnyFunSuite with BeforeAndAfterAll 
   test("validateDataFrame with sparse vectors") {
     val sparkSession = spark
     import sparkSession.implicits._
-    val df = Seq(
+    val df           = Seq(
       Tuple1(Vectors.sparse(5, Seq((0, 1.0), (2, 2.0)))),
       Tuple1(Vectors.sparse(5, Seq((1, 3.0), (4, 4.0))))
     ).toDF("features")

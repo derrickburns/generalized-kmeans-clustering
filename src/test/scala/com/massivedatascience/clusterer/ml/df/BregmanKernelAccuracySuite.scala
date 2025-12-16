@@ -679,8 +679,13 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
 
     // Direction should be preserved (same as normalized theta)
     val thetaNorm = math.sqrt(theta.toArray.map(v => v * v).sum)
-    val expected = Vectors.dense(theta.toArray.map(_ / thetaNorm))
-    assertVectorsEqual(recovered, expected, defaultTol, "Spherical grad ∘ invGrad should preserve direction")
+    val expected  = Vectors.dense(theta.toArray.map(_ / thetaNorm))
+    assertVectorsEqual(
+      recovered,
+      expected,
+      defaultTol,
+      "Spherical grad ∘ invGrad should preserve direction"
+    )
   }
 
   test("Spherical: self-distance is zero") {
@@ -718,9 +723,9 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
 
     // Test various vector pairs
     val testCases = Seq(
-      (Vectors.dense(1.0, 0.0), Vectors.dense(1.0, 0.0)),   // Same direction
-      (Vectors.dense(1.0, 0.0), Vectors.dense(0.0, 1.0)),   // Perpendicular
-      (Vectors.dense(1.0, 0.0), Vectors.dense(-1.0, 0.0)),  // Opposite
+      (Vectors.dense(1.0, 0.0), Vectors.dense(1.0, 0.0)),  // Same direction
+      (Vectors.dense(1.0, 0.0), Vectors.dense(0.0, 1.0)),  // Perpendicular
+      (Vectors.dense(1.0, 0.0), Vectors.dense(-1.0, 0.0)), // Opposite
       (Vectors.dense(1.0, 2.0, 3.0), Vectors.dense(4.0, 5.0, 6.0))
     )
 
@@ -775,9 +780,9 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
     val kernel = new SphericalKernel()
 
     // 45-degree angle: cos(45°) = √2/2 ≈ 0.707, distance ≈ 0.293
-    val x1 = Vectors.dense(1.0, 0.0)
-    val y1 = Vectors.dense(1.0, 1.0)
-    val d1 = kernel.divergence(x1, y1)
+    val x1        = Vectors.dense(1.0, 0.0)
+    val y1        = Vectors.dense(1.0, 1.0)
+    val d1        = kernel.divergence(x1, y1)
     val expected1 = 1.0 - math.sqrt(2) / 2
     math.abs(d1 - expected1) should be < relaxedTol
 
@@ -793,10 +798,10 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
     val euclidean = new SquaredEuclideanKernel()
 
     // For unit vectors: ||x - y||² = 2(1 - x·y) = 2 * cosineDistance
-    val x = Vectors.dense(0.6, 0.8)  // Already unit vector
-    val y = Vectors.dense(0.8, 0.6)  // Already unit vector
+    val x = Vectors.dense(0.6, 0.8) // Already unit vector
+    val y = Vectors.dense(0.8, 0.6) // Already unit vector
 
-    val cosineDist = spherical.divergence(x, y)
+    val cosineDist    = spherical.divergence(x, y)
     val euclideanDist = euclidean.divergence(x, y)
 
     // euclideanDist = 0.5 * ||x-y||² = 0.5 * 2 * (1 - x·y) = cosineDist

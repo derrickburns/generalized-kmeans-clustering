@@ -13,14 +13,15 @@ import org.apache.spark.sql.functions._
   * reduced memory footprint.
   *
   * Algorithm:
-  *   1. Split centers into chunks of size chunkSize
-  *   2. For each chunk: broadcast chunk, compute local min distance & cluster ID
-  *   3. Reduce across chunks to find global minimum
+  *   1. Split centers into chunks of size chunkSize 2. For each chunk: broadcast chunk, compute
+  *      local min distance & cluster ID 3. Reduce across chunks to find global minimum
   *
-  * Memory: O(chunkSize × dim) broadcast per executor
-  * Scans: ceil(k / chunkSize) passes over the data
+  * Memory: O(chunkSize × dim) broadcast per executor Scans: ceil(k / chunkSize) passes over the
+  * data
   */
-private[df] class ChunkedBroadcastAssignment(chunkSize: Int = 100) extends AssignmentStrategy with Logging {
+private[df] class ChunkedBroadcastAssignment(chunkSize: Int = 100)
+    extends AssignmentStrategy
+    with Logging {
 
   override def assign(
       df: DataFrame,

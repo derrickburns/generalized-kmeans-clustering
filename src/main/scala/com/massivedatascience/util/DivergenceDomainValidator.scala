@@ -149,13 +149,13 @@ object DivergenceDomainValidator {
   /** Get domain requirement for a divergence name. */
   def getDomainRequirement(divergence: String): DomainRequirement = {
     divergence.toLowerCase match {
-      case "kl" | "kullbackleibler"                             => StrictlyPositive
-      case "itakurasaito" | "is"                                => StrictlyPositive
-      case "logistic" | "logisticloss"                          => OpenInterval01
-      case "generalizedi" | "geni"                              => NonNegative
-      case "squaredeuclidean" | "euclidean" | "se" | "l2"       => Unrestricted
-      case "l1" | "manhattan"                                   => Unrestricted
-      case _ => Unrestricted // Default to unrestricted for unknown divergences
+      case "kl" | "kullbackleibler"                       => StrictlyPositive
+      case "itakurasaito" | "is"                          => StrictlyPositive
+      case "logistic" | "logisticloss"                    => OpenInterval01
+      case "generalizedi" | "geni"                        => NonNegative
+      case "squaredeuclidean" | "euclidean" | "se" | "l2" => Unrestricted
+      case "l1" | "manhattan"                             => Unrestricted
+      case _                                              => Unrestricted // Default to unrestricted for unknown divergences
     }
   }
 

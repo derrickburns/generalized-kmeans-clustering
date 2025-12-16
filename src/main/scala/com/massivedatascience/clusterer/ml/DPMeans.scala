@@ -20,20 +20,20 @@ package com.massivedatascience.clusterer.ml
 import com.massivedatascience.clusterer.ml.df._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
-import org.apache.spark.ml.util.{DefaultParamsReadable, DefaultParamsWritable, Identifiable}
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable }
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DoubleType, StructType}
+import org.apache.spark.sql.types.{ DoubleType, StructType }
 
 import scala.collection.mutable.ArrayBuffer
 
 /** Parameters for DPMeans and DPMeansModel.
   *
-  * DPMeans uses a distance threshold (lambda) instead of a fixed number of clusters.
-  * New clusters are created when a point is farther than lambda from all existing centers.
+  * DPMeans uses a distance threshold (lambda) instead of a fixed number of clusters. New clusters
+  * are created when a point is farther than lambda from all existing centers.
   */
 trait DPMeansParams
     extends Params
@@ -45,17 +45,15 @@ trait DPMeansParams
 
   /** Distance threshold for creating new clusters.
     *
-    * When a point's distance to the nearest center exceeds lambda, a new cluster
-    * is created with that point as the center. Controls the granularity of clustering:
+    * When a point's distance to the nearest center exceeds lambda, a new cluster is created with
+    * that point as the center. Controls the granularity of clustering:
     *   - Small lambda → more, smaller clusters
     *   - Large lambda → fewer, larger clusters
     *
-    * The optimal lambda depends on your data scale and desired cluster granularity.
-    * A good starting point is the median or 75th percentile of pairwise distances
-    * in a sample of your data.
+    * The optimal lambda depends on your data scale and desired cluster granularity. A good starting
+    * point is the median or 75th percentile of pairwise distances in a sample of your data.
     *
-    * Must be > 0.
-    * Default: 1.0
+    * Must be > 0. Default: 1.0
     */
   final val lambda = new DoubleParam(
     this,
@@ -68,11 +66,10 @@ trait DPMeansParams
 
   /** Maximum number of clusters to create.
     *
-    * Provides an upper bound on the number of clusters to prevent runaway cluster creation
-    * with a too-small lambda. Set to 0 for no limit.
+    * Provides an upper bound on the number of clusters to prevent runaway cluster creation with a
+    * too-small lambda. Set to 0 for no limit.
     *
-    * Must be >= 0.
-    * Default: 100
+    * Must be >= 0. Default: 100
     */
   final val maxK = new IntParam(
     this,
@@ -113,9 +110,7 @@ trait DPMeansParams
 
   def getDivergence: String = $(divergence)
 
-  /** Smoothing parameter for divergences with domain constraints.
-    * Must be > 0.
-    * Default: 1e-10
+  /** Smoothing parameter for divergences with domain constraints. Must be > 0. Default: 1e-10
     */
   final val smoothing = new DoubleParam(
     this,
@@ -156,32 +151,32 @@ trait DPMeansParams
   }
 
   setDefault(
-    lambda           -> 1.0,
-    maxK             -> 100,
-    divergence       -> "squaredEuclidean",
-    smoothing        -> 1e-10,
-    maxIter          -> 20,
-    tol              -> 1e-4,
-    featuresCol      -> "features",
-    predictionCol    -> "prediction"
+    lambda        -> 1.0,
+    maxK          -> 100,
+    divergence    -> "squaredEuclidean",
+    smoothing     -> 1e-10,
+    maxIter       -> 20,
+    tol           -> 1e-4,
+    featuresCol   -> "features",
+    predictionCol -> "prediction"
   )
 }
 
 /** DP-Means clustering with automatic cluster count determination.
   *
-  * DP-Means is a Bayesian nonparametric extension of K-Means that automatically
-  * determines the number of clusters based on a distance threshold (lambda).
-  * Instead of specifying k, you specify how far apart clusters should be.
+  * DP-Means is a Bayesian nonparametric extension of K-Means that automatically determines the
+  * number of clusters based on a distance threshold (lambda). Instead of specifying k, you specify
+  * how far apart clusters should be.
   *
   * ==Algorithm==
   *
   * The algorithm proceeds as follows:
-  *   1. '''Initialization''': Start with first point as the only center
-  *   2. '''Assignment''': For each point:
+  *   1. '''Initialization''': Start with first point as the only center 2. '''Assignment''': For
+  *      each point:
   *      - If distance to nearest center > lambda: create new cluster
   *      - Otherwise: assign to nearest center
-  *   3. '''Update''': Recompute centers as centroids of assigned points
-  *   4. '''Convergence''': Repeat until no new clusters are created and centers stabilize
+  *      3. '''Update''': Recompute centers as centroids of assigned points 4. '''Convergence''':
+  *      Repeat until no new clusters are created and centers stabilize
   *
   * ==Choosing Lambda==
   *
@@ -207,8 +202,10 @@ trait DPMeansParams
   * val predictions = model.transform(dataset)
   * }}}
   *
-  * @see Kulis & Jordan (2012): "Revisiting k-means: New Algorithms via Bayesian Nonparametrics"
-  * @see [[GeneralizedKMeans]] for fixed-k clustering
+  * @see
+  *   Kulis & Jordan (2012): "Revisiting k-means: New Algorithms via Bayesian Nonparametrics"
+  * @see
+  *   [[GeneralizedKMeans]] for fixed-k clustering
   */
 class DPMeans(override val uid: String)
     extends Estimator[DPMeansModel]
@@ -244,12 +241,12 @@ class DPMeans(override val uid: String)
     val df = dataset.toDF()
     validateAndTransformSchema(df.schema)
 
-    val featCol = $(featuresCol)
-    val lambdaVal = $(lambda)
-    val maxKVal = $(maxK)
+    val featCol    = $(featuresCol)
+    val lambdaVal  = $(lambda)
+    val maxKVal    = $(maxK)
     val maxIterVal = $(maxIter)
-    val tolVal = $(tol)
-    val smooth = $(smoothing)
+    val tolVal     = $(tol)
+    val smooth     = $(smoothing)
 
     val kernel = createKernel($(divergence), smooth)
 
@@ -257,11 +254,11 @@ class DPMeans(override val uid: String)
 
     // Initialize with first point
     val firstPoint = df.select(featCol).head().getAs[Vector](0).toArray
-    var centers = ArrayBuffer[Array[Double]](firstPoint)
+    var centers    = ArrayBuffer[Array[Double]](firstPoint)
 
-    val spark = df.sparkSession
-    var iter = 0
-    var converged = false
+    val spark              = df.sparkSession
+    var iter               = 0
+    var converged          = false
     var newClustersCreated = true
 
     while (iter < maxIterVal && !converged) {
@@ -270,16 +267,16 @@ class DPMeans(override val uid: String)
 
       // Broadcast current centers
       val centersArray = centers.toArray
-      val bcCenters = spark.sparkContext.broadcast(centersArray)
-      val bcKernel = spark.sparkContext.broadcast(kernel)
+      val bcCenters    = spark.sparkContext.broadcast(centersArray)
+      val bcKernel     = spark.sparkContext.broadcast(kernel)
 
       // Assign points and compute distances
       val assignUDF = udf { (features: Vector) =>
         val point = features.toArray
-        val ctrs = bcCenters.value
-        val kern = bcKernel.value
+        val ctrs  = bcCenters.value
+        val kern  = bcKernel.value
 
-        var minIdx = 0
+        var minIdx  = 0
         var minDist = kern.divergence(Vectors.dense(point), Vectors.dense(ctrs(0)))
 
         var i = 1
@@ -316,17 +313,19 @@ class DPMeans(override val uid: String)
       newClustersCreated = false
       if (furthestOutlier.nonEmpty && (maxKVal == 0 || centers.length < maxKVal)) {
         val newCenter = furthestOutlier.head.getAs[Vector](0).toArray
-        val dist = furthestOutlier.head.getDouble(1)
+        val dist      = furthestOutlier.head.getDouble(1)
         centers += newCenter
         newClustersCreated = true
-        logInfo(f"Created new cluster (distance=$dist%.4f > lambda=$lambdaVal%.4f), total now ${centers.length}")
+        logInfo(
+          f"Created new cluster (distance=$dist%.4f > lambda=$lambdaVal%.4f), total now ${centers.length}"
+        )
       }
 
       // Update centers based on assignments
       if (!newClustersCreated) {
         // Only update centers if no new clusters were created (stabilization phase)
         val weightColOpt = if (hasWeightCol) Some($(weightCol)) else None
-        val updater = createUpdater($(divergence))
+        val updater      = createUpdater($(divergence))
 
         val newCentersArray = updater.update(
           assigned.select(col(featCol), col("cluster")).toDF(featCol, "cluster"),
@@ -337,9 +336,13 @@ class DPMeans(override val uid: String)
         )
 
         // Check convergence (max center movement)
-        val maxMovement = centers.zip(newCentersArray).map { case (old, neu) =>
-          kernel.divergence(Vectors.dense(old), Vectors.dense(neu))
-        }.maxOption.getOrElse(0.0)
+        val maxMovement = centers
+          .zip(newCentersArray)
+          .map { case (old, neu) =>
+            kernel.divergence(Vectors.dense(old), Vectors.dense(neu))
+          }
+          .maxOption
+          .getOrElse(0.0)
 
         logInfo(f"Iteration $iter: max center movement = $maxMovement%.6f")
 
@@ -374,7 +377,7 @@ class DPMeans(override val uid: String)
       case "logistic"             => new LogisticLossKernel(smoothing)
       case "l1" | "manhattan"     => new L1Kernel()
       case "spherical" | "cosine" => new SphericalKernel()
-      case _ =>
+      case _                      =>
         throw new IllegalArgumentException(
           s"Unknown divergence: '$divergence'. " +
             s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan, spherical, cosine"
@@ -398,8 +401,8 @@ class DPMeans(override val uid: String)
 
 /** Model produced by DPMeans.
   *
-  * Contains the cluster centers determined by the DP-Means algorithm.
-  * The number of clusters is automatically determined based on the lambda threshold.
+  * Contains the cluster centers determined by the DP-Means algorithm. The number of clusters is
+  * automatically determined based on the lambda threshold.
   */
 class DPMeansModel private[ml] (
     override val uid: String,
@@ -413,24 +416,24 @@ class DPMeansModel private[ml] (
   def getK: Int = clusterCenters.length
 
   override def transform(dataset: Dataset[_]): DataFrame = {
-    val df = dataset.toDF()
+    val df      = dataset.toDF()
     val featCol = $(featuresCol)
     val predCol = $(predictionCol)
-    val smooth = $(smoothing)
+    val smooth  = $(smoothing)
 
-    val kernel = createKernel($(divergence), smooth)
+    val kernel       = createKernel($(divergence), smooth)
     val centersArray = clusterCenters.map(_.toArray)
 
-    val spark = df.sparkSession
+    val spark     = df.sparkSession
     val bcCenters = spark.sparkContext.broadcast(centersArray)
-    val bcKernel = spark.sparkContext.broadcast(kernel)
+    val bcKernel  = spark.sparkContext.broadcast(kernel)
 
     val predictUDF = udf { (features: Vector) =>
       val point = features.toArray
-      val ctrs = bcCenters.value
-      val kern = bcKernel.value
+      val ctrs  = bcCenters.value
+      val kern  = bcKernel.value
 
-      var minIdx = 0
+      var minIdx  = 0
       var minDist = kern.divergence(Vectors.dense(point), Vectors.dense(ctrs(0)))
 
       var i = 1
@@ -450,7 +453,7 @@ class DPMeansModel private[ml] (
 
     if (hasDistanceCol) {
       val distUDF = udf { (features: Vector, cluster: Int) =>
-        val point = features.toArray
+        val point  = features.toArray
         val center = bcCenters.value(cluster)
         bcKernel.value.divergence(Vectors.dense(point), Vectors.dense(center))
       }

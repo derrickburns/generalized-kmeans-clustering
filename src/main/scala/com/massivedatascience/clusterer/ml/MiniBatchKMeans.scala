@@ -21,11 +21,11 @@ import com.massivedatascience.clusterer.ml.df._
 import com.massivedatascience.clusterer.ml.df.kernels._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
-import org.apache.spark.ml.util.{DefaultParamsReadable, DefaultParamsWritable, Identifiable}
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable }
+import org.apache.spark.sql.{ DataFrame, Dataset }
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 
@@ -33,31 +33,31 @@ import scala.util.Random
 
 /** Mini-Batch K-Means clustering with pluggable Bregman divergences.
   *
-  * Mini-Batch K-Means is a variant of K-Means that uses random mini-batches of the data
-  * to update cluster centers, dramatically reducing computation time while achieving
-  * similar clustering quality.
+  * Mini-Batch K-Means is a variant of K-Means that uses random mini-batches of the data to update
+  * cluster centers, dramatically reducing computation time while achieving similar clustering
+  * quality.
   *
   * ==Algorithm==
   *
   * The algorithm proceeds as follows:
-  *   1. '''Initialization''': Select initial centers using k-means|| or random sampling
-  *   2. '''Mini-Batch Sampling''': Sample `batchSize` points uniformly at random
-  *   3. '''Assignment''': Assign each mini-batch point to the nearest center
-  *   4. '''Incremental Update''': Update centers using a streaming/online update rule:
+  *   1. '''Initialization''': Select initial centers using k-means|| or random sampling 2.
+  *      '''Mini-Batch Sampling''': Sample `batchSize` points uniformly at random 3.
+  *      '''Assignment''': Assign each mini-batch point to the nearest center 4. '''Incremental
+  *      Update''': Update centers using a streaming/online update rule:
   *      - Track per-center counts
   *      - Compute learning rate: η = 1 / (count + 1)
   *      - Update: center = (1 - η) * center + η * new_point
-  *   5. '''Convergence''': Repeat until `maxIter` batches or early stopping
+  *      5. '''Convergence''': Repeat until `maxIter` batches or early stopping
   *
   * ==Comparison with Standard K-Means==
   *
-  * | Aspect | Standard K-Means | Mini-Batch K-Means |
-  * |--------|------------------|-------------------|
-  * | Data per iteration | All data | `batchSize` samples |
-  * | Center update | Complete recompute | Incremental average |
-  * | Memory | O(n) | O(batchSize) |
-  * | Convergence | Monotonic decrease | Stochastic (may oscillate) |
-  * | Best for | Small-medium data | Large-scale data |
+  * | Aspect             | Standard K-Means   | Mini-Batch K-Means         |
+  * |:-------------------|:-------------------|:---------------------------|
+  * | Data per iteration | All data           | `batchSize` samples        |
+  * | Center update      | Complete recompute | Incremental average        |
+  * | Memory             | O(n)               | O(batchSize)               |
+  * | Convergence        | Monotonic decrease | Stochastic (may oscillate) |
+  * | Best for           | Small-medium data  | Large-scale data           |
   *
   * ==Example Usage==
   *
@@ -83,12 +83,16 @@ import scala.util.Random
   * val model = mbKmeans.fit(veryLargeDataset)
   * }}}
   *
-  * @see [[GeneralizedKMeans]] for standard batch K-Means
-  * @see [[StreamingKMeans]] for true streaming/online K-Means
+  * @see
+  *   [[GeneralizedKMeans]] for standard batch K-Means
+  * @see
+  *   [[StreamingKMeans]] for true streaming/online K-Means
   *
-  * @note For reproducible results, set the seed using `setSeed()`.
-  * @note Mini-batch K-Means may not converge to the same solution as batch K-Means,
-  *       but typically achieves similar quality with much less computation.
+  * @note
+  *   For reproducible results, set the seed using `setSeed()`.
+  * @note
+  *   Mini-batch K-Means may not converge to the same solution as batch K-Means, but typically
+  *   achieves similar quality with much less computation.
   *
   * Reference: Sculley (2010): "Web-Scale K-Means Clustering"
   */
@@ -132,8 +136,8 @@ class MiniBatchKMeans(override val uid: String)
   /** Sets the random seed. */
   def setSeed(value: Long): this.type = set(seed, value)
 
-  /** Sets the max iterations without improvement for early stopping.
-    * Set to 0 to disable early stopping. Default: 10.
+  /** Sets the max iterations without improvement for early stopping. Set to 0 to disable early
+    * stopping. Default: 10.
     */
   def setMaxNoImprovement(value: Int): this.type = set(maxNoImprovement, value)
 
@@ -314,7 +318,9 @@ class MiniBatchKMeans(override val uid: String)
         }
 
         if (iteration % 10 == 0) {
-          logInfo(s"Iteration $iteration: avgDistortion=$avgDistortion, noImprovementCount=$noImprovementCount")
+          logInfo(
+            s"Iteration $iteration: avgDistortion=$avgDistortion, noImprovementCount=$noImprovementCount"
+          )
         }
       }
 
@@ -325,9 +331,9 @@ class MiniBatchKMeans(override val uid: String)
       centers = centers,
       iterations = iteration,
       distortionHistory = distortionHistory.toArray,
-      movementHistory = Array.empty,  // Not tracked in mini-batch
+      movementHistory = Array.empty, // Not tracked in mini-batch
       converged = converged,
-      emptyClusterEvents = 0  // Handled inline
+      emptyClusterEvents = 0         // Handled inline
     )
   }
 
@@ -341,7 +347,7 @@ class MiniBatchKMeans(override val uid: String)
       case "logistic"             => new LogisticLossKernel(smooth)
       case "l1" | "manhattan"     => new L1Kernel()
       case "spherical" | "cosine" => new SphericalKernel()
-      case _ =>
+      case _                      =>
         throw new IllegalArgumentException(
           s"Unknown divergence: '$divName'. Valid options: squaredEuclidean, kl, itakuraSaito, " +
             "generalizedI, logistic, l1, manhattan, spherical, cosine"
@@ -358,7 +364,7 @@ class MiniBatchKMeans(override val uid: String)
     $(initMode) match {
       case "random"    => initializeRandom(df, featuresCol, $(k), $(seed))
       case "k-means||" => initializeKMeansPP(df, featuresCol, $(k), $(initSteps), $(seed), kernel)
-      case _ =>
+      case _           =>
         throw new IllegalArgumentException(
           s"Unknown init mode: '${$(initMode)}'. Valid options: random, k-means||"
         )
@@ -402,10 +408,10 @@ class MiniBatchKMeans(override val uid: String)
       val bcCenters = df.sparkSession.sparkContext.broadcast(centers)
 
       val distanceUDF = udf { (features: Vector) =>
-        val ctrs = bcCenters.value
-        val kern = bcKernel.value
+        val ctrs    = bcCenters.value
+        val kern    = bcKernel.value
         var minDist = Double.PositiveInfinity
-        var i = 0
+        var i       = 0
         while (i < ctrs.length) {
           val dist = kern.divergence(features, Vectors.dense(ctrs(i)))
           if (dist < minDist) minDist = dist
@@ -414,9 +420,10 @@ class MiniBatchKMeans(override val uid: String)
         minDist
       }
 
-      val withDistances = df.select(featuresCol).withColumn("distance", distanceUDF(col(featuresCol)))
+      val withDistances =
+        df.select(featuresCol).withColumn("distance", distanceUDF(col(featuresCol)))
       val numToSample   = math.min(k - centers.length, 2 * k)
-      val samples = withDistances
+      val samples       = withDistances
         .sample(withReplacement = false, numToSample.toDouble / df.count(), rand.nextLong())
         .collect()
         .map(_.getAs[Vector](0).toArray)
@@ -443,11 +450,11 @@ trait MiniBatchKMeansParams
     with HasSeed {
 
   /** Number of clusters (k). */
-  final val k = new IntParam(this, "k", "Number of clusters", ParamValidators.gt(1))
+  final val k   = new IntParam(this, "k", "Number of clusters", ParamValidators.gt(1))
   def getK: Int = $(k)
 
   /** Mini-batch size. */
-  final val batchSize = new IntParam(
+  final val batchSize   = new IntParam(
     this,
     "batchSize",
     "Number of samples per mini-batch",
@@ -456,19 +463,28 @@ trait MiniBatchKMeansParams
   def getBatchSize: Int = $(batchSize)
 
   /** Bregman divergence. */
-  final val divergence = new Param[String](
+  final val divergence      = new Param[String](
     this,
     "divergence",
     "Bregman divergence kernel",
-    ParamValidators.inArray(Array(
-      "squaredEuclidean", "kl", "itakuraSaito", "generalizedI",
-      "logistic", "l1", "manhattan", "spherical", "cosine"
-    ))
+    ParamValidators.inArray(
+      Array(
+        "squaredEuclidean",
+        "kl",
+        "itakuraSaito",
+        "generalizedI",
+        "logistic",
+        "l1",
+        "manhattan",
+        "spherical",
+        "cosine"
+      )
+    )
   )
   def getDivergence: String = $(divergence)
 
   /** Smoothing parameter. */
-  final val smoothing = new DoubleParam(
+  final val smoothing      = new DoubleParam(
     this,
     "smoothing",
     "Smoothing parameter for divergences",
@@ -477,12 +493,12 @@ trait MiniBatchKMeansParams
   def getSmoothing: Double = $(smoothing)
 
   /** Weight column. */
-  final val weightCol = new Param[String](this, "weightCol", "Weight column name")
+  final val weightCol       = new Param[String](this, "weightCol", "Weight column name")
   def getWeightCol: String  = $(weightCol)
   def hasWeightCol: Boolean = isSet(weightCol)
 
   /** Max iterations without improvement for early stopping. */
-  final val maxNoImprovement = new IntParam(
+  final val maxNoImprovement   = new IntParam(
     this,
     "maxNoImprovement",
     "Max iterations without improvement (0 to disable)",
@@ -491,7 +507,7 @@ trait MiniBatchKMeansParams
   def getMaxNoImprovement: Int = $(maxNoImprovement)
 
   /** Reassignment ratio for empty clusters. */
-  final val reassignmentRatio = new DoubleParam(
+  final val reassignmentRatio      = new DoubleParam(
     this,
     "reassignmentRatio",
     "Fraction of mini-batch to reassign for empty clusters",
@@ -500,7 +516,7 @@ trait MiniBatchKMeansParams
   def getReassignmentRatio: Double = $(reassignmentRatio)
 
   /** Initialization mode. */
-  final val initMode = new Param[String](
+  final val initMode      = new Param[String](
     this,
     "initMode",
     "Initialization mode",
@@ -509,7 +525,7 @@ trait MiniBatchKMeansParams
   def getInitMode: String = $(initMode)
 
   /** K-means|| initialization steps. */
-  final val initSteps = new IntParam(
+  final val initSteps   = new IntParam(
     this,
     "initSteps",
     "Number of k-means|| initialization steps",

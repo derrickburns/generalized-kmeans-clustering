@@ -61,28 +61,30 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDF("features")
 
     val centers = Array(
-      Array(0.0, 0.0),   // Cluster 0
-      Array(10.0, 0.0),  // Cluster 1
-      Array(5.0, 10.0),  // Cluster 2
-      Array(0.0, 10.0),  // Cluster 3
-      Array(10.0, 10.0)  // Cluster 4
+      Array(0.0, 0.0),  // Cluster 0
+      Array(10.0, 0.0), // Cluster 1
+      Array(5.0, 10.0), // Cluster 2
+      Array(0.0, 10.0), // Cluster 3
+      Array(10.0, 10.0) // Cluster 4
     )
 
     val kernel = new SquaredEuclideanKernel()
 
     // Run standard assignment
-    val standardAssigner = new BroadcastUDFAssignment()
-    val standardResult = standardAssigner.assign(data, "features", None, centers, kernel)
+    val standardAssigner    = new BroadcastUDFAssignment()
+    val standardResult      = standardAssigner.assign(data, "features", None, centers, kernel)
     val standardAssignments = standardResult.select("cluster").collect().map(_.getInt(0))
 
     // Run accelerated assignment
-    val acceleratedAssigner = new AcceleratedSEAssignment()
-    val acceleratedResult = acceleratedAssigner.assign(data, "features", None, centers, kernel)
+    val acceleratedAssigner    = new AcceleratedSEAssignment()
+    val acceleratedResult      = acceleratedAssigner.assign(data, "features", None, centers, kernel)
     val acceleratedAssignments = acceleratedResult.select("cluster").collect().map(_.getInt(0))
 
     // Verify same results
-    assert(standardAssignments.toSeq === acceleratedAssignments.toSeq,
-      "Accelerated assignment should produce identical results to standard assignment")
+    assert(
+      standardAssignments.toSeq === acceleratedAssignments.toSeq,
+      "Accelerated assignment should produce identical results to standard assignment"
+    )
   }
 
   test("accelerated assignment falls back to standard for small k") {
@@ -100,7 +102,7 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
       Array(5.0, 5.0)
     )
 
-    val kernel = new SquaredEuclideanKernel()
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AcceleratedSEAssignment()
 
     // Should complete without error (falls back internally)
@@ -160,11 +162,11 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
       Tuple1(Vectors.dense(2.0, 2.0))
     ).toDF("features")
 
-    val kernel = new SquaredEuclideanKernel()
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AcceleratedSEAssignment()
 
     // Single center - falls back to standard
-    val single = Array(Array(1.5, 1.5))
+    val single       = Array(Array(1.5, 1.5))
     val singleResult = assigner.assign(data, "features", None, single, kernel)
     assert(singleResult.select("cluster").distinct().count() === 1)
   }
@@ -174,9 +176,9 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
     import sparkSession.implicits._
 
     // Create many well-separated clusters
-    val numClusters = 20
+    val numClusters      = 20
     val pointsPerCluster = 50
-    val separation = 100.0  // Large separation for high pruning rate
+    val separation       = 100.0 // Large separation for high pruning rate
 
     val points = (0 until numClusters).flatMap { c =>
       val cx = (c % 5) * separation
@@ -194,12 +196,12 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
       Array(cx, cy)
     }.toArray
 
-    val kernel = new SquaredEuclideanKernel()
+    val kernel   = new SquaredEuclideanKernel()
     val assigner = new AcceleratedSEAssignment()
 
     // Run and verify correctness
     val result = assigner.assign(data, "features", None, centers, kernel)
-    val count = result.count()
+    val count  = result.count()
 
     assert(count === numClusters * pointsPerCluster)
 
@@ -236,14 +238,20 @@ class AcceleratedSEAssignmentSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     val kernel = new SquaredEuclideanKernel()
 
-    val standard = new BroadcastUDFAssignment()
+    val standard    = new BroadcastUDFAssignment()
     val accelerated = new AcceleratedSEAssignment()
 
-    val standardResult = standard.assign(data, "features", None, centers, kernel)
-      .select("cluster").collect().map(_.getInt(0))
+    val standardResult = standard
+      .assign(data, "features", None, centers, kernel)
+      .select("cluster")
+      .collect()
+      .map(_.getInt(0))
 
-    val acceleratedResult = accelerated.assign(data, "features", None, centers, kernel)
-      .select("cluster").collect().map(_.getInt(0))
+    val acceleratedResult = accelerated
+      .assign(data, "features", None, centers, kernel)
+      .select("cluster")
+      .collect()
+      .map(_.getInt(0))
 
     // Must produce identical results even with overlapping clusters
     assert(standardResult.toSeq === acceleratedResult.toSeq)

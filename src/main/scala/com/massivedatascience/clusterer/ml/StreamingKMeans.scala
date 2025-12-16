@@ -80,18 +80,17 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
 
 /** Streaming K-Means clustering for incremental updates on streaming data.
   *
-  * Implements mini-batch K-Means with exponential forgetting for real-time clustering.
-  * The model is updated incrementally as new batches arrive, adapting to concept drift
-  * in the data distribution over time.
+  * Implements mini-batch K-Means with exponential forgetting for real-time clustering. The model is
+  * updated incrementally as new batches arrive, adapting to concept drift in the data distribution
+  * over time.
   *
   * ==Algorithm==
   *
   * For each incoming batch, the algorithm:
-  *   1. Assigns new points to nearest clusters
-  *   2. Computes batch-local cluster statistics (mean, count)
-  *   3. Applies exponential decay to existing cluster weights
-  *   4. Merges batch statistics with decayed historical statistics
-  *   5. Handles dying clusters by splitting the largest cluster
+  *   1. Assigns new points to nearest clusters 2. Computes batch-local cluster statistics (mean,
+  *      count) 3. Applies exponential decay to existing cluster weights 4. Merges batch statistics
+  *      with decayed historical statistics 5. Handles dying clusters by splitting the largest
+  *      cluster
   *
   * '''Update Rule (for each cluster):'''
   * {{{
@@ -114,8 +113,8 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   *   - '''α = 0.5:''' Strong forgetting - good for rapidly changing data
   *   - '''α = 0.0:''' Complete forgetting (only current batch matters)
   *
-  * Alternatively, use `halfLife` to specify how many batches/points until a data point's
-  * influence decays to 50%.
+  * Alternatively, use `halfLife` to specify how many batches/points until a data point's influence
+  * decays to 50%.
   *
   * ==Divergences==
   *
@@ -161,9 +160,12 @@ trait StreamingKMeansParams extends GeneralizedKMeansParams {
   * The streaming model can be saved and loaded, preserving cluster weights for seamless
   * continuation after restarts. This enables fault-tolerant streaming pipelines.
   *
-  * @see [[StreamingKMeansModel]] for the updateable model
-  * @see [[StreamingKMeansUpdater]] for the streaming update interface
-  * @see [[GeneralizedKMeans]] for batch clustering
+  * @see
+  *   [[StreamingKMeansModel]] for the updateable model
+  * @see
+  *   [[StreamingKMeansUpdater]] for the streaming update interface
+  * @see
+  *   [[GeneralizedKMeans]] for batch clustering
   *
   * @param uid
   *   unique identifier

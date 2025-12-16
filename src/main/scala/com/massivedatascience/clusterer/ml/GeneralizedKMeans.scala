@@ -14,20 +14,20 @@ import scala.util.Random
 /** Generalized K-Means clustering with pluggable Bregman divergences.
   *
   * This estimator implements Lloyd's algorithm for clustering with any Bregman divergence. Unlike
-  * MLlib's KMeans (which only supports Squared Euclidean distance), this supports multiple
-  * distance measures suitable for different data types.
+  * MLlib's KMeans (which only supports Squared Euclidean distance), this supports multiple distance
+  * measures suitable for different data types.
   *
   * ==Supported Divergences==
   *
-  * | Divergence | Use Case | Domain Requirement |
-  * |------------|----------|-------------------|
-  * | `squaredEuclidean` | General clustering, continuous data | Any finite values |
-  * | `kl` | Probability distributions, topic models, TF-IDF | Non-negative values |
-  * | `itakuraSaito` | Spectral analysis, audio, power spectra | Strictly positive values |
-  * | `generalizedI` | Count data, non-negative matrices | Non-negative values |
-  * | `logistic` | Binary probabilities, proportions | Values in [0, 1] |
-  * | `l1` / `manhattan` | Outlier-robust clustering (K-Medians) | Any finite values |
-  * | `spherical` / `cosine` | Text embeddings, document vectors | Non-zero vectors |
+  * | Divergence             | Use Case                                        | Domain Requirement       |
+  * |:-----------------------|:------------------------------------------------|:-------------------------|
+  * | `squaredEuclidean`     | General clustering, continuous data             | Any finite values        |
+  * | `kl`                   | Probability distributions, topic models, TF-IDF | Non-negative values      |
+  * | `itakuraSaito`         | Spectral analysis, audio, power spectra         | Strictly positive values |
+  * | `generalizedI`         | Count data, non-negative matrices               | Non-negative values      |
+  * | `logistic`             | Binary probabilities, proportions               | Values in [0, 1]         |
+  * | `l1` / `manhattan`     | Outlier-robust clustering (K-Medians)           | Any finite values        |
+  * | `spherical` / `cosine` | Text embeddings, document vectors               | Non-zero vectors         |
   *
   * ==Domain Validation==
   *
@@ -39,17 +39,17 @@ import scala.util.Random
   *
   * The algorithm proceeds as follows:
   *   1. '''Initialization''': Select initial centers using k-means|| (default) or random sampling
-  *   2. '''Assignment''': Assign each point to the nearest center using the specified divergence
-  *   3. '''Update''': Recompute centers as the Bregman centroid of assigned points
-  *   4. '''Convergence''': Repeat until centers move less than `tol` or `maxIter` is reached
+  *      2. '''Assignment''': Assign each point to the nearest center using the specified divergence
+  *      3. '''Update''': Recompute centers as the Bregman centroid of assigned points 4.
+  *      '''Convergence''': Repeat until centers move less than `tol` or `maxIter` is reached
   *
   * ==Performance Considerations==
   *
-  * - For '''Squared Euclidean''', the `crossJoin` assignment strategy uses vectorized Spark SQL
-  *   operations and is significantly faster than the UDF-based approach.
-  * - For '''large k × dim''', consider using checkpointing to avoid lineage explosion.
-  * - For '''high-dimensional sparse data''', consider using `spherical` divergence which
-  *   normalizes vectors and focuses on directional similarity.
+  *   - For '''Squared Euclidean''', the `crossJoin` assignment strategy uses vectorized Spark SQL
+  *     operations and is significantly faster than the UDF-based approach.
+  *   - For '''large k × dim''', consider using checkpointing to avoid lineage explosion.
+  *   - For '''high-dimensional sparse data''', consider using `spherical` divergence which
+  *     normalizes vectors and focuses on directional similarity.
   *
   * ==Example Usage==
   *
@@ -94,13 +94,20 @@ import scala.util.Random
   * val model = kmeans.fit(weightedData)
   * }}}
   *
-  * @see [[GeneralizedKMeansModel]] for the trained model
-  * @see [[BisectingKMeans]] for hierarchical divisive clustering
-  * @see [[SoftKMeans]] for fuzzy/soft clustering with membership probabilities
-  * @see [[StreamingKMeans]] for online/streaming clustering
+  * @see
+  *   [[GeneralizedKMeansModel]] for the trained model
+  * @see
+  *   [[BisectingKMeans]] for hierarchical divisive clustering
+  * @see
+  *   [[SoftKMeans]] for fuzzy/soft clustering with membership probabilities
+  * @see
+  *   [[StreamingKMeans]] for online/streaming clustering
   *
-  * @note For reproducible results, set the seed using `setSeed()`.
-  * @note Empty clusters are handled according to `emptyClusterStrategy` (default: reseed with random points).
+  * @note
+  *   For reproducible results, set the seed using `setSeed()`.
+  * @note
+  *   Empty clusters are handled according to `emptyClusterStrategy` (default: reseed with random
+  *   points).
   */
 class GeneralizedKMeans(override val uid: String)
     extends Estimator[GeneralizedKMeansModel]

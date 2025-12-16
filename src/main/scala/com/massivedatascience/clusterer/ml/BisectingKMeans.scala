@@ -31,16 +31,15 @@ trait BisectingKMeansParams extends GeneralizedKMeansParams {
 
 /** Bisecting K-Means clustering with pluggable Bregman divergences.
   *
-  * A hierarchical divisive clustering algorithm that produces a dendrogram-like structure.
-  * Unlike standard k-means which starts with k random centers, bisecting k-means builds
-  * clusters incrementally by recursive splitting.
+  * A hierarchical divisive clustering algorithm that produces a dendrogram-like structure. Unlike
+  * standard k-means which starts with k random centers, bisecting k-means builds clusters
+  * incrementally by recursive splitting.
   *
   * ==Algorithm==
   *
-  *   1. Start with all points in one cluster
-  *   2. Select the largest divisible cluster (size ≥ minDivisibleClusterSize)
-  *   3. Split it into two using k=2 clustering with the selected divergence
-  *   4. Repeat until reaching the target k clusters
+  *   1. Start with all points in one cluster 2. Select the largest divisible cluster (size ≥
+  *      minDivisibleClusterSize) 3. Split it into two using k=2 clustering with the selected
+  *      divergence 4. Repeat until reaching the target k clusters
   *
   * ==Advantages==
   *
@@ -83,8 +82,10 @@ trait BisectingKMeansParams extends GeneralizedKMeansParams {
   *   - You want to analyze hierarchical structure
   *   - k is large (e.g., k > 50)
   *
-  * @see [[GeneralizedKMeans]] for standard k-means with multiple initialization methods
-  * @see [[GeneralizedKMeansModel]] for prediction and model persistence
+  * @see
+  *   [[GeneralizedKMeans]] for standard k-means with multiple initialization methods
+  * @see
+  *   [[GeneralizedKMeansModel]] for prediction and model persistence
   *
   * @param uid
   *   Unique identifier

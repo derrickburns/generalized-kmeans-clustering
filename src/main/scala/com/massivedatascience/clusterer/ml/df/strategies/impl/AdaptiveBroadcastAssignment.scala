@@ -8,8 +8,8 @@ import org.apache.spark.sql.functions._
 
 /** Adaptive broadcast assignment strategy.
   *
-  * Automatically determines optimal chunk size and broadcast threshold based on
-  * executor memory configuration, rather than using fixed defaults.
+  * Automatically determines optimal chunk size and broadcast threshold based on executor memory
+  * configuration, rather than using fixed defaults.
   *
   * ==Memory Calculation==
   *
@@ -24,7 +24,8 @@ import org.apache.spark.sql.functions._
   *
   * ==Parameters==
   *
-  *   - '''broadcastFraction''': Fraction of available memory to use for broadcast (default: 0.1 = 10%)
+  *   - '''broadcastFraction''': Fraction of available memory to use for broadcast (default: 0.1 =
+  *     10%)
   *   - '''safetyFactor''': Additional margin for serialization overhead (default: 2.0)
   *   - '''minChunkSize''': Minimum chunk size to use (default: 10)
   *   - '''maxChunkSize''': Maximum chunk size to use (default: 1000)
@@ -35,10 +36,14 @@ import org.apache.spark.sql.functions._
   *   - Available for broadcast: 4GB × 0.6 × 0.1 = 245MB
   *   - For dim=100: chunk_size ≈ 245MB / (100 × 8 × 2) ≈ 153,600 centers per chunk
   *
-  * @param broadcastFraction fraction of available memory for broadcast (default 0.1)
-  * @param safetyFactor overhead multiplier for serialization (default 2.0)
-  * @param minChunkSize minimum chunk size (default 10)
-  * @param maxChunkSize maximum chunk size (default 1000)
+  * @param broadcastFraction
+  *   fraction of available memory for broadcast (default 0.1)
+  * @param safetyFactor
+  *   overhead multiplier for serialization (default 2.0)
+  * @param minChunkSize
+  *   minimum chunk size (default 10)
+  * @param maxChunkSize
+  *   maximum chunk size (default 1000)
   */
 private[df] class AdaptiveBroadcastAssignment(
     broadcastFraction: Double = 0.1,
@@ -48,8 +53,10 @@ private[df] class AdaptiveBroadcastAssignment(
 ) extends AssignmentStrategy
     with Logging {
 
-  require(broadcastFraction > 0 && broadcastFraction <= 1.0,
-    s"broadcastFraction must be in (0, 1], got $broadcastFraction")
+  require(
+    broadcastFraction > 0 && broadcastFraction <= 1.0,
+    s"broadcastFraction must be in (0, 1], got $broadcastFraction"
+  )
   require(safetyFactor >= 1.0, s"safetyFactor must be >= 1.0, got $safetyFactor")
   require(minChunkSize > 0, s"minChunkSize must be > 0, got $minChunkSize")
   require(maxChunkSize >= minChunkSize, s"maxChunkSize must be >= minChunkSize")
@@ -58,15 +65,15 @@ private[df] class AdaptiveBroadcastAssignment(
   private def parseMemoryString(mem: String): Long = {
     val trimmed = mem.trim.toLowerCase
     val numPart = trimmed.dropRight(1)
-    val unit = trimmed.last
+    val unit    = trimmed.last
 
     val multiplier = unit match {
-      case 'k' => 1024L
-      case 'm' => 1024L * 1024L
-      case 'g' => 1024L * 1024L * 1024L
-      case 't' => 1024L * 1024L * 1024L * 1024L
+      case 'k'            => 1024L
+      case 'm'            => 1024L * 1024L
+      case 'g'            => 1024L * 1024L * 1024L
+      case 't'            => 1024L * 1024L * 1024L * 1024L
       case c if c.isDigit => return trimmed.toLong // No suffix, assume bytes
-      case _ => throw new IllegalArgumentException(s"Unknown memory unit: $unit in $mem")
+      case _              => throw new IllegalArgumentException(s"Unknown memory unit: $unit in $mem")
     }
 
     (numPart.toDouble * multiplier).toLong
@@ -91,7 +98,7 @@ private[df] class AdaptiveBroadcastAssignment(
 
     // Get executor memory (default 1g)
     val executorMemoryStr = conf.get("spark.executor.memory", "1g")
-    val executorMemory = parseMemoryString(executorMemoryStr)
+    val executorMemory    = parseMemoryString(executorMemoryStr)
 
     // Get memory fraction (default 0.6)
     val memoryFraction = conf.getDouble("spark.memory.fraction", 0.6)
@@ -100,7 +107,7 @@ private[df] class AdaptiveBroadcastAssignment(
     val availableMemory = (executorMemory * memoryFraction * broadcastFraction).toLong
 
     // Calculate chunk size: available_memory / (dim × 8 bytes × safety_factor)
-    val bytesPerCenter = dim * 8L // 8 bytes per double
+    val bytesPerCenter          = dim * 8L // 8 bytes per double
     val effectiveBytesPerCenter = (bytesPerCenter * safetyFactor).toLong
 
     val optimalChunkSize = if (effectiveBytesPerCenter > 0) {
@@ -134,7 +141,7 @@ private[df] class AdaptiveBroadcastAssignment(
       kernel: BregmanKernel
   ): DataFrame = {
 
-    val k = centers.length
+    val k   = centers.length
     val dim = centers.headOption.map(_.length).getOrElse(0)
 
     if (k == 0 || dim == 0) {
@@ -145,7 +152,7 @@ private[df] class AdaptiveBroadcastAssignment(
     val spark = df.sparkSession
 
     // Calculate optimal chunk size based on memory configuration
-    val chunkSize = calculateOptimalChunkSize(spark, dim)
+    val chunkSize          = calculateOptimalChunkSize(spark, dim)
     val broadcastThreshold = chunkSize * dim
 
     val kTimesDim = k * dim
@@ -154,7 +161,9 @@ private[df] class AdaptiveBroadcastAssignment(
       s"""AdaptiveBroadcastAssignment: Strategy selection
          |  k=$k, dim=$dim, k×dim=$kTimesDim elements (${formatBytes(kTimesDim * 8L)})
          |  Adaptive chunk size: $chunkSize
-         |  Broadcast threshold: $broadcastThreshold elements (${formatBytes(broadcastThreshold * 8L)})""".stripMargin
+         |  Broadcast threshold: $broadcastThreshold elements (${formatBytes(
+          broadcastThreshold * 8L
+        )})""".stripMargin
     )
 
     // Use SE fast path if available

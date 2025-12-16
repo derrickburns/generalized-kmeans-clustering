@@ -8,17 +8,17 @@ import com.massivedatascience.clusterer.ml.df._
 /** Test suite for BregmanFunction unified trait.
   *
   * Verifies:
-  *   1. Mathematical properties (non-negativity, identity)
-  *   2. Consistency with existing BregmanKernel implementations
+  *   1. Mathematical properties (non-negativity, identity) 2. Consistency with existing
+  *      BregmanKernel implementations
   */
 class BregmanFunctionSuite extends AnyFunSuite with Matchers {
 
   val tolerance = 1e-9
 
   // Test vectors
-  val v1 = Vectors.dense(1.0, 2.0, 3.0)
-  val v2 = Vectors.dense(1.5, 2.5, 3.5)
-  val vPositive = Vectors.dense(0.1, 0.2, 0.3)
+  val v1           = Vectors.dense(1.0, 2.0, 3.0)
+  val v2           = Vectors.dense(1.5, 2.5, 3.5)
+  val vPositive    = Vectors.dense(0.1, 0.2, 0.3)
   val vProbability = Vectors.dense(0.2, 0.3, 0.5)
 
   // ============ Squared Euclidean Tests ============
@@ -35,8 +35,8 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("SquaredEuclidean - gradient consistency: invGrad(grad(x)) = x") {
-    val func = BregmanFunctions.squaredEuclidean
-    val grad = func.gradF(v1)
+    val func      = BregmanFunctions.squaredEuclidean
+    val grad      = func.gradF(v1)
     val recovered = func.invGradF(grad)
     recovered.toArray.zip(v1.toArray).foreach { case (a, b) =>
       a shouldBe b +- tolerance
@@ -44,14 +44,14 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("SquaredEuclidean - consistent with BregmanKernel") {
-    val func = BregmanFunctions.squaredEuclidean
+    val func   = BregmanFunctions.squaredEuclidean
     val kernel = new SquaredEuclideanKernel()
 
-    val funcDiv = func.divergence(v1, v2)
+    val funcDiv   = func.divergence(v1, v2)
     val kernelDiv = kernel.divergence(v1, v2)
     funcDiv shouldBe kernelDiv +- tolerance
 
-    val funcGrad = func.gradF(v1)
+    val funcGrad   = func.gradF(v1)
     val kernelGrad = kernel.grad(v1)
     funcGrad.toArray.zip(kernelGrad.toArray).foreach { case (a, b) =>
       a shouldBe b +- tolerance
@@ -62,7 +62,10 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
 
   test("KL - divergence is non-negative") {
     val func = BregmanFunctions.kl()
-    func.divergence(vPositive, vPositive.copy) should be >= -tolerance // Allow small numerical error
+    func.divergence(
+      vPositive,
+      vPositive.copy
+    ) should be >= -tolerance // Allow small numerical error
   }
 
   test("KL - identity: D(x, x) ≈ 0") {
@@ -71,22 +74,22 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("KL - gradient consistency: invGrad(grad(x)) ≈ x") {
-    val func = BregmanFunctions.kl()
-    val grad = func.gradF(vPositive)
+    val func      = BregmanFunctions.kl()
+    val grad      = func.gradF(vPositive)
     val recovered = func.invGradF(grad)
     recovered.toArray.zip(vPositive.toArray).foreach { case (a, b) =>
-      a shouldBe b +- 1e-6  // Slightly larger tolerance due to exp/log
+      a shouldBe b +- 1e-6 // Slightly larger tolerance due to exp/log
     }
   }
 
   test("KL - consistent with BregmanKernel") {
-    val func = BregmanFunctions.kl()
+    val func   = BregmanFunctions.kl()
     val kernel = new KLDivergenceKernel()
 
     val v1Pos = Vectors.dense(0.5, 1.0, 1.5)
     val v2Pos = Vectors.dense(0.6, 1.1, 1.6)
 
-    val funcDiv = func.divergence(v1Pos, v2Pos)
+    val funcDiv   = func.divergence(v1Pos, v2Pos)
     val kernelDiv = kernel.divergence(v1Pos, v2Pos)
     funcDiv shouldBe kernelDiv +- tolerance
   }
@@ -104,13 +107,13 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("ItakuraSaito - consistent with BregmanKernel") {
-    val func = BregmanFunctions.itakuraSaito()
+    val func   = BregmanFunctions.itakuraSaito()
     val kernel = new ItakuraSaitoKernel()
 
     val v1Pos = Vectors.dense(0.5, 1.0, 1.5)
     val v2Pos = Vectors.dense(0.6, 1.1, 1.6)
 
-    val funcDiv = func.divergence(v1Pos, v2Pos)
+    val funcDiv   = func.divergence(v1Pos, v2Pos)
     val kernelDiv = kernel.divergence(v1Pos, v2Pos)
     funcDiv shouldBe kernelDiv +- tolerance
   }
@@ -123,13 +126,13 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("GeneralizedI - consistent with BregmanKernel") {
-    val func = BregmanFunctions.generalizedI()
+    val func   = BregmanFunctions.generalizedI()
     val kernel = new GeneralizedIDivergenceKernel()
 
     val v1Pos = Vectors.dense(0.5, 1.0, 1.5)
     val v2Pos = Vectors.dense(0.6, 1.1, 1.6)
 
-    val funcDiv = func.divergence(v1Pos, v2Pos)
+    val funcDiv   = func.divergence(v1Pos, v2Pos)
     val kernelDiv = kernel.divergence(v1Pos, v2Pos)
     funcDiv shouldBe kernelDiv +- tolerance
   }
@@ -142,10 +145,10 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("LogisticLoss - consistent with BregmanKernel") {
-    val func = BregmanFunctions.logisticLoss()
+    val func   = BregmanFunctions.logisticLoss()
     val kernel = new LogisticLossKernel()
 
-    val funcDiv = func.divergence(vProbability, vProbability)
+    val funcDiv   = func.divergence(vProbability, vProbability)
     val kernelDiv = kernel.divergence(vProbability, vProbability)
     funcDiv shouldBe kernelDiv +- tolerance
   }
@@ -163,10 +166,10 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("L1 - consistent with BregmanKernel") {
-    val func = BregmanFunctions.l1
+    val func   = BregmanFunctions.l1
     val kernel = new L1Kernel()
 
-    val funcDiv = func.divergence(v1, v2)
+    val funcDiv   = func.divergence(v1, v2)
     val kernelDiv = kernel.divergence(v1, v2)
     funcDiv shouldBe kernelDiv +- tolerance
   }
@@ -184,10 +187,10 @@ class BregmanFunctionSuite extends AnyFunSuite with Matchers {
   }
 
   test("Spherical - consistent with BregmanKernel") {
-    val func = BregmanFunctions.spherical
+    val func   = BregmanFunctions.spherical
     val kernel = new SphericalKernel()
 
-    val funcDiv = func.divergence(v1, v2)
+    val funcDiv   = func.divergence(v1, v2)
     val kernelDiv = kernel.divergence(v1, v2)
     funcDiv shouldBe kernelDiv +- tolerance
   }

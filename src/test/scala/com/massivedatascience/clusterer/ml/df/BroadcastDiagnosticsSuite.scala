@@ -21,7 +21,7 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.BeforeAndAfterAll
-import org.apache.log4j.{Level, Logger}
+import org.apache.log4j.{ Level, Logger }
 
 import scala.collection.mutable
 
@@ -138,10 +138,10 @@ class BroadcastDiagnosticsSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Test various sizes
     val testCases = Seq(
-      (10, 10),      // 100 elements = 800 bytes
-      (100, 100),    // 10K elements = 80KB
-      (1000, 100),   // 100K elements = 800KB
-      (1000, 1000)   // 1M elements = 8MB
+      (10, 10),    // 100 elements = 800 bytes
+      (100, 100),  // 10K elements = 80KB
+      (1000, 100), // 100K elements = 800KB
+      (1000, 1000) // 1M elements = 8MB
     )
 
     testCases.foreach { case (k, dim) =>

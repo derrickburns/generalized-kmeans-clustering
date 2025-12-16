@@ -88,22 +88,24 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
     ).toDF("features")
 
     val initialCenters = Array(
-      Array(0.5, 0.5),    // Near cluster 0
-      Array(9.5, 0.5),    // Near cluster 1
-      Array(5.5, 9.5),    // Near cluster 2
-      Array(0.5, 9.5),    // Near cluster 3
-      Array(9.5, 9.5)     // Near cluster 4
+      Array(0.5, 0.5), // Near cluster 0
+      Array(9.5, 0.5), // Near cluster 1
+      Array(5.5, 9.5), // Near cluster 2
+      Array(0.5, 9.5), // Near cluster 3
+      Array(9.5, 9.5)  // Near cluster 4
     )
 
     val config = createConfig(k = 5)
 
     // Run default iterator
     val defaultIterator = new DefaultLloydsIterator()
-    val defaultResult = defaultIterator.run(data, "features", None, initialCenters.map(_.clone()), config)
+    val defaultResult   =
+      defaultIterator.run(data, "features", None, initialCenters.map(_.clone()), config)
 
     // Run Elkan iterator
     val elkanIterator = new ElkanLloydsIterator()
-    val elkanResult = elkanIterator.run(data, "features", None, initialCenters.map(_.clone()), config)
+    val elkanResult   =
+      elkanIterator.run(data, "features", None, initialCenters.map(_.clone()), config)
 
     // Both should converge
     assert(defaultResult.converged, "Default iterator should converge")
@@ -114,14 +116,15 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
       for (j <- defaultResult.centers(i).indices) {
         assert(
           math.abs(defaultResult.centers(i)(j) - elkanResult.centers(i)(j)) < 0.1,
-          s"Center $i dimension $j differs: default=${defaultResult.centers(i)(j)}, elkan=${elkanResult.centers(i)(j)}"
+          s"Center $i dimension $j differs: default=${defaultResult
+              .centers(i)(j)}, elkan=${elkanResult.centers(i)(j)}"
         )
       }
     }
 
     // Final distortion should be similar
     val defaultDistortion = defaultResult.distortionHistory.last
-    val elkanDistortion = elkanResult.distortionHistory.last
+    val elkanDistortion   = elkanResult.distortionHistory.last
     assert(
       math.abs(defaultDistortion - elkanDistortion) / defaultDistortion < 0.01,
       s"Distortion differs: default=$defaultDistortion, elkan=$elkanDistortion"
@@ -147,7 +150,7 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val config = createConfig(k = 2)
 
     val elkanIterator = new ElkanLloydsIterator()
-    val result = elkanIterator.run(data, "features", None, initialCenters, config)
+    val result        = elkanIterator.run(data, "features", None, initialCenters, config)
 
     // Should complete successfully (falls back to default)
     assert(result.converged || result.iterations == config.maxIter)
@@ -174,7 +177,7 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
       k = 5,
       maxIter = 10,
       tol = 1e-4,
-      kernel = new KLDivergenceKernel(),  // Non-SE kernel
+      kernel = new KLDivergenceKernel(), // Non-SE kernel
       assigner = new BroadcastUDFAssignment(),
       updater = new GradMeanUDAFUpdate(),
       emptyHandler = new ReseedRandomHandler(),
@@ -219,9 +222,9 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
     import sparkSession.implicits._
 
     // Create synthetic data with clear cluster structure
-    val numClusters = 10
+    val numClusters      = 10
     val pointsPerCluster = 20
-    val separation = 50.0
+    val separation       = 50.0
 
     val random = new scala.util.Random(42)
     val points = (0 until numClusters).flatMap { c =>
@@ -244,7 +247,7 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val config = createConfig(k = numClusters, maxIter = 50)
 
     val elkanIterator = new ElkanLloydsIterator()
-    val result = elkanIterator.run(data, "features", None, initialCenters, config)
+    val result        = elkanIterator.run(data, "features", None, initialCenters, config)
 
     // Should converge
     assert(result.converged, s"Should converge but took ${result.iterations} iterations")
@@ -254,7 +257,10 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
       val prev = result.distortionHistory(i - 1)
       val curr = result.distortionHistory(i)
       // Allow small increases due to empty cluster reseeding
-      assert(curr <= prev * 1.01, s"Distortion increased significantly at iteration $i: $prev -> $curr")
+      assert(
+        curr <= prev * 1.01,
+        s"Distortion increased significantly at iteration $i: $prev -> $curr"
+      )
     }
   }
 
@@ -282,7 +288,7 @@ class ElkanLloydsIteratorSuite extends AnyFunSuite with BeforeAndAfterAll {
     val config = createConfig(k = 5, maxIter = 20)
 
     val elkanIterator = new ElkanLloydsIterator()
-    val result = elkanIterator.run(data, "features", None, initialCenters, config)
+    val result        = elkanIterator.run(data, "features", None, initialCenters, config)
 
     // Should complete without error - centers may collapse when all points
     // are assigned to one cluster (existing limitation in EmptyClusterHandler

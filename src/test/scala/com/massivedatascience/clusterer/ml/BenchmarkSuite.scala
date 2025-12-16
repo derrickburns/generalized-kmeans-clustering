@@ -58,11 +58,13 @@ class BenchmarkSuite extends AnyFunSuite {
     // Generate test data - positive for non-SE divergences
     val data = (0 until numPoints).map { i =>
       val cluster = i % k
-      val base = if (divergence == "squaredEuclidean" || divergence == "spherical") {
+      val base    = if (divergence == "squaredEuclidean" || divergence == "spherical") {
         (0 until dim).map(d => cluster * 10.0 + scala.util.Random.nextGaussian()).toArray
       } else {
         // Positive values for KL, IS, etc.
-        (0 until dim).map(d => cluster + 1.0 + math.abs(scala.util.Random.nextGaussian()) * 0.1).toArray
+        (0 until dim)
+          .map(d => cluster + 1.0 + math.abs(scala.util.Random.nextGaussian()) * 0.1)
+          .toArray
       }
       Tuple1(Vectors.dense(base))
     }.toDF("features")
@@ -78,18 +80,19 @@ class BenchmarkSuite extends AnyFunSuite {
       .setSeed(seed)
       .setCheckpointInterval(0) // Disable checkpointing for benchmarks
 
-    val startTime = System.currentTimeMillis()
-    val model = gkm.fit(data)
+    val startTime   = System.currentTimeMillis()
+    val model       = gkm.fit(data)
     val predictions = model.transform(data)
     predictions.count() // Force evaluation
     val endTime = System.currentTimeMillis()
 
     data.unpersist()
 
-    val elapsedMs = endTime - startTime
-    val actualIter = if (model.hasSummary) model.summary.iterations else maxIter
-    val pointsPerSec = numPoints * 1000.0 / elapsedMs
-    val pointsPerIterPerSec = if (actualIter > 0) numPoints * 1000.0 / (elapsedMs / actualIter.toDouble) else 0.0
+    val elapsedMs           = endTime - startTime
+    val actualIter          = if (model.hasSummary) model.summary.iterations else maxIter
+    val pointsPerSec        = numPoints * 1000.0 / elapsedMs
+    val pointsPerIterPerSec =
+      if (actualIter > 0) numPoints * 1000.0 / (elapsedMs / actualIter.toDouble) else 0.0
 
     BenchmarkResult(
       name = name,
@@ -126,7 +129,9 @@ class BenchmarkSuite extends AnyFunSuite {
       println(f"${"Strategy"}%-15s ${"Time(ms)"}%10s ${"Pts/sec"}%12s ${"Pts/iter/sec"}%14s")
       println("-" * 55)
       results.foreach { r =>
-        println(f"${r.strategy}%-15s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f")
+        println(
+          f"${r.strategy}%-15s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f"
+        )
       }
 
       // All strategies should complete reasonably
@@ -163,7 +168,9 @@ class BenchmarkSuite extends AnyFunSuite {
       println(f"${"Divergence"}%-18s ${"Time(ms)"}%10s ${"Pts/sec"}%12s ${"Iterations"}%12s")
       println("-" * 55)
       results.foreach { r =>
-        println(f"${r.divergence}%-18s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.actualIter}%12d")
+        println(
+          f"${r.divergence}%-18s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.actualIter}%12d"
+        )
       }
 
       // All divergences should complete
@@ -198,7 +205,9 @@ class BenchmarkSuite extends AnyFunSuite {
       println(f"${"K"}%5s ${"Time(ms)"}%10s ${"Pts/sec"}%12s ${"Pts/iter/sec"}%14s")
       println("-" * 45)
       results.foreach { r =>
-        println(f"${r.k}%5d ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f")
+        println(
+          f"${r.k}%5d ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f"
+        )
       }
 
       // Time should scale reasonably (not exponentially) with k
@@ -232,7 +241,9 @@ class BenchmarkSuite extends AnyFunSuite {
       println(f"${"Dim"}%5s ${"Time(ms)"}%10s ${"Pts/sec"}%12s ${"Pts/iter/sec"}%14s")
       println("-" * 45)
       results.foreach { r =>
-        println(f"${r.dim}%5d ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f")
+        println(
+          f"${r.dim}%5d ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.pointsPerIterPerSec}%14.0f"
+        )
       }
 
       // All should complete in reasonable time
@@ -250,13 +261,13 @@ class BenchmarkSuite extends AnyFunSuite {
 
       // Generate normalized data (unit vectors)
       val numPoints = 2000
-      val dim = 20
-      val k = 5
+      val dim       = 20
+      val k         = 5
 
       val normalizedData = (0 until numPoints).map { i =>
-        val cluster = i % k
-        val raw = (0 until dim).map(d => cluster + scala.util.Random.nextGaussian()).toArray
-        val norm = math.sqrt(raw.map(x => x * x).sum)
+        val cluster    = i % k
+        val raw        = (0 until dim).map(d => cluster + scala.util.Random.nextGaussian()).toArray
+        val norm       = math.sqrt(raw.map(x => x * x).sum)
         val normalized = raw.map(_ / norm)
         Tuple1(Vectors.dense(normalized))
       }.toDF("features")
@@ -294,12 +305,17 @@ class BenchmarkSuite extends AnyFunSuite {
       println(f"${"Method"}%-18s ${"Time(ms)"}%10s ${"Pts/sec"}%12s ${"Iterations"}%12s")
       println("-" * 55)
       Seq(seResult, sphericalResult).foreach { r =>
-        println(f"${r.divergence}%-18s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.actualIter}%12d")
+        println(
+          f"${r.divergence}%-18s ${r.elapsedMs}%10d ${r.pointsPerSec}%12.0f ${r.actualIter}%12d"
+        )
       }
 
       // Both should complete reasonably
       assert(seResult.elapsedMs < 30000, s"SE too slow: ${seResult.elapsedMs}ms")
-      assert(sphericalResult.elapsedMs < 30000, s"Spherical too slow: ${sphericalResult.elapsedMs}ms")
+      assert(
+        sphericalResult.elapsedMs < 30000,
+        s"Spherical too slow: ${sphericalResult.elapsedMs}ms"
+      )
     }
   }
 

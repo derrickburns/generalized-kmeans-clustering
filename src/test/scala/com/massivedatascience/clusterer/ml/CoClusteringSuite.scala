@@ -49,9 +49,9 @@ class CoClusteringSuite extends AnyFunSuite with BeforeAndAfterAll {
     * }}}
     *
     * Should result in:
-    * - Row clusters: {row0, row1} -> 0, {row2, row3} -> 1
-    * - Col clusters: {col0, col1} -> 0, {col2, col3} -> 1
-    * - Block centers: [[1.05, 5.05], [4.95, 1.05]]
+    *   - Row clusters: {row0, row1} -> 0, {row2, row3} -> 1
+    *   - Col clusters: {col0, col1} -> 0, {col2, col3} -> 1
+    *   - Block centers: [[1.05, 5.05], [4.95, 1.05]]
     */
   def createBlockStructuredMatrix(): DataFrame = {
     val sparkSession = spark
@@ -162,7 +162,7 @@ class CoClusteringSuite extends AnyFunSuite with BeforeAndAfterAll {
     val model = coClustering.fit(df)
 
     // Save to temp directory
-    val tmpDir = Files.createTempDirectory("coclustering-test")
+    val tmpDir    = Files.createTempDirectory("coclustering-test")
     val modelPath = tmpDir.resolve("model").toString
 
     try {
@@ -215,7 +215,7 @@ class CoClusteringSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setMaxIter(10)
       .setSeed(42)
 
-    val model = coClustering.fit(df)
+    val model       = coClustering.fit(df)
     val predictions = model.transform(df)
 
     assert(predictions.columns.contains("rCluster"))
@@ -224,14 +224,11 @@ class CoClusteringSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("estimator persistence") {
-    val tmpDir = Files.createTempDirectory("coclustering-estimator-test")
+    val tmpDir        = Files.createTempDirectory("coclustering-estimator-test")
     val estimatorPath = tmpDir.resolve("estimator").toString
 
     try {
-      val coClustering = new CoClustering()
-        .setNumRowClusters(3)
-        .setNumColClusters(4)
-        .setMaxIter(50)
+      val coClustering = new CoClustering().setNumRowClusters(3).setNumColClusters(4).setMaxIter(50)
 
       coClustering.write.overwrite().save(estimatorPath)
 
@@ -253,15 +250,18 @@ class CoClusteringSuite extends AnyFunSuite with BeforeAndAfterAll {
       .setRowIndexCol("row")
       .setColIndexCol("col")
       .setValueCol("value")
-      .setMaxIter(1000)  // High max iter
-      .setTolerance(1e-3)  // Reasonable tolerance
+      .setMaxIter(1000)   // High max iter
+      .setTolerance(1e-3) // Reasonable tolerance
       .setSeed(42)
 
     val model = coClustering.fit(df)
 
     // With good block structure, should converge well before 1000 iterations
     assert(model.hasSummary)
-    assert(model.summary.iterations < 100, s"Should converge quickly, but took ${model.summary.iterations} iterations")
+    assert(
+      model.summary.iterations < 100,
+      s"Should converge quickly, but took ${model.summary.iterations} iterations"
+    )
   }
 
   private def deleteRecursively(file: java.io.File): Unit = {

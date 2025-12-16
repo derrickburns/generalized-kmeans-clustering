@@ -15,7 +15,8 @@ import com.massivedatascience.clusterer.ml.GeneralizedKMeans
   * This example simulates clustering document embeddings from two topics.
   */
 object SphericalKMeansExample extends App {
-  val spark = SparkSession.builder().appName("SphericalKMeansExample").master("local[*]").getOrCreate()
+  val spark =
+    SparkSession.builder().appName("SphericalKMeansExample").master("local[*]").getOrCreate()
   import spark.implicits._
 
   // Simulate document embeddings from 2 topics
@@ -40,11 +41,11 @@ object SphericalKMeansExample extends App {
   // Use spherical (cosine) divergence
   val sphericalKMeans = new GeneralizedKMeans()
     .setK(2)
-    .setDivergence("spherical")  // or "cosine" - both work
+    .setDivergence("spherical") // or "cosine" - both work
     .setMaxIter(20)
     .setSeed(42)
 
-  val model = sphericalKMeans.fit(embeddings)
+  val model       = sphericalKMeans.fit(embeddings)
   val predictions = model.transform(embeddings)
 
   // Verify basic functionality
@@ -62,14 +63,22 @@ object SphericalKMeansExample extends App {
   println(s"\nCluster distribution: cluster0=$predictions0, cluster1=$predictions1")
 
   // With well-separated directions, each cluster should have roughly 4 documents
-  assert(predictions0 >= 3 && predictions0 <= 5, s"cluster 0 should have ~4 docs, got $predictions0")
-  assert(predictions1 >= 3 && predictions1 <= 5, s"cluster 1 should have ~4 docs, got $predictions1")
+  assert(
+    predictions0 >= 3 && predictions0 <= 5,
+    s"cluster 0 should have ~4 docs, got $predictions0"
+  )
+  assert(
+    predictions1 >= 3 && predictions1 <= 5,
+    s"cluster 1 should have ~4 docs, got $predictions1"
+  )
 
   // Show cluster centers (normalized)
   println("\nCluster centers (normalized vectors):")
   model.clusterCenters.zipWithIndex.foreach { case (center, i) =>
     val norm = math.sqrt(center.map(x => x * x).sum)
-    println(s"  Cluster $i: [${center.map(x => f"$x%.4f").mkString(", ")}] (norm=${"%.4f".format(norm)})")
+    println(
+      s"  Cluster $i: [${center.map(x => f"$x%.4f").mkString(", ")}] (norm=${"%.4f".format(norm)})"
+    )
   }
 
   // Demonstrate training summary
@@ -89,11 +98,8 @@ object SphericalKMeansExample extends App {
   }
 
   // Demonstrate using "cosine" alias (same behavior)
-  val cosineKMeans = new GeneralizedKMeans()
-    .setK(2)
-    .setDivergence("cosine")
-    .setMaxIter(10)
-    .setSeed(42)
+  val cosineKMeans =
+    new GeneralizedKMeans().setK(2).setDivergence("cosine").setMaxIter(10).setSeed(42)
 
   val cosineModel = cosineKMeans.fit(embeddings)
   assert(cosineModel.clusterCenters.length == 2, "cosine alias should work")

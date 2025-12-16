@@ -69,8 +69,8 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
 
 /** Soft K-Means clustering (fuzzy c-means) with pluggable Bregman divergences.
   *
-  * Unlike hard clustering where each point belongs to exactly one cluster, soft clustering
-  * assigns each point a probability distribution over all clusters. This is useful when:
+  * Unlike hard clustering where each point belongs to exactly one cluster, soft clustering assigns
+  * each point a probability distribution over all clusters. This is useful when:
   *   - Cluster boundaries are uncertain or overlapping
   *   - You need confidence scores for cluster assignments
   *   - Points may genuinely belong to multiple categories
@@ -143,8 +143,10 @@ trait SoftKMeansParams extends GeneralizedKMeansParams {
   *   - '''Ensemble clustering:''' Soft assignments enable cluster aggregation
   *   - '''Uncertainty quantification:''' Know when assignments are confident vs. ambiguous
   *
-  * @see [[SoftKMeansModel]] for prediction methods and model details
-  * @see [[GeneralizedKMeans]] for hard clustering alternative
+  * @see
+  *   [[SoftKMeansModel]] for prediction methods and model details
+  * @see
+  *   [[GeneralizedKMeans]] for hard clustering alternative
   *
   * @param uid
   *   Unique identifier

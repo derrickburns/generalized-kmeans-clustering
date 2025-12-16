@@ -61,10 +61,10 @@ private[df] class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSiz
       )
       broadcastStrategy.assign(df, featuresCol, weightCol, centers, kernel)
     } else {
-      val sizeStr          = formatBroadcastSize(kTimesDim)
-      val thresholdStr     = formatBroadcastSize(broadcastThresholdElems)
-      val overagePercent   = ((kTimesDim.toDouble / broadcastThresholdElems - 1.0) * 100).toInt
-      val suggestedChunkK  = math.max(1, broadcastThresholdElems / dim)
+      val sizeStr         = formatBroadcastSize(kTimesDim)
+      val thresholdStr    = formatBroadcastSize(broadcastThresholdElems)
+      val overagePercent  = ((kTimesDim.toDouble / broadcastThresholdElems - 1.0) * 100).toInt
+      val suggestedChunkK = math.max(1, broadcastThresholdElems / dim)
 
       logWarning(
         s"""AutoAssignment: Broadcast size exceeds threshold
