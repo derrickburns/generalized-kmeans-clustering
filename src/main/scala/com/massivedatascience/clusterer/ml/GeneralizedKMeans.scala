@@ -370,10 +370,20 @@ class GeneralizedKMeans(override val uid: String)
       .map(_.getAs[Vector](0).toArray)
   }
 
-  /** K-means|| initialization (simplified version).
+  /** K-means++ initialization with Bregman divergence.
     *
-    * This is a simplified implementation. A full implementation would use the parallel k-means++
-    * algorithm with oversampling.
+    * This implements the D^2 weighting scheme of k-means++ using the actual Bregman divergence,
+    * ensuring proper initialization for any divergence (KL, Itakura-Saito, etc.).
+    *
+    * Algorithm:
+    *   1. Select first center uniformly at random 2. For each subsequent center:
+    *      - Compute D(x, nearest_center) for all points x
+    *      - Select next center with probability proportional to D(x, nearest_center)
+    *      3. Repeat until k centers are selected
+    *
+    * This properly uses the specified Bregman divergence for distance-proportional sampling, which
+    * leads to better initialization quality compared to using squared Euclidean for all
+    * divergences.
     */
   private def initializeKMeansPlusPlus(
       df: DataFrame,
@@ -385,68 +395,79 @@ class GeneralizedKMeans(override val uid: String)
       kernel: BregmanKernel
   ): Array[Array[Double]] = {
 
-    val rand     = new Random(seed)
-    val bcKernel = df.sparkSession.sparkContext.broadcast(kernel)
+    val rand = new Random(seed)
 
-    // Step 1: Select first center uniformly at random
-    val allPoints = df.select(featuresCol).collect()
+    // Collect all points for local k-means++ (efficient for moderate dataset sizes)
+    val allPoints = df.select(featuresCol).collect().map(_.getAs[Vector](0))
     require(
       allPoints.nonEmpty,
-      s"Dataset is empty. Cannot initialize k-means|| with k=$k on an empty dataset."
+      s"Dataset is empty. Cannot initialize k-means++ with k=$k on an empty dataset."
     )
 
-    val firstCenter = allPoints(rand.nextInt(allPoints.length)).getAs[Vector](0).toArray
+    val n = allPoints.length
+    logInfo(s"Running Bregman-native k-means++ on $n points with ${kernel.name} divergence")
 
-    var centers = Array(firstCenter)
+    // Step 1: Select first center uniformly at random
+    val centers = scala.collection.mutable.ArrayBuffer.empty[Array[Double]]
+    centers += allPoints(rand.nextInt(n)).toArray
 
-    // Steps 2-k: Iteratively select centers with probability proportional to distance^2
-    for (step <- 1 until math.min(k, steps + 1)) {
-      val bcCenters = df.sparkSession.sparkContext.broadcast(centers)
+    // Array to store distance to nearest center for each point
+    val minDistances = Array.fill(n)(Double.PositiveInfinity)
 
-      // Compute distances to nearest center
-      val distanceUDF = udf { (features: Vector) =>
-        val ctrs    = bcCenters.value
-        val kern    = bcKernel.value
-        var minDist = Double.PositiveInfinity
-        var i       = 0
-        while (i < ctrs.length) {
-          val center = Vectors.dense(ctrs(i))
-          val dist   = kern.divergence(features, center)
-          if (dist < minDist) {
-            minDist = dist
+    // Steps 2-k: Select centers with probability proportional to divergence
+    while (centers.length < k) {
+      // Update minimum distances with respect to the most recently added center
+      val lastCenter = Vectors.dense(centers.last)
+      var totalDist  = 0.0
+
+      var i = 0
+      while (i < n) {
+        val dist = kernel.divergence(allPoints(i), lastCenter)
+        if (dist < minDistances(i)) {
+          minDistances(i) = dist
+        }
+        // Handle potential numerical issues
+        if (java.lang.Double.isFinite(minDistances(i))) {
+          totalDist += minDistances(i)
+        }
+        i += 1
+      }
+
+      // If all distances are zero or invalid, fall back to random selection
+      if (totalDist <= 0.0 || !java.lang.Double.isFinite(totalDist)) {
+        // All points are duplicates or numerical issues - select random point
+        centers += allPoints(rand.nextInt(n)).toArray
+        logInfo(s"K-means++ step ${centers.length}: fallback to random selection")
+      } else {
+        // Sample with probability proportional to distance (D^2 weighting)
+        val threshold = rand.nextDouble() * totalDist
+        var cumSum    = 0.0
+        var selected  = -1
+        i = 0
+
+        while (i < n && selected < 0) {
+          if (java.lang.Double.isFinite(minDistances(i))) {
+            cumSum += minDistances(i)
+          }
+          if (cumSum >= threshold) {
+            selected = i
           }
           i += 1
         }
-        minDist
+
+        // Fallback to last point if numerical issues
+        if (selected < 0) selected = n - 1
+
+        centers += allPoints(selected).toArray
+
+        if (centers.length % 10 == 0 || centers.length == k) {
+          logInfo(s"K-means++ progress: ${centers.length}/$k centers selected")
+        }
       }
-
-      val withDistances =
-        df.select(featuresCol).withColumn("distance", distanceUDF(col(featuresCol)))
-
-      // Sample proportional to distance^2
-      val numToSample = math.min(k - centers.length, 2 * k)
-      val samples     = withDistances
-        .sample(withReplacement = false, numToSample.toDouble / df.count(), rand.nextLong())
-        .collect()
-        .map(_.getAs[Vector](0).toArray)
-
-      centers = centers ++ samples.take(k - centers.length)
-
-      bcCenters.destroy()
-
-      logInfo(s"K-means|| step $step: selected ${centers.length} centers")
     }
 
-    // If we have more than k centers, run one iteration of Lloyd's to reduce
-    if (centers.length > k) {
-      logInfo(s"Reducing ${centers.length} centers to $k using Lloyd's iteration")
-      val assigner = new BroadcastUDFAssignment()
-      val assigned = assigner.assign(df, featuresCol, weightCol, centers, kernel)
-      val updater  = new GradMeanUDAFUpdate()
-      centers = updater.update(assigned, featuresCol, weightCol, k, kernel)
-    }
-
-    centers.take(k)
+    logInfo(s"K-means++ initialization complete: selected $k centers using ${kernel.name}")
+    centers.toArray
   }
 }
 

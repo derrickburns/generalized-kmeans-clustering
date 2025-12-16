@@ -204,7 +204,7 @@ This document tracks planned improvements, technical debt, and future directions
   - `src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala` (initializeKMeansPP)
   - Add tests for KL/IS seeding quality
 - **Reference:** Nock, Luosto & Kivinen (2008): "Mixed Bregman Clustering with Approximation Guarantees"
-- **Status:** Not Started
+- **Status:** Completed 2025-12-15
 
 ---
 
