@@ -23,6 +23,29 @@ package object df {
   // Re-export strategy types for backward compatibility
   // Users importing com.massivedatascience.clusterer.ml.df._ get these types
 
+  /** Factory for creating BregmanKernel instances by name.
+    *
+    * @param divergence
+    *   divergence name: "squaredEuclidean", "kl", "itakuraSaito", etc.
+    * @param smoothing
+    *   smoothing parameter for divergences with domain constraints
+    * @return
+    *   BregmanKernel instance
+    */
+  object BregmanKernel {
+    def create(divergence: String, smoothing: Double = 1e-10): kernels.BregmanKernel =
+      divergence.toLowerCase match {
+        case "squaredeuclidean" | "se" | "euclidean" => new kernels.SquaredEuclideanKernel()
+        case "kl" | "kullbackleibler"                => new kernels.KLDivergenceKernel(smoothing)
+        case "itakurasaito" | "is"                   => new kernels.ItakuraSaitoKernel(smoothing)
+        case "generalizedi" | "geni"                 => new kernels.GeneralizedIDivergenceKernel(smoothing)
+        case "logistic"                              => new kernels.LogisticLossKernel(smoothing)
+        case "l1" | "manhattan"                      => new kernels.L1Kernel()
+        case "spherical" | "cosine"                  => new kernels.SphericalKernel()
+        case other => throw new IllegalArgumentException(s"Unknown divergence: $other")
+      }
+  }
+
   // Assignment strategies
   type AssignmentStrategy          = strategies.AssignmentStrategy
   type BroadcastUDFAssignment      = strategies.BroadcastUDFAssignment

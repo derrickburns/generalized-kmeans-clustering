@@ -224,7 +224,9 @@ class StreamingKMeansModel(
     val timeUnitValue: String
 ) extends GeneralizedKMeansModel(uid, initialCenters, kernelNameForParent)
     with MLWritable
-    with Logging {
+    with Logging
+    with HasTrainingSummary
+    with CentroidModelHelpers {
 
   // Mutable state for streaming updates (array contents are mutated, not references)
   @transient private val centerArrays: Array[Vector]   = initialCenters.map(Vectors.dense)
@@ -234,6 +236,9 @@ class StreamingKMeansModel(
   /** Get current cluster centers as Vectors (defensive copy).
     */
   def currentCenters: Array[Vector] = centerArrays.map(_.copy)
+
+  // For CentroidModelHelpers — return live centers
+  override def clusterCentersAsVectors: Array[Vector] = currentCenters
 
   /** Get current cluster weights (defensive copy).
     */
@@ -453,10 +458,6 @@ class StreamingKMeansModel(
 
     bestCluster
   }
-
-  /** Override clusterCentersAsVectors to return current dynamic centers.
-    */
-  override def clusterCentersAsVectors: Array[Vector] = currentCenters
 
   /** Create a streaming updater for real-time updates.
     *

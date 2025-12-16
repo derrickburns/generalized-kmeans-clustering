@@ -13,12 +13,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SECURITY.md with vulnerability reporting guidelines
 - CONTRIBUTING.md with development guidelines
 - Test suite fixes for Scala 2.12/2.13 compatibility
+- Spherical K-Means / cosine divergence support across estimators and models
+- New estimators: Mini-Batch K-Means, DP-Means, Balanced K-Means, Constrained (semi-supervised) K-Means, Kernel K-Means, Agglomerative Bregman, Bregman mixture models (EM), and CoClustering following the Spark ML Estimator/Model pattern
+- Bregman-native k-means++ seeding plus executable examples for spherical k-means
+- Outlier detection scaffolding with distance- and trim-based detectors
+- Property-based kernel accuracy suites and a performance benchmark suite with JSON outputs
+- **RobustKMeans estimator** for outlier-resistant clustering with trim, noise_cluster, and m_estimator modes
+- **Test suites for new components** (108 new tests, 716 total):
+  - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
+  - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
+  - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
+  - ConstrainedKMeansSuite: 17 tests for semi-supervised clustering with soft/hard constraints
+  - RobustKMeansSuite: 17 tests for robust clustering with outlier handling and persistence
 
 ### Fixed
 - Package name conflicts in StreamingKMeans and XMeans test suites
 - Scala 2.12 compatibility issues with `isFinite` method
+- SparseSEKernel divergenceSparse missing 0.5 factor (now matches SquaredEuclideanKernel)
+- AgglomerativeBregmanModel persistence serializing IntParam object instead of value
 - Spark 3.4 compatibility issues with `model.summary` API
 - CollectionConverters imports for cross-version support
+- BLAS `doMax` comparison, division-by-zero guards in strategies and co-clustering initializer, and invalid javac option in `build.sbt`
+
+### Changed
+- Unified divergence math via `BregmanFunction` and refactored kernel factory for consistency
+- Added Bregman-native initialization path and enriched Scaladoc across major estimators
+- Enhanced clustering iterator and constraint frameworks to support new variants
+
+### Performance
+- Accelerated squared-Euclidean assignment and Elkan-style cross-iteration bounds for Lloyd's iterations
+- Vectorized BLAS helpers for common linear algebra operations
+
+### Removed
+- Legacy RDD API and associated coreset/transform modules (DataFrame/ML API is now the sole surface)
 
 ## [0.6.0] - 2025-10-18
 

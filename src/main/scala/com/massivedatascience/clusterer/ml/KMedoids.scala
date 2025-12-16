@@ -505,26 +505,11 @@ class KMedoidsModel(
 ) extends org.apache.spark.ml.Model[KMedoidsModel]
     with KMedoidsParams
     with org.apache.spark.ml.util.MLWritable
-    with Logging {
+    with Logging
+    with HasTrainingSummary
+    with CentroidModelHelpers {
 
-  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
-
-  /** Training summary (only available for models trained in the current session). */
-  def summary: TrainingSummary = trainingSummary.getOrElse(
-    throw new NoSuchElementException(
-      "Training summary not available. Summary is only available for models trained " +
-        "in the current session, not for models loaded from disk."
-    )
-  )
-
-  /** Returns true if training summary is available. */
-  def hasSummary: Boolean = trainingSummary.isDefined
-
-  /** Number of clusters. */
-  def numClusters: Int = medoids.length
-
-  /** Dimensionality of features. */
-  def numFeatures: Int = medoids.headOption.map(_.size).getOrElse(0)
+  override def clusterCentersAsVectors: Array[Vector] = medoids
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     transformSchema(dataset.schema, logging = true)

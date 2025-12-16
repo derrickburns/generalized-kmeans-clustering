@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.{ BregmanKernel, SoftAssignments }
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param.{ ParamMap }
@@ -50,22 +50,13 @@ class SoftKMeansModel(
 ) extends org.apache.spark.ml.Model[SoftKMeansModel]
     with SoftKMeansParams
     with MLWritable
-    with Logging {
+    with Logging
+    with HasTrainingSummary
+    with CentroidModelHelpers {
 
-  /** Training summary (only available for models trained in current session). */
-  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
+  override def clusterCentersAsVectors: Array[Vector] = clusterCenters
 
-  def numClusters: Int = clusterCenters.length
-
-  /** Get training summary (throws if not available). */
-  def summary: TrainingSummary = trainingSummary.getOrElse(
-    throw new NoSuchElementException(
-      "Training summary not available. Summary is only available for models trained " +
-        "in the current session, not for models loaded from disk."
-    )
-  )
-
-  def hasSummary: Boolean = trainingSummary.isDefined
+  override def numClusters: Int = clusterCenters.length
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     transformSchema(dataset.schema, logging = true)
@@ -90,20 +81,15 @@ class SoftKMeansModel(
 
   /** Compute soft assignment probabilities. */
   private def computeSoftAssignments(df: DataFrame): DataFrame = {
-    val softAssignUDF = udf { (features: Vector) =>
-      val distances         = clusterCenters.map(center => kernel.divergence(features, center))
-      val minDistance       = distances.min
-      val unnormalizedProbs = distances.map(dist => math.exp(-betaValue * (dist - minDistance)))
-      val totalProb         = unnormalizedProbs.sum
-      val probabilities     =
-        if (totalProb > 1e-100) unnormalizedProbs.map(_ / totalProb).toArray
-        else Array.fill(clusterCenters.length)(1.0 / clusterCenters.length)
-      val adjusted          = probabilities.map(p => math.max(p, minMembershipValue))
-      val adjustedSum       = adjusted.sum
-      Vectors.dense(adjusted.map(_ / adjustedSum))
-    }
-
-    df.withColumn($(probabilityCol), softAssignUDF(col($(featuresCol))))
+    SoftAssignments.withProbabilities(
+      df,
+      clusterCenters,
+      kernel,
+      beta = betaValue,
+      minMembership = minMembershipValue,
+      featuresCol = $(featuresCol),
+      probabilityCol = $(probabilityCol)
+    )
   }
 
   /** Predict cluster (hard). */

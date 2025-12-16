@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.{ BregmanKernel, SoftAssignments }
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -327,24 +327,15 @@ class SoftKMeans(override val uid: String)
       centers: Array[Vector],
       kernel: BregmanKernel
   ): DataFrame = {
-    val betaValue          = $(beta)
-    val minMembershipValue = $(minMembership)
-
-    val softAssignUDF = udf { (features: Vector) =>
-      val distances         = centers.map(center => kernel.divergence(features, center))
-      val minDistance       = distances.min
-      val unnormalizedProbs = distances.map(dist => math.exp(-betaValue * (dist - minDistance)))
-      val totalProb         = unnormalizedProbs.sum
-      val probabilities     =
-        if (totalProb > 1e-100) unnormalizedProbs.map(_ / totalProb).toArray
-        else Array.fill(centers.length)(1.0 / centers.length)
-      val adjusted          = probabilities.map(p => math.max(p, minMembershipValue))
-      val adjustedSum       = adjusted.sum
-      Vectors.dense(adjusted.map(_ / adjustedSum))
-    }
-
-    // Use the configured probabilityCol for output
-    df.withColumn($(probabilityCol), softAssignUDF(col($(featuresCol))))
+    SoftAssignments.withProbabilities(
+      df,
+      centers,
+      kernel,
+      beta = $(beta),
+      minMembership = $(minMembership),
+      featuresCol = $(featuresCol),
+      probabilityCol = $(probabilityCol)
+    )
   }
 
   /** Compute new cluster centers using soft assignments. */

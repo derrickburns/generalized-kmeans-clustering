@@ -21,7 +21,8 @@
 3. **Mathematical fidelity first.** Correct Bregman formulations beat micro-perf. Perf changes must not alter semantics.
 4. **Determinism matters.** Same seed ⇒ identical results. Avoid nondeterministic ops in core loops.
 5. **Tight PRs.** Small, test-backed, CI-friendly. No speculative abstractions.
-6. **Maintain the roadmap.** When making changes, update `ROADMAP.md` to reflect completed work, new issues discovered, or priority changes.
+6. **Maintain the roadmap.** Keep `ROADMAP.md` forward-looking; move completed work into `CHANGELOG.md` and leave the roadmap focused on upcoming items and priorities.
+7. **Use shared model helpers.** Clustering models should mix in `HasTrainingSummary` and `CentroidModelHelpers` for consistent summaries/metadata; avoid reintroducing ad-hoc summary fields.
 
 ---
 
@@ -37,12 +38,11 @@
 **Claude must:**
 1. **Inspect `ROADMAP.md`** at the start of significant work to understand current priorities and context.
 2. **Update `ROADMAP.md`** when:
-   - Completing a bug fix → mark as ✅ FIXED with date
-   - Discovering a new bug → add to Bug Fixes section with priority
-   - Completing a feature → move to Completed Items section
-   - Identifying technical debt → add to appropriate section
+   - Discovering a new bug or opportunity → add with priority
+   - Changing priorities → update ordering/sections
    - Making architectural decisions → add to Decision Log
-3. **Reference roadmap items** in commit messages and PR descriptions where applicable.
+3. **Move completed work** (features, fixes, docs, perf) into `CHANGELOG.md` with dates and drop it from `ROADMAP.md` so the roadmap stays forward-looking.
+4. **Reference roadmap items** in commit messages and PR descriptions where applicable.
 
 ---
 

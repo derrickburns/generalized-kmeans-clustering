@@ -46,16 +46,9 @@ class GeneralizedKMeansModel(
 ) extends Model[GeneralizedKMeansModel]
     with GeneralizedKMeansParams
     with MLWritable
-    with Logging {
-
-  /** Training summary (only available for models trained in current session).
-    *
-    * Contains diagnostic information about the training process including convergence metrics,
-    * iteration history, and performance statistics.
-    *
-    * Note: This field is not persisted. Models loaded from disk will have trainingSummary = None.
-    */
-  @transient private[ml] var trainingSummary: Option[TrainingSummary] = None
+    with Logging
+    with HasTrainingSummary
+    with CentroidModelHelpers {
 
   /** Constructs a model with a random UID.
     *
@@ -67,47 +60,12 @@ class GeneralizedKMeansModel(
   def this(clusterCenters: Array[Array[Double]], kernelName: String) =
     this(Identifiable.randomUID("gkmeans"), clusterCenters, kernelName)
 
-  /** Number of clusters (k).
-    */
-  def numClusters: Int = clusterCenters.length
-
-  /** Dimensionality of features (d).
-    */
-  def numFeatures: Int = clusterCenters.headOption.map(_.length).getOrElse(0)
-
   /** Get cluster centers as Spark ML Vector array.
     *
     * @return
     *   array of k cluster center vectors
     */
   def clusterCentersAsVectors: Array[Vector] = clusterCenters.map(Vectors.dense)
-
-  /** Get training summary.
-    *
-    * Contains diagnostic information about the training process including convergence metrics,
-    * iteration history, and performance statistics.
-    *
-    * @throws NoSuchElementException
-    *   if summary is not available (e.g., model was loaded from disk)
-    * @return
-    *   training summary
-    */
-  def summary: TrainingSummary = trainingSummary.getOrElse(
-    throw new NoSuchElementException(
-      "Training summary not available. Summary is only available for models trained " +
-        "in the current session, not for models loaded from disk."
-    )
-  )
-
-  /** Check if training summary is available.
-    *
-    * Summary is only available for models trained in the current session. Models loaded from disk
-    * will have hasSummary = false.
-    *
-    * @return
-    *   true if summary is available
-    */
-  def hasSummary: Boolean = trainingSummary.isDefined
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     transformSchema(dataset.schema, logging = true)
