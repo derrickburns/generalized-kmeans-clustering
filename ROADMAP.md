@@ -1,6 +1,6 @@
 # Roadmap: Generalized K-Means Clustering
 
-> **Last Updated:** 2025-12-15 (RDD API Removed)
+> **Last Updated:** 2025-12-15 (New Algorithm Roadmap)
 > **Status:** Active planning document
 > **Maintainer Note:** Claude should inspect and update this file as changes are made.
 
@@ -161,6 +161,50 @@ This document tracks planned improvements, technical debt, and future directions
   - `src/test/scala/com/massivedatascience/clusterer/ml/DPMeansSuite.scala`
 - **Reference:** Kulis & Jordan (2012): "Revisiting k-means: New Algorithms via Bayesian Nonparametrics"
 - **Status:** Completed 2025-12-15
+
+### 3.4 Add Mini-Batch K-Means (P1)
+- **Motivation:** Orders of magnitude faster for very large datasets; standard in scikit-learn
+- **Algorithm:** Process random mini-batches instead of full data per iteration
+  - Sample batch of size `batchSize` at each iteration
+  - Update centers using weighted running average
+  - Convergence based on center stability across batches
+- **Key parameters:**
+  - `batchSize`: Number of samples per mini-batch (default: 1024)
+  - `maxNoImprovement`: Early stopping after N batches without improvement (default: 10)
+  - `reassignmentRatio`: Fraction of batch to reassign for empty clusters (default: 0.01)
+- **Files to create:**
+  - `src/main/scala/com/massivedatascience/clusterer/ml/MiniBatchKMeans.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/ml/MiniBatchKMeansSuite.scala`
+- **Reference:** Sculley (2010): "Web-Scale K-Means Clustering"
+- **Status:** In Progress
+
+### 3.5 Add Constrained/Balanced K-Means (P2)
+- **Motivation:** Enforce min/max cluster sizes for workload balancing, equal-sized segments
+- **Algorithm:** Modified Lloyd's with Hungarian algorithm or min-cost flow for assignment
+  - Assignment step solves balanced assignment problem
+  - Update step remains standard centroid computation
+- **Key parameters:**
+  - `minClusterSize`: Minimum points per cluster (default: 1)
+  - `maxClusterSize`: Maximum points per cluster (default: n/k)
+  - `balanceMode`: "soft" (penalty) or "hard" (strict constraint)
+- **Files to create:**
+  - `src/main/scala/com/massivedatascience/clusterer/ml/BalancedKMeans.scala`
+  - `src/test/scala/com/massivedatascience/clusterer/ml/BalancedKMeansSuite.scala`
+- **Reference:** Malinen & Fränti (2014): "Balanced K-Means for Clustering"
+- **Status:** Not Started
+
+### 3.6 Bregman-Native k-means++ Seeding (P2)
+- **Motivation:** Current k-means|| uses SE distances for seeding even with non-SE divergences
+- **Algorithm:** k-means++ probability-proportional seeding using the actual Bregman divergence
+  - Select first center uniformly at random
+  - Select subsequent centers with probability proportional to D(x, nearest_center)
+  - Works for any Bregman divergence (KL, IS, etc.)
+- **Key insight:** Better initialization leads to faster convergence and better local optima
+- **Files to modify:**
+  - `src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala` (initializeKMeansPP)
+  - Add tests for KL/IS seeding quality
+- **Reference:** Nock, Luosto & Kivinen (2008): "Mixed Bregman Clustering with Approximation Guarantees"
+- **Status:** Not Started
 
 ---
 
