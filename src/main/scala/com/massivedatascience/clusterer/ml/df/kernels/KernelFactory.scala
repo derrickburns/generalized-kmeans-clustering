@@ -78,9 +78,9 @@ object KernelFactory {
     )
   }
 
-  /** Divergences with sparse-optimized implementations. */
+  /** Divergences with sparse-optimized implementations (lowercase for comparison). */
   val sparseSupported: Set[String] = Set(
-    "squaredEuclidean",
+    "squaredeuclidean",
     "se",
     "euclidean",
     "kl",

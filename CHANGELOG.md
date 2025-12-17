@@ -19,12 +19,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Outlier detection scaffolding with distance- and trim-based detectors
 - Property-based kernel accuracy suites and a performance benchmark suite with JSON outputs
 - **RobustKMeans estimator** for outlier-resistant clustering with trim, noise_cluster, and m_estimator modes
-- **Test suites for new components** (108 new tests, 716 total):
+- **SparseKMeans estimator** for high-dimensional sparse data with auto-sparsity detection (21 tests)
+  - Automatic sparse kernel selection based on data sparsity ratio
+  - Support for SE, KL, L1, and Spherical divergences with sparse optimization
+  - `sparseMode` parameter: "auto", "force", or "dense"
+  - `sparseThreshold` parameter for auto-mode sparsity cutoff
+- **KernelFactory** for unified dense/sparse kernel creation with clear API
+  - Single entry point for all 8 Bregman divergences
+  - Auto-selection based on data sparsity with `forSparsity()` method
+  - Canonical divergence name constants in `KernelFactory.Divergence`
+- **Test suites for new components** (129 new tests, 737 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
   - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
   - ConstrainedKMeansSuite: 17 tests for semi-supervised clustering with soft/hard constraints
   - RobustKMeansSuite: 17 tests for robust clustering with outlier handling and persistence
+  - SparseKMeansSuite: 21 tests for sparse clustering with auto-detection and persistence
+
+### Architecture
+- Moved AcceleratedSEAssignment to `strategies/impl/` subpackage for better organization
+- Added type aliases in package objects for backward compatibility
+- Models now use KernelFactory for kernel creation (reduces code duplication)
 
 ### Fixed
 - Package name conflicts in StreamingKMeans and XMeans test suites

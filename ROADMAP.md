@@ -1,6 +1,6 @@
 # Roadmap: Generalized K-Means Clustering
 
-> **Last Updated:** 2025-12-15
+> **Last Updated:** 2025-12-16
 > **Status:** Forward-looking (completed work now lives in `CHANGELOG.md`)
 > **Maintainer Note:** Keep this document for upcoming work only; ship-ready or finished items belong in the changelog.
 
@@ -23,8 +23,8 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 
 Goal: land the highest-demand capabilities and supporting docs.
 
-- **Robust Bregman clustering + outlier handling** (3.11 / 5.8) — finalize trimmed/noise-cluster strategies, expose `outlierFraction`/`outlierMode`, add scoring column + persistence.
-- **Sparse Bregman clustering** (3.12) — finish `SparseKMeans` estimator and sparse-aware update strategy on top of `SparseBregmanKernel`.
+- ~~**Robust Bregman clustering + outlier handling** (3.11 / 5.8)~~ — **DONE**: `RobustKMeans` with trim/noise_cluster/m_estimator modes, outlier scoring, persistence.
+- ~~**Sparse Bregman clustering** (3.12)~~ — **DONE**: `SparseKMeans` estimator with auto-sparsity detection, `KernelFactory` for unified kernel creation.
 - **Multi-view clustering** (3.13 / 5.9) — implement `MultiViewKMeans` with shared `MultiViewAssignment`, per-view weights/divergences.
 - **Docs & notebooks** (6.1) — quick-start notebook, divergence selection guide, X-Means auto-k demo, soft-clustering interpretation examples.
 
@@ -56,7 +56,7 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 
 | Component | Priority | Enables | Notes |
 |-----------|----------|---------|-------|
-| Outlier Detection (5.8) | P1 | Robust Bregman clustering (3.11) | Trim/noise-cluster strategies, scoring column |
+| ~~Outlier Detection (5.8)~~ | ~~P1~~ | ~~Robust Bregman clustering (3.11)~~ | **DONE**: Trim/noise-cluster strategies, scoring column |
 | Multi-View (5.9) | P1 | Multi-view clustering (3.13) | View specs, weights, divergences |
 | Sequence Kernels (5.10) | P2 | Time-series clustering (3.15) | DTW/shape kernels, barycenters |
 | Consensus (5.11) | P2 | Ensemble clustering (3.16) | Base generator + co-association |
@@ -85,6 +85,8 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2025-12-15 | Prioritize robust/sparse/multi-view work next | Highest user demand and unlocks downstream variants |
 | 2025-12-15 | Maintain kernels in a single module (`BregmanKernel.scala`) | Consistency and discoverability |
 | 2025-12-15 | Use phased delivery for accelerations and new iterators | Keep CI stable while iterating |
+| 2025-12-16 | Created `KernelFactory` for unified kernel creation | Single API for dense/sparse kernels, reduces duplication |
+| 2025-12-16 | Moved assignment strategies to `impl/` subpackage | Better organization, backward-compatible via type aliases |
 
 ---
 
