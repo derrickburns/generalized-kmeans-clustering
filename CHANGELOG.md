@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Combine strategies: "weighted" (default), "max", "min"
   - `ViewSpec` case class for view configuration
   - Full persistence support (save/load)
+- **Documentation guides** in `docs/guides/`:
+  - Quick Start Guide - get running in 5 minutes
+  - Divergence Selection Guide - comprehensive decision flowchart and examples
+  - X-Means Auto-K Demo - automatic cluster count selection with BIC/AIC
+  - Soft Clustering Guide - interpreting probabilistic memberships
 - **Test suites for new components** (150 new tests, 758 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels

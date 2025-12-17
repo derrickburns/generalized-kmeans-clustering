@@ -143,11 +143,20 @@ rm -rf docs/api/
 sbt clean unidoc
 ```
 
+## Guides
+
+Comprehensive guides for common use cases:
+
+- **[Quick Start](guides/quickstart.md)** - Get up and running in 5 minutes
+- **[Divergence Selection](guides/divergence-selection.md)** - Choose the right distance measure
+- **[X-Means Auto-K](guides/xmeans-auto-k.md)** - Automatic cluster count selection
+- **[Soft Clustering](guides/soft-clustering.md)** - Interpret probabilistic memberships
+
 ## Related Documentation
 
 - **[Architecture Guide](../ARCHITECTURE.md)** - Technical deep-dive
 - **[Usage Examples](../DATAFRAME_API_EXAMPLES.md)** - Code examples
-- **[Performance Tuning](../PERFORMANCE_TUNING.md)** - Optimization guide
+- **[Performance Benchmarks](../PERFORMANCE_BENCHMARKS.md)** - Performance analysis
 - **[Migration Guide](../MIGRATION_GUIDE.md)** - RDD → DataFrame migration
 
 ---

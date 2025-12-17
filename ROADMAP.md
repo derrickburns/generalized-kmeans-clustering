@@ -26,7 +26,7 @@ Goal: land the highest-demand capabilities and supporting docs.
 - ~~**Robust Bregman clustering + outlier handling** (3.11 / 5.8)~~ — **DONE**: `RobustKMeans` with trim/noise_cluster/m_estimator modes, outlier scoring, persistence.
 - ~~**Sparse Bregman clustering** (3.12)~~ — **DONE**: `SparseKMeans` estimator with auto-sparsity detection, `KernelFactory` for unified kernel creation.
 - ~~**Multi-view clustering** (3.13 / 5.9)~~ — **DONE**: `MultiViewKMeans` estimator with per-view weights/divergences, combine strategies (weighted/max/min), `ViewSpec` configuration.
-- **Docs & notebooks** (6.1) — quick-start notebook, divergence selection guide, X-Means auto-k demo, soft-clustering interpretation examples.
+- ~~**Docs & notebooks** (6.1)~~ — **DONE**: Quick-start guide, divergence selection guide, X-Means auto-k demo, soft-clustering interpretation examples in `docs/guides/`.
 
 ---
 
@@ -88,6 +88,7 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2025-12-16 | Created `KernelFactory` for unified kernel creation | Single API for dense/sparse kernels, reduces duplication |
 | 2025-12-16 | Moved assignment strategies to `impl/` subpackage | Better organization, backward-compatible via type aliases |
 | 2025-12-16 | Implemented `MultiViewKMeans` with ViewSpec configuration | Per-view divergences/weights, weighted/max/min combine strategies |
+| 2025-12-16 | Created documentation guides in `docs/guides/` | Quick-start, divergence selection, X-Means auto-k, soft clustering |
 
 ---
 
