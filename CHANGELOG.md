@@ -42,12 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DerivativeDTWKernel` - Shape-based DTW invariant to offset/amplitude
   - DBA (DTW Barycenter Averaging) for computing sequence centroids
   - Full persistence support (save/load)
+- **InformationBottleneck estimator** for information-theoretic clustering (28 tests)
+  - Blahut-Arimoto algorithm for IB optimization
+  - `MutualInformation` utilities: entropy, KL divergence, JS divergence, conditional entropy
+  - Configurable trade-off parameter β (compression vs. relevance)
+  - Supports discrete and continuous relevance variables
+  - Self-information mode when no relevance column provided
+  - I(X;T) compression and I(T;Y) relevance metrics
+  - Full persistence support (save/load)
 - **Documentation guides** in `docs/guides/`:
   - Quick Start Guide - get running in 5 minutes
   - Divergence Selection Guide - comprehensive decision flowchart and examples
   - X-Means Auto-K Demo - automatic cluster count selection with BIC/AIC
   - Soft Clustering Guide - interpreting probabilistic memberships
-- **Test suites for new components** (150 new tests, 758 total):
+- **Test suites for new components** (178 new tests, 817 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
   - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
@@ -55,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - RobustKMeansSuite: 17 tests for robust clustering with outlier handling and persistence
   - SparseKMeansSuite: 21 tests for sparse clustering with auto-detection and persistence
   - MultiViewKMeansSuite: 21 tests for multi-view clustering with persistence
+  - TimeSeriesKMeansSuite: 31 tests for DTW-based time-series clustering with persistence
+  - InformationBottleneckSuite: 28 tests for IB clustering with MI utilities and persistence
 
 ### Architecture
 - Moved AcceleratedSEAssignment to `strategies/impl/` subpackage for better organization

@@ -45,7 +45,7 @@ Goal: land the highest-demand capabilities and supporting docs.
 
 ## Long-Term (P3)
 
-- **Information-theoretic clustering** (5.15) — mutual-information estimators and `IBIterator` for information bottleneck objectives.
+- ~~**Information-theoretic clustering** (5.15)~~ — **DONE**: `InformationBottleneck` estimator with Blahut-Arimoto algorithm, `MutualInformation` utilities, β trade-off parameter, discrete/continuous relevance support, 28 tests.
 - **Future variants/backlog:** additional experimental divergences, alternative initialization schemes, and advanced evaluation metrics as demand warrants.
 
 ---
@@ -63,7 +63,8 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | Federated (5.12) | P2 | Federated Bregman clustering (3.17) | Secure aggregation, optional DP |
 | Spectral (5.13) | P2 | Spectral/graph clustering (3.18) | Affinity builders, embeddings |
 | Subspace (5.14) | P2 | Subspace clustering (3.19) | Projections/feature weights |
-| Multi-Objective + IB (5.6/5.15) | P3 | Information bottleneck variants | Pareto tracking, IB iterator |
+| ~~IB (5.15)~~ | ~~P3~~ | ~~Information bottleneck clustering~~ | **DONE**: Blahut-Arimoto, MI utilities, 28 tests |
+| Multi-Objective (5.6) | P3 | Multi-criterion algorithms | Pareto tracking, objective combination |
 
 ---
 
@@ -90,6 +91,7 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2025-12-16 | Implemented `MultiViewKMeans` with ViewSpec configuration | Per-view divergences/weights, weighted/max/min combine strategies |
 | 2025-12-16 | Created documentation guides in `docs/guides/` | Quick-start, divergence selection, X-Means auto-k, soft clustering |
 | 2025-12-16 | Implemented `TimeSeriesKMeans` with sequence kernels | DTW, Soft-DTW, GAK, Derivative-DTW; DBA barycenters; 31 tests |
+| 2025-12-16 | Implemented `InformationBottleneck` estimator | Blahut-Arimoto algorithm, MutualInformation utilities, 28 tests |
 
 ---
 
