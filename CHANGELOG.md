@@ -50,12 +50,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Self-information mode when no relevance column provided
   - I(X;T) compression and I(T;Y) relevance metrics
   - Full persistence support (save/load)
+- **SpectralClustering estimator** for graph-based clustering (25 tests)
+  - `SpectralGraph` utilities for affinity matrix construction and Laplacian computation
+  - Affinity types: full, k-NN, ε-neighborhood
+  - Laplacian types: unnormalized (Shi-Malik), symmetric normalized (Ng-Jordan-Weiss), random walk
+  - Mercer kernels: RBF, Laplacian, Polynomial, Linear
+  - Eigendecomposition via power iteration with deflation
+  - Nyström approximation for large-scale clustering (O(nm²) instead of O(n³))
+  - Full persistence support (save/load)
 - **Documentation guides** in `docs/guides/`:
   - Quick Start Guide - get running in 5 minutes
   - Divergence Selection Guide - comprehensive decision flowchart and examples
   - X-Means Auto-K Demo - automatic cluster count selection with BIC/AIC
   - Soft Clustering Guide - interpreting probabilistic memberships
-- **Test suites for new components** (178 new tests, 817 total):
+- **Test suites for new components** (203 new tests, 842 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
   - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
@@ -65,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - MultiViewKMeansSuite: 21 tests for multi-view clustering with persistence
   - TimeSeriesKMeansSuite: 31 tests for DTW-based time-series clustering with persistence
   - InformationBottleneckSuite: 28 tests for IB clustering with MI utilities and persistence
+  - SpectralClusteringSuite: 25 tests for spectral/graph-based clustering with persistence
 
 ### Architecture
 - Moved AcceleratedSEAssignment to `strategies/impl/` subpackage for better organization

@@ -33,10 +33,10 @@ Goal: land the highest-demand capabilities and supporting docs.
 ## Mid-Term (P2)
 
 - ~~**Time-series Bregman clustering** (3.15 / 5.10)~~ — **DONE**: `TimeSeriesKMeans` with DTW, Soft-DTW, GAK, and Derivative-DTW kernels; DBA barycenter computation; full persistence support.
+- ~~**Spectral/graph-based clustering** (3.18 / 5.13)~~ — **DONE**: `SpectralClustering` with affinity builders (full, k-NN, ε-neighborhood), Laplacian types (unnormalized, symmetric normalized, random walk), Mercer kernels (RBF, Laplacian, polynomial, linear), Nyström approximation for O(nm²) scalability; 25 tests.
 - **Co-clustering extensions** (3.14) — sparse input support, streaming/incremental updates, improved initialization, block-center refinement.
 - **Consensus/ensemble clustering** (3.16 / 5.11) — base clustering generator + co-association aggregation with target-k selection.
 - **Federated/distributed aggregation** (3.17 / 5.12) — sufficient statistics exchange, optional differential privacy noise, secure aggregation hooks.
-- **Spectral/graph-based clustering** (3.18 / 5.13) — affinity builders, Laplacian embeddings, Nyström approximation for large n.
 - **Subspace clustering** (3.19 / 5.14) — cluster-specific projections or feature weights with alternating optimization.
 - **Model type hierarchy & soft-assignment refactor** (5.7 / 5.3) — shared clustering model traits, common persistence hooks, reusable soft-assignment iterator.
 - **Multi-objective convergence support** (5.6) — Pareto tracking and configurable objective combination for multi-criterion algorithms.
@@ -61,7 +61,7 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | ~~Sequence Kernels (5.10)~~ | ~~P2~~ | ~~Time-series clustering (3.15)~~ | **DONE**: DTW, Soft-DTW, GAK, Derivative-DTW kernels; DBA barycenters |
 | Consensus (5.11) | P2 | Ensemble clustering (3.16) | Base generator + co-association |
 | Federated (5.12) | P2 | Federated Bregman clustering (3.17) | Secure aggregation, optional DP |
-| Spectral (5.13) | P2 | Spectral/graph clustering (3.18) | Affinity builders, embeddings |
+| ~~Spectral (5.13)~~ | ~~P2~~ | ~~Spectral/graph clustering (3.18)~~ | **DONE**: Affinity builders, Laplacians, Nyström, 25 tests |
 | Subspace (5.14) | P2 | Subspace clustering (3.19) | Projections/feature weights |
 | ~~IB (5.15)~~ | ~~P3~~ | ~~Information bottleneck clustering~~ | **DONE**: Blahut-Arimoto, MI utilities, 28 tests |
 | Multi-Objective (5.6) | P3 | Multi-criterion algorithms | Pareto tracking, objective combination |
@@ -92,6 +92,7 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2025-12-16 | Created documentation guides in `docs/guides/` | Quick-start, divergence selection, X-Means auto-k, soft clustering |
 | 2025-12-16 | Implemented `TimeSeriesKMeans` with sequence kernels | DTW, Soft-DTW, GAK, Derivative-DTW; DBA barycenters; 31 tests |
 | 2025-12-16 | Implemented `InformationBottleneck` estimator | Blahut-Arimoto algorithm, MutualInformation utilities, 28 tests |
+| 2025-12-16 | Implemented `SpectralClustering` estimator | Graph Laplacian eigenvectors (Ng-Jordan-Weiss), Nyström approximation, 25 tests |
 
 ---
 
