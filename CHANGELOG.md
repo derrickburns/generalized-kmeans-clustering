@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Combine strategies: "weighted" (default), "max", "min"
   - `ViewSpec` case class for view configuration
   - Full persistence support (save/load)
+- **TimeSeriesKMeans estimator** for time-series clustering with DTW-based distances (31 tests)
+  - `SequenceKernel` trait for time-series similarity measures
+  - `DTWKernel` - Dynamic Time Warping with Sakoe-Chiba band constraint
+  - `SoftDTWKernel` - Differentiable DTW for gradient-based optimization
+  - `GAKKernel` - Global Alignment Kernel (positive-definite)
+  - `DerivativeDTWKernel` - Shape-based DTW invariant to offset/amplitude
+  - DBA (DTW Barycenter Averaging) for computing sequence centroids
+  - Full persistence support (save/load)
 - **Documentation guides** in `docs/guides/`:
   - Quick Start Guide - get running in 5 minutes
   - Divergence Selection Guide - comprehensive decision flowchart and examples
