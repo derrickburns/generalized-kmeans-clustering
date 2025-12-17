@@ -219,16 +219,19 @@ class GeneralizedKMeansModel(
   /** Create Bregman kernel based on kernel name.
     */
   private def createKernel(kernelName: String, smoothing: Double): BregmanKernel = {
-    kernelName match {
-      case "SquaredEuclidean"                       => new SquaredEuclideanKernel()
-      case name if name.startsWith("KL(")           => new KLDivergenceKernel(smoothing)
-      case name if name.startsWith("ItakuraSaito(") => new ItakuraSaitoKernel(smoothing)
-      case name if name.startsWith("GeneralizedI(") => new GeneralizedIDivergenceKernel(smoothing)
-      case name if name.startsWith("LogisticLoss(") => new LogisticLossKernel(smoothing)
-      case "L1"                                     => new L1Kernel()
-      case "Spherical"                              => new SphericalKernel()
-      case _                                        => throw new IllegalArgumentException(s"Unknown kernel: $kernelName")
+    import com.massivedatascience.clusterer.ml.df.kernels.KernelFactory
+    // Map stored kernel names to divergence names for KernelFactory
+    val divergence = kernelName match {
+      case "SquaredEuclidean"                       => "squaredEuclidean"
+      case name if name.startsWith("KL(")           => "kl"
+      case name if name.startsWith("ItakuraSaito(") => "itakuraSaito"
+      case name if name.startsWith("GeneralizedI(") => "generalizedI"
+      case name if name.startsWith("LogisticLoss(") => "logistic"
+      case "L1"                                     => "l1"
+      case "Spherical"                              => "spherical"
+      case other                                    => other.toLowerCase
     }
+    KernelFactory.create(divergence, smoothing = smoothing)
   }
 
   override def write: MLWriter = new GeneralizedKMeansModel.GeneralizedKMeansModelWriter(this)

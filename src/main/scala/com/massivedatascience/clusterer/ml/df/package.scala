@@ -53,6 +53,8 @@ package object df {
   type ChunkedBroadcastAssignment  = strategies.ChunkedBroadcastAssignment
   type AdaptiveBroadcastAssignment = strategies.AdaptiveBroadcastAssignment
   type AutoAssignment              = strategies.AutoAssignment
+  type AcceleratedSEAssignment     = strategies.impl.AcceleratedSEAssignment
+  val AcceleratedAssignment = strategies.impl.AcceleratedAssignment
 
   // Update strategies
   type UpdateStrategy       = strategies.UpdateStrategy
@@ -81,4 +83,14 @@ package object df {
   type LogisticLossKernel           = kernels.LogisticLossKernel
   type L1Kernel                     = kernels.L1Kernel
   type SphericalKernel              = kernels.SphericalKernel
+
+  // Sparse kernel types
+  type SparseBregmanKernel   = kernels.SparseBregmanKernel
+  type SparseSEKernel        = kernels.SparseSEKernel
+  type SparseKLKernel        = kernels.SparseKLKernel
+  type SparseL1Kernel        = kernels.SparseL1Kernel
+  type SparseSphericalKernel = kernels.SparseSphericalKernel
+
+  // Kernel factory
+  val KernelFactory = kernels.KernelFactory
 }

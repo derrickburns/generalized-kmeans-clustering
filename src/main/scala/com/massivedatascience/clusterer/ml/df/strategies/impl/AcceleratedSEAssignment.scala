@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
-package com.massivedatascience.clusterer.ml.df
+package com.massivedatascience.clusterer.ml.df.strategies.impl
 
+import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.strategies.AssignmentStrategy
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.DataFrame
@@ -28,7 +30,7 @@ import org.apache.spark.sql.functions._
   *
   * '''Key Insight (Elkan's Lemma 1):''' If d(x, c) ≤ d(c, c')/2, then d(x, c) ≤ d(x, c')
   *
-  * This means: once we find a center c with distance d, we can skip any center c' where d(c, c') ≥
+  * This means: once we find a center c with distance d, we can skip any center c' where d(c, c') >=
   * 2*d (because the triangle inequality guarantees c' is farther).
   *
   * ==Algorithm==

@@ -9,6 +9,7 @@ package com.massivedatascience.clusterer.ml.df.strategies
   *   - [[ChunkedBroadcastAssignment]]: Memory-efficient chunked processing
   *   - [[AdaptiveBroadcastAssignment]]: Memory-adaptive strategy
   *   - [[AutoAssignment]]: Automatic strategy selection
+  *   - [[AcceleratedSEAssignment]]: Triangle-inequality accelerated SE assignment
   */
 package object impl {
   // All implementations are defined in their respective files

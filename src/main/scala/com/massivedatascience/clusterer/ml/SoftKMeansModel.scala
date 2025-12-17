@@ -267,17 +267,8 @@ object SoftKMeansModel extends MLReadable[SoftKMeansModel] {
       val minMembership = (paramsJ \ "minMembership").extract[Double]
       val smoothing     = (paramsJ \ "smoothing").extract[Double]
 
-      import com.massivedatascience.clusterer.ml.df._
-      val kernel: BregmanKernel = divergence match {
-        case "squaredEuclidean"     => new SquaredEuclideanKernel()
-        case "kl"                   => new KLDivergenceKernel(smoothing)
-        case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
-        case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
-        case "logistic"             => new LogisticLossKernel(smoothing)
-        case "l1" | "manhattan"     => new L1Kernel()
-        case "spherical" | "cosine" => new SphericalKernel()
-        case _                      => new SquaredEuclideanKernel()
-      }
+      import com.massivedatascience.clusterer.ml.df.kernels.KernelFactory
+      val kernel = KernelFactory.create(divergence, smoothing = smoothing)
 
       val model = new SoftKMeansModel(uid, centers, beta, minMembership, kernel)
       model.modelDivergence = divergence

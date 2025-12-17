@@ -19,4 +19,6 @@ package object strategies {
   type ChunkedBroadcastAssignment  = impl.ChunkedBroadcastAssignment
   type AdaptiveBroadcastAssignment = impl.AdaptiveBroadcastAssignment
   type AutoAssignment              = impl.AutoAssignment
+  type AcceleratedSEAssignment     = impl.AcceleratedSEAssignment
+  val AcceleratedAssignment = impl.AcceleratedAssignment
 }
