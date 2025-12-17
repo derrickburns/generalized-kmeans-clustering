@@ -19,6 +19,64 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 
 ---
 
+## Adoption & Distribution (P0) — Highest ROI
+
+> **Insight:** More algorithms won't drive adoption if users can't easily install or trust the library. These items reduce friction and increase real-world usage more than any algorithm tweak.
+
+### 1. Frictionless Distribution
+
+**Problem:** README shows SBT coordinates implying "just add a dependency," but Spark Packages listing says no releases/no Maven coordinates — users must build from source.
+
+**Actions:**
+- [ ] Publish to Maven Central (or Spark Packages) with clear `--packages` string
+- [ ] Version matrix spelled out: Spark 3.4/3.5/4.0 × Scala 2.12/2.13
+- [ ] "Works on Databricks" cookbook (cluster library install, init script)
+- [ ] EMR / Kubernetes deployment examples
+- [ ] Copy-paste install paths for `spark-submit`, notebooks, and build tools
+
+### 2. Performance Accelerations (SE + large k)
+
+**Problem:** Squared-Euclidean at scale is the #1 use case; users care about cost and wall-clock.
+
+**Actions:**
+- [ ] **Fast exact:** Hamerly/Elkan/Yinyang pruning for Lloyd's iterations
+- [ ] **Fast approximate:** ANN-assisted assignment (LSH, KD-tree, ball tree)
+- [ ] Benchmark suite with published numbers (iterations/sec, speedup vs. baseline)
+
+### 3. PySpark Parity
+
+**Problem:** Python wrapper exists but isn't first-class; PySpark users are the majority.
+
+**Actions:**
+- [ ] pip-installable wheel with pinned Spark/Scala compatibility
+- [ ] Type hints and docstrings for IDE support
+- [ ] Native-feeling PySpark examples (not just Scala translations)
+- [ ] Model save/load and full param support matching Scala API
+- [ ] CI smoke tests for Python API
+
+### 4. Model Selection & Diagnostics
+
+**Problem:** Users ask "Is this clustering any good?" after fitting.
+
+**Actions:**
+- [ ] Scalable silhouette score (Spark-native)
+- [ ] Elbow method helper (cost vs. k curve)
+- [ ] Stability/bootstrap metrics
+- [ ] Iteration history: objective per iter, convergence reason, cluster sizes
+- [ ] First-class `ModelSummary` with JSON persistence
+
+### 5. Production Features (Surface Existing Work)
+
+**Problem:** Features like constraints and balanced clustering exist in master but aren't in the documented/released API.
+
+**Actions:**
+- [ ] Sample weights support across estimators
+- [ ] Document `ConstrainedKMeans` (must-link / cannot-link) in README/guides
+- [ ] Document `BalancedKMeans` (size constraints) in README/guides
+- [ ] Add these to the quick-start and divergence selection guides
+
+---
+
 ## Next Release Focus (P1)
 
 Goal: land the highest-demand capabilities and supporting docs.
