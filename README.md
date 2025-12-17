@@ -79,24 +79,41 @@ Our comprehensive CI pipeline ensures quality across multiple dimensions:
 
 Truth-linked to code, tests, and examples for full transparency:
 
-| Algorithm | API | Code | Tests | Example | Use Case |
-|-----------|-----|------|-------|---------|----------|
-| **GeneralizedKMeans** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTrip.scala) | General clustering with 6+ divergences |
-| **Bisecting K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BisectingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | Hierarchical/divisive clustering |
-| **X-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala) | [Example](src/main/scala/examples/XMeansExample.scala) | Automatic k via BIC/AIC |
-| **Soft K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala) | [Example](src/main/scala/examples/SoftKMeansExample.scala) + [Persistence](src/main/scala/examples/PersistenceRoundTripSoftKMeans.scala) | Fuzzy/probabilistic memberships |
-| **Streaming K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripStreamingKMeans.scala) | Real-time with exponential forgetting |
-| **K-Medoids** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripKMedoids.scala) | Outlier-robust, custom distances |
-| **K-Medians** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/L1Kernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | [Example](src/main/scala/examples/BisectingExample.scala) | L1/Manhattan robustness |
-| **Spherical K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/df/BregmanKernel.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/df/BregmanKernelAccuracySuite.scala) | [Example](src/main/scala/examples/SphericalKMeansExample.scala) | Text/embedding clustering (cosine) |
-| **Coreset K-Means** | ✅ | [Code](src/main/scala/com/massivedatascience/clusterer/ml/CoresetKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/CoresetKMeansSuite.scala) | [Persistence](src/main/scala/examples/PersistenceRoundTripCoresetKMeans.scala) | Large-scale approximation (10-100x speedup) |
+### Core Algorithms
+
+| Algorithm | Code | Tests | Use Case |
+|-----------|------|-------|----------|
+| **GeneralizedKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/GeneralizedKMeansSuite.scala) | General clustering with 8 divergences |
+| **Bisecting K-Means** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BisectingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/BisectingKMeansSuite.scala) | Hierarchical/divisive clustering |
+| **X-Means** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/XMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/XMeansSuite.scala) | Automatic k selection via BIC/AIC |
+| **Soft K-Means** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SoftKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/SoftKMeansSuite.scala) | Fuzzy/probabilistic memberships |
+| **Streaming K-Means** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/StreamingKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/StreamingKMeansSuite.scala) | Real-time with exponential forgetting |
+| **K-Medoids** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/KMedoids.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/KMedoidsSuite.scala) | Outlier-robust, custom distances |
+| **Coreset K-Means** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/CoresetKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/CoresetKMeansSuite.scala) | Large-scale approximation (10-100x speedup) |
+
+### Production Features (NEW)
+
+| Algorithm | Code | Tests | Use Case |
+|-----------|------|-------|----------|
+| **ConstrainedKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/ConstrainedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/ConstrainedKMeansSuite.scala) | Must-link / cannot-link constraints |
+| **BalancedKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/BalancedKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/BalancedKMeansSuite.scala) | Equal-sized clusters, capacity constraints |
+| **RobustKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/RobustKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/RobustKMeansSuite.scala) | Outlier detection (trim/noise cluster) |
+| **SparseKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SparseKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/SparseKMeansSuite.scala) | High-dimensional sparse data |
+
+### Advanced Variants (NEW)
+
+| Algorithm | Code | Tests | Use Case |
+|-----------|------|-------|----------|
+| **MultiViewKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/MultiViewKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/MultiViewKMeansSuite.scala) | Multiple feature representations |
+| **TimeSeriesKMeans** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/TimeSeriesKMeans.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/TimeSeriesKMeansSuite.scala) | DTW / Soft-DTW / GAK kernels |
+| **SpectralClustering** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/SpectralClustering.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/SpectralClusteringSuite.scala) | Graph Laplacian eigenvectors |
+| **InformationBottleneck** | [Code](src/main/scala/com/massivedatascience/clusterer/ml/InformationBottleneck.scala) | [Tests](src/test/scala/com/massivedatascience/clusterer/ml/InformationBottleneckSuite.scala) | Information-theoretic compression |
 
 **Divergences Available**: Squared Euclidean, KL, Itakura-Saito, L1/Manhattan, Generalized-I, Logistic Loss, Spherical/Cosine
 
 All algorithms include:
 - ✅ Model persistence (save/load across Spark 3.4↔3.5↔4.0, Scala 2.12↔2.13)
-- ✅ Comprehensive test coverage (576 tests, 100% passing)
-- ✅ Executable documentation with assertions (9 examples validate correctness in CI)
+- ✅ Comprehensive test coverage (842 tests, 100% passing)
 - ✅ Deterministic behavior (same seed → identical results)
 - ✅ CI validation on every commit
 
@@ -104,13 +121,108 @@ All algorithms include:
 
 ## Installation / Versions
 
-- Spark: 3.5.1 default (override via -Dspark.version), 3.4.x / 4.0.x tested
-- Scala: 2.13.14 (primary), 2.12.18 (cross-compiled)
-- Java: 17
+### Version Compatibility Matrix
+
+| Spark Version | Scala 2.13 | Scala 2.12 | Notes |
+|---------------|------------|------------|-------|
+| **4.0.x** | ✅ | ❌ | Spark 4.0 dropped Scala 2.12 support |
+| **3.5.x** | ✅ | ✅ | Recommended for production |
+| **3.4.x** | ✅ | ✅ | LTS support |
+
+**Java:** 17 (required for Spark 4.0, recommended for all)
+
+### SBT (Scala projects)
 
 ```scala
+// build.sbt
 libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.7.0"
 ```
+
+### Maven
+
+```xml
+<!-- Scala 2.13 -->
+<dependency>
+    <groupId>com.massivedatascience</groupId>
+    <artifactId>massivedatascience-clusterer_2.13</artifactId>
+    <version>0.7.0</version>
+</dependency>
+
+<!-- Scala 2.12 (Spark 3.x only) -->
+<dependency>
+    <groupId>com.massivedatascience</groupId>
+    <artifactId>massivedatascience-clusterer_2.12</artifactId>
+    <version>0.7.0</version>
+</dependency>
+```
+
+### spark-submit / spark-shell
+
+```bash
+# For Spark 3.5 + Scala 2.13
+spark-submit --packages com.massivedatascience:massivedatascience-clusterer_2.13:0.7.0 \
+  your-app.jar
+
+# For Spark 3.5 + Scala 2.12
+spark-submit --packages com.massivedatascience:massivedatascience-clusterer_2.12:0.7.0 \
+  your-app.jar
+```
+
+### Databricks
+
+**Option 1: Cluster Library (recommended)**
+1. Cluster → Libraries → Install New → Maven
+2. Coordinates: `com.massivedatascience:massivedatascience-clusterer_2.12:0.7.0`
+   - Use `_2.12` for DBR 13.x and earlier
+   - Use `_2.13` for DBR 14.x+ (Spark 3.5+)
+
+**Option 2: Notebook-scoped**
+```python
+%pip install --quiet pyspark  # if needed
+```
+```scala
+// In Scala notebook
+%scala
+// Library should be attached to cluster
+import com.massivedatascience.clusterer.ml.GeneralizedKMeans
+```
+
+### EMR / AWS
+
+Add to your EMR step or bootstrap action:
+```bash
+# spark-submit with packages
+spark-submit \
+  --packages com.massivedatascience:massivedatascience-clusterer_2.12:0.7.0 \
+  --class com.example.YourApp \
+  s3://your-bucket/your-app.jar
+```
+
+Or add to `spark-defaults.conf`:
+```
+spark.jars.packages com.massivedatascience:massivedatascience-clusterer_2.12:0.7.0
+```
+
+### Build from Source
+
+```bash
+git clone https://github.com/derrickburns/generalized-kmeans-clustering.git
+cd generalized-kmeans-clustering
+
+# Build for Scala 2.13 (default)
+sbt ++2.13.14 package
+
+# Build for Scala 2.12
+sbt ++2.12.18 package
+
+# Run tests
+sbt test
+
+# Cross-build for all Scala versions
+sbt +package
+```
+
+The JAR will be in `target/scala-2.1x/massivedatascience-clusterer_2.1x-0.7.0.jar`
 
 ## What's New in 0.7.0
 
@@ -393,6 +505,108 @@ Models implement DefaultParamsWritable/Readable.
 ## Python (PySpark) wrapper
 -	Package exposes GeneralizedKMeans, BisectingGeneralizedKMeans, SoftGeneralizedKMeans, StreamingGeneralizedKMeans, KMedoids, etc.
 -	CI runs a spark-submit smoke test on local[*] with a non-SE divergence.
+
+---
+
+## Production Features
+
+### ConstrainedKMeans — Semi-supervised Clustering
+
+Use when you have prior knowledge about which points should (or shouldn't) be in the same cluster.
+
+```scala
+import com.massivedatascience.clusterer.ml.ConstrainedKMeans
+
+val df = spark.createDataFrame(Seq(
+  (0L, Vectors.dense(0.0, 0.0)),
+  (1L, Vectors.dense(0.1, 0.1)),
+  (2L, Vectors.dense(5.0, 5.0)),
+  (3L, Vectors.dense(5.1, 5.1))
+)).toDF("id", "features")
+
+// Define constraints
+val mustLink = Seq((0L, 1L))      // Points 0 and 1 must be in the same cluster
+val cannotLink = Seq((0L, 2L))    // Points 0 and 2 must be in different clusters
+
+val ckm = new ConstrainedKMeans()
+  .setK(2)
+  .setMustLinkPairs(mustLink)
+  .setCannotLinkPairs(cannotLink)
+  .setConstraintMode("soft")      // "soft" (penalty) or "hard" (strict enforcement)
+  .setPenaltyWeight(1.0)          // Weight for constraint violations (soft mode)
+  .setMaxIter(20)
+
+val model = ckm.fit(df)
+model.transform(df).show()
+```
+
+**Parameters:**
+- `mustLinkPairs`: Pairs of point IDs that should be in the same cluster
+- `cannotLinkPairs`: Pairs of point IDs that should be in different clusters
+- `constraintMode`: `"soft"` (penalize violations) or `"hard"` (strictly enforce)
+- `penaltyWeight`: Weight for constraint violations in soft mode
+
+### BalancedKMeans — Equal-sized Clusters
+
+Use when you need clusters of similar size (e.g., load balancing, fair allocation).
+
+```scala
+import com.massivedatascience.clusterer.ml.BalancedKMeans
+
+val df = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.0, 0.0)),
+  Tuple1(Vectors.dense(0.1, 0.1)),
+  Tuple1(Vectors.dense(5.0, 5.0)),
+  Tuple1(Vectors.dense(5.1, 5.1)),
+  Tuple1(Vectors.dense(10.0, 10.0)),
+  Tuple1(Vectors.dense(10.1, 10.1))
+)).toDF("features")
+
+val bkm = new BalancedKMeans()
+  .setK(3)
+  .setBalanceMode("soft")         // "soft" (penalty) or "hard" (exact balance)
+  .setBalancePenalty(1.0)         // Penalty for size imbalance (soft mode)
+  .setMaxClusterSize(0)           // 0 = auto (n/k), or set explicit limit
+  .setMaxIter(20)
+
+val model = bkm.fit(df)
+model.transform(df).show()
+
+// Check cluster sizes
+model.summary.clusterSizes.foreach { case (k, size) =>
+  println(s"Cluster $k: $size points")
+}
+```
+
+**Parameters:**
+- `balanceMode`: `"soft"` (penalize imbalance) or `"hard"` (enforce exact sizes)
+- `balancePenalty`: Weight for size imbalance penalty (soft mode)
+- `maxClusterSize`: Maximum points per cluster (0 = automatic, n/k)
+
+### RobustKMeans — Outlier Detection
+
+Use when your data contains outliers that would skew cluster centers.
+
+```scala
+import com.massivedatascience.clusterer.ml.RobustKMeans
+
+val rkm = new RobustKMeans()
+  .setK(3)
+  .setRobustMode("trim")          // "trim", "noise_cluster", or "m_estimator"
+  .setTrimFraction(0.1)           // Ignore 10% most distant points (trim mode)
+  .setMaxIter(20)
+
+val model = rkm.fit(df)
+val predictions = model.transform(df)
+
+// Check outlier scores
+predictions.select("features", "prediction", "outlierScore").show()
+```
+
+**Robust modes:**
+- `"trim"`: Ignore the most distant points (controlled by `trimFraction`)
+- `"noise_cluster"`: Assign outliers to a special noise cluster (-1)
+- `"m_estimator"`: Use robust M-estimator for center computation
 
 ---
 
