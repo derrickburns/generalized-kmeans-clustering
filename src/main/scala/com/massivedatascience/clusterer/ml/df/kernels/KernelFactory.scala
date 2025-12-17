@@ -26,15 +26,15 @@ package com.massivedatascience.clusterer.ml.df.kernels
   *
   * ==Supported Divergences==
   *
-  * | Name             | Aliases         | Sparse Support | Domain  | Use Case                  |
-  * |:-----------------|:----------------|:---------------|:--------|:--------------------------|
-  * | squaredEuclidean | se, euclidean   | Yes            | R^n     | General clustering        |
-  * | kl               | kullbackLeibler | Yes            | R+^n    | Probability distributions |
-  * | itakuraSaito     | is              | No             | R+^n    | Audio/spectrum analysis   |
-  * | generalizedI     | genI            | No             | R+^n    | Count data                |
-  * | logistic         | -               | No             | [0,1]^n | Bounded probabilities     |
-  * | l1               | manhattan       | Yes            | R^n     | Robust clustering         |
-  * | spherical        | cosine          | Yes            | R^n     | Text/documents            |
+  *   - '''squaredEuclidean''' (aliases: se, euclidean) - Sparse: Yes, Domain: R^n, Use: General
+  *     clustering
+  *   - '''kl''' (aliases: kullbackLeibler) - Sparse: Yes, Domain: R+^n, Use: Probability
+  *     distributions
+  *   - '''itakuraSaito''' (aliases: is) - Sparse: No, Domain: R+^n, Use: Audio/spectrum analysis
+  *   - '''generalizedI''' (aliases: genI) - Sparse: No, Domain: R+^n, Use: Count data
+  *   - '''logistic''' - Sparse: No, Domain: [0,1]^n, Use: Bounded probabilities
+  *   - '''l1''' (aliases: manhattan) - Sparse: Yes, Domain: R^n, Use: Robust clustering
+  *   - '''spherical''' (aliases: cosine) - Sparse: Yes, Domain: R^n, Use: Text/documents
   *
   * ==Example Usage==
   *
