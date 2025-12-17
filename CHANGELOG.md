@@ -28,13 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Single entry point for all 8 Bregman divergences
   - Auto-selection based on data sparsity with `forSparsity()` method
   - Canonical divergence name constants in `KernelFactory.Divergence`
-- **Test suites for new components** (129 new tests, 737 total):
+- **MultiViewKMeans estimator** for clustering data with multiple feature representations (21 tests)
+  - Per-view divergences (different distance measures for each view)
+  - Per-view weights (importance weighting)
+  - Combine strategies: "weighted" (default), "max", "min"
+  - `ViewSpec` case class for view configuration
+  - Full persistence support (save/load)
+- **Test suites for new components** (150 new tests, 758 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
   - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
   - ConstrainedKMeansSuite: 17 tests for semi-supervised clustering with soft/hard constraints
   - RobustKMeansSuite: 17 tests for robust clustering with outlier handling and persistence
   - SparseKMeansSuite: 21 tests for sparse clustering with auto-detection and persistence
+  - MultiViewKMeansSuite: 21 tests for multi-view clustering with persistence
 
 ### Architecture
 - Moved AcceleratedSEAssignment to `strategies/impl/` subpackage for better organization
