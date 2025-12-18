@@ -267,7 +267,7 @@ class SoftDTWKernel(
 
   /** Soft minimum: -γ log(Σ exp(-x_i/γ)) */
   private def softMin(values: Double*): Double = {
-    val filtered = values.filter(_.isFinite)
+    val filtered = values.filter(java.lang.Double.isFinite)
     if (filtered.isEmpty) Double.PositiveInfinity
     else {
       val maxVal = filtered.max
@@ -591,7 +591,7 @@ object DTWBarycenter {
     val dtw                                              = Array.fill(n)(Array.fill(m)(Double.PositiveInfinity))
     def d(i: Int, j: Int): Double                        = { val diff = x(i) - y(j); diff * diff }
     def softMin(a: Double, b: Double, c: Double): Double = {
-      val vals = Array(a, b, c).filter(_.isFinite)
+      val vals = Array(a, b, c).filter(java.lang.Double.isFinite)
       if (vals.isEmpty) Double.PositiveInfinity
       else {
         val maxV = vals.max
