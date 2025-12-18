@@ -58,12 +58,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eigendecomposition via power iteration with deflation
   - Nyström approximation for large-scale clustering (O(nm²) instead of O(n³))
   - Full persistence support (save/load)
+- **ClusteringMetrics** for model selection and diagnostics (12 tests)
+  - Scalable silhouette score (exact and centroid-based approximation)
+  - Inertia (WCSS) computation
+  - Cluster sizes and balance metrics
+  - Elbow curve helper for finding optimal k
 - **Documentation guides** in `docs/guides/`:
   - Quick Start Guide - get running in 5 minutes
   - Divergence Selection Guide - comprehensive decision flowchart and examples
   - X-Means Auto-K Demo - automatic cluster count selection with BIC/AIC
   - Soft Clustering Guide - interpreting probabilistic memberships
-- **Test suites for new components** (203 new tests, 842 total):
+- **Test suites for new components** (215 new tests, 854 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
   - ConstraintsSuite: 30 tests for must-link/cannot-link constraints and penalty computation
@@ -74,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TimeSeriesKMeansSuite: 31 tests for DTW-based time-series clustering with persistence
   - InformationBottleneckSuite: 28 tests for IB clustering with MI utilities and persistence
   - SpectralClusteringSuite: 25 tests for spectral/graph-based clustering with persistence
+  - ClusteringMetricsSuite: 12 tests for silhouette, inertia, and cluster balance metrics
 
 ### Architecture
 - Moved AcceleratedSEAssignment to `strategies/impl/` subpackage for better organization

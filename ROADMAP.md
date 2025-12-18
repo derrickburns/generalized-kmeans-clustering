@@ -19,6 +19,47 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 
 ---
 
+## Documentation (P0) — Top Priority
+
+> **Framework:** Follow [Diátaxis](https://diataxis.fr/) — Tutorials, How-to guides, Reference, Explanation. Every code snippet must be runnable (CI-compiled or from `examples/`).
+
+### For Humans
+
+| Doc Type | Purpose | Format |
+|----------|---------|--------|
+| **README** | What it is, when to use it, minimal install + example | 2-5 min read |
+| **Tutorials** | First successful run end-to-end (Scala + PySpark) | 15-30 min, tiny dataset |
+| **How-tos** | Task recipes: cosine k-means, KL on probabilities, streaming, choosing k, sparse vectors, avoiding OOM | One task per page |
+| **Reference** | Every param with type/default/range, complexity, persistence, determinism | Exhaustive, skimmable |
+| **Explanation** | Geometry choices, preprocessing guidance, scaling tradeoffs, failure modes | Why it works / when it fails |
+
+**Actions:**
+- [ ] Restructure docs into Diátaxis categories
+- [ ] Create `docs/tutorials/` with end-to-end examples
+- [ ] Create `docs/howto/` with task-based recipes
+- [ ] Create `docs/reference/` with exhaustive param docs
+- [ ] Create `docs/explanation/` with conceptual guides
+- [ ] Ensure all code snippets compile in CI
+
+### For AI/LLM Consumption
+
+| Item | Purpose |
+|------|---------|
+| `/llms.txt` | Index of key pages for LLM tools ([llmstxt.org](https://llmstxt.org/)) |
+| `params.json` | Machine-readable parameter reference (names, defaults, constraints) |
+| `algorithms.json` | Algorithm catalog with links to canonical docs |
+| Small, single-topic pages | Better retrieval chunking |
+| Consistent headings | `## Parameters`, `## Examples`, `## Performance`, `## Failure modes` |
+
+**Actions:**
+- [ ] Add `/llms.txt` with page descriptions
+- [ ] Generate `docs/reference/params.json` from code
+- [ ] Generate `docs/reference/algorithms.json` catalog
+- [ ] Split large docs into single-topic pages
+- [ ] Standardize section headings across all docs
+
+---
+
 ## Adoption & Distribution (P0) — Highest ROI
 
 > **Insight:** More algorithms won't drive adoption if users can't easily install or trust the library. These items reduce friction and increase real-world usage more than any algorithm tweak.
@@ -39,7 +80,7 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 **Problem:** Squared-Euclidean at scale is the #1 use case; users care about cost and wall-clock.
 
 **Actions:**
-- [ ] **Fast exact:** Hamerly/Elkan/Yinyang pruning for Lloyd's iterations
+- [x] **Fast exact:** Hamerly/Elkan/Yinyang pruning for Lloyd's iterations — **DONE**: `ElkanLloydsIterator` with cross-iteration bounds, `AcceleratedSEAssignment` with triangle inequality pruning (13 tests)
 - [ ] **Fast approximate:** ANN-assisted assignment (LSH, KD-tree, ball tree)
 - [ ] Benchmark suite with published numbers (iterations/sec, speedup vs. baseline)
 
@@ -49,9 +90,9 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 
 **Actions:**
 - [ ] pip-installable wheel with pinned Spark/Scala compatibility
-- [ ] Type hints and docstrings for IDE support
-- [ ] Native-feeling PySpark examples (not just Scala translations)
-- [ ] Model save/load and full param support matching Scala API
+- [x] Type hints and docstrings for IDE support — **DONE**: Full type hints in `kmeans.py`, comprehensive Google-style docstrings
+- [x] Native-feeling PySpark examples (not just Scala translations) — **DONE**: 5 example files (basic, KL divergence, weighted, finding optimal k, persistence)
+- [x] Model save/load and full param support matching Scala API — **DONE**: Full persistence and TrainingSummary support
 - [ ] CI smoke tests for Python API
 
 ### 4. Model Selection & Diagnostics
@@ -59,11 +100,11 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 **Problem:** Users ask "Is this clustering any good?" after fitting.
 
 **Actions:**
-- [ ] Scalable silhouette score (Spark-native)
-- [ ] Elbow method helper (cost vs. k curve)
+- [x] Scalable silhouette score (Spark-native) — **DONE**: `ClusteringMetrics` with exact and approximate silhouette (12 tests)
+- [x] Elbow method helper (cost vs. k curve) — **DONE**: `ClusteringMetrics.elbowCurve()` method
 - [ ] Stability/bootstrap metrics
-- [ ] Iteration history: objective per iter, convergence reason, cluster sizes
-- [ ] First-class `ModelSummary` with JSON persistence
+- [x] Iteration history: objective per iter, convergence reason, cluster sizes — **DONE**: `TrainingSummary` with distortionHistory, movementHistory, convergenceReport (8 tests)
+- [x] First-class `ModelSummary` with JSON persistence — **DONE**: `TrainingSummary.toDF()` for DataFrame/JSON export
 
 ### 5. Production Features (Surface Existing Work)
 
