@@ -12,16 +12,16 @@ header_pages:
 collections:
   tutorials:
     output: true
-    permalink: /tutorials/:name/
+    permalink: /tutorials/:name.html
   howto:
     output: true
-    permalink: /howto/:name/
+    permalink: /howto/:name.html
   reference:
     output: true
-    permalink: /reference/:name/
+    permalink: /reference/:name.html
   explanation:
     output: true
-    permalink: /explanation/:name/
+    permalink: /explanation/:name.html
 
 # Defaults
 defaults:
