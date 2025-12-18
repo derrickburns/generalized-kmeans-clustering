@@ -52,30 +52,29 @@ val predictions = model.transform(data)
 
 This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 
-### [Tutorials](tutorials/) — Learning-oriented
+### [Tutorials](tutorials/index.html) — Learning-oriented
 Step-by-step guides to get you started:
 - [Your First Clustering](tutorials/first-clustering.html) — Cluster data in 5 minutes
 - [PySpark Tutorial](tutorials/pyspark-tutorial.html) — Python users start here
 - [Choosing the Right Algorithm](tutorials/choosing-algorithm.html) — Decision guide
 
-### [How-To Guides](howto/) — Task-oriented
+### [How-To Guides](howto/index.html) — Task-oriented
 Practical recipes for specific tasks:
 - [Cluster Probability Distributions](howto/cluster-probabilities.html) — Use KL divergence
 - [Handle Outliers](howto/handle-outliers.html) — Robust clustering
 - [Find Optimal K](howto/find-optimal-k.html) — Elbow method and X-Means
-- [Stream Processing](howto/streaming.html) — Online clustering
+- [Installation](howto/installation.html) — Setup instructions
 
-### [Reference](reference/) — Information-oriented
+### [Reference](reference/index.html) — Information-oriented
 Technical specifications:
 - [Algorithm Reference](reference/algorithms.html) — All 15 algorithms
 - [Parameter Reference](reference/parameters.html) — Every parameter documented
 - [Divergence Reference](reference/divergences.html) — Mathematical details
 - [API Reference](api/) — Scaladoc
 
-### [Explanation](explanation/) — Understanding-oriented
+### [Explanation](explanation/index.html) — Understanding-oriented
 Conceptual guides:
 - [Bregman Divergences](explanation/bregman-divergences.html) — The math behind it
-- [When to Use What](explanation/when-to-use.html) — Choosing divergences
 - [Performance Tuning](explanation/performance.html) — Scaling to billions
 
 ---

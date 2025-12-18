@@ -7,10 +7,6 @@ highlighter: rouge
 # Navigation
 header_pages:
   - index.md
-  - tutorials/index.md
-  - howto/index.md
-  - reference/index.md
-  - explanation/index.md
 
 # Collections for organized content
 collections:
