@@ -39,8 +39,8 @@ import org.apache.spark.sql.functions._
   * }}}
   *
   * ==Scalability==
-  * The exact silhouette score requires O(n²) distance computations. For large datasets,
-  * use `approximateSilhouetteScore` which samples points or uses centroid-based approximation.
+  * The exact silhouette score requires O(n²) distance computations. For large datasets, use
+  * `approximateSilhouetteScore` which samples points or uses centroid-based approximation.
   */
 object ClusteringMetrics {
 
@@ -66,12 +66,8 @@ object ClusteringMetrics {
     )
 
     // Compute cluster sizes
-    val sizes = df
-      .groupBy("prediction")
-      .count()
-      .collect()
-      .map(r => (r.getInt(0), r.getLong(1)))
-      .toMap
+    val sizes =
+      df.groupBy("prediction").count().collect().map(r => (r.getInt(0), r.getLong(1))).toMap
 
     // Compute centroids
     val centroids = computeCentroids(df)
@@ -108,7 +104,7 @@ object ClusteringMetrics {
             i += 1
           }
         }
-        val n = points.size.toDouble
+        val n       = points.size.toDouble
         (cluster, Vectors.dense(sum.map(_ / n)))
       }
       .toMap
@@ -122,9 +118,9 @@ object ClusteringMetrics {
     import spark.implicits._
 
     df.map { row =>
-      val features  = row.getAs[Vector](0)
-      val cluster   = row.getInt(1)
-      val centroid  = centroidsBc.value(cluster)
+      val features = row.getAs[Vector](0)
+      val cluster  = row.getInt(1)
+      val centroid = centroidsBc.value(cluster)
       squaredDistance(features, centroid)
     }.reduce(_ + _)
   }
@@ -178,7 +174,7 @@ object ClusteringMetrics {
 
     // Compute silhouette for each point
     val silhouettes = points.map { case (point, cluster) =>
-      val sameCluster  = byCluster(cluster).filterNot(_ eq point)
+      val sameCluster   = byCluster(cluster).filterNot(_ eq point)
       val otherClusters = byCluster.filterNot(_._1 == cluster)
 
       // a(i) = mean distance to same cluster
@@ -201,8 +197,8 @@ object ClusteringMetrics {
 
   /** Compute approximate silhouette score using centroids (O(n×k)).
     *
-    * Uses simplified silhouette where b(i) is distance to nearest other centroid
-    * instead of mean distance to all points in that cluster.
+    * Uses simplified silhouette where b(i) is distance to nearest other centroid instead of mean
+    * distance to all points in that cluster.
     *
     * @param df
     *   DataFrame with features and prediction columns

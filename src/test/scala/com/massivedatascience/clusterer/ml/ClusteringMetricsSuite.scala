@@ -100,7 +100,7 @@ class ClusteringMetricsSuite extends AnyFunSuite with DataFrameSuiteBase with Ma
       (Vectors.dense(9.9, 10.1), 1)
     ).toDF("features", "prediction")
 
-    val metrics = ClusteringMetrics(predictions)
+    val metrics    = ClusteringMetrics(predictions)
     val silhouette = metrics.silhouetteScore
 
     // Well-separated clusters should have high silhouette (close to 1)
@@ -118,7 +118,7 @@ class ClusteringMetricsSuite extends AnyFunSuite with DataFrameSuiteBase with Ma
       (Vectors.dense(10.1, 9.9), 1)
     ).toDF("features", "prediction")
 
-    val metrics = ClusteringMetrics(predictions)
+    val metrics          = ClusteringMetrics(predictions)
     val approxSilhouette = metrics.approximateSilhouetteScore
 
     // Should be positive for well-separated clusters
@@ -137,7 +137,7 @@ class ClusteringMetricsSuite extends AnyFunSuite with DataFrameSuiteBase with Ma
       (Vectors.dense(2.0, 2.0), 1)
     ).toDF("features", "prediction")
 
-    val metrics = ClusteringMetrics(predictions)
+    val metrics    = ClusteringMetrics(predictions)
     val silhouette = metrics.silhouetteScore
 
     // Overlapping clusters should have lower silhouette
@@ -215,7 +215,7 @@ class ClusteringMetricsSuite extends AnyFunSuite with DataFrameSuiteBase with Ma
     ).toDF("features", "prediction")
 
     val metrics = ClusteringMetrics(predictions)
-    val str = metrics.toString
+    val str     = metrics.toString
 
     str should include("Clusters: 2")
     str should include("Points: 3")
@@ -234,13 +234,10 @@ class ClusteringMetricsSuite extends AnyFunSuite with DataFrameSuiteBase with Ma
       Tuple1(Vectors.dense(10.5, 10.5))
     ).toDF("features")
 
-    val model = new GeneralizedKMeans()
-      .setK(2)
-      .setSeed(42L)
-      .fit(data)
+    val model = new GeneralizedKMeans().setK(2).setSeed(42L).fit(data)
 
     val predictions = model.transform(data)
-    val metrics = ClusteringMetrics(predictions)
+    val metrics     = ClusteringMetrics(predictions)
 
     metrics.k shouldBe 2
     metrics.numPoints shouldBe 4
