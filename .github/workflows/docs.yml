@@ -3,32 +3,25 @@ name: Generate API Documentation
 on:
   push:
     branches: [master]
+    paths:
+      - 'src/**'
+      - 'build.sbt'
+      - 'project/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  # This single job now builds AND deploys
-  deploy:
+  generate-docs:
     runs-on: ubuntu-latest
-    name: Generate and Deploy API Docs
-
-    # This 'environment' block is the main fix for your error.
-    # It tells GitHub Actions that this job is intended to deploy to Pages.
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    name: Generate Scaladoc
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -42,41 +35,19 @@ jobs:
       - name: Generate Unidoc
         run: sbt ++2.13.14 unidoc
 
-      # The 'unidoc' command generates files directly to 'docs/api'.
-      # No need to move files since build.sbt already configures the target
       - name: Verify documentation files
         run: |
           ls -la docs/api/
-          echo "Documentation generated successfully"
-          
-      - name: Create index redirect
+          echo "Scaladoc generated successfully in docs/api/"
+
+      - name: Commit updated API docs
         run: |
-          cat > docs/index.html <<'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="refresh" content="0; url=api/index.html">
-            <title>Redirecting to API Documentation</title>
-          </head>
-          <body>
-            <p>Redirecting to <a href="api/index.html">API Documentation</a>...</p>
-          </body>
-          </html>
-          EOF
-
-      # This is no longer needed in the latest versions of the deploy-pages action
-      # - name: Setup Pages
-      #   uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload the entire 'docs' directory which now contains
-          # both the redirect and the 'api' subdirectory
-          path: 'docs'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/api/
+          if git diff --staged --quiet; then
+            echo "No changes to API docs"
+          else
+            git commit -m "docs: Update Scaladoc API reference [skip ci]"
+            git push
+          fi
