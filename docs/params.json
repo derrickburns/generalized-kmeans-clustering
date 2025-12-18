@@ -1,0 +1,701 @@
+{
+  "version": "0.7.0",
+  "algorithms": {
+    "GeneralizedKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.GeneralizedKMeans",
+      "description": "Standard k-means with pluggable Bregman divergences",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "tol": {
+          "type": "Double",
+          "default": 1e-4,
+          "description": "Convergence tolerance"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "initMode": {
+          "type": "String",
+          "default": "k-means||",
+          "options": ["k-means||", "random"],
+          "description": "Initialization mode"
+        },
+        "initSteps": {
+          "type": "Int",
+          "default": 2,
+          "description": "Number of steps for k-means|| initialization"
+        },
+        "assignmentStrategy": {
+          "type": "String",
+          "default": "auto",
+          "options": ["auto", "crossJoin", "broadcastUDF"],
+          "description": "Strategy for assigning points to clusters"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        },
+        "smoothing": {
+          "type": "Double",
+          "default": 1e-10,
+          "description": "Smoothing for divergences requiring positive values"
+        }
+      }
+    },
+    "XMeans": {
+      "class": "com.massivedatascience.clusterer.ml.XMeans",
+      "description": "Automatic k selection using BIC/AIC",
+      "parameters": {
+        "minK": {
+          "type": "Int",
+          "default": 2,
+          "description": "Minimum number of clusters"
+        },
+        "maxK": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of clusters"
+        },
+        "criterion": {
+          "type": "String",
+          "default": "bic",
+          "options": ["bic", "aic"],
+          "description": "Information criterion for model selection"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum iterations per k"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "SoftKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.SoftKMeans",
+      "description": "Fuzzy/probabilistic cluster assignments",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "beta": {
+          "type": "Double",
+          "default": 2.0,
+          "description": "Fuzziness parameter (higher = softer assignments)"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "tol": {
+          "type": "Double",
+          "default": 1e-4,
+          "description": "Convergence tolerance"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        },
+        "probabilitiesCol": {
+          "type": "String",
+          "default": "probabilities",
+          "description": "Output column for membership probabilities"
+        }
+      }
+    },
+    "BisectingKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.BisectingKMeans",
+      "description": "Hierarchical divisive clustering",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum iterations per bisection"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "minDivisibleClusterSize": {
+          "type": "Int",
+          "default": 1,
+          "description": "Minimum points for a cluster to be divisible"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "StreamingKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.StreamingKMeans",
+      "description": "Online clustering with exponential decay",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "decayFactor": {
+          "type": "Double",
+          "default": 0.9,
+          "description": "Exponential decay factor for older data"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "MiniBatchKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.MiniBatchKMeans",
+      "description": "Stochastic mini-batch updates for large datasets",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "batchSize": {
+          "type": "Int",
+          "default": 1000,
+          "description": "Number of points per mini-batch"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 100,
+          "description": "Maximum number of iterations"
+        },
+        "tol": {
+          "type": "Double",
+          "default": 1e-4,
+          "description": "Convergence tolerance"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "KMedoids": {
+      "class": "com.massivedatascience.clusterer.ml.KMedoids",
+      "description": "K-medoids using actual data points as centers",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "distanceFunction": {
+          "type": "String",
+          "default": "euclidean",
+          "options": ["euclidean", "manhattan", "cosine"],
+          "description": "Distance function for medoid selection"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "RobustKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.RobustKMeans",
+      "description": "K-means with explicit outlier handling",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "robustMode": {
+          "type": "String",
+          "default": "trim",
+          "options": ["trim", "noise_cluster", "m_estimator"],
+          "description": "Outlier handling mode"
+        },
+        "trimFraction": {
+          "type": "Double",
+          "default": 0.1,
+          "description": "Fraction of points to trim (for trim mode)"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "BalancedKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.BalancedKMeans",
+      "description": "K-means with equal-sized cluster constraints",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "balanceMode": {
+          "type": "String",
+          "default": "hard",
+          "options": ["hard", "soft"],
+          "description": "Balance enforcement mode"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "ConstrainedKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.ConstrainedKMeans",
+      "description": "Semi-supervised with must-link/cannot-link constraints",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "mustLinkCol": {
+          "type": "String",
+          "description": "Column containing must-link constraint IDs"
+        },
+        "cannotLinkCol": {
+          "type": "String",
+          "description": "Column containing cannot-link constraint IDs"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "SparseKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.SparseKMeans",
+      "description": "Optimized for high-dimensional sparse data",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "sparseMode": {
+          "type": "String",
+          "default": "auto",
+          "options": ["auto", "sparse", "dense"],
+          "description": "Sparsity optimization mode"
+        },
+        "divergence": {
+          "type": "String",
+          "default": "squaredEuclidean",
+          "options": ["squaredEuclidean", "kl", "itakuraSaito", "l1", "generalizedI", "logistic", "spherical", "cosine"],
+          "description": "Bregman divergence for distance computation"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "MultiViewKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.MultiViewKMeans",
+      "description": "Clustering with multiple feature representations",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "viewSpecs": {
+          "type": "Array[ViewSpec]",
+          "description": "Specifications for each view (column, divergence, weight)"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "TimeSeriesKMeans": {
+      "class": "com.massivedatascience.clusterer.ml.TimeSeriesKMeans",
+      "description": "Sequence clustering with DTW",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "distanceType": {
+          "type": "String",
+          "default": "dtw",
+          "options": ["dtw", "euclidean"],
+          "description": "Distance measure for sequences"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "SpectralClustering": {
+      "class": "com.massivedatascience.clusterer.ml.SpectralClustering",
+      "description": "Graph-based clustering via Laplacian eigenvectors",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "affinityType": {
+          "type": "String",
+          "default": "rbf",
+          "options": ["rbf", "cosine", "precomputed"],
+          "description": "Affinity matrix computation method"
+        },
+        "gamma": {
+          "type": "Double",
+          "default": 1.0,
+          "description": "RBF kernel parameter"
+        },
+        "useNystrom": {
+          "type": "Boolean",
+          "default": false,
+          "description": "Use Nystrom approximation for large datasets"
+        },
+        "nystromSamples": {
+          "type": "Int",
+          "default": 200,
+          "description": "Number of samples for Nystrom approximation"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    },
+    "InformationBottleneck": {
+      "class": "com.massivedatascience.clusterer.ml.InformationBottleneck",
+      "description": "Information-theoretic clustering",
+      "parameters": {
+        "k": {
+          "type": "Int",
+          "required": true,
+          "description": "Number of clusters"
+        },
+        "beta": {
+          "type": "Double",
+          "default": 1.0,
+          "description": "Trade-off between compression and relevance"
+        },
+        "relevanceCol": {
+          "type": "String",
+          "description": "Column containing relevance labels"
+        },
+        "maxIter": {
+          "type": "Int",
+          "default": 20,
+          "description": "Maximum number of iterations"
+        },
+        "tol": {
+          "type": "Double",
+          "default": 1e-4,
+          "description": "Convergence tolerance"
+        },
+        "seed": {
+          "type": "Long",
+          "description": "Random seed for reproducibility"
+        },
+        "featuresCol": {
+          "type": "String",
+          "default": "features",
+          "description": "Input features column name"
+        },
+        "predictionCol": {
+          "type": "String",
+          "default": "prediction",
+          "description": "Output prediction column name"
+        }
+      }
+    }
+  },
+  "divergences": {
+    "squaredEuclidean": {
+      "formula": "D(x, y) = 0.5 * sum((x_i - y_i)^2)",
+      "domain": "any real",
+      "symmetric": true,
+      "description": "Standard Euclidean distance squared"
+    },
+    "kl": {
+      "formula": "D(x, y) = sum(x_i * log(x_i / y_i) - x_i + y_i)",
+      "domain": "strictly positive",
+      "symmetric": false,
+      "description": "Kullback-Leibler divergence"
+    },
+    "itakuraSaito": {
+      "formula": "D(x, y) = sum(x_i / y_i - log(x_i / y_i) - 1)",
+      "domain": "strictly positive",
+      "symmetric": false,
+      "description": "Itakura-Saito divergence (scale-invariant)"
+    },
+    "l1": {
+      "formula": "D(x, y) = sum(|x_i - y_i|)",
+      "domain": "any real",
+      "symmetric": true,
+      "description": "Manhattan/L1 distance (not a Bregman divergence)"
+    },
+    "generalizedI": {
+      "formula": "D(x, y) = sum(x_i * log(x_i / y_i) - x_i + y_i)",
+      "domain": "non-negative",
+      "symmetric": false,
+      "description": "Generalized I-divergence for unnormalized data"
+    },
+    "logistic": {
+      "formula": "D(x, y) = sum(x_i * log(x_i / y_i) + (1 - x_i) * log((1 - x_i) / (1 - y_i)))",
+      "domain": "(0, 1)",
+      "symmetric": false,
+      "description": "Logistic loss for binary probabilities"
+    },
+    "spherical": {
+      "formula": "D(x, y) = 1 - (x . y) / (||x|| * ||y||)",
+      "domain": "non-zero vectors",
+      "symmetric": true,
+      "description": "Spherical/cosine distance"
+    },
+    "cosine": {
+      "formula": "D(x, y) = 1 - (x . y) / (||x|| * ||y||)",
+      "domain": "non-zero vectors",
+      "symmetric": true,
+      "description": "Cosine distance (alias for spherical)"
+    }
+  }
+}

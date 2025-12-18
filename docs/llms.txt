@@ -1,0 +1,161 @@
+# Generalized K-Means Clustering
+
+> Scalable clustering with Bregman divergences on Apache Spark
+
+## Overview
+
+This library extends Apache Spark MLlib with generalized k-means clustering supporting 8 Bregman divergences and 15 algorithm variants. It provides a DataFrame/ML Pipeline API compatible with Spark 3.4+/4.0+ and Scala 2.12/2.13.
+
+## Quick Start
+
+```scala
+import com.massivedatascience.clusterer.ml.GeneralizedKMeans
+import org.apache.spark.ml.linalg.Vectors
+
+val df = spark.createDataFrame(Seq(
+  Tuple1(Vectors.dense(0.0, 0.0)),
+  Tuple1(Vectors.dense(1.0, 1.0)),
+  Tuple1(Vectors.dense(9.0, 8.0)),
+  Tuple1(Vectors.dense(8.0, 9.0))
+)).toDF("features")
+
+val kmeans = new GeneralizedKMeans()
+  .setK(2)
+  .setDivergence("squaredEuclidean")
+  .setMaxIter(20)
+
+val model = kmeans.fit(df)
+val predictions = model.transform(df)
+```
+
+## Installation
+
+**SBT:**
+```scala
+libraryDependencies += "com.massivedatascience" %% "generalized-kmeans-clustering" % "0.7.0"
+```
+
+**Maven:**
+```xml
+<dependency>
+  <groupId>com.massivedatascience</groupId>
+  <artifactId>generalized-kmeans-clustering_2.13</artifactId>
+  <version>0.7.0</version>
+</dependency>
+```
+
+## Divergences
+
+All divergences are Bregman divergences (except L1):
+
+| Name | Use Case | Domain |
+|------|----------|--------|
+| `squaredEuclidean` | General-purpose, continuous data | Any real |
+| `kl` | Probability distributions, topic models | Strictly positive |
+| `itakuraSaito` | Power spectra, audio signals | Strictly positive |
+| `l1` | Robust clustering, outlier resistance | Any real |
+| `generalizedI` | Count data, word frequencies | Non-negative |
+| `logistic` | Binary probabilities | (0, 1) |
+| `cosine`/`spherical` | Text vectors, TF-IDF | Non-zero |
+
+## Algorithms
+
+### Core Algorithms
+- **GeneralizedKMeans** - Standard k-means with pluggable divergences
+- **XMeans** - Automatic k selection using BIC/AIC
+- **SoftKMeans** - Fuzzy/probabilistic cluster assignments
+- **BisectingKMeans** - Hierarchical divisive clustering
+
+### Online/Streaming
+- **StreamingKMeans** - Online clustering with exponential decay
+- **MiniBatchKMeans** - Stochastic mini-batch updates
+
+### Robust Algorithms
+- **KMedoids** - Uses actual data points as centers (PAM)
+- **RobustKMeans** - Explicit outlier handling (trim, noise_cluster, m_estimator)
+
+### Constrained Algorithms
+- **BalancedKMeans** - Equal-sized cluster constraints
+- **ConstrainedKMeans** - Must-link/cannot-link constraints
+
+### Specialized Algorithms
+- **SparseKMeans** - Optimized for high-dimensional sparse data
+- **MultiViewKMeans** - Multiple feature representations
+- **TimeSeriesKMeans** - DTW-based sequence clustering
+- **SpectralClustering** - Graph-based via Laplacian eigenvectors
+- **InformationBottleneck** - Information-theoretic clustering
+
+## Key Parameters
+
+### GeneralizedKMeans
+- `k` (Int, required) - Number of clusters
+- `divergence` (String, default: "squaredEuclidean") - Distance measure
+- `maxIter` (Int, default: 20) - Maximum iterations
+- `tol` (Double, default: 1e-4) - Convergence tolerance
+- `seed` (Long) - Random seed for reproducibility
+- `initMode` (String, default: "k-means||") - Initialization: "k-means||", "random"
+- `initSteps` (Int, default: 2) - Steps for k-means|| initialization
+- `assignmentStrategy` (String, default: "auto") - "auto", "crossJoin", "broadcastUDF"
+- `featuresCol` (String, default: "features") - Input column name
+- `predictionCol` (String, default: "prediction") - Output column name
+
+### SoftKMeans
+- All GeneralizedKMeans params plus:
+- `beta` (Double, default: 2.0) - Fuzziness parameter (higher = softer)
+- `probabilitiesCol` (String, default: "probabilities") - Membership probabilities column
+
+### XMeans
+- `minK` (Int) - Minimum clusters to consider
+- `maxK` (Int) - Maximum clusters to consider
+- `criterion` (String, default: "bic") - Selection criterion: "bic", "aic"
+
+### StreamingKMeans
+- `decayFactor` (Double, default: 0.9) - Exponential decay for older data
+
+### MiniBatchKMeans
+- `batchSize` (Int, default: 1000) - Points per mini-batch
+
+### KMedoids
+- `distanceFunction` (String) - Distance metric for medoid selection
+
+### RobustKMeans
+- `robustMode` (String) - "trim", "noise_cluster", "m_estimator"
+- `trimFraction` (Double) - Fraction to trim (for trim mode)
+
+### BalancedKMeans
+- `balanceMode` (String) - "hard" (strict) or "soft" (penalty-based)
+
+### TimeSeriesKMeans
+- `distanceType` (String) - "dtw" (Dynamic Time Warping) or "euclidean"
+
+### SpectralClustering
+- `affinityType` (String) - "rbf", "cosine", "precomputed"
+- `useNystrom` (Boolean) - Enable Nystrom approximation for large datasets
+
+## Model Properties
+
+All models provide:
+- `clusterCenters` - Array of center vectors
+- `summary` - Training summary with metrics
+- `transform(df)` - Add predictions to DataFrame
+- `save(path)` / `load(path)` - Model persistence
+
+## Performance Tips
+
+1. **Large k (>1000)**: Use `assignmentStrategy("crossJoin")` for squared Euclidean
+2. **Very large data**: Use `MiniBatchKMeans` or `StreamingKMeans`
+3. **Outliers**: Use `RobustKMeans` or `KMedoids`
+4. **Unknown k**: Use `XMeans` for automatic selection
+5. **Probabilistic assignments**: Use `SoftKMeans`
+
+## Documentation
+
+- Tutorials: /tutorials/
+- How-to Guides: /howto/
+- Reference: /reference/
+- Explanation: /explanation/
+
+## Links
+
+- GitHub: https://github.com/derrickburns/generalized-kmeans-clustering
+- Documentation: https://derrickburns.github.io/generalized-kmeans-clustering/

@@ -1,5 +1,60 @@
 title: Generalized K-Means Clustering
-description: A Scala library for generalized K-means clustering using Bregman divergences on Apache Spark
+description: Scalable clustering with Bregman divergences on Apache Spark
 theme: jekyll-theme-minimal
 markdown: kramdown
 highlighter: rouge
+
+# Navigation
+header_pages:
+  - index.md
+  - tutorials/index.md
+  - howto/index.md
+  - reference/index.md
+  - explanation/index.md
+
+# Collections for organized content
+collections:
+  tutorials:
+    output: true
+    permalink: /tutorials/:name/
+  howto:
+    output: true
+    permalink: /howto/:name/
+  reference:
+    output: true
+    permalink: /reference/:name/
+  explanation:
+    output: true
+    permalink: /explanation/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "tutorials"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "howto"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "reference"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "explanation"
+    values:
+      layout: "default"
+
+# GitHub Pages
+baseurl: "/generalized-kmeans-clustering"
+url: "https://derrickburns.github.io"
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
