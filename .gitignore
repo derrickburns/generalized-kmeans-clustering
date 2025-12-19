@@ -114,5 +114,3 @@ venv/
 env/
 ENV/
 
-# Generated documentation (built by CI)
-docs/api/

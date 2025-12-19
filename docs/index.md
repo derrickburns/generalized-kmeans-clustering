@@ -70,7 +70,6 @@ Technical specifications:
 - [Algorithm Reference](reference/algorithms.html) — All 15 algorithms
 - [Parameter Reference](reference/parameters.html) — Every parameter documented
 - [Divergence Reference](reference/divergences.html) — Mathematical details
-- [API Reference](api/) — Scaladoc
 
 ### [Explanation](explanation/index.html) — Understanding-oriented
 Conceptual guides:
