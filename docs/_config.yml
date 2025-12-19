@@ -46,9 +46,9 @@ defaults:
     values:
       layout: "default"
 
-# GitHub Pages with custom domain
-baseurl: ""
-url: "https://generalized-kmeans-clustering.massivedatascience.com"
+# GitHub Pages
+baseurl: "/generalized-kmeans-clustering"
+url: "https://derrickburns.github.io"
 
 # Plugins
 plugins:
