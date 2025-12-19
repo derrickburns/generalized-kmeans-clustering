@@ -3,9 +3,9 @@
 Use this guide to make concise, high-signal contributions to the generalized k-means clustering library.
 
 ## Project Structure & Module Organization
-- Scala sources live in `src/main/scala` (DataFrame/ML API under `com.massivedatascience.clusterer.ml`), with version-specific shims in `src/main/scala-2.12` and `src/main/scala-2.13`. Legacy RDD code remains in `com.massivedatascience.clusterer`.
+- Scala sources live in `src/main/scala` (DataFrame/ML API under `com.massivedatascience.clusterer.ml`), with version-specific shims in `src/main/scala-2.12` and `src/main/scala-2.13`.
 - Tests use ScalaTest under `src/test/scala` with Spark-local fixtures; shared data is in `src/test/resources`. Executable examples sit in `src/main/scala/examples`.
-- Python wrapper lives in `python/` (`massivedatascience` package, examples, and tests). Docs and release notes are in `docs/`, `release-notes/`, `ARCHITECTURE.md`, and `DATAFRAME_API_EXAMPLES.md`.
+- Python wrapper lives in `python/` (`massivedatascience` package, examples, and tests). Documentation follows Diátaxis structure in `docs/` (`_tutorials/`, `_howto/`, `_reference/`, `_explanation/`). Architecture and changelog are in `ARCHITECTURE.md` and `CHANGELOG.md`.
 
 ## Build, Test, and Development Commands
 - `sbt compile` — compile against the default Scala/Spark matrix; use `sbt ++2.13.14` or `sbt ++2.12.18` to pin versions.

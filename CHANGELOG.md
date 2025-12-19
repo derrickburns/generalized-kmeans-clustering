@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Comprehensive CI validation DAG with cross-version testing
-- Production quality blockers documented in ACTION_ITEMS.md
 - SECURITY.md with vulnerability reporting guidelines
 - CONTRIBUTING.md with development guidelines
 - Test suite fixes for Scala 2.12/2.13 compatibility
@@ -63,11 +62,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Inertia (WCSS) computation
   - Cluster sizes and balance metrics
   - Elbow curve helper for finding optimal k
-- **Documentation guides** in `docs/guides/`:
-  - Quick Start Guide - get running in 5 minutes
-  - Divergence Selection Guide - comprehensive decision flowchart and examples
-  - X-Means Auto-K Demo - automatic cluster count selection with BIC/AIC
-  - Soft Clustering Guide - interpreting probabilistic memberships
+- **Documentation restructured** using Diátaxis framework:
+  - `docs/_tutorials/` - Learning-oriented guides (first clustering, PySpark, algorithm selection)
+  - `docs/_howto/` - Task-oriented guides (installation, choosing divergence, finding optimal k, outliers)
+  - `docs/_reference/` - Information-oriented (parameters, algorithms, divergences)
+  - `docs/_explanation/` - Understanding-oriented (Bregman divergences, Lloyd's algorithm, performance)
+  - Custom domain: https://generalized-kmeans-clustering.massivedatascience.com
+  - Jekyll-based site with automatic deployment
+- **SPECIFICATION.md** - Compressed specification enabling AI reconstruction of the codebase
 - **Test suites for new components** (215 new tests, 854 total):
   - OutlierDetectionSuite: 16 tests for distance-based and trimmed outlier detection
   - SparseBregmanKernelSuite: 28 tests for sparse-optimized SE, KL, L1, Spherical kernels
@@ -106,6 +108,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Legacy RDD API and associated coreset/transform modules (DataFrame/ML API is now the sole surface)
+- Obsolete documentation files consolidated into Diátaxis structure:
+  - `ACTION_ITEMS.md` (superseded by ROADMAP.md)
+  - `DATAFRAME_API_EXAMPLES.md` (covered by tutorials)
+  - `RELEASE_NOTES_0.6.0.md` (consolidated into CHANGELOG.md)
+  - `HACKERNEWS_ANNOUNCEMENT.md` (promotional material)
+  - `docs/guides/` (replaced by Diátaxis categories)
+  - `release-notes/` directory (consolidated into CHANGELOG.md)
 
 ## [0.6.0] - 2025-10-18
 

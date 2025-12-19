@@ -1,6 +1,6 @@
 # Roadmap: Generalized K-Means Clustering
 
-> **Last Updated:** 2025-12-16
+> **Last Updated:** 2025-12-19
 > **Status:** Forward-looking (completed work now lives in `CHANGELOG.md`)
 > **Maintainer Note:** Keep this document for upcoming work only; ship-ready or finished items belong in the changelog.
 
@@ -16,47 +16,6 @@ This roadmap tracks upcoming improvements. It is organized by time horizon and p
 | P1 | High value, low/medium effort | Next release |
 | P2 | Medium value or effort | Following releases |
 | P3 | Nice to have | Backlog |
-
----
-
-## Documentation (P0) — Top Priority
-
-> **Framework:** Follow [Diátaxis](https://diataxis.fr/) — Tutorials, How-to guides, Reference, Explanation. Every code snippet must be runnable (CI-compiled or from `examples/`).
-
-### For Humans
-
-| Doc Type | Purpose | Format |
-|----------|---------|--------|
-| **README** | What it is, when to use it, minimal install + example | 2-5 min read |
-| **Tutorials** | First successful run end-to-end (Scala + PySpark) | 15-30 min, tiny dataset |
-| **How-tos** | Task recipes: cosine k-means, KL on probabilities, streaming, choosing k, sparse vectors, avoiding OOM | One task per page |
-| **Reference** | Every param with type/default/range, complexity, persistence, determinism | Exhaustive, skimmable |
-| **Explanation** | Geometry choices, preprocessing guidance, scaling tradeoffs, failure modes | Why it works / when it fails |
-
-**Actions:**
-- [ ] Restructure docs into Diátaxis categories
-- [ ] Create `docs/tutorials/` with end-to-end examples
-- [ ] Create `docs/howto/` with task-based recipes
-- [ ] Create `docs/reference/` with exhaustive param docs
-- [ ] Create `docs/explanation/` with conceptual guides
-- [ ] Ensure all code snippets compile in CI
-
-### For AI/LLM Consumption
-
-| Item | Purpose |
-|------|---------|
-| `/llms.txt` | Index of key pages for LLM tools ([llmstxt.org](https://llmstxt.org/)) |
-| `params.json` | Machine-readable parameter reference (names, defaults, constraints) |
-| `algorithms.json` | Algorithm catalog with links to canonical docs |
-| Small, single-topic pages | Better retrieval chunking |
-| Consistent headings | `## Parameters`, `## Examples`, `## Performance`, `## Failure modes` |
-
-**Actions:**
-- [ ] Add `/llms.txt` with page descriptions
-- [ ] Generate `docs/reference/params.json` from code
-- [ ] Generate `docs/reference/algorithms.json` catalog
-- [ ] Split large docs into single-topic pages
-- [ ] Standardize section headings across all docs
 
 ---
 
@@ -188,10 +147,13 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2025-12-16 | Created `KernelFactory` for unified kernel creation | Single API for dense/sparse kernels, reduces duplication |
 | 2025-12-16 | Moved assignment strategies to `impl/` subpackage | Better organization, backward-compatible via type aliases |
 | 2025-12-16 | Implemented `MultiViewKMeans` with ViewSpec configuration | Per-view divergences/weights, weighted/max/min combine strategies |
-| 2025-12-16 | Created documentation guides in `docs/guides/` | Quick-start, divergence selection, X-Means auto-k, soft clustering |
+| 2025-12-16 | Created initial documentation guides | Quick-start, divergence selection, X-Means auto-k, soft clustering (later restructured to Diátaxis) |
 | 2025-12-16 | Implemented `TimeSeriesKMeans` with sequence kernels | DTW, Soft-DTW, GAK, Derivative-DTW; DBA barycenters; 31 tests |
 | 2025-12-16 | Implemented `InformationBottleneck` estimator | Blahut-Arimoto algorithm, MutualInformation utilities, 28 tests |
 | 2025-12-16 | Implemented `SpectralClustering` estimator | Graph Laplacian eigenvectors (Ng-Jordan-Weiss), Nyström approximation, 25 tests |
+| 2025-12-19 | Restructured documentation to Diátaxis framework | Tutorials, how-to, reference, explanation categories; Jekyll deployment; custom domain |
+| 2025-12-19 | Created `SPECIFICATION.md` | Compressed reconstruction spec for AI code generation |
+| 2025-12-19 | Consolidated obsolete files | Removed redundant guides, release notes; single source of truth in CHANGELOG.md |
 
 ---
 
