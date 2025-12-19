@@ -105,12 +105,12 @@ Conceptual guides:
 
 ### SBT
 ```scala
-libraryDependencies += "com.massivedatascience" %% "clusterer" % "0.7.0"
+libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.7.0"
 ```
 
 ### spark-submit
 ```bash
-spark-submit --packages com.massivedatascience:clusterer_2.13:0.7.0 your-app.jar
+spark-submit --packages com.massivedatascience:massivedatascience-clusterer_2.13:0.7.0 your-app.jar
 ```
 
 ### Databricks
