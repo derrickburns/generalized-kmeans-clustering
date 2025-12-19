@@ -44,7 +44,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add docs/api/
+          git add -f docs/api/
           if git diff --staged --quiet; then
             echo "No changes to API docs"
           else
