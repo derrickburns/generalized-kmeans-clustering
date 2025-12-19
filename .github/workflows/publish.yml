@@ -1,0 +1,66 @@
+name: Publish to Maven Central
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.7.0)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish to Maven Central
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Publish Scala 2.13 artifacts
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          sbt ++2.13.14 \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            'set pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)' \
+            clean compile publishSigned
+
+      - name: Publish Scala 2.12 artifacts
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          sbt ++2.12.18 \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            'set pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)' \
+            clean compile publishSigned
+
+      - name: Release to Maven Central
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        run: |
+          sbt \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            sonatypeBundleRelease

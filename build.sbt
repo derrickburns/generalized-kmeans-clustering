@@ -60,9 +60,36 @@ val _ = if (javaMajor != 17 && javaMajor != 8) {
 // Adjust javac target based on detected version (fallback to 1.8 if running on 8)
 // Note: Java 9+ uses simple version numbers (e.g., "17"), not "17.0"
 javacOptions ++= (if (javaMajor <= 8) Seq("-source", "1.8", "-target", "1.8") else Seq("-source", "17", "-target", "17"))
+    // ============================================
+    // Maven Central Publishing Configuration
+    // ============================================
     publishMavenStyle := true
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
+
+    // Sonatype settings
+    sonatypeProfileName := "com.massivedatascience"
+    publishTo := sonatypePublishToBundle.value
+    sonatypeCredentialHost := "s01.oss.sonatype.org"
+    sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+
+    // POM metadata required by Maven Central
+    homepage := Some(url("https://github.com/derrickburns/generalized-kmeans-clustering"))
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/derrickburns/generalized-kmeans-clustering"),
+        "scm:git@github.com:derrickburns/generalized-kmeans-clustering.git"
+      )
+    )
+    developers := List(
+      Developer(
+        id = "derrickburns",
+        name = "Derrick Burns",
+        email = "derrick@massivedatascience.com",
+        url = url("https://github.com/derrickburns")
+      )
+    )
+    description := "Generalized K-Means clustering with Bregman divergences for Apache Spark"
     // Test dependencies
     libraryDependencies ++= Seq(
       "org.scalactic" %% "scalactic" % "3.2.19",

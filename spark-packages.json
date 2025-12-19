@@ -1,0 +1,25 @@
+{
+  "name": "derrickburns/generalized-kmeans-clustering",
+  "version": "0.7.0",
+  "description": "Generalized K-Means clustering with 8 Bregman divergences (KL, Itakura-Saito, etc.) and 15 algorithm variants for Apache Spark",
+  "homepage": "https://github.com/derrickburns/generalized-kmeans-clustering",
+  "repository": "https://github.com/derrickburns/generalized-kmeans-clustering",
+  "issue_tracker": "https://github.com/derrickburns/generalized-kmeans-clustering/issues",
+  "licenses": [
+    {
+      "name": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "spark_version": "3.4.0",
+  "tags": [
+    "clustering",
+    "kmeans",
+    "machine-learning",
+    "bregman-divergence",
+    "kl-divergence",
+    "soft-clustering",
+    "streaming",
+    "xmeans"
+  ]
+}

@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "massivedatascience-clusterer"
-version = "0.6.0"
+version = "0.7.0"
 description = "Generalized K-Means clustering for PySpark with Bregman divergences"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
-    {name = "MassiveDataScience", email = "support@massivedatascience.com"}
+    {name = "Derrick Burns", email = "derrick@massivedatascience.com"}
 ]
 maintainers = [
-    {name = "MassiveDataScience", email = "support@massivedatascience.com"}
+    {name = "Derrick Burns", email = "derrick@massivedatascience.com"}
 ]
 keywords = [
     "pyspark",
@@ -63,7 +63,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/derrickburns/generalized-kmeans-clustering"
-Documentation = "https://github.com/derrickburns/generalized-kmeans-clustering#readme"
+Documentation = "https://derrickburns.github.io/generalized-kmeans-clustering/"
 Repository = "https://github.com/derrickburns/generalized-kmeans-clustering"
 "Bug Tracker" = "https://github.com/derrickburns/generalized-kmeans-clustering/issues"
 Changelog = "https://github.com/derrickburns/generalized-kmeans-clustering/blob/master/CHANGELOG.md"

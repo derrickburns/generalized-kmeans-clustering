@@ -22,6 +22,7 @@ Conceptual guides to understand the theory and make informed decisions.
 
 - [Performance Tuning](performance.html) — Scaling to billions of points
 - [Acceleration Techniques](acceleration.html) — Elkan, Hamerly, mini-batch
+- [Comparison with MLlib](comparison-mllib.html) — When to use this vs. built-in
 
 ## Advanced Topics
 

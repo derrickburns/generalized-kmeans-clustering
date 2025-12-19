@@ -71,9 +71,9 @@ print(f"Within-cluster sum of squares: {cost}")
 
 ## Documentation
 
-- GitHub: https://github.com/massivedatascience/generalized-kmeans-clustering
+- GitHub: https://github.com/derrickburns/generalized-kmeans-clustering
 - Examples: See `examples/` directory
-- API Docs: https://massivedatascience.github.io/generalized-kmeans-clustering/
+- API Docs: https://derrickburns.github.io/generalized-kmeans-clustering/
 """
 
 setup(
@@ -82,9 +82,9 @@ setup(
     description="Generalized K-Means clustering for PySpark with Bregman divergences",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="MassiveDataScience",
-    author_email="support@massivedatascience.com",
-    url="https://github.com/massivedatascience/generalized-kmeans-clustering",
+    author="Derrick Burns",
+    author_email="derrick@massivedatascience.com",
+    url="https://github.com/derrickburns/generalized-kmeans-clustering",
     license="Apache License 2.0",
     packages=find_packages(),
     python_requires=">=3.7",
@@ -121,8 +121,8 @@ setup(
     ],
     keywords="pyspark clustering kmeans machine-learning bregman-divergence",
     project_urls={
-        "Bug Reports": "https://github.com/massivedatascience/generalized-kmeans-clustering/issues",
-        "Source": "https://github.com/massivedatascience/generalized-kmeans-clustering",
-        "Documentation": "https://github.com/massivedatascience/generalized-kmeans-clustering#readme",
+        "Bug Reports": "https://github.com/derrickburns/generalized-kmeans-clustering/issues",
+        "Source": "https://github.com/derrickburns/generalized-kmeans-clustering",
+        "Documentation": "https://derrickburns.github.io/generalized-kmeans-clustering/",
     },
 )
