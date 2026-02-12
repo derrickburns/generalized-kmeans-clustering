@@ -296,7 +296,7 @@ class CoClustering(override val uid: String)
       rowClusters: Map[Long, Int],
       colClusters: Map[Long, Int],
       blockCenters: Array[Array[Double]],
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       iterations: Int,
       objective: Double
   ): CoClusteringModel = {
@@ -343,7 +343,7 @@ class CoClustering(override val uid: String)
       rowClusters: Map[Long, Int],
       colClusters: Map[Long, Int],
       blockCenters: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Double = {
 
     val bcBlockCenters = df.sparkSession.sparkContext.broadcast(blockCenters)
@@ -373,7 +373,7 @@ class CoClustering(override val uid: String)
       df: DataFrame,
       colClusters: Map[Long, Int],
       blockCenters: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Map[Long, Int] = {
 
     val spark               = df.sparkSession
@@ -413,7 +413,7 @@ class CoClustering(override val uid: String)
       df: DataFrame,
       rowClusters: Map[Long, Int],
       blockCenters: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Map[Long, Int] = {
 
     val spark               = df.sparkSession
@@ -471,7 +471,7 @@ class CoClusteringModel(
     val rowClusters: Map[Long, Int],
     val colClusters: Map[Long, Int],
     val blockCenters: Array[Array[Double]],
-    private val kernel: BregmanKernel
+    private val kernel: ClusteringKernel
 ) extends Model[CoClusteringModel]
     with CoClusteringParams
     with MLWritable

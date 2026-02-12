@@ -545,24 +545,13 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
     actual shouldBe 7.0
   }
 
-  test("L1: gradient is sign function") {
+  test("L1: is not a BregmanKernel (no grad/invGrad)") {
     val kernel = new L1Kernel()
-    val x      = Vectors.dense(1.0, -2.0, 0.0, 3.0)
-
-    val grad     = kernel.grad(x)
-    val expected = Vectors.dense(1.0, -1.0, 0.0, 1.0)
-
-    assertVectorsEqual(grad, expected, defaultTol, "L1 gradient mismatch")
-  }
-
-  test("L1: invGrad is identity (placeholder for K-Medians)") {
-    val kernel = new L1Kernel()
-    val theta  = Vectors.dense(1.0, -1.0, 0.0)
-
-    val x = kernel.invGrad(theta)
-
-    // L1 invGrad is not well-defined, returns theta as identity
-    assertVectorsEqual(x, theta, defaultTol, "L1 invGrad should return theta")
+    // L1Kernel extends ClusteringKernel directly, not BregmanKernel,
+    // because L1 has no well-defined gradient or inverse gradient.
+    // Centers must be computed via component-wise median (MedianUpdateStrategy).
+    kernel shouldNot be(a[kernels.BregmanKernel])
+    kernel shouldBe a[kernels.ClusteringKernel]
   }
 
   test("L1: self-distance is zero") {
@@ -923,8 +912,7 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
     val testCases = Seq(
       (new SquaredEuclideanKernel(), Vectors.dense(0.0, 1.0, 0.0)),
       (new KLDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)),           // Needs smoothing
-      (new GeneralizedIDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)), // Needs smoothing
-      (new L1Kernel(), Vectors.dense(0.0, 1.0, 0.0))
+      (new GeneralizedIDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)) // Needs smoothing
     )
 
     testCases.foreach { case (kernel, x) =>
@@ -933,6 +921,14 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
           kernel.divergence(x, x)
           kernel.grad(x)
         }
+      }
+    }
+
+    // L1Kernel only has divergence (not a BregmanKernel)
+    withClue("L1Kernel should handle zeros for divergence") {
+      val l1 = new L1Kernel()
+      noException should be thrownBy {
+        l1.divergence(Vectors.dense(0.0, 1.0, 0.0), Vectors.dense(0.0, 1.0, 0.0))
       }
     }
   }
@@ -1019,5 +1015,43 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
     val divToAlt  = points.map(p => kernel.divergence(p, altCenter)).sum
 
     divToMean should be < divToAlt
+  }
+
+  // ========== Type Hierarchy Tests ==========
+
+  test("ClusteringOps: createUpdateStrategy returns MedianUpdateStrategy for L1") {
+    val updater = ClusteringOps.createUpdateStrategy("l1")
+    updater shouldBe a[strategies.MedianUpdateStrategy]
+  }
+
+  test("ClusteringOps: createUpdateStrategy returns MedianUpdateStrategy for manhattan") {
+    val updater = ClusteringOps.createUpdateStrategy("manhattan")
+    updater shouldBe a[strategies.MedianUpdateStrategy]
+  }
+
+  test("ClusteringOps: createUpdateStrategy returns GradMeanUDAFUpdate for Bregman kernels") {
+    for (div <- Seq("squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic",
+      "spherical", "cosine")) {
+      withClue(s"divergence=$div:") {
+        val updater = ClusteringOps.createUpdateStrategy(div)
+        updater shouldBe a[strategies.GradMeanUDAFUpdate]
+      }
+    }
+  }
+
+  test("ClusteringOps: createKernel returns ClusteringKernel (not BregmanKernel) for L1") {
+    val kernel = ClusteringOps.createKernel("l1")
+    kernel shouldBe a[kernels.ClusteringKernel]
+    kernel shouldNot be(a[kernels.BregmanKernel])
+  }
+
+  test("ClusteringOps: createKernel returns BregmanKernel for standard divergences") {
+    for (div <- Seq("squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic",
+      "spherical")) {
+      withClue(s"divergence=$div:") {
+        val kernel = ClusteringOps.createKernel(div)
+        kernel shouldBe a[kernels.BregmanKernel]
+      }
+    }
   }
 }

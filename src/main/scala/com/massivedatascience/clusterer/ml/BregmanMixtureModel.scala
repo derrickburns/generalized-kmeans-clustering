@@ -233,7 +233,7 @@ class BregmanMixture(override val uid: String)
     }
   }
 
-  private def createKernel(): BregmanKernel = {
+  private def createKernel(): ClusteringKernel = {
     BregmanKernel.create($(divergence), $(smoothing))
   }
 
@@ -270,7 +270,7 @@ class BregmanMixtureModelInstance(
     override val uid: String,
     val means: Array[Vector],
     val weights: Array[Double],
-    val kernel: BregmanKernel
+    val kernel: ClusteringKernel
 ) extends Model[BregmanMixtureModelInstance]
     with BregmanMixtureParams
     with MLWritable

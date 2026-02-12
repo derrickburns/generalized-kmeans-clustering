@@ -33,7 +33,7 @@ case class LloydsConfig(
     k: Int,
     maxIter: Int,
     tol: Double,
-    kernel: BregmanKernel,
+    kernel: ClusteringKernel,
     assigner: AssignmentStrategy,
     updater: UpdateStrategy,
     emptyHandler: EmptyClusterHandler,

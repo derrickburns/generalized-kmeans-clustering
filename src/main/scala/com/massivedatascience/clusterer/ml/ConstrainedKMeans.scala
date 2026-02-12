@@ -217,7 +217,7 @@ class ConstrainedKMeans(override val uid: String)
   private def runConstrainedLloyds(
       df: DataFrame,
       initialCenters: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): ConstrainedResult = {
     val isSoftMode = $(constraintMode) == "soft"
     val lambda     = $(constraintWeight)
@@ -273,7 +273,7 @@ class ConstrainedKMeans(override val uid: String)
   private def assignSoftConstrained(
       df: DataFrame,
       centers: Array[Array[Double]],
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       lambda: Double
   ): (Map[Long, Int], Int) = {
     val k          = centers.length
@@ -326,7 +326,7 @@ class ConstrainedKMeans(override val uid: String)
   private def assignHardConstrained(
       df: DataFrame,
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Map[Long, Int], Int) = {
     val k          = centers.length
     val centersVec = centers.map(Vectors.dense)
@@ -372,11 +372,12 @@ class ConstrainedKMeans(override val uid: String)
   private def updateCenters(
       df: DataFrame,
       assignments: Map[Long, Int],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
+    val bregmanKernel = kernel.asInstanceOf[BregmanKernel]
     val k             = $(this.k)
     val bcAssignments = df.sparkSession.sparkContext.broadcast(assignments)
-    val bcKernel      = df.sparkSession.sparkContext.broadcast(kernel)
+    val bcKernel      = df.sparkSession.sparkContext.broadcast(bregmanKernel)
 
     // Add cluster column based on assignments
     val assignUDF = udf { (id: Long) =>
@@ -406,7 +407,7 @@ class ConstrainedKMeans(override val uid: String)
           .reduce((a, b) => a.zip(b).map { case (x, y) => x + y })
 
         val meanGrad = gradSum.map(_ / count)
-        kernel.invGrad(Vectors.dense(meanGrad)).toArray
+        bregmanKernel.invGrad(Vectors.dense(meanGrad)).toArray
       }
     }.toArray
 
@@ -432,7 +433,7 @@ class ConstrainedKMeans(override val uid: String)
       df: DataFrame,
       assignments: Map[Long, Int],
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Double = {
     val centersVec = centers.map(Vectors.dense)
     df.select($(idCol), $(featuresCol))
@@ -446,11 +447,11 @@ class ConstrainedKMeans(override val uid: String)
       .sum
   }
 
-  private def createKernel(): BregmanKernel = {
-    BregmanKernel.create($(divergence), $(smoothing))
+  private def createKernel(): ClusteringKernel = {
+    ClusteringOps.createKernel($(divergence), $(smoothing))
   }
 
-  private def initializeCenters(df: DataFrame, kernel: BregmanKernel): Array[Array[Double]] = {
+  private def initializeCenters(df: DataFrame, kernel: ClusteringKernel): Array[Array[Double]] = {
     val fraction = math.min(1.0, ($(k) * 10.0) / df.count().toDouble)
     df.select($(featuresCol))
       .sample(withReplacement = false, fraction, $(seed))

@@ -108,7 +108,7 @@ object KernelFactory {
       divergence: String,
       sparse: Boolean = false,
       smoothing: Double = 1e-10
-  ): BregmanKernel = {
+  ): ClusteringKernel = {
     val normalized = divergence.toLowerCase.trim
     if (sparse && supportsSparse(normalized)) {
       createSparse(normalized, smoothing)
@@ -138,7 +138,7 @@ object KernelFactory {
       sparsityRatio: Double,
       smoothing: Double = 1e-10,
       sparseThreshold: Double = 0.3
-  ): BregmanKernel = {
+  ): ClusteringKernel = {
     val useSparse = sparsityRatio < sparseThreshold && supportsSparse(divergence)
     create(divergence, sparse = useSparse, smoothing = smoothing)
   }
@@ -171,7 +171,7 @@ object KernelFactory {
   }
 
   /** Create a dense (standard) kernel implementation. */
-  private def createDense(divergence: String, smoothing: Double): BregmanKernel =
+  private def createDense(divergence: String, smoothing: Double): ClusteringKernel =
     divergence match {
       case "squaredeuclidean" | "se" | "euclidean" => new SquaredEuclideanKernel()
       case "kl" | "kullbackleibler"                => new KLDivergenceKernel(smoothing)
@@ -187,7 +187,7 @@ object KernelFactory {
     }
 
   /** Create a sparse-optimized kernel implementation. */
-  private def createSparse(divergence: String, smoothing: Double): BregmanKernel =
+  private def createSparse(divergence: String, smoothing: Double): ClusteringKernel =
     divergence match {
       case "squaredeuclidean" | "se" | "euclidean" => new SparseSEKernel()
       case "kl" | "kullbackleibler"                => new SparseKLKernel(smoothing)

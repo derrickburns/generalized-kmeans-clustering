@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.ml.df.{ BregmanKernel, SoftAssignments }
+import com.massivedatascience.clusterer.ml.df.{ ClusteringKernel, ClusteringOps, SoftAssignments }
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -184,16 +184,16 @@ class SoftKMeans(override val uid: String)
     )
 
     // Validate input data domain requirements for the selected divergence
-    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+    ClusteringOps.validateDomain(
       df,
       $(featuresCol),
       $(divergence),
-      maxSamples = Some(1000)
+      maxSamples = 1000
     )
 
     df.cache()
     try {
-      val kernel = createKernel($(divergence), $(smoothing))
+      val kernel = ClusteringOps.createKernel($(divergence), $(smoothing))
 
       // Initialize centers
       val initialCenters = initializeCenters(
@@ -280,27 +280,13 @@ class SoftKMeans(override val uid: String)
     }
   }
 
-  /** Create kernel for distance calculations. */
-  private def createKernel(divName: String, smooth: Double): BregmanKernel = {
-    import com.massivedatascience.clusterer.ml.df._
-    divName match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"             => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      => throw new IllegalArgumentException(s"Unknown divergence: $divName")
-    }
-  }
 
   /** Initialize cluster centers. */
   private def initializeCenters(
       df: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
     // Random initialization by default
     initializeRandom(df, featuresCol, $(k), $(seed))
@@ -325,7 +311,7 @@ class SoftKMeans(override val uid: String)
   private def computeSoftAssignments(
       df: DataFrame,
       centers: Array[Vector],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): DataFrame = {
     SoftAssignments.withProbabilities(
       df,
@@ -342,7 +328,7 @@ class SoftKMeans(override val uid: String)
   private def computeSoftCenters(
       memberships: DataFrame,
       numClusters: Int,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Vector] = {
     val featCol: String              = $(featuresCol)
     val weightColOpt: Option[String] = if (hasWeightCol) Some($(weightCol)) else None
@@ -387,7 +373,7 @@ class SoftKMeans(override val uid: String)
   private def computeSoftCost(
       memberships: DataFrame,
       centers: Array[Vector],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Double = {
     val costUDF = udf { (features: Vector, probs: Vector) =>
       probs.toArray.zipWithIndex.map { case (p, c) =>

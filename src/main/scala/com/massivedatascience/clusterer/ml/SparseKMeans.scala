@@ -236,7 +236,7 @@ class SparseKMeans(override val uid: String)
   private def runLloyds(
       df: DataFrame,
       initialCenters: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): SparseResult = {
     var centers           = initialCenters
     var iteration         = 0
@@ -355,7 +355,7 @@ class SparseKMeans(override val uid: String)
     )
   }
 
-  private def initializeCenters(df: DataFrame, kernel: BregmanKernel): Array[Array[Double]] = {
+  private def initializeCenters(df: DataFrame, kernel: ClusteringKernel): Array[Array[Double]] = {
     val fraction = math.min(1.0, ($(k) * 10.0) / df.count().toDouble)
     df.select($(featuresCol))
       .sample(withReplacement = false, fraction, $(seed))
@@ -366,10 +366,11 @@ class SparseKMeans(override val uid: String)
 
   private def updateCenters(
       assigned: DataFrame,
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       numClusters: Int
   ): Array[Vector] = {
-    val bcKernel = assigned.sparkSession.sparkContext.broadcast(kernel)
+    val bregmanKernel = kernel.asInstanceOf[BregmanKernel]
+    val bcKernel      = assigned.sparkSession.sparkContext.broadcast(bregmanKernel)
 
     val gradUDF = udf { (features: Vector) =>
       bcKernel.value.grad(features).toArray
@@ -418,7 +419,7 @@ class SparseKMeans(override val uid: String)
   private def computeDistortion(
       df: DataFrame,
       centers: Array[Vector],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Double = {
     val bcKernel  = df.sparkSession.sparkContext.broadcast(kernel)
     val bcCenters = df.sparkSession.sparkContext.broadcast(centers)

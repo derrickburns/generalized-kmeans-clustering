@@ -241,9 +241,9 @@ class MultiViewKMeans(override val uid: String)
       viewSpecs.map(_.weight)
     }
 
-    // Create kernels for each view
+    // Create kernels for each view (BregmanKernel needed for gradient-based center updates)
     val kernels = viewSpecs.map { view =>
-      KernelFactory.create(view.divergence, smoothing = $(smoothing))
+      BregmanKernel.create(view.divergence, $(smoothing)).asInstanceOf[BregmanKernel]
     }
 
     // Get dimensions for each view

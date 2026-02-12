@@ -8,6 +8,7 @@ package com.massivedatascience.clusterer.ml.df
   * }}}
   */
 object BregmanKernels {
+  type ClusteringKernel             = kernels.ClusteringKernel
   type BregmanKernel                = kernels.BregmanKernel
   type SquaredEuclideanKernel       = kernels.SquaredEuclideanKernel
   type KLDivergenceKernel           = kernels.KLDivergenceKernel

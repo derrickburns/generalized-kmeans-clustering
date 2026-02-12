@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.{ BregmanKernel, ClusteringKernel }
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.{ Estimator, Model }
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -434,7 +434,7 @@ class AgglomerativeBregman(override val uid: String)
   }
 
   private def createKernel(): BregmanKernel = {
-    BregmanKernel.create($(divergence), $(smoothing))
+    BregmanKernel.create($(divergence), $(smoothing)).asInstanceOf[BregmanKernel]
   }
 
   override def copy(extra: ParamMap): AgglomerativeBregman = defaultCopy(extra)
@@ -481,7 +481,7 @@ class AgglomerativeBregmanModel(
   private[ml] var modelDivergence: String = "squaredEuclidean"
   private[ml] var modelSmoothing: Double  = 1e-10
   private[ml] var modelLinkage: String    = "average"
-  private[ml] var kernel: BregmanKernel   = _
+  private[ml] var kernel: ClusteringKernel = _
 
   /** Cluster centers as vectors for downstream consumers/tests. */
   def clusterCentersAsVectors: Array[Vector] = clusterCenters

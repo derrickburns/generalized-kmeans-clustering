@@ -1,5 +1,6 @@
 package com.massivedatascience.clusterer.ml
 
+import com.massivedatascience.clusterer.ml.df.ClusteringOps
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.linalg.Vector
@@ -147,11 +148,11 @@ class CoresetKMeans(override val uid: String)
     )
 
     // Validate input data domain requirements for the selected divergence
-    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+    ClusteringOps.validateDomain(
       df,
       $(featuresCol),
       $(divergence),
-      maxSamples = Some(1000)
+      maxSamples = 1000
     )
 
     val startTime = System.currentTimeMillis()

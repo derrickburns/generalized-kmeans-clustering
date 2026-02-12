@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml
 
-import com.massivedatascience.clusterer.ml.df.{ BregmanKernel, SoftAssignments }
+import com.massivedatascience.clusterer.ml.df.{ ClusteringKernel, SoftAssignments }
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.ml.param.{ ParamMap }
@@ -46,7 +46,7 @@ class SoftKMeansModel(
     val clusterCenters: Array[Vector],
     val betaValue: Double,
     val minMembershipValue: Double,
-    private val kernel: BregmanKernel
+    private val kernel: ClusteringKernel
 ) extends org.apache.spark.ml.Model[SoftKMeansModel]
     with SoftKMeansParams
     with MLWritable

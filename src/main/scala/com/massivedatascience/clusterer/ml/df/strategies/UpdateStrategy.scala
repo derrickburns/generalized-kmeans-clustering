@@ -4,7 +4,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.{ BregmanKernel, ClusteringKernel }
 
 /** Strategy for updating cluster centers.
   *
@@ -32,13 +32,16 @@ trait UpdateStrategy extends Serializable {
       featuresCol: String,
       weightCol: Option[String],
       k: Int,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]]
 }
 
 /** Gradient mean update strategy using UDAF.
   *
   * Computes μ = invGrad(∑_i w_i · grad(x_i) / ∑_i w_i) for each cluster.
+  *
+  * Requires a [[BregmanKernel]] (which has grad/invGrad). Passing a non-Bregman kernel (e.g.,
+  * L1Kernel) will throw an [[IllegalArgumentException]].
   */
 private[df] class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
 
@@ -47,13 +50,21 @@ private[df] class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
       featuresCol: String,
       weightCol: Option[String],
       k: Int,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
+
+    require(
+      kernel.isInstanceOf[BregmanKernel],
+      s"GradMeanUDAFUpdate requires a BregmanKernel (with grad/invGrad), " +
+        s"but got ${kernel.getClass.getSimpleName} (${kernel.name}). " +
+        s"Use MedianUpdateStrategy for non-Bregman kernels like L1."
+    )
+    val bregmanKernel = kernel.asInstanceOf[BregmanKernel]
 
     logDebug(s"GradMeanUDAFUpdate: computing centers for k=$k clusters")
 
     val spark    = assigned.sparkSession
-    val bcKernel = spark.sparkContext.broadcast(kernel)
+    val bcKernel = spark.sparkContext.broadcast(bregmanKernel)
 
     // UDF to compute gradient
     val gradUDF = udf { (features: Vector) =>
@@ -108,7 +119,7 @@ private[df] class GradMeanUDAFUpdate extends UpdateStrategy with Logging {
       clusterSums.get(clusterId).flatMap { case (gradSum, weightSum) =>
         if (weightSum > 0.0) {
           val meanGrad = gradSum.map(_ / weightSum)
-          Some(kernel.invGrad(Vectors.dense(meanGrad)).toArray)
+          Some(bregmanKernel.invGrad(Vectors.dense(meanGrad)).toArray)
         } else {
           // Cluster has only zero-weight points - skip it
           // (will be handled by EmptyClusterHandler)
@@ -138,7 +149,7 @@ private[df] class MedianUpdateStrategy extends UpdateStrategy with Logging {
       featuresCol: String,
       weightCol: Option[String],
       k: Int,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
 
     logDebug(s"MedianUpdateStrategy: computing medians for k=$k clusters")

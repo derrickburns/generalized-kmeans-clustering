@@ -4,7 +4,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 
 /** Strategy for checking convergence.
   */
@@ -33,7 +33,7 @@ trait ConvergenceCheck extends Serializable {
       assigned: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Double, Double)
 }
 
@@ -49,7 +49,7 @@ private[df] class MovementConvergence extends ConvergenceCheck with Logging {
       assigned: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Double, Double) = {
 
     // Compute max movement (only for centers that exist in both arrays)

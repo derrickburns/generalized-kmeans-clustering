@@ -1,39 +1,20 @@
 package com.massivedatascience.clusterer.ml.df.kernels
 
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.Vector
 
 /** L1 (Manhattan distance) kernel for K-Medians clustering.
   *
-  * This is NOT a Bregman divergence, but we provide it for K-Medians support. K-Medians uses
-  * component-wise medians instead of gradient-based means.
+  * This is NOT a Bregman divergence. It extends [[ClusteringKernel]] directly because L1 has no
+  * well-defined gradient or inverse gradient. Centers must be computed via component-wise median
+  * (MedianUpdateStrategy), not gradient-based averaging (GradMeanUDAFUpdate).
   *
   *   - Distance: ||x - μ||_1 = ∑_i |x_i - μ_i|
   *   - Centers: component-wise median (not via gradient)
   *   - More robust to outliers than squared Euclidean
   *
-  * Note: This kernel should be paired with MedianUpdateStrategy, not GradMeanUDAFUpdate.
+  * Note: This kernel must be paired with MedianUpdateStrategy, not GradMeanUDAFUpdate.
   */
-private[df] class L1Kernel extends BregmanKernel {
-
-  override def grad(x: Vector): Vector = {
-    // L1 is not differentiable everywhere (non-differentiable at 0)
-    // Use sign function as subgradient
-    val arr    = x.toArray
-    val result = new Array[Double](arr.length)
-    var i      = 0
-    while (i < arr.length) {
-      result(i) = if (arr(i) > 0) 1.0 else if (arr(i) < 0) -1.0 else 0.0
-      i += 1
-    }
-    Vectors.dense(result)
-  }
-
-  override def invGrad(theta: Vector): Vector = {
-    // Inverse of sign function is not well-defined
-    // For K-Medians, we compute medians directly, not via gradient
-    // Return theta as identity (will be overridden by MedianUpdateStrategy)
-    theta
-  }
+private[df] class L1Kernel extends ClusteringKernel {
 
   override def divergence(x: Vector, mu: Vector): Double = {
     // Manhattan distance (L1 norm)

@@ -21,7 +21,7 @@ import org.apache.spark.ml.linalg.{ SparseVector, Vector, Vectors }
 
 /** Extended kernel interface for sparse-optimized divergence computation.
   *
-  * This trait extends BregmanKernel with methods optimized for sparse vectors, avoiding
+  * This trait extends ClusteringKernel with methods optimized for sparse vectors, avoiding
   * materialization of dense representations when possible.
   *
   * Key optimizations:
@@ -29,7 +29,7 @@ import org.apache.spark.ml.linalg.{ SparseVector, Vector, Vectors }
   *   - Use sparse iteration over non-zero indices
   *   - Maintain sparse center representations when beneficial
   */
-trait SparseBregmanKernel extends BregmanKernel {
+trait SparseClusteringKernel extends ClusteringKernel {
 
   /** Compute divergence optimized for sparse vectors.
     *
@@ -56,6 +56,12 @@ trait SparseBregmanKernel extends BregmanKernel {
     */
   def preferSparseComputation(sparsity: Double): Boolean = sparsity < 0.5
 }
+
+/** Sparse-optimized Bregman kernel interface.
+  *
+  * Combines Bregman divergence (grad/invGrad) with sparse optimization.
+  */
+trait SparseBregmanKernel extends BregmanKernel with SparseClusteringKernel
 
 /** Sparse-optimized Squared Euclidean kernel.
   *
@@ -215,7 +221,7 @@ class SparseKLKernel(val smoothing: Double = 1e-10) extends SparseBregmanKernel 
   *   - Only iterate over union of non-zero indices
   *   - \|0 - 0| = 0 contributes nothing
   */
-class SparseL1Kernel extends L1Kernel with SparseBregmanKernel {
+class SparseL1Kernel extends L1Kernel with SparseClusteringKernel {
 
   override def divergenceSparse(x: SparseVector, mu: SparseVector): Double = {
     val xIndices  = x.indices
@@ -271,7 +277,7 @@ object SparseBregmanKernel {
     * @return
     *   sparse-optimized kernel if available, or standard kernel
     */
-  def create(divergence: String, smoothing: Double = 1e-10): BregmanKernel = divergence match {
+  def create(divergence: String, smoothing: Double = 1e-10): ClusteringKernel = divergence match {
     case "squaredEuclidean"     => new SparseSEKernel()
     case "kl"                   => new SparseKLKernel(smoothing)
     case "l1" | "manhattan"     => new SparseL1Kernel()

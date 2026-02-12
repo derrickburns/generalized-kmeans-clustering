@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml.df.strategies.impl
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import com.massivedatascience.clusterer.ml.df.strategies.AssignmentStrategy
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
@@ -168,7 +168,7 @@ class AcceleratedSEAssignment extends AssignmentStrategy with Logging {
       featuresCol: String,
       weightCol: Option[String],
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): DataFrame = {
 
     require(
@@ -253,7 +253,7 @@ object AcceleratedAssignment {
     * @return
     *   appropriate assignment strategy
     */
-  def forKernel(kernel: BregmanKernel, k: Int): AssignmentStrategy = {
+  def forKernel(kernel: ClusteringKernel, k: Int): AssignmentStrategy = {
     if (kernel.supportsExpressionOptimization && k >= 5) {
       new AcceleratedSEAssignment()
     } else {

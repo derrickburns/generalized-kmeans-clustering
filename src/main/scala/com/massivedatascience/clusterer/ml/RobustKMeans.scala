@@ -328,7 +328,7 @@ class RobustKMeans(override val uid: String)
   }
 
   private def createKernel(): BregmanKernel = {
-    BregmanKernel.create($(divergence), $(smoothing))
+    ClusteringOps.createKernel($(divergence), $(smoothing)).asInstanceOf[BregmanKernel]
   }
 
   private def initializeCenters(df: DataFrame, kernel: BregmanKernel): Array[Array[Double]] = {
@@ -414,7 +414,7 @@ class RobustKMeansModel(
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     val df     = dataset.toDF()
-    val kernel = BregmanKernel.create(divergenceName, $(smoothing))
+    val kernel = ClusteringOps.createKernel(divergenceName, $(smoothing)).asInstanceOf[BregmanKernel]
     val mode   = OutlierMode.fromString(outlierModeName)
 
     val bcKernel  = df.sparkSession.sparkContext.broadcast(kernel)

@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer.ml.df.strategies
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import org.apache.spark.sql.DataFrame
 
 /** Strategy for assigning points to clusters.
@@ -28,7 +28,7 @@ trait AssignmentStrategy extends Serializable {
     * @param centers
     *   current cluster centers
     * @param kernel
-    *   Bregman kernel
+    *   clustering kernel
     * @return
     *   DataFrame with additional "cluster" column (Int)
     */
@@ -37,6 +37,6 @@ trait AssignmentStrategy extends Serializable {
       featuresCol: String,
       weightCol: Option[String],
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): DataFrame
 }

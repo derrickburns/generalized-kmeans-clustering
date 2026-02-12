@@ -18,7 +18,6 @@
 package com.massivedatascience.clusterer.ml
 
 import com.massivedatascience.clusterer.ml.df._
-import com.massivedatascience.clusterer.ml.df.kernels._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -164,15 +163,15 @@ class MiniBatchKMeans(override val uid: String)
     )
 
     // Validate input data domain requirements
-    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+    ClusteringOps.validateDomain(
       df,
       $(featuresCol),
       $(divergence),
-      maxSamples = Some(1000)
+      maxSamples = 1000
     )
 
     // Create kernel
-    val kernel = createKernel($(divergence), $(smoothing))
+    val kernel = ClusteringOps.createKernel($(divergence), $(smoothing))
 
     // Initialize centers
     val initialCenters = initializeCenters(df, $(featuresCol), kernel)
@@ -215,7 +214,7 @@ class MiniBatchKMeans(override val uid: String)
   private def runMiniBatch(
       df: DataFrame,
       initialCenters: Array[Array[Double]],
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       totalPoints: Long
   ): LloydResult = {
 
@@ -337,29 +336,12 @@ class MiniBatchKMeans(override val uid: String)
     )
   }
 
-  /** Create Bregman kernel. */
-  private def createKernel(divName: String, smooth: Double): BregmanKernel = {
-    divName match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"             => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      =>
-        throw new IllegalArgumentException(
-          s"Unknown divergence: '$divName'. Valid options: squaredEuclidean, kl, itakuraSaito, " +
-            "generalizedI, logistic, l1, manhattan, spherical, cosine"
-        )
-    }
-  }
 
   /** Initialize cluster centers. */
   private def initializeCenters(
       df: DataFrame,
       featuresCol: String,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
     $(initMode) match {
       case "random"    => initializeRandom(df, featuresCol, $(k), $(seed))
@@ -393,7 +375,7 @@ class MiniBatchKMeans(override val uid: String)
       k: Int,
       steps: Int,
       seed: Long,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Array[Double]] = {
     val rand     = new Random(seed)
     val bcKernel = df.sparkSession.sparkContext.broadcast(kernel)

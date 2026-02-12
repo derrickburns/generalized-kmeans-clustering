@@ -17,7 +17,7 @@
 
 package com.massivedatascience.clusterer.ml.df
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -33,7 +33,7 @@ object SoftAssignments {
   def withProbabilities(
       df: DataFrame,
       centers: Array[Vector],
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       beta: Double,
       minMembership: Double,
       featuresCol: String,

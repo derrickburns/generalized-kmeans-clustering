@@ -3,7 +3,7 @@ package com.massivedatascience.clusterer.ml.df.strategies
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.DataFrame
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 
 /** Input validation strategy.
   */
@@ -26,7 +26,7 @@ trait InputValidator extends Serializable {
       df: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Unit
 }
 
@@ -38,7 +38,7 @@ private[df] class StandardInputValidator extends InputValidator with Logging {
       df: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Unit = {
 
     require(

@@ -42,7 +42,7 @@ case class EMConfig(
     k: Int,
     maxIter: Int,
     tol: Double,
-    kernel: BregmanKernel,
+    kernel: ClusteringKernel,
     regularization: Double = 0.0,
     checkpointInterval: Int = 10,
     checkpointDir: Option[String] = None
@@ -215,7 +215,7 @@ class BregmanEMIterator extends AbstractClusteringIterator {
       weightCol: Option[String],
       centers: Array[Array[Double]],
       weights: Array[Double],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (DataFrame, Double) = {
     val spark      = df.sparkSession
     val k          = centers.length

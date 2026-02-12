@@ -3,12 +3,11 @@ package com.massivedatascience.clusterer.ml
 import com.massivedatascience.clusterer.ml.df._
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.linalg.{ Vector, Vectors }
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util.{ DefaultParamsReadable, DefaultParamsWritable, Identifiable }
-import org.apache.spark.sql.{ DataFrame, Dataset }
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.types.StructType
-import scala.util.Random
 
 /** Generalized K-Means clustering with pluggable Bregman divergences.
   *
@@ -188,25 +187,29 @@ class GeneralizedKMeans(override val uid: String)
     )
 
     // Validate input data domain requirements for the selected divergence
-    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
-      df,
-      $(featuresCol),
-      $(divergence),
-      maxSamples = Some(1000) // Check first 1000 rows for performance
-    )
+    ClusteringOps.validateDomain(df, $(featuresCol), $(divergence))
 
     // Create kernel
-    val kernel = createKernel($(divergence), $(smoothing))
+    val kernel = ClusteringOps.createKernel($(divergence), $(smoothing))
 
     // Initialize centers
-    val initialCenters = initializeCenters(df, $(featuresCol), getWeightColOpt, kernel)
+    val initialCenters = CenterInitializer.initialize(
+      df,
+      $(featuresCol),
+      getWeightColOpt,
+      $(k),
+      $(initMode),
+      $(initSteps),
+      $(seed),
+      kernel
+    )
 
     logInfo(s"Initialized ${initialCenters.length} centers using ${$(initMode)}")
 
     // Create strategies
-    val assigner     = createAssignmentStrategy($(assignmentStrategy))
-    val updater      = createUpdateStrategy($(divergence))
-    val emptyHandler = createEmptyClusterHandler($(emptyClusterStrategy), $(seed))
+    val assigner     = ClusteringOps.createAssignmentStrategy($(assignmentStrategy))
+    val updater      = ClusteringOps.createUpdateStrategy($(divergence))
+    val emptyHandler = ClusteringOps.createEmptyClusterHandler($(emptyClusterStrategy), $(seed))
     val convergence  = new MovementConvergence()
     val validator    = new StandardInputValidator()
 
@@ -276,198 +279,6 @@ class GeneralizedKMeans(override val uid: String)
     if (hasWeightCol) Some($(weightCol)) else None
   }
 
-  /** Create Bregman kernel based on divergence name.
-    */
-  private def createKernel(divName: String, smooth: Double): BregmanKernel = {
-    divName match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"             => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      =>
-        throw new IllegalArgumentException(
-          s"Unknown divergence: '$divName'. " +
-            s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan, spherical, cosine"
-        )
-    }
-  }
-
-  /** Create assignment strategy.
-    */
-  private def createAssignmentStrategy(strategy: String): AssignmentStrategy = {
-    strategy match {
-      case "broadcast" => new BroadcastUDFAssignment()
-      case "crossJoin" => new SECrossJoinAssignment()
-      case "auto"      => new AutoAssignment()
-      case _           =>
-        throw new IllegalArgumentException(
-          s"Unknown assignment strategy: '$strategy'. Valid options: auto, broadcast, crossJoin"
-        )
-    }
-  }
-
-  /** Create update strategy based on divergence. L1/Manhattan distance uses MedianUpdateStrategy,
-    * others use GradMeanUDAFUpdate.
-    */
-  private def createUpdateStrategy(divName: String): UpdateStrategy = {
-    divName match {
-      case "l1" | "manhattan" => new MedianUpdateStrategy()
-      case _                  => new GradMeanUDAFUpdate()
-    }
-  }
-
-  /** Create empty cluster handler.
-    */
-  private def createEmptyClusterHandler(strategy: String, seed: Long): EmptyClusterHandler = {
-    strategy match {
-      case "reseedRandom" => new ReseedRandomHandler(seed)
-      case "drop"         => new DropEmptyClustersHandler()
-      case _              =>
-        throw new IllegalArgumentException(
-          s"Unknown empty cluster strategy: '$strategy'. Valid options: reseedRandom, drop"
-        )
-    }
-  }
-
-  /** Initialize cluster centers.
-    */
-  private def initializeCenters(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      kernel: BregmanKernel
-  ): Array[Array[Double]] = {
-
-    $(initMode) match {
-      case "random"    => initializeRandom(df, featuresCol, $(k), $(seed))
-      case "k-means||" =>
-        initializeKMeansPlusPlus(df, featuresCol, weightCol, $(k), $(initSteps), $(seed), kernel)
-      case _           =>
-        throw new IllegalArgumentException(
-          s"Unknown init mode: '${$(initMode)}'. Valid options: random, k-means||"
-        )
-    }
-  }
-
-  /** Random initialization: sample k random points.
-    */
-  private def initializeRandom(
-      df: DataFrame,
-      featuresCol: String,
-      k: Int,
-      seed: Long
-  ): Array[Array[Double]] = {
-
-    val fraction = math.min(1.0, (k * 10.0) / df.count().toDouble)
-    df.select(featuresCol)
-      .sample(withReplacement = false, fraction, seed)
-      .limit(k)
-      .collect()
-      .map(_.getAs[Vector](0).toArray)
-  }
-
-  /** K-means++ initialization with Bregman divergence.
-    *
-    * This implements the D^2 weighting scheme of k-means++ using the actual Bregman divergence,
-    * ensuring proper initialization for any divergence (KL, Itakura-Saito, etc.).
-    *
-    * Algorithm:
-    *   1. Select first center uniformly at random 2. For each subsequent center:
-    *      - Compute D(x, nearest_center) for all points x
-    *      - Select next center with probability proportional to D(x, nearest_center) 3. Repeat
-    *        until k centers are selected
-    *
-    * This properly uses the specified Bregman divergence for distance-proportional sampling, which
-    * leads to better initialization quality compared to using squared Euclidean for all
-    * divergences.
-    */
-  private def initializeKMeansPlusPlus(
-      df: DataFrame,
-      featuresCol: String,
-      weightCol: Option[String],
-      k: Int,
-      steps: Int,
-      seed: Long,
-      kernel: BregmanKernel
-  ): Array[Array[Double]] = {
-
-    val rand = new Random(seed)
-
-    // Collect all points for local k-means++ (efficient for moderate dataset sizes)
-    val allPoints = df.select(featuresCol).collect().map(_.getAs[Vector](0))
-    require(
-      allPoints.nonEmpty,
-      s"Dataset is empty. Cannot initialize k-means++ with k=$k on an empty dataset."
-    )
-
-    val n = allPoints.length
-    logInfo(s"Running Bregman-native k-means++ on $n points with ${kernel.name} divergence")
-
-    // Step 1: Select first center uniformly at random
-    val centers = scala.collection.mutable.ArrayBuffer.empty[Array[Double]]
-    centers += allPoints(rand.nextInt(n)).toArray
-
-    // Array to store distance to nearest center for each point
-    val minDistances = Array.fill(n)(Double.PositiveInfinity)
-
-    // Steps 2-k: Select centers with probability proportional to divergence
-    while (centers.length < k) {
-      // Update minimum distances with respect to the most recently added center
-      val lastCenter = Vectors.dense(centers.last)
-      var totalDist  = 0.0
-
-      var i = 0
-      while (i < n) {
-        val dist = kernel.divergence(allPoints(i), lastCenter)
-        if (dist < minDistances(i)) {
-          minDistances(i) = dist
-        }
-        // Handle potential numerical issues
-        if (java.lang.Double.isFinite(minDistances(i))) {
-          totalDist += minDistances(i)
-        }
-        i += 1
-      }
-
-      // If all distances are zero or invalid, fall back to random selection
-      if (totalDist <= 0.0 || !java.lang.Double.isFinite(totalDist)) {
-        // All points are duplicates or numerical issues - select random point
-        centers += allPoints(rand.nextInt(n)).toArray
-        logInfo(s"K-means++ step ${centers.length}: fallback to random selection")
-      } else {
-        // Sample with probability proportional to distance (D^2 weighting)
-        val threshold = rand.nextDouble() * totalDist
-        var cumSum    = 0.0
-        var selected  = -1
-        i = 0
-
-        while (i < n && selected < 0) {
-          if (java.lang.Double.isFinite(minDistances(i))) {
-            cumSum += minDistances(i)
-          }
-          if (cumSum >= threshold) {
-            selected = i
-          }
-          i += 1
-        }
-
-        // Fallback to last point if numerical issues
-        if (selected < 0) selected = n - 1
-
-        centers += allPoints(selected).toArray
-
-        if (centers.length % 10 == 0 || centers.length == k) {
-          logInfo(s"K-means++ progress: ${centers.length}/$k centers selected")
-        }
-      }
-    }
-
-    logInfo(s"K-means++ initialization complete: selected $k centers using ${kernel.name}")
-    centers.toArray
-  }
 }
 
 object GeneralizedKMeans extends DefaultParamsReadable[GeneralizedKMeans] {

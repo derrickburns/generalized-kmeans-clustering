@@ -248,7 +248,7 @@ class DPMeans(override val uid: String)
     val tolVal     = $(tol)
     val smooth     = $(smoothing)
 
-    val kernel = createKernel($(divergence), smooth)
+    val kernel = ClusteringOps.createKernel($(divergence), smooth)
 
     logInfo(s"Starting DP-Means with lambda=$lambdaVal, maxK=$maxKVal, maxIter=$maxIterVal")
 
@@ -325,7 +325,7 @@ class DPMeans(override val uid: String)
       if (!newClustersCreated) {
         // Only update centers if no new clusters were created (stabilization phase)
         val weightColOpt = if (hasWeightCol) Some($(weightCol)) else None
-        val updater      = createUpdater($(divergence))
+        val updater      = ClusteringOps.createUpdateStrategy($(divergence))
 
         val newCentersArray = updater.update(
           assigned.select(col(featCol), col("cluster")).toDF(featCol, "cluster"),
@@ -365,29 +365,6 @@ class DPMeans(override val uid: String)
     copyValues(model)
   }
 
-  private def createKernel(divergence: String, smoothing: Double): BregmanKernel = {
-    divergence match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smoothing)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
-      case "logistic"             => new LogisticLossKernel(smoothing)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      =>
-        throw new IllegalArgumentException(
-          s"Unknown divergence: '$divergence'. " +
-            s"Valid options: squaredEuclidean, kl, itakuraSaito, generalizedI, logistic, l1, manhattan, spherical, cosine"
-        )
-    }
-  }
-
-  private def createUpdater(divergence: String): UpdateStrategy = {
-    divergence match {
-      case "l1" | "manhattan" => new MedianUpdateStrategy()
-      case _                  => new GradMeanUDAFUpdate()
-    }
-  }
 
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)
@@ -418,7 +395,7 @@ class DPMeansModel private[ml] (
     val predCol = $(predictionCol)
     val smooth  = $(smoothing)
 
-    val kernel       = createKernel($(divergence), smooth)
+    val kernel       = ClusteringOps.createKernel($(divergence), smooth)
     val centersArray = clusterCenters.map(_.toArray)
 
     val spark     = df.sparkSession
@@ -460,18 +437,6 @@ class DPMeansModel private[ml] (
     result
   }
 
-  private def createKernel(divergence: String, smoothing: Double): BregmanKernel = {
-    divergence match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smoothing)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
-      case "logistic"             => new LogisticLossKernel(smoothing)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      => new SquaredEuclideanKernel()
-    }
-  }
 
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)

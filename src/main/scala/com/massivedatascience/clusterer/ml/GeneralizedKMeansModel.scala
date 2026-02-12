@@ -218,7 +218,7 @@ class GeneralizedKMeansModel(
 
   /** Create Bregman kernel based on kernel name.
     */
-  private def createKernel(kernelName: String, smoothing: Double): BregmanKernel = {
+  private def createKernel(kernelName: String, smoothing: Double): ClusteringKernel = {
     import com.massivedatascience.clusterer.ml.df.kernels.KernelFactory
     // Map stored kernel names to divergence names for KernelFactory
     val divergence = kernelName match {
@@ -450,7 +450,7 @@ class GeneralizedKMeansSummary(
     val predictionCol: String,
     val featuresCol: String,
     val clusterCenters: Array[Array[Double]],
-    val kernel: BregmanKernel,
+    val kernel: ClusteringKernel,
     val numClusters: Int,
     val numFeatures: Int,
     val numIter: Int,

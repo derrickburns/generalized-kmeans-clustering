@@ -18,7 +18,7 @@
 package com.massivedatascience.clusterer.ml
 
 import com.massivedatascience.clusterer.ml.df._
-import com.massivedatascience.clusterer.ml.df.kernels._
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -191,10 +191,21 @@ class BalancedKMeans(override val uid: String)
     )
 
     // Create kernel
-    val kernel = createKernel($(divergence), $(smoothing))
+    val kernel = ClusteringOps.createKernel($(divergence), $(smoothing))
 
     // Initialize centers
-    val initialCenters = initializeCenters(df, $(featuresCol), kernel)
+    val initialCenters = CenterInitializer
+      .initialize(
+        df,
+        $(featuresCol),
+        weightCol = None,
+        $(k),
+        $(initMode),
+        $(initSteps),
+        $(seed),
+        kernel
+      )
+      .map(arr => Vectors.dense(arr))
 
     logInfo(s"Initialized ${initialCenters.length} centers using ${$(initMode)}")
 
@@ -239,7 +250,7 @@ class BalancedKMeans(override val uid: String)
   private def runBalancedLloyds(
       df: DataFrame,
       initialCenters: Array[Vector],
-      kernel: BregmanKernel,
+      kernel: ClusteringKernel,
       minSize: Int,
       maxSize: Int
   ): LloydResult = {
@@ -502,68 +513,6 @@ class BalancedKMeans(override val uid: String)
     withDistances.withColumn("_assignment", assignUdf(col("_row_id")))
   }
 
-  private def createKernel(divergenceName: String, smoothing: Double): BregmanKernel = {
-    divergenceName.toLowerCase match {
-      case "squaredeuclidean" | "se" | "euclidean" => new SquaredEuclideanKernel()
-      case "kl" | "kullbackleibler"                => new KLDivergenceKernel(smoothing)
-      case "itakurasaito" | "is"                   => new ItakuraSaitoKernel(smoothing)
-      case "l1" | "manhattan"                      => new L1Kernel()
-      case "spherical" | "cosine"                  => new SphericalKernel()
-      case "generalizedi" | "gi"                   => new GeneralizedIDivergenceKernel(smoothing)
-      case "logistic"                              => new LogisticLossKernel()
-      case other                                   => throw new IllegalArgumentException(s"Unknown divergence: $other")
-    }
-  }
-
-  private def initializeCenters(
-      df: DataFrame,
-      featuresCol: String,
-      kernel: BregmanKernel
-  ): Array[Vector] = {
-    val rng = new Random($(seed))
-
-    $(initMode).toLowerCase match {
-      case "random" =>
-        val fraction = math.min(1.0, $(k).toDouble / df.count() * 10)
-        df.select(featuresCol)
-          .sample(withReplacement = false, fraction, $(seed))
-          .limit($(k))
-          .collect()
-          .map(_.getAs[Vector](0))
-
-      case "k-means||" | "kmeansparallel" =>
-        // Simplified k-means|| initialization
-        val allPoints = df.select(featuresCol).collect().map(_.getAs[Vector](0))
-        if (allPoints.length <= $(k)) {
-          allPoints
-        } else {
-          val centers = scala.collection.mutable.ArrayBuffer.empty[Vector]
-          centers += allPoints(rng.nextInt(allPoints.length))
-
-          while (centers.length < $(k)) {
-            val currentCenters           = centers.toArray
-            val distances: Array[Double] = allPoints.map { point =>
-              val dists: Array[Double] = currentCenters.map(c => kernel.divergence(point, c))
-              dists.min
-            }
-            val totalDist: Double        = distances.sum
-            if (totalDist > 0) {
-              val probabilities: Array[Double] = distances.map(d => d / totalDist)
-              val cumProbs: Array[Double]      = probabilities.scanLeft(0.0)((a, b) => a + b).tail
-              val r                            = rng.nextDouble()
-              val idx                          = cumProbs.indexWhere(_ >= r)
-              centers += allPoints(if (idx >= 0) idx else allPoints.length - 1)
-            } else {
-              centers += allPoints(rng.nextInt(allPoints.length))
-            }
-          }
-          centers.toArray
-        }
-
-      case other =>
-        throw new IllegalArgumentException(s"Unknown initialization mode: $other")
-    }
-  }
 
   override def transformSchema(schema: StructType): StructType = {
     require(

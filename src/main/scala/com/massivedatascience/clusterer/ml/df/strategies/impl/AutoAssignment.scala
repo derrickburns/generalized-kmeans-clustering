@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer.ml.df.strategies.impl
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import com.massivedatascience.clusterer.ml.df.strategies.AssignmentStrategy
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
@@ -43,7 +43,7 @@ private[df] class AutoAssignment(broadcastThresholdElems: Int = 200000, chunkSiz
       featuresCol: String,
       weightCol: Option[String],
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): DataFrame = {
 
     val k         = centers.length

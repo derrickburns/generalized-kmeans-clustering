@@ -503,7 +503,7 @@ object LloydsIteratorFactory {
     * @return
     *   appropriate LloydsIterator implementation
     */
-  def create(kernel: BregmanKernel, k: Int, useAcceleration: Boolean = true): LloydsIterator = {
+  def create(kernel: ClusteringKernel, k: Int, useAcceleration: Boolean = true): LloydsIterator = {
     if (useAcceleration && kernel.supportsExpressionOptimization && k >= 5) {
       new ElkanLloydsIterator()
     } else {

@@ -3,7 +3,7 @@ package com.massivedatascience.clusterer.ml.df.strategies
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.DataFrame
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 
 /** Strategy for handling empty clusters.
   */
@@ -32,7 +32,7 @@ trait EmptyClusterHandler extends Serializable {
       weightCol: Option[String],
       centers: Array[Array[Double]],
       originalDF: DataFrame,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Array[Array[Double]], Int)
 }
 
@@ -48,7 +48,7 @@ private[df] class ReseedRandomHandler(seed: Long = System.currentTimeMillis())
       weightCol: Option[String],
       centers: Array[Array[Double]],
       originalDF: DataFrame,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Array[Array[Double]], Int) = {
 
     val k = centers.length
@@ -85,7 +85,7 @@ private[df] class DropEmptyClustersHandler extends EmptyClusterHandler with Logg
       weightCol: Option[String],
       centers: Array[Array[Double]],
       originalDF: DataFrame,
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Array[Array[Double]], Int) = {
 
     (centers, 0) // Just return what we have

@@ -231,7 +231,7 @@ class StreamingKMeansModel(
   // Mutable state for streaming updates (array contents are mutated, not references)
   @transient private val centerArrays: Array[Vector]   = initialCenters.map(Vectors.dense)
   @transient private val clusterWeights: Array[Double] = Array.fill(initialCenters.length)(1.0)
-  @transient private lazy val kernel: BregmanKernel    = createKernel(divergenceName, smoothingValue)
+  @transient private lazy val kernel: ClusteringKernel  = createKernel(divergenceName, smoothingValue)
 
   /** Get current cluster centers as Vectors (defensive copy).
     */
@@ -263,18 +263,8 @@ class StreamingKMeansModel(
 
   /** Create Bregman kernel from divergence name.
     */
-  private def createKernel(divName: String, smooth: Double): BregmanKernel = {
-    divName match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      =>
-        logWarning(s"Unknown divergence $divName, using squared Euclidean")
-        new SquaredEuclideanKernel()
-    }
+  private def createKernel(divName: String, smooth: Double): ClusteringKernel = {
+    ClusteringOps.createKernel(divName, smooth)
   }
 
   /** Update the model with a new batch of data.

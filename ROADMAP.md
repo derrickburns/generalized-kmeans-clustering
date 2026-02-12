@@ -143,6 +143,8 @@ These frameworks unblock multiple roadmap items; prefer delivering them before d
 | 2024 | Keep L1 listed alongside Bregman divergences | Practical utility outweighs theoretical purity |
 | 2025-12-15 | Prioritize robust/sparse/multi-view work next | Highest user demand and unlocks downstream variants |
 | 2025-12-15 | Maintain kernels in a single module (`BregmanKernel.scala`) | Consistency and discoverability |
+| 2026-02-11 | Introduced `ClusteringKernel` as root trait; reclassified L1Kernel | L1 is not a true Bregman divergence; type system now prevents misuse with GradMeanUDAFUpdate |
+| 2026-02-11 | Created `ClusteringOps` and `CenterInitializer` shared utilities | Centralized factory methods and k-means++ initialization; eliminates copy-paste across estimators |
 | 2025-12-15 | Use phased delivery for accelerations and new iterators | Keep CI stable while iterating |
 | 2025-12-16 | Created `KernelFactory` for unified kernel creation | Single API for dense/sparse kernels, reduces duplication |
 | 2025-12-16 | Moved assignment strategies to `impl/` subpackage | Better organization, backward-compatible via type aliases |

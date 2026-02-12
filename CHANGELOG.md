@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Kernel type hierarchy refactor:** Introduced `ClusteringKernel` as the root trait for all clustering kernels. `BregmanKernel` now extends `ClusteringKernel` and adds `grad`/`invGrad` declarations. `L1Kernel` reclassified to extend `ClusteringKernel` directly (not `BregmanKernel`) since L1 has no valid gradient/inverse gradient. All consumer signatures widened from `BregmanKernel` to `ClusteringKernel`.
+- **GradMeanUDAFUpdate runtime guard:** Now throws `IllegalArgumentException` with actionable message when passed a non-Bregman kernel (e.g., L1Kernel), preventing silent wrong-answer bugs.
+- **Shared orchestration:** Created `ClusteringOps` object centralizing `createKernel`, `createAssignmentStrategy`, `createUpdateStrategy`, `createEmptyClusterHandler`, and `validateDomain` factory methods. All estimators (GeneralizedKMeans, BisectingKMeans, BalancedKMeans, DPMeans, MiniBatchKMeans, SoftKMeans, StreamingKMeans, CoresetKMeans, ConstrainedKMeans, RobustKMeans) now delegate to `ClusteringOps`.
+- **Shared initialization:** Created `CenterInitializer` utility extracting k-means++ and random initialization from GeneralizedKMeans. GeneralizedKMeans and BalancedKMeans now share the same initialization code.
+- **Sparse kernel hierarchy:** Added `SparseClusteringKernel` trait; `SparseBregmanKernel` extends both `BregmanKernel` and `SparseClusteringKernel`. `SparseL1Kernel` correctly extends `L1Kernel with SparseClusteringKernel`.
+- Backward compatibility maintained via type aliases in package objects.
+
 ### Added
 - Comprehensive CI validation DAG with cross-version testing
 - SECURITY.md with vulnerability reporting guidelines

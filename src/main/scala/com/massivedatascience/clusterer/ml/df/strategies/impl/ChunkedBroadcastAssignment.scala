@@ -1,6 +1,6 @@
 package com.massivedatascience.clusterer.ml.df.strategies.impl
 
-import com.massivedatascience.clusterer.ml.df.BregmanKernel
+import com.massivedatascience.clusterer.ml.df.kernels.ClusteringKernel
 import com.massivedatascience.clusterer.ml.df.strategies.AssignmentStrategy
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{ Vector, Vectors }
@@ -28,7 +28,7 @@ private[df] class ChunkedBroadcastAssignment(chunkSize: Int = 100)
       featuresCol: String,
       weightCol: Option[String],
       centers: Array[Array[Double]],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): DataFrame = {
 
     val k = centers.length

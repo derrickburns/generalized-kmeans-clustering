@@ -33,7 +33,7 @@ package object df {
     *   BregmanKernel instance
     */
   object BregmanKernel {
-    def create(divergence: String, smoothing: Double = 1e-10): kernels.BregmanKernel =
+    def create(divergence: String, smoothing: Double = 1e-10): kernels.ClusteringKernel =
       divergence.toLowerCase match {
         case "squaredeuclidean" | "se" | "euclidean" => new kernels.SquaredEuclideanKernel()
         case "kl" | "kullbackleibler"                => new kernels.KLDivergenceKernel(smoothing)
@@ -75,6 +75,7 @@ package object df {
   type StandardInputValidator = strategies.StandardInputValidator
 
   // Kernel types (from kernels subpackage)
+  type ClusteringKernel             = kernels.ClusteringKernel
   type BregmanKernel                = kernels.BregmanKernel
   type SquaredEuclideanKernel       = kernels.SquaredEuclideanKernel
   type KLDivergenceKernel           = kernels.KLDivergenceKernel

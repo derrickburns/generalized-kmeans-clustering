@@ -144,15 +144,15 @@ class BisectingKMeans(override val uid: String)
     )
 
     // Validate input data domain requirements for the selected divergence
-    com.massivedatascience.util.DivergenceDomainValidator.validateDataFrame(
+    ClusteringOps.validateDomain(
       df,
       $(featuresCol),
       $(divergence),
-      maxSamples = Some(1000)
+      maxSamples = 1000
     )
 
     // Create kernel
-    val kernel = createKernel($(divergence), $(smoothing))
+    val kernel = ClusteringOps.createKernel($(divergence), $(smoothing))
 
     // Bisecting algorithm with timing
     val startTime                 = System.currentTimeMillis()
@@ -203,7 +203,7 @@ class BisectingKMeans(override val uid: String)
       df: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Array[Array[Double]], Int) = {
 
     val targetK = $(k)
@@ -324,7 +324,7 @@ class BisectingKMeans(override val uid: String)
       clusterData: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): (Array[Double], Array[Double]) = {
 
     // Drop the "cluster" column if it exists to avoid conflicts with assignment strategy
@@ -348,8 +348,8 @@ class BisectingKMeans(override val uid: String)
     )
 
     // Create strategies for k=2 clustering
-    val assigner = createAssignmentStrategy("auto")
-    val updater  = createUpdateStrategy($(divergence))
+    val assigner = ClusteringOps.createAssignmentStrategy("auto")
+    val updater  = ClusteringOps.createUpdateStrategy($(divergence))
 
     // Run Lloyd's for a few iterations
     var iteration = 0
@@ -389,10 +389,10 @@ class BisectingKMeans(override val uid: String)
       data: DataFrame,
       featuresCol: String,
       weightCol: Option[String],
-      kernel: BregmanKernel
+      kernel: ClusteringKernel
   ): Array[Double] = {
 
-    val updater = createUpdateStrategy($(divergence))
+    val updater = ClusteringOps.createUpdateStrategy($(divergence))
     val centers = updater.update(
       data.withColumn("cluster", lit(0)),
       featuresCol,
@@ -402,41 +402,6 @@ class BisectingKMeans(override val uid: String)
     )
 
     if (centers.nonEmpty) centers(0) else Array.empty[Double]
-  }
-
-  /** Create Bregman kernel based on divergence name.
-    */
-  private def createKernel(divName: String, smooth: Double): BregmanKernel = {
-    divName match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smooth)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smooth)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smooth)
-      case "logistic"             => new LogisticLossKernel(smooth)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      => throw new IllegalArgumentException(s"Unknown divergence: $divName")
-    }
-  }
-
-  /** Create assignment strategy.
-    */
-  private def createAssignmentStrategy(strategy: String): AssignmentStrategy = {
-    strategy match {
-      case "broadcast" => new BroadcastUDFAssignment()
-      case "crossJoin" => new SECrossJoinAssignment()
-      case "auto"      => new AutoAssignment()
-      case _           => throw new IllegalArgumentException(s"Unknown assignment strategy: $strategy")
-    }
-  }
-
-  /** Create update strategy based on divergence.
-    */
-  private def createUpdateStrategy(divName: String): UpdateStrategy = {
-    divName match {
-      case "l1" | "manhattan" => new MedianUpdateStrategy()
-      case _                  => new GradMeanUDAFUpdate()
-    }
   }
 
   override def transformSchema(schema: StructType): StructType = {
