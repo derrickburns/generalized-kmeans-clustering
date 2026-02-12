@@ -41,7 +41,7 @@ jobs:
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           sbt ++2.13.14 \
-            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "central.sonatype.com", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
             'set pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)' \
             clean compile publishSigned
 
@@ -52,7 +52,7 @@ jobs:
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           sbt ++2.12.18 \
-            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "central.sonatype.com", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
             'set pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)' \
             clean compile publishSigned
 
@@ -62,5 +62,5 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           sbt \
-            'set credentials += Credentials("Sonatype Nexus Repository Manager", "s01.oss.sonatype.org", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
+            'set credentials += Credentials("Sonatype Nexus Repository Manager", "central.sonatype.com", sys.env("SONATYPE_USERNAME"), sys.env("SONATYPE_PASSWORD"))' \
             sonatypeBundleRelease

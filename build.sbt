@@ -67,11 +67,10 @@ javacOptions ++= (if (javaMajor <= 8) Seq("-source", "1.8", "-target", "1.8") el
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
 
-    // Sonatype settings
+    // Sonatype Central Portal settings
     sonatypeProfileName := "com.massivedatascience"
     publishTo := sonatypePublishToBundle.value
-    sonatypeCredentialHost := "s01.oss.sonatype.org"
-    sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+    sonatypeCredentialHost := "central.sonatype.com"
 
     // POM metadata required by Maven Central
     homepage := Some(url("https://github.com/derrickburns/generalized-kmeans-clustering"))
