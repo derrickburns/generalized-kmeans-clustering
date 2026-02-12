@@ -39,9 +39,8 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.2.2")
 // Resolve scala-xml version conflict between scoverage and scalariform
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
-// Publishing plugins
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.21")
-addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
+// Publishing to Maven Central via Central Portal (requires sbt 1.11+)
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
 
 // Documentation
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")

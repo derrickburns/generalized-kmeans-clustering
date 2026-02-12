@@ -67,10 +67,7 @@ javacOptions ++= (if (javaMajor <= 8) Seq("-source", "1.8", "-target", "1.8") el
     Test / publishArtifact := false
     pomIncludeRepository := { _ => false }
 
-    // Sonatype Central Portal settings
-    sonatypeProfileName := "com.massivedatascience"
-    publishTo := sonatypePublishToBundle.value
-    sonatypeCredentialHost := "central.sonatype.com"
+    // sbt-ci-release 1.11+ publishes to Central Portal by default
 
     // POM metadata required by Maven Central
     homepage := Some(url("https://github.com/derrickburns/generalized-kmeans-clustering"))
