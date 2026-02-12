@@ -369,39 +369,62 @@ class SparseKMeans(override val uid: String)
       kernel: ClusteringKernel,
       numClusters: Int
   ): Array[Vector] = {
-    val bregmanKernel = kernel.asInstanceOf[BregmanKernel]
-    val bcKernel      = assigned.sparkSession.sparkContext.broadcast(bregmanKernel)
-
-    val gradUDF = udf { (features: Vector) =>
-      bcKernel.value.grad(features).toArray
-    }
-
-    val withGrad = assigned.withColumn("_grad", gradUDF(col($(featuresCol))))
-
     val dim = assigned.select($(featuresCol)).head().getAs[Vector](0).size
 
-    val aggregated = withGrad
-      .groupBy("_cluster")
-      .agg(
-        count("*").as("count"),
-        array((0 until dim).map(i => sum(element_at(col("_grad"), i + 1))): _*).as("grad_sum")
-      )
-      .collect()
+    kernel match {
+      case bk: BregmanKernel =>
+        // Use gradient-based update for Bregman divergences
+        val bcKernel = assigned.sparkSession.sparkContext.broadcast(bk)
 
-    val centers = Array.fill(numClusters)(Vectors.zeros(dim))
-    aggregated.foreach { row =>
-      val clusterId = row.getInt(0)
-      if (clusterId >= 0 && clusterId < numClusters) {
-        val count   = row.getLong(1)
-        val gradSum = row.getSeq[Double](2).toArray
-        if (count > 0) {
-          val avgGrad = Vectors.dense(gradSum.map(_ / count))
-          centers(clusterId) = bcKernel.value.invGrad(avgGrad)
+        val gradUDF = udf { (features: Vector) =>
+          bcKernel.value.grad(features).toArray
         }
-      }
-    }
 
-    centers
+        val withGrad = assigned.withColumn("_grad", gradUDF(col($(featuresCol))))
+
+        val aggregated = withGrad
+          .groupBy("_cluster")
+          .agg(
+            count("*").as("count"),
+            array((0 until dim).map(i => sum(element_at(col("_grad"), i + 1))): _*).as("grad_sum")
+          )
+          .collect()
+
+        val centers = Array.fill(numClusters)(Vectors.zeros(dim))
+        aggregated.foreach { row =>
+          val clusterId = row.getInt(0)
+          if (clusterId >= 0 && clusterId < numClusters) {
+            val count   = row.getLong(1)
+            val gradSum = row.getSeq[Double](2).toArray
+            if (count > 0) {
+              val avgGrad = Vectors.dense(gradSum.map(_ / count))
+              centers(clusterId) = bcKernel.value.invGrad(avgGrad)
+            }
+          }
+        }
+
+        centers
+
+      case _ =>
+        // Non-Bregman kernels (e.g., L1): use component-wise median via
+        // MedianUpdateStrategy, which correctly minimizes L1 distance.
+        val updateStrategy = ClusteringOps.createUpdateStrategy("l1")
+        val renamed        = assigned.withColumnRenamed("_cluster", "cluster")
+        val medianCenters  = updateStrategy.update(
+          renamed,
+          $(featuresCol),
+          weightCol = None,
+          k = numClusters,
+          kernel
+        )
+        // MedianUpdateStrategy may return fewer centers (drops empty clusters).
+        // Pad back to numClusters with zeros.
+        val centers        = Array.fill(numClusters)(Vectors.zeros(dim))
+        medianCenters.zipWithIndex.foreach { case (c, i) =>
+          if (i < numClusters) centers(i) = Vectors.dense(c)
+        }
+        centers
+    }
   }
 
   private def computeMovement(

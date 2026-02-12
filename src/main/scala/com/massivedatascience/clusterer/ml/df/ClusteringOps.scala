@@ -50,13 +50,16 @@ private[ml] object ClusteringOps extends Logging {
     "spherical"
   )
 
-  /** All supported divergence names and aliases. */
+  /** All supported divergence names and aliases (lowercased for case-insensitive matching). */
   private val validDivergenceNames: Set[String] = Set(
-    "squaredEuclidean",
+    "squaredeuclidean",
+    "se",
     "kl",
-    "itakuraSaito",
-    "generalizedI",
+    "itakurasaito",
+    "is",
+    "generalizedi",
     "logistic",
+    "logisticloss",
     "l1",
     "manhattan",
     "spherical",
@@ -75,15 +78,15 @@ private[ml] object ClusteringOps extends Logging {
     *   if divergence name is unknown
     */
   def createKernel(divergence: String, smoothing: Double = 1e-10): ClusteringKernel = {
-    divergence match {
-      case "squaredEuclidean"     => new SquaredEuclideanKernel()
-      case "kl"                   => new KLDivergenceKernel(smoothing)
-      case "itakuraSaito"         => new ItakuraSaitoKernel(smoothing)
-      case "generalizedI"         => new GeneralizedIDivergenceKernel(smoothing)
-      case "logistic"             => new LogisticLossKernel(smoothing)
-      case "l1" | "manhattan"     => new L1Kernel()
-      case "spherical" | "cosine" => new SphericalKernel()
-      case _                      =>
+    divergence.toLowerCase match {
+      case "squaredeuclidean" | "se"   => new SquaredEuclideanKernel()
+      case "kl"                        => new KLDivergenceKernel(smoothing)
+      case "itakurasaito" | "is"       => new ItakuraSaitoKernel(smoothing)
+      case "generalizedi"              => new GeneralizedIDivergenceKernel(smoothing)
+      case "logistic" | "logisticloss" => new LogisticLossKernel(smoothing)
+      case "l1" | "manhattan"          => new L1Kernel()
+      case "spherical" | "cosine"      => new SphericalKernel()
+      case _                           =>
         throw new IllegalArgumentException(
           s"Unknown divergence: '$divergence'. " +
             s"Valid options: ${supportedDivergences.mkString(", ")}"
@@ -122,7 +125,7 @@ private[ml] object ClusteringOps extends Logging {
     *   configured UpdateStrategy
     */
   def createUpdateStrategy(divergence: String): UpdateStrategy = {
-    divergence match {
+    divergence.toLowerCase match {
       case "l1" | "manhattan" => new MedianUpdateStrategy()
       case _                  => new GradMeanUDAFUpdate()
     }
@@ -181,5 +184,5 @@ private[ml] object ClusteringOps extends Logging {
   /** Check if a divergence name is valid.
     */
   def isValidDivergence(divergence: String): Boolean =
-    validDivergenceNames.contains(divergence)
+    validDivergenceNames.contains(divergence.toLowerCase)
 }
