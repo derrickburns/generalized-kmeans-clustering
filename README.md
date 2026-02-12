@@ -10,10 +10,66 @@
 
 > **Security**: This project follows security best practices. See [SECURITY.md](SECURITY.md) for vulnerability reporting and [dependabot.yml](.github/dependabot.yml) for automated dependency updates.
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.massivedatascience/massivedatascience-clusterer_2.13.svg)](https://central.sonatype.com/artifact/com.massivedatascience/massivedatascience-clusterer_2.13)
+[![PyPI](https://img.shields.io/pypi/v/massivedatascience-clusterer.svg)](https://pypi.org/project/massivedatascience-clusterer/)
+
 **DataFrame-only API** — Version 0.7.0 removes the legacy RDD API entirely.
 The library is now 100% DataFrame/Spark ML native with a clean, modern architecture.
 
 This project generalizes K-Means to multiple Bregman divergences and advanced variants (Bisecting, X-Means, Soft/Fuzzy, Streaming, K-Medians, K-Medoids). It provides a pure DataFrame/ML API following Spark's Estimator/Model pattern.
+
+## Installation
+
+### Scala / SBT
+
+```scala
+// Spark 3.5.x with Scala 2.13
+libraryDependencies += "com.massivedatascience" %% "massivedatascience-clusterer" % "0.7.0"
+
+// Spark 3.5.x with Scala 2.12
+libraryDependencies += "com.massivedatascience" % "massivedatascience-clusterer_2.12" % "0.7.0"
+```
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>com.massivedatascience</groupId>
+  <artifactId>massivedatascience-clusterer_2.13</artifactId>
+  <version>0.7.0</version>
+</dependency>
+```
+
+### spark-submit / spark-shell
+
+```bash
+spark-submit --packages com.massivedatascience:massivedatascience-clusterer_2.13:0.7.0 your-app.jar
+spark-shell --packages com.massivedatascience:massivedatascience-clusterer_2.13:0.7.0
+```
+
+### PySpark
+
+```bash
+pip install massivedatascience-clusterer
+```
+
+### Databricks
+
+Upload the JAR as a cluster library, or use an init script:
+```bash
+%pip install massivedatascience-clusterer
+```
+
+For Scala notebooks, add to your cluster's Maven libraries:
+`com.massivedatascience:massivedatascience-clusterer_2.12:0.7.0`
+
+### Version Compatibility
+
+| Spark | Scala 2.13 | Scala 2.12 |
+|-------|-----------|-----------|
+| 4.0.x | ✅ | ❌ (dropped by Spark) |
+| 3.5.x | ✅ | ✅ |
+| 3.4.x | ✅ | ✅ |
 
 ## What's in here
 
