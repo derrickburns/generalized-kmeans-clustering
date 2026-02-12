@@ -513,7 +513,6 @@ class BalancedKMeans(override val uid: String)
     withDistances.withColumn("_assignment", assignUdf(col("_row_id")))
   }
 
-
   override def transformSchema(schema: StructType): StructType = {
     require(
       schema.fieldNames.contains($(featuresCol)),

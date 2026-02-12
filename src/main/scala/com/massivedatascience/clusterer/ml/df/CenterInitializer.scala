@@ -76,10 +76,10 @@ private[ml] object CenterInitializer extends Logging {
       kernel: ClusteringKernel
   ): Array[Array[Double]] = {
     initMode.toLowerCase match {
-      case "random"                        => initializeRandom(df, featuresCol, k, seed)
+      case "random"                       => initializeRandom(df, featuresCol, k, seed)
       case "k-means||" | "kmeansparallel" =>
         initializeKMeansPlusPlus(df, featuresCol, k, seed, kernel)
-      case other                           =>
+      case other                          =>
         throw new IllegalArgumentException(
           s"Unknown init mode: '$other'. Valid options: random, k-means||"
         )

@@ -478,9 +478,9 @@ class AgglomerativeBregmanModel(
     with Logging
     with HasTrainingSummary {
 
-  private[ml] var modelDivergence: String = "squaredEuclidean"
-  private[ml] var modelSmoothing: Double  = 1e-10
-  private[ml] var modelLinkage: String    = "average"
+  private[ml] var modelDivergence: String  = "squaredEuclidean"
+  private[ml] var modelSmoothing: Double   = 1e-10
+  private[ml] var modelLinkage: String     = "average"
   private[ml] var kernel: ClusteringKernel = _
 
   /** Cluster centers as vectors for downstream consumers/tests. */

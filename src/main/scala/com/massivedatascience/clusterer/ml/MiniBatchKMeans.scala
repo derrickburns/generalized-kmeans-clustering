@@ -336,7 +336,6 @@ class MiniBatchKMeans(override val uid: String)
     )
   }
 
-
   /** Initialize cluster centers. */
   private def initializeCenters(
       df: DataFrame,

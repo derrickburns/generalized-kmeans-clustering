@@ -414,7 +414,8 @@ class RobustKMeansModel(
 
   override def transform(dataset: Dataset[_]): DataFrame = {
     val df     = dataset.toDF()
-    val kernel = ClusteringOps.createKernel(divergenceName, $(smoothing)).asInstanceOf[BregmanKernel]
+    val kernel =
+      ClusteringOps.createKernel(divergenceName, $(smoothing)).asInstanceOf[BregmanKernel]
     val mode   = OutlierMode.fromString(outlierModeName)
 
     val bcKernel  = df.sparkSession.sparkContext.broadcast(kernel)

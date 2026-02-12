@@ -231,7 +231,8 @@ class StreamingKMeansModel(
   // Mutable state for streaming updates (array contents are mutated, not references)
   @transient private val centerArrays: Array[Vector]   = initialCenters.map(Vectors.dense)
   @transient private val clusterWeights: Array[Double] = Array.fill(initialCenters.length)(1.0)
-  @transient private lazy val kernel: ClusteringKernel  = createKernel(divergenceName, smoothingValue)
+  @transient private lazy val kernel: ClusteringKernel =
+    createKernel(divergenceName, smoothingValue)
 
   /** Get current cluster centers as Vectors (defensive copy).
     */

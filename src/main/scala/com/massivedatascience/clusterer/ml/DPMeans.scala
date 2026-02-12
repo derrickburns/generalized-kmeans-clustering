@@ -365,7 +365,6 @@ class DPMeans(override val uid: String)
     copyValues(model)
   }
 
-
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)
   }
@@ -436,7 +435,6 @@ class DPMeansModel private[ml] (
 
     result
   }
-
 
   override def transformSchema(schema: StructType): StructType = {
     validateAndTransformSchema(schema)

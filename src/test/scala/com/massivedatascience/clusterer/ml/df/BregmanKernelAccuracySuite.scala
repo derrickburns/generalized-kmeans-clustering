@@ -911,7 +911,7 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
   test("All kernels handle vectors with zeros (with smoothing)") {
     val testCases = Seq(
       (new SquaredEuclideanKernel(), Vectors.dense(0.0, 1.0, 0.0)),
-      (new KLDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)),           // Needs smoothing
+      (new KLDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)),          // Needs smoothing
       (new GeneralizedIDivergenceKernel(1e-6), Vectors.dense(0.0, 1.0)) // Needs smoothing
     )
 
@@ -1030,8 +1030,17 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
   }
 
   test("ClusteringOps: createUpdateStrategy returns GradMeanUDAFUpdate for Bregman kernels") {
-    for (div <- Seq("squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic",
-      "spherical", "cosine")) {
+    for (
+      div <- Seq(
+               "squaredEuclidean",
+               "kl",
+               "itakuraSaito",
+               "generalizedI",
+               "logistic",
+               "spherical",
+               "cosine"
+             )
+    ) {
       withClue(s"divergence=$div:") {
         val updater = ClusteringOps.createUpdateStrategy(div)
         updater shouldBe a[strategies.GradMeanUDAFUpdate]
@@ -1046,8 +1055,9 @@ class BregmanKernelAccuracySuite extends AnyFunSuite with Matchers {
   }
 
   test("ClusteringOps: createKernel returns BregmanKernel for standard divergences") {
-    for (div <- Seq("squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic",
-      "spherical")) {
+    for (
+      div <- Seq("squaredEuclidean", "kl", "itakuraSaito", "generalizedI", "logistic", "spherical")
+    ) {
       withClue(s"divergence=$div:") {
         val kernel = ClusteringOps.createKernel(div)
         kernel shouldBe a[kernels.BregmanKernel]
